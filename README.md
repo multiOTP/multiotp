@@ -159,170 +159,170 @@ WHAT'S NEW IN THE RELEASES
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
-2014-12-27 4.3.2.0beta0 SysCo/al Empty users are refused
-                            More accuracy in the logged information
-2014-12-15 4.3.1.1 SysCo/al Better generic LDAP support
-                              - description sync done in the following order: description, gecos, displayName
-                              - memberOf is not always implemented, alternative method to sync users based on group names.
-                              - disabled account synchronization using shadowExpire or sambaAcctFlags
-                            Better Active Directory support
-                              - accountExpires is now supported for synchronization
-                              - ms-DS-User-Account-Control-Computed (to handle locked out accounts, available since Windows 2003)
-2014-12-09 4.3.1.0 SysCo/al MULTIOTP_PATH environment variable support
-                            CLI proxy added to speed up the command line
-                            Scratch password need also the prefix PIN if it's activated
-                            OTP with integrated serial numbers better supported (in PAP)
-                            Generic LDAP support (instead of Microsoft AD support only)
-                            Raspberry Pi edition has now a special proxy to speed up the command line
-2014-11-04 4.3.0.0 SysCo/al It's now possible to use the AD/LDAP password instead of the PIN code
-                            Yubico OTP support, including keys import using the log file in Traditional format
-                            qrcode() stub enhanced to check if the required folders are available
-                            SyncLdapUsers completely redesigned
-                              - no more complete array in memory
-                              - MultiotpAdLdap class also enhanced accordingly
-                                - cached group_cn requests
-                                - cached recursive_groups requests
-                                - new "by element" functions
-                            Demo mode support
-                            Bug fix concerning the NT_KEY generation with enabled prefix PIN (thanks Adam)
-                            ResyncToken() method added (instead of using CheckToken() method for synchronization)
-2014-06-12 4.2.4.3 SysCo/al Bug fix concerning aspsms provider
-2014-04-13 4.2.4.2 SysCo/al XML parsing consolidation, one library for the whole project
-                            Fixed bug concerning tokens CSV import
-2014-04-13 4.2.4.2 SysCo/al XML parsing consolidation, one library for the whole project
-                            Fixed bug concerning tokens CSV import
-2014-04-06 4.2.4.1 SysCo/al Fixed bug concerning LDAP handling
-                            NT_KEY support added (for FreeRADIUS further handling)
-                            Tokens CSV import (serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
-                            When a user is deleted, the token(s) attributed to this user is/are unassigned
-                            New option -user-info added
-2014-03-30 4.2.4   SysCo/al Fixed bug concerning MySQL handling and mysqli support added
-                            Enhanced SetAttributesToEncrypt function
-                            New implementation fo some external classes
-                            Generated QRcode are better
-                            LOT of new QA tests, more than 60 different tests (including PHP class and command line versions)
-                            Enhanced documentation
-2014-03-13 4.2.3   SysCo/al Fixed bug for clear text password going back to TekRADIUS (PIN was always prefixed for mOTP)
-2014-03-03 4.2.2   SysCo/al Better AD/LDAP integration
-                            Web GUI is now complete for a simple usage, including hardware tokens import
-                            Better template for provisioning information
-                            Some values can now go back to TekRADIUS
-                            If activated, prefix PIN is now also requested for SMS authentication
-                            More information in the logs
-                            Better list of the external packages used
-2014-02-14 4.2.1   SysCo/al AD/LDAP is now fully supported in order to create users based on AD/LDAP content
-                             (with groups filtering)
-2014-02-07 4.2.0   SysCo/al MS-CHAP and MS-CHAPv2 are now supported
-                             (md4 implementation added for PHP backward compatibility)
-                            Enhanced LDAP configuration structure
-                            Fixed bug during token attribution to users
-                             (a "no name" token appeared sometimes)
-2014-01-20 4.1.1   SysCo/al md5.js was missing in the public distribution
-                            Alternate json_encode function is defined if the JSON extension is not loaded
-                            Fixed possible image functions incompatibilities with some PHP versions
-                             during QRcode generation
-                            As suggested by Sylvain, token resync doesn't need prefix PIN anymore
-                             (but still accepted)
-                            More verbosity in the logs in debug mode
-                            Specific parameters order in QRCode for Microsoft Authenticator support
-                             (thanks to Erik Nylund)
-2013-12-23 4.1.0   SysCo/al The open source edition of multiOTP is OATH certified ;-)
-                             (that means full compatibility with any OATH tokens and encrypted PSKC import support)
-                            Raspberry Pi nano-computer is now fully supported
-                            Basic web interface
-                            Self-registration of hardware tokens is now possible
-                             PAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
-                             [serial number][OTP] instead of [OTP]. If user has a prefix PIN, type [serial number][PIN][OTP])
-                             PAP/CHAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
-                             [username:serialnumber] as the username and the [OTP] in the password field. If user has a prefix PIN,
-                             he must type [PIN][OTP] in the password field
-                            Automatic resync/unlock option during authentication (PAP only). When the autoresync option is enabled,
-                             any user can resync his token by typing [OTP1] [OTP2] in the password field. If user has a prefix PIN,
-                             he must type [PIN][OTP1] [PIN][OTP2].
-                            Tokens with less than 3 characters are not accepted anymore in CheckToken()
-                            Default Linux file mode is now set by default (0666 for created and changed files)
-                            Error 28 is returned if the file is not writable, even after a successful login
-                            Added GetUsersCount() function
-                            Added GenerateSmsToken() function
-                            Added Groups management functions
-                            Added Tokens assignation functions
-                            Added SetUserActivated(1|0) and GetUserActivated() function
-                            Added SetUserSynchronized(1|0) and GetUserSynchronized() function
-                            scratch_passwords is now a text field in the database
-                            The third parameter of the Decrypt method is now mandatory
-                            Some modifications in order to correctly handle the class methods
-2013-09-22 4.0.9   SysCo/al Fixed a bug in GetUserScratchPasswordsArray. If a user had no scratch password
-                             and the implementation accepted blank password, it was accepted
-2013-08-30 4.0.7   SysCo/al GetScriptFolder() was still buggy sometimes, thanks Frank for the feedback
-                            File mode of the created QRcode file is also changed base on GetLinuxFileMode()
-                            'sms' as the password to request an SMS token can now be sent in lower or uppercase
-                            Added a description attribute for the tokens
-2013-08-25 4.0.6   SysCo/al base32_encode() is now RFC compliant with uppercases
-                            GetUserTokenQrCode() and GetTokenQrCode() where buggy
-                            GetScriptFolder() use now __FILE__ if the full path is included
-                            When doing a check in the CLI header, @xxx is automatically removed from the
-                             username if the user doesn't exist, and the check is done on the clean name
-                            Added a lot of tests to enhance release quality
-2013-08-21 4.0.5   SysCo/al Fixed the check of the cache lifetime
-                            Added a temporary server blacklist during the same instances
-                            Default server timeout is now set to 1 second
-2013-08-20 4.0.4   SysCo/al Adding an optional group attribute for the user
-                             (which will be send with the Radius Filter-Id option)
-                            Adding scratch passwords generation (if the token is lost)
-                            Automatic database schema upgrade using method UpgradeSchemaIfNeeded()
-                            Adding client/server support with local cache
-                            Adding CHAP authentication support (PAP is of course still supported)
-                            The encryption key is now a parameter of the class constructor
-                            The method SetEncryptionKey('MyPersonalEncryptionKey') is DEPRECATED
-                            The method DefineMySqlConnection is DEPRECATED
-                            Full MySQL support, including tables creation (see example and SetSqlXXXX methods)
-                            Adding email, sms and seed_password to users attributes
-                            Adding sms support (aspsms, clickatell, intellisms, exec)
-                            Adding prefix support for debug mode (in order to send Reply-Message := to Radius)
-                            Adding a lot of new methods to handle easier the users and the tokens
-                            General speedup by using available native functions for hash_hmac and others
-                            Default max_time_window has been lowered to 600 seconds (thanks Stefan for suggestion)
-                            Integrated Google Authenticator support with integrated base 32 seed handling
-                            Integrated QRcode generator library (from Y. Swetake)
-                            General options in an external configuration file
-                            Comments have been reformatted and enhanced for automatic documentation
-                            Development process enhanced, source code reorganized, external contributions are
-                             added automatically at the end of the library after an internal build release
-2011-10-25 3.9.2   SysCo/al Some quick fixes after intensive check
-                            Improved get_script_dir() in CLI for Linux/Windows compatibility
-2011-09-15 3.9.1   SysCo/al Some quick fixes concerning multiple users
-2011-09-13 3.9.0   SysCo/al Adding support for account with multiple users
-2011-07-06 3.2.0   SysCo/al Encryption hash handling with additional error message 33
-                             (if the key has changed)
-                            Adding more examples
-                            Adding generic user with multiple account
-                             (Real account name is combined: "user" and "account password")
-                            Adding log options, now default doesn't log token value anymore
-                            Debugging MySQL backend support for the token handling
-                            Fixed automatic detection of \ or / for script path detection
-2010-12-19 3.1.1   SysCo/al Better MySQL backend support (still in beta), including in CLI version
-2010-09-15 3.1.0   SysCo/al Removed bad extra spaces in the multiotp.php file for Linux
-                            Beta MySQL backend support
-2010-09-02 3.0.0   SysCo/al Adding tokens handling support, including importing XML tokens definition file
-                            Enhanced flat database file format
-                             (multiOTP is still compatible with old versions)
-                            Internal method SetDataReadFlag renamed to SetUserDataReadFlag
-                            Internal method GetDataReadFlag renamed to GetUserDataReadFlag
-2010-08-21 2.0.4   SysCo/al Enhancement in order to use an alternate php "compiler"
-                             for Windows command line
-                            Documentation enhancement
-2010-08-18 2.0.3   SysCo/al Minor notice fix, define timezone if not defined (for embedded command line)
-                            If user doesn't exist, do not create the related flat file after a check
-2010-07-21 2.0.2   SysCo/al Fix to create correctly the folders "users" and "log" if needed
-2010-07-19 2.0.1   SysCo/al Foreach was not working well in PHP4, replaced at some places
-2010-07-19 2.0.0   SysCo/al New design using a class, mOTP support, cleaning of the code
-2010-06-15 1.1.5   SysCo/al Adding OATH/TOTP support
-2010-06-15 1.1.4   SysCo/al Project renamed to multiOTP to avoid overlapping
-2010-06-08 1.1.3   SysCo/al Typo in script folder detection
-2010-06-08 1.1.2   SysCo/al Typo in variable name
-2010-06-08 1.1.1   SysCo/al Status bar during resynchronization
-2010-06-08 1.1.0   SysCo/al Fix in the example, distribution not compressed
-2010-06-07 1.0.0   SysCo/al Initial implementation
+    2014-12-27 4.3.2.0beta0 SysCo/al Empty users are refused
+                                More accuracy in the logged information
+    2014-12-15 4.3.1.1 SysCo/al Better generic LDAP support
+                                  - description sync done in the following order: description, gecos, displayName
+                                  - memberOf is not always implemented, alternative method to sync users based on group names.
+                                  - disabled account synchronization using shadowExpire or sambaAcctFlags
+                                Better Active Directory support
+                                  - accountExpires is now supported for synchronization
+                                  - ms-DS-User-Account-Control-Computed (to handle locked out accounts, available since Windows 2003)
+    2014-12-09 4.3.1.0 SysCo/al MULTIOTP_PATH environment variable support
+                                CLI proxy added to speed up the command line
+                                Scratch password need also the prefix PIN if it's activated
+                                OTP with integrated serial numbers better supported (in PAP)
+                                Generic LDAP support (instead of Microsoft AD support only)
+                                Raspberry Pi edition has now a special proxy to speed up the command line
+    2014-11-04 4.3.0.0 SysCo/al It's now possible to use the AD/LDAP password instead of the PIN code
+                                Yubico OTP support, including keys import using the log file in Traditional format
+                                qrcode() stub enhanced to check if the required folders are available
+                                SyncLdapUsers completely redesigned
+                                  - no more complete array in memory
+                                  - MultiotpAdLdap class also enhanced accordingly
+                                    - cached group_cn requests
+                                    - cached recursive_groups requests
+                                    - new "by element" functions
+                                Demo mode support
+                                Bug fix concerning the NT_KEY generation with enabled prefix PIN (thanks Adam)
+                                ResyncToken() method added (instead of using CheckToken() method for synchronization)
+    2014-06-12 4.2.4.3 SysCo/al Bug fix concerning aspsms provider
+    2014-04-13 4.2.4.2 SysCo/al XML parsing consolidation, one library for the whole project
+                                Fixed bug concerning tokens CSV import
+    2014-04-13 4.2.4.2 SysCo/al XML parsing consolidation, one library for the whole project
+                                Fixed bug concerning tokens CSV import
+    2014-04-06 4.2.4.1 SysCo/al Fixed bug concerning LDAP handling
+                                NT_KEY support added (for FreeRADIUS further handling)
+                                Tokens CSV import (serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
+                                When a user is deleted, the token(s) attributed to this user is/are unassigned
+                                New option -user-info added
+    2014-03-30 4.2.4   SysCo/al Fixed bug concerning MySQL handling and mysqli support added
+                                Enhanced SetAttributesToEncrypt function
+                                New implementation fo some external classes
+                                Generated QRcode are better
+                                LOT of new QA tests, more than 60 different tests (including PHP class and command line versions)
+                                Enhanced documentation
+    2014-03-13 4.2.3   SysCo/al Fixed bug for clear text password going back to TekRADIUS (PIN was always prefixed for mOTP)
+    2014-03-03 4.2.2   SysCo/al Better AD/LDAP integration
+                                Web GUI is now complete for a simple usage, including hardware tokens import
+                                Better template for provisioning information
+                                Some values can now go back to TekRADIUS
+                                If activated, prefix PIN is now also requested for SMS authentication
+                                More information in the logs
+                                Better list of the external packages used
+    2014-02-14 4.2.1   SysCo/al AD/LDAP is now fully supported in order to create users based on AD/LDAP content
+                                 (with groups filtering)
+    2014-02-07 4.2.0   SysCo/al MS-CHAP and MS-CHAPv2 are now supported
+                                 (md4 implementation added for PHP backward compatibility)
+                                Enhanced LDAP configuration structure
+                                Fixed bug during token attribution to users
+                                 (a "no name" token appeared sometimes)
+    2014-01-20 4.1.1   SysCo/al md5.js was missing in the public distribution
+                                Alternate json_encode function is defined if the JSON extension is not loaded
+                                Fixed possible image functions incompatibilities with some PHP versions
+                                 during QRcode generation
+                                As suggested by Sylvain, token resync doesn't need prefix PIN anymore
+                                 (but still accepted)
+                                More verbosity in the logs in debug mode
+                                Specific parameters order in QRCode for Microsoft Authenticator support
+                                 (thanks to Erik Nylund)
+    2013-12-23 4.1.0   SysCo/al The open source edition of multiOTP is OATH certified ;-)
+                                 (that means full compatibility with any OATH tokens and encrypted PSKC import support)
+                                Raspberry Pi nano-computer is now fully supported
+                                Basic web interface
+                                Self-registration of hardware tokens is now possible
+                                 PAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
+                                 [serial number][OTP] instead of [OTP]. If user has a prefix PIN, type [serial number][PIN][OTP])
+                                 PAP/CHAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
+                                 [username:serialnumber] as the username and the [OTP] in the password field. If user has a prefix PIN,
+                                 he must type [PIN][OTP] in the password field
+                                Automatic resync/unlock option during authentication (PAP only). When the autoresync option is enabled,
+                                 any user can resync his token by typing [OTP1] [OTP2] in the password field. If user has a prefix PIN,
+                                 he must type [PIN][OTP1] [PIN][OTP2].
+                                Tokens with less than 3 characters are not accepted anymore in CheckToken()
+                                Default Linux file mode is now set by default (0666 for created and changed files)
+                                Error 28 is returned if the file is not writable, even after a successful login
+                                Added GetUsersCount() function
+                                Added GenerateSmsToken() function
+                                Added Groups management functions
+                                Added Tokens assignation functions
+                                Added SetUserActivated(1|0) and GetUserActivated() function
+                                Added SetUserSynchronized(1|0) and GetUserSynchronized() function
+                                scratch_passwords is now a text field in the database
+                                The third parameter of the Decrypt method is now mandatory
+                                Some modifications in order to correctly handle the class methods
+    2013-09-22 4.0.9   SysCo/al Fixed a bug in GetUserScratchPasswordsArray. If a user had no scratch password
+                                 and the implementation accepted blank password, it was accepted
+    2013-08-30 4.0.7   SysCo/al GetScriptFolder() was still buggy sometimes, thanks Frank for the feedback
+                                File mode of the created QRcode file is also changed base on GetLinuxFileMode()
+                                'sms' as the password to request an SMS token can now be sent in lower or uppercase
+                                Added a description attribute for the tokens
+    2013-08-25 4.0.6   SysCo/al base32_encode() is now RFC compliant with uppercases
+                                GetUserTokenQrCode() and GetTokenQrCode() where buggy
+                                GetScriptFolder() use now __FILE__ if the full path is included
+                                When doing a check in the CLI header, @xxx is automatically removed from the
+                                 username if the user doesn't exist, and the check is done on the clean name
+                                Added a lot of tests to enhance release quality
+    2013-08-21 4.0.5   SysCo/al Fixed the check of the cache lifetime
+                                Added a temporary server blacklist during the same instances
+                                Default server timeout is now set to 1 second
+    2013-08-20 4.0.4   SysCo/al Adding an optional group attribute for the user
+                                 (which will be send with the Radius Filter-Id option)
+                                Adding scratch passwords generation (if the token is lost)
+                                Automatic database schema upgrade using method UpgradeSchemaIfNeeded()
+                                Adding client/server support with local cache
+                                Adding CHAP authentication support (PAP is of course still supported)
+                                The encryption key is now a parameter of the class constructor
+                                The method SetEncryptionKey('MyPersonalEncryptionKey') is DEPRECATED
+                                The method DefineMySqlConnection is DEPRECATED
+                                Full MySQL support, including tables creation (see example and SetSqlXXXX methods)
+                                Adding email, sms and seed_password to users attributes
+                                Adding sms support (aspsms, clickatell, intellisms, exec)
+                                Adding prefix support for debug mode (in order to send Reply-Message := to Radius)
+                                Adding a lot of new methods to handle easier the users and the tokens
+                                General speedup by using available native functions for hash_hmac and others
+                                Default max_time_window has been lowered to 600 seconds (thanks Stefan for suggestion)
+                                Integrated Google Authenticator support with integrated base 32 seed handling
+                                Integrated QRcode generator library (from Y. Swetake)
+                                General options in an external configuration file
+                                Comments have been reformatted and enhanced for automatic documentation
+                                Development process enhanced, source code reorganized, external contributions are
+                                 added automatically at the end of the library after an internal build release
+    2011-10-25 3.9.2   SysCo/al Some quick fixes after intensive check
+                                Improved get_script_dir() in CLI for Linux/Windows compatibility
+    2011-09-15 3.9.1   SysCo/al Some quick fixes concerning multiple users
+    2011-09-13 3.9.0   SysCo/al Adding support for account with multiple users
+    2011-07-06 3.2.0   SysCo/al Encryption hash handling with additional error message 33
+                                 (if the key has changed)
+                                Adding more examples
+                                Adding generic user with multiple account
+                                 (Real account name is combined: "user" and "account password")
+                                Adding log options, now default doesn't log token value anymore
+                                Debugging MySQL backend support for the token handling
+                                Fixed automatic detection of \ or / for script path detection
+    2010-12-19 3.1.1   SysCo/al Better MySQL backend support (still in beta), including in CLI version
+    2010-09-15 3.1.0   SysCo/al Removed bad extra spaces in the multiotp.php file for Linux
+                                Beta MySQL backend support
+    2010-09-02 3.0.0   SysCo/al Adding tokens handling support, including importing XML tokens definition file
+                                Enhanced flat database file format
+                                 (multiOTP is still compatible with old versions)
+                                Internal method SetDataReadFlag renamed to SetUserDataReadFlag
+                                Internal method GetDataReadFlag renamed to GetUserDataReadFlag
+    2010-08-21 2.0.4   SysCo/al Enhancement in order to use an alternate php "compiler"
+                                 for Windows command line
+                                Documentation enhancement
+    2010-08-18 2.0.3   SysCo/al Minor notice fix, define timezone if not defined (for embedded command line)
+                                If user doesn't exist, do not create the related flat file after a check
+    2010-07-21 2.0.2   SysCo/al Fix to create correctly the folders "users" and "log" if needed
+    2010-07-19 2.0.1   SysCo/al Foreach was not working well in PHP4, replaced at some places
+    2010-07-19 2.0.0   SysCo/al New design using a class, mOTP support, cleaning of the code
+    2010-06-15 1.1.5   SysCo/al Adding OATH/TOTP support
+    2010-06-15 1.1.4   SysCo/al Project renamed to multiOTP to avoid overlapping
+    2010-06-08 1.1.3   SysCo/al Typo in script folder detection
+    2010-06-08 1.1.2   SysCo/al Typo in variable name
+    2010-06-08 1.1.1   SysCo/al Status bar during resynchronization
+    2010-06-08 1.1.0   SysCo/al Fix in the example, distribution not compressed
+    2010-06-07 1.0.0   SysCo/al Initial implementation
 
 
 CONTENT OF THE PACKAGE
