@@ -92,7 +92,6 @@ ROADMAP FOR NEXT RELEASES
 - SMS-revolution SMS provider support
 - SOAP API
 - PostgreSQL support
-- ...
 
 
 WHAT'S NEW IN THE RELEASES
@@ -146,7 +145,7 @@ WHAT'S NEW IN THE RELEASES
 - Full MySQL support, including tables creation
 - Fully automatic build chain (invisible for you, but very nice for me)
 - (Parts of the) comments have been reformatted and enhanced,
-  but still some work to do...
+  but still some work to do.
 
 # What's new in 3.9 releases
 - Support for account with multiple users
@@ -160,6 +159,15 @@ WHAT'S NEW IN THE RELEASES
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
+2014-12-27 4.3.2.0beta0 SysCo/al Empty users are refused
+                            More accuracy in the logged information
+2014-12-15 4.3.1.1 SysCo/al Better generic LDAP support
+                              - description sync done in the following order: description, gecos, displayName
+                              - memberOf is not always implemented, alternative method to sync users based on group names.
+                              - disabled account synchronization using shadowExpire or sambaAcctFlags
+                            Better Active Directory support
+                              - accountExpires is now supported for synchronization
+                              - ms-DS-User-Account-Control-Computed (to handle locked out accounts, available since Windows 2003)
 2014-12-09 4.3.1.0 SysCo/al MULTIOTP_PATH environment variable support
                             CLI proxy added to speed up the command line
                             Scratch password need also the prefix PIN if it's activated
@@ -252,7 +260,7 @@ CHANGE LOG OF RELEASED VERSIONS
 2013-08-25 4.0.6   SysCo/al base32_encode() is now RFC compliant with uppercases
                             GetUserTokenQrCode() and GetTokenQrCode() where buggy
                             GetScriptFolder() use now __FILE__ if the full path is included
-                            When doing a check in the CLI header, @... is automatically removed from the
+                            When doing a check in the CLI header, @xxx is automatically removed from the
                              username if the user doesn't exist, and the check is done on the clean name
                             Added a lot of tests to enhance release quality
 2013-08-21 4.0.5   SysCo/al Fixed the check of the cache lifetime
@@ -440,14 +448,12 @@ Provisioning will be done simply by flashing a QRcode.
   - Java J2ME (Nokia and other Java capable phones): MobileOTP
               (http://motp.sf.net/MobileOTP.jad)
   - WinPhone:  Token2 (https://token2.com/?content=mobileapp)
-  - ...
   
 # Software tokens with OATH compliant HOTP or TOTP support
   Check the various markets of your devices, for examples:
   - Google Authenticator (Android/iPhone/iPad/BlackBerry)
   - oathtoken for iPhone/iPad: http://code.google.com/p/oathtoken/
   - androidtoken for Android: http://code.google.com/p/androidtoken/
-  - ...
 
 # Hardware tokens
   - Any tokens that are OATH certified
@@ -466,7 +472,6 @@ Provisioning will be done simply by flashing a QRcode.
     - Seamoon provides OATH compliant TOTP tokens
       - Seamoon KingKey: OATH/TOTP, 6 digits, 60 seconds time interval
         (seed is provided in a specific smd file)
-    - ...
   - YubiKeys from Yubico
     - YubiKey standard
     - YubiKey Nano
@@ -531,79 +536,79 @@ CONFIGURING MULTIOTP WITH FREERADIUS UNDER LINUX
 Using the -request-nt-key option, NT_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX can
 now be displayed (like with the same option used with ntlm_auth).
 
-1) Create a new module file called "multiotp" in etc/raddb/modules/ containing:
-# Exec module instance for multiOTP (http://www.multiotp.net/).
-# for Linux  : replace '/path/to' with the actual path to the multiotp.php file.
-# for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /).
-exec multiotp {
-        wait = yes
-        input_pairs = request
-        output_pairs = reply
-        program = "/path/to/multiotp '%{User-Name}' '%{User-Password}' -request-nt-key -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"
-        shell_escape = yes
-}
+1) Create a new module file called "multiotp" in etc/raddb/modules/ containing:  
+   # Exec module instance for multiOTP (http://www.multiotp.net/).  
+   # for Linux  : replace '/path/to' with the actual path to the multiotp.php file.  
+   # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /).  
+   exec multiotp {  
+       wait = yes  
+       input_pairs = request  
+       output_pairs = reply  
+       program = "/path/to/multiotp '%{User-Name}' '%{User-Password}' -request-nt-key -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"  
+       shell_escape = yes  
+   }
 
-2) In the configuration file called "default" in etc/raddb/sites-enabled/
-    a) Add the multiOTP handling
-    #
-    # Handle multiOTP (http://www.multiotp.net/) authentication.
-    # This must be add BEFORE the first "pap" entry found in the file.
-    multiotp
+2) In the configuration file called "default" in etc/raddb/sites-enabled/  
+    a) Add the multiOTP handling  
+    #  
+    # Handle multiOTP (http://www.multiotp.net/) authentication.  
+    # This must be add BEFORE the first "pap" entry found in the file.  
+    multiotp  
     
-    b) Add the multiOTP authentication handling
-    #
-    # Handle multiOTP (http://www.multiotp.net/) authentication.
-    # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.
-    Auth-Type multiotp {
-        multiotp
-    }
+    b) Add the multiOTP authentication handling  
+    #  
+    # Handle multiOTP (http://www.multiotp.net/) authentication.  
+    # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.  
+    Auth-Type multiotp {  
+        multiotp  
+    }  
     
-    c) Comment the first line containing only "chap"
-    #chap is now handled by multiOTP
+    c) Comment the first line containing only "chap"  
+    #chap is now handled by multiOTP  
     
-3) In the configuration file called "inner-tunnel" in etc/raddb/sites-enabled/
-    a) Add the multiOTP handling
-    #
-    # Handle multiOTP (http://www.multiotp.net/) authentication.
-    # This must be add BEFORE the first "pap" entry found in the file.
-    multiotp
+3) In the configuration file called "inner-tunnel" in etc/raddb/sites-enabled/  
+    a) Add the multiOTP handling  
+    #  
+    # Handle multiOTP (http://www.multiotp.net/) authentication.  
+    # This must be add BEFORE the first "pap" entry found in the file.  
+    multiotp  
     
-    b) Add the multiOTP authentication handling
-    #
-    # Handle multiOTP (http://www.multiotp.net/) authentication.
-    # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.
-    Auth-Type multiotp {
-        multiotp
-    }
+    b) Add the multiOTP authentication handling  
+    #  
+    # Handle multiOTP (http://www.multiotp.net/) authentication.  
+    # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.  
+    Auth-Type multiotp {  
+        multiotp  
+    }  
     
-    c) Comment the first line containing only "chap"
-    #chap is now handled by multiOTP
+    c) Comment the first line containing only "chap"  
+    #chap is now handled by multiOTP  
 
-4) In the configuration file called "policy.conf" in etc/raddb/
-    a) Add the multiOTP authorization policy
-    #
-    # Handle multiOTP (http://www.multiotp.net/) authorization policy.
-    # This must be add just before the last "}"
-    multiotp.authorize {
-        if (!control:Auth-Type) {
-            update control {
-                Auth-Type := multiotp
-            }
-        }
-    }
+4) In the configuration file called "policy.conf" in etc/raddb/  
+    a) Add the multiOTP authorization policy  
+    #  
+    # Handle multiOTP (http://www.multiotp.net/) authorization policy.  
+    # This must be add just before the last "}"  
+    multiotp.authorize {  
+        if (!control:Auth-Type) {  
+            update control {  
+                Auth-Type := multiotp  
+            }  
+        }  
+    }  
 
-5) In the configuration file called "radiusd.conf" in etc/raddb/
+5) In the configuration file called "radiusd.conf" in etc/raddb/  
     a) Depending which port(s) and/or ip address(es) you want to listen, change
-       the corresponding ipaddr and port parameters
+       the corresponding ipaddr and port parameters  
 
-6) In the configuration file called "clients.conf" in etc/raddb/
-    a) Add the clients IP, mask and secret that you want to authorize.
-    #
-    # Handle multiOTP (http://www.multiotp.net/) for some clients.
-    client 0.0.0.0 {
-    netmask = 0
-    secret = multiotpsecret
-    }
+6) In the configuration file called "clients.conf" in etc/raddb/  
+    a) Add the clients IP, mask and secret that you want to authorize.  
+    #  
+    # Handle multiOTP (http://www.multiotp.net/) for some clients.  
+    client 0.0.0.0 {  
+    netmask = 0  
+    secret = multiotpsecret  
+    }  
    
 7) Now, to see what's going on, you can:
    - stop the service : /etc/init.d/freeradius stop
@@ -616,11 +621,11 @@ exec multiotp {
 
 Some values can go back to FreeRADIUS:
 
-a) Set the right format options for FreeRADIUS:
+a) Set the right format options for FreeRADIUS:  
    multiotp -config radius-reply-attributor=" = " radius-reply-separator=","
    
-b) Set multiOTP to send back to FreeRADIUS the group of the authenticated user:
-   multiotp -config group-attribute="Filter-Id"
+b) Set multiOTP to send back to FreeRADIUS the group of the authenticated user:  
+   multiotp -config group-attribute="Filter-Id"  
 
 
 HOW TO CONFIGURE MULTIOTP TO SYNCHRONIZED THE USERS FROM AN ACTIVE DIRECTORY ?
@@ -889,7 +894,6 @@ things like:
 option). This is very useful to allow specific rules for some groups.
 - VPN connections can be set-up to have a strong authentication (X-Auth).
 - Strong Web authentication can be combined with specific firewall rules.
-- ...
 
 
 EXTERNAL PACKAGES AND SOFTWARE USED
