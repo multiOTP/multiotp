@@ -1,16 +1,16 @@
 multiOTP open source
 ====================
-multiOTP(r) open source is a GNU LGPL implementation of a strong two-factor authentication PHP class
-multiOTP(r) open source is OATH certified for HOTP/TOTP
+multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
+multiOTP open source is OATH certified for HOTP/TOTP
 
-(c) 2010-2014 SysCo systemes de communication sa
+(c) 2010-2014 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
 Current build: 4.3.1.0 (2014-12-09)
 
 Visit http://forum.multiotp.net/ for additional support.
 
-The multiOTP(r) package is the lightest package available that provides so many
+The multiOTP package is the lightest package available that provides so many
 strong authentication functionalities and goodies, and best of all, for anyone
 that is interested about security issues, it's a fully open source solution!
 
@@ -19,16 +19,14 @@ package, [Donation] are always welcome to support this project.
 Please check http://www.multiOTP.net/ and you will find the magic button ;-)
 (OATH membership and certifications are not free, sponsorship welcome)
 
-If you need some specific features in the open source edition of multiOTP(r),
+If you need some specific features in the open source edition of multiOTP,
 please contact us in order to discuss about a sponsorship in order to
 prioritize your needs.
 
-This project is *NOT* sponsored by NSA.
-
-The multiOTP(r) class supports currently the following algorithms and RFC's:
+The multiOTP class supports currently the following algorithms and RFC's:
 - RFC4226 OATH/HOTP (http://www.ietf.org/rfc/rfc4226.txt)
 - RFC6238 OATH/TOTP (http://www.ietf.org/rfc/rfc6238.txt)
-- YubicoOTP (http://yubico.com/yubikey)
+- Yubico OTP (https://www.yubico.com/)
 - mOTP (http://motp.sourceforge.net)
 - Google Authenticator (OATH/HOTP or OATH/TOTP, base32 seed, QRcode provisioning)
 - SMS tokens (using aspsms, clickatell, intellisms, or even your own script)
@@ -47,26 +45,26 @@ TABLE OF CONTENTS
  * Change Log of released version
  * Content of the package
  * When and how can I use this package ?
- * How to install the multiOTP(r) web service under Windows ?
- * How to install the multiOTP(r) radius server under Windows ?
- * Configuring multiOTP(r) with TekRADIUS or TekRADIUS LT under Windows
- * How to install the multiOTP(r) web service under Linux ?
- * Configuring multiOTP(r) with FreeRADIUS under Linux
- * How to configure multiOTP(r) to synchronized the users from an Active Directory ?
- * How to configure multiOTP(r) to synchronized the users from a standard LDAP ?
- * How to configure multiOTP(r) to use the client/server feature ?
+ * How to install the multiOTP web service under Windows ?
+ * How to install the multiOTP radius server under Windows ?
+ * Configuring multiOTP with TekRADIUS or TekRADIUS LT under Windows
+ * How to install the multiOTP web service under Linux ?
+ * Configuring multiOTP with FreeRADIUS under Linux
+ * How to configure multiOTP to synchronized the users from an Active Directory ?
+ * How to configure multiOTP to synchronized the users from a standard LDAP ?
+ * How to configure multiOTP to use the client/server feature ?
  * How to build a Raspberry Pi strong authentication server ?
  * How to install a centralized strong authentication server
    for strong authentication on desktops ?
  * Compatible clients applications and devices
  * External packages used
- * multiOTP(r) PHP class documentation
- * multiOTP(r) command line tool
+ * multiOTP PHP class documentation
+ * multiOTP command line tool
 
 
 DONATIONS AND SPONSORING
 ========================
-You can support our multiOTP(r) open source project with donations and sponsoring.
+You can support our multiOTP open source project with donations and sponsoring.
 Sponsorships are crucial for ongoing and future development of the project! 
 If you'd like to support our work, then consider making a donation, any support
 is always welcome even if it's as low as $1!
@@ -82,7 +80,7 @@ SerNet GmbH (DE)
 
 ROADMAP FOR NEXT RELEASES
 =========================
-- Radius challenge/response support (4.3.1.1)
+- Radius challenge/response support (4.3.1.2)
 - Doxygen documentation format
 - Generic web based SMS provider support
 - Users CSV import
@@ -99,7 +97,7 @@ ROADMAP FOR NEXT RELEASES
 
 WHAT'S NEW IN THE RELEASES
 ==========================
-What's new in 4.3.x releases
+# What's new in 4.3 releases
 - Raspberry Pi edition has now a special proxy to speed up the command line (4.3.1)
 - Generic LDAP support (no more only Microsoft AD compatible LDAP) (4.3.1)
 - New AD/LDAP sync algorithm to support larger AD (4.3.0)
@@ -107,7 +105,7 @@ What's new in 4.3.x releases
   instead of the PIN code (4.3.0)
 - Yubico OTP support, including keys import using the log file in Traditional format (4.3.0)
 
-What's new in 4.2.x releases
+# What's new in 4.2 releases
 - A new option -user-info is now available (4.2.4.1)
 - Tokens CSV import (4.2.4.1)
 - NT_KEY can be displayed for further handling by FreeRADIUS (4.2.4.1)
@@ -119,11 +117,11 @@ What's new in 4.2.x releases
 - AD/LDAP is now fully supported (4.2.1)
 - MS-CHAP and MS-CHAPv2 authentication support
 
-What's new in 4.1.x releases
+# What's new in 4.1 releases
 - Syslog support
 - Token resync doesn't need prefix PIN anymore
 - Specific parameters order in QRCode for Microsoft Authenticator support
-- The open source edition of multiOTP(r) is also OATH certified for HOTP and TOTP,
+- The open source edition of multiOTP is also OATH certified for HOTP and TOTP,
   which includes encrypted PSKC import support
 - Instructions and files to build your own strong authentication server device
   on a Raspberry Pi nano-computer
@@ -132,7 +130,7 @@ What's new in 4.1.x releases
 - Default Linux file mode is now set by default to 0666 to avoid access problem
 - Basic web GUI
 
-What's new in 4.0.x releases
+# What's new in 4.0 releases
 - Full client/server support with local cache
 - CHAP authentication support
 - Emergency scratch passwords list
@@ -150,11 +148,11 @@ What's new in 4.0.x releases
 - (Parts of the) comments have been reformatted and enhanced,
   but still some work to do...
 
-What's new in 3.9.x releases
+# What's new in 3.9 releases
 - Support for account with multiple users
 - Some bug fixes
 
-What's new in 3.2.x releases
+# What's new in 3.2 releases
 - Google Authenticator support. Special information to handle the base 32 seed.
 - Better MySQL backend integration (still in beta). Now it is possible to store
   all information in a MySQL backend instead of a flat file 
@@ -171,7 +169,7 @@ CHANGE LOG OF RELEASED VERSIONS
 2014-11-04 4.3.0.0 SysCo/al It's now possible to use the AD/LDAP password instead of the PIN code
                             Yubico OTP support, including keys import using the log file in Traditional format
                             qrcode() stub enhanced to check if the required folders are available
-                            SyncLdapUsers completely rewritten
+                            SyncLdapUsers completely redesigned
                               - no more complete array in memory
                               - MultiotpAdLdap class also enhanced accordingly
                                 - cached group_cn requests
@@ -220,7 +218,7 @@ CHANGE LOG OF RELEASED VERSIONS
                             More verbosity in the logs in debug mode
                             Specific parameters order in QRCode for Microsoft Authenticator support
                              (thanks to Erik Nylund)
-2013-12-23 4.1.0   SysCo/al The open source edition of multiOTP(r) is OATH certified ;-)
+2013-12-23 4.1.0   SysCo/al The open source edition of multiOTP is OATH certified ;-)
                              (that means full compatibility with any OATH tokens and encrypted PSKC import support)
                             Raspberry Pi nano-computer is now fully supported
                             Basic web interface
@@ -299,7 +297,7 @@ CHANGE LOG OF RELEASED VERSIONS
                             Beta MySQL backend support
 2010-09-02 3.0.0   SysCo/al Adding tokens handling support, including importing XML tokens definition file
                             Enhanced flat database file format
-                             (multiOTP(r) is still compatible with old versions)
+                             (multiOTP is still compatible with old versions)
                             Internal method SetDataReadFlag renamed to SetUserDataReadFlag
                             Internal method GetDataReadFlag renamed to GetUserDataReadFlag
 2010-08-21 2.0.4   SysCo/al Enhancement in order to use an alternate php "compiler"
@@ -311,7 +309,7 @@ CHANGE LOG OF RELEASED VERSIONS
 2010-07-19 2.0.1   SysCo/al Foreach was not working well in PHP4, replaced at some places
 2010-07-19 2.0.0   SysCo/al New design using a class, mOTP support, cleaning of the code
 2010-06-15 1.1.5   SysCo/al Adding OATH/TOTP support
-2010-06-15 1.1.4   SysCo/al Project renamed to multiOTP(r) to avoid overlapping
+2010-06-15 1.1.4   SysCo/al Project renamed to multiOTP to avoid overlapping
 2010-06-08 1.1.3   SysCo/al Typo in script folder detection
 2010-06-08 1.1.2   SysCo/al Typo in variable name
 2010-06-08 1.1.1   SysCo/al Status bar during resynchronization
@@ -325,7 +323,7 @@ In the linux folder:
 - multiotp.php             : command line tool (merge of the header and the class, external files also included)
 - multiotp.class.php       : the main file, it is the class itself, external files are already included
 - multiotp.server.php      : the web service file (the class is already merged in the file, external files also included)
-- check.multiotp.class.php : PHP script to validate some multiOTP(r) functionalities
+- check.multiotp.class.php : PHP script to validate some multiOTP functionalities
 - md5.js                   : encryption JS library used by multiotp.server.php
 - test-tokens.csv          : provisioning file of test tokens
 + oath subfolder           : contains provisioning files for oath test tokens
@@ -339,29 +337,29 @@ In the sources folder:
 - multiotp.class.php       : the main file, it is the class itself, which requires external files
 - multiotp.cli.header.php  : header file to be merged with the class for a single file command line tool
 - multiotp.server.php      : the web service file, which requires the class as external file
-- check.multiotp.class.php : PHP script to validate some multiOTP(r) functionalities
+- check.multiotp.class.php : PHP script to validate some multiOTP functionalities
 + contrib subfolder        : contains all external files required by the multiotp.class.php file
 
 In the windows folder:
 - multiotp.exe             : command line tool for Windows (digitally signed) with embedded PHP 5.3.1
 - multiotp.class.php       : the main file, it is the class itself, external files are already included
 - multiotp.server.php      : the web service file (the class is already merged in the file, external files also included)
-- check.multiotp.class.php : PHP script to validate some multiOTP(r) functionalities
+- check.multiotp.class.php : PHP script to validate some multiOTP functionalities
 - md5.js                   : encryption JS library used by multiotp.server.php
-- checkmultiotp.cmd        : Windows script to validate some multiOTP(r) functionalities
-- radius_debug.cmd         : Windows script to run the multiOTP(r) radius web server in debug mode
-- radius_install.cmd       : Windows script to install and start the multiOTP(r) radius web server
-- radius_uninstall.cmd     : Windows script to stop and uninstall the multiOTP(r) radius web server
-- webservice_install.cmd   : Windows script to install and start the multiOTP(r) web service
-- webservice_uninstall.cmd : Windows script to stop and uninstall the multiOTP(r) web service
+- checkmultiotp.cmd        : Windows script to validate some multiOTP functionalities
+- radius_debug.cmd         : Windows script to run the multiOTP radius web server in debug mode
+- radius_install.cmd       : Windows script to install and start the multiOTP radius web server
+- radius_uninstall.cmd     : Windows script to stop and uninstall the multiOTP radius web server
+- webservice_install.cmd   : Windows script to install and start the multiOTP web service
+- webservice_uninstall.cmd : Windows script to stop and uninstall the multiOTP web service
 - test-tokens.csv          : provisioning file of test tokens
 + oath subfolder           : contains provisioning files for oath test tokens
 + qrcode subfolder         : all necessary files to be able to generate QRcode
 + radius subfolder         : all necessary files to be able to install a Windows radius server already
-                             configured with multiOTP(r) support (using FreeRADIUS implementation for Windows)
+                             configured with multiOTP support (using FreeRADIUS implementation for Windows)
 + templates subfolder      : all templates files needed to generate the provisioning pages from the web GUI
 + tools subfolder          : command line tools needed by some cmd scripts
-+ webservice subfolder     : all necessary files to be able to install a Windows multiOTP(r) web service
++ webservice subfolder     : all necessary files to be able to install a Windows multiOTP web service
                              (using mongoose as the light web server on port 8112,
                               or as a secured SSL connection (https) on port 8113)
 
@@ -373,7 +371,7 @@ this is definitely the package you need! You will be able to have strong
 authentication for your VPN accesses, your SSL gateway, your private websites
 and even your Windows login for desktops AND laptops!
 
-The multiOTP(r) class can be used alone (for example to have strong 
+The multiOTP class can be used alone (for example to have strong 
 authentication for your PHP based web application), as a command line tool
 (to handle users and have strong authentication using command line), as a web
 service (to provide centralized authentication for a master/slave installation)
@@ -384,14 +382,14 @@ external devices like for example firewalls or captive portals.
 The default backend storage is done in flat files, but you can also defined a
 MySQL server as the backend server. To use MySQL, you will only have to provide
 the server, the username, the password and the database name. Tables will be
-created/updated automatically by multiOTP(r). The schema is also upgraded
-automatically if you install a new release of multiOTP(r).
+created/updated automatically by multiOTP. The schema is also upgraded
+automatically if you install a new release of multiOTP.
 
-Starting with version 4.x, you can also install a multiOTP(r) web service
-on a server, and this way some other multiOTP(r) slave clients (like laptops)
+Starting with version 4.x, you can also install a multiOTP web service
+on a server, and this way some other multiOTP slave clients (like laptops)
 can connect to the web service and caching the tokens information (if allowed).
 
-Inside a company, you will probably use multiOTP(r) with a radius server or as
+Inside a company, you will probably use multiOTP with a radius server or as
 a web service (see below on how to install these services).
 
 If you are running under Windows, TekRADIUS or TekRADIUS LT will do the job 
@@ -416,7 +414,7 @@ If you want to have strong authentication on Windows logon, have a look at the
 open source MultiOneTimePassword Credential Provider from Last Squirrel IT.
 It works with Windows Vista/7/2008/8/2012 in both 32 and 64 bits.
 The Credential Provider does not need any RADIUS connection! It uses instead a
-local version of multiOTP(r) which can be configured as a client of a
+local version of multiOTP which can be configured as a client of a
 centralized server (with caching support).
 (https://code.google.com/p/multi-one-time-password--credential-provider/)
 
@@ -435,39 +433,45 @@ The easiest tokens to use are TOTP, they are time based and well supported by
 a lot of implementations like Google Authenticator.
 Provisioning will be done simply by flashing a QRcode.
 
-Software tokens with mOTP support
-  iPhone:    iOTP from PDTS (type iOTP in the Apple AppStore)
-  Android:   Mobile-OTP (http://motp.sf.net/Mobile-OTP.apk)
-  PalmOS:    Mobile-OTP (http://motp.sf.net/mobileotp_palm.zip)
-  Java J2ME (Nokia and other Java capable phones): MobileOTP
-            (http://motp.sf.net/MobileOTP.jad)
-  ...
+# Software tokens with mOTP (Mobile-OTP) support
+  - iPhone:    iOTP from PDTS (type iOTP in the Apple AppStore)
+  - Android:   Mobile-OTP (http://motp.sf.net/Mobile-OTP.apk)
+  - PalmOS:    Mobile-OTP (http://motp.sf.net/mobileotp_palm.zip)
+  - Java J2ME (Nokia and other Java capable phones): MobileOTP
+              (http://motp.sf.net/MobileOTP.jad)
+  - WinPhone:  Token2 (https://token2.com/?content=mobileapp)
+  - ...
   
-Software tokens with OATH compliant HOTP or TOTP support
+# Software tokens with OATH compliant HOTP or TOTP support
   Check the various markets of your devices, for examples:
-    Google Authenticator (Android/iPhone/iPad/BlackBerry)
-    oathtoken for iPhone/iPad: http://code.google.com/p/oathtoken/
-    androidtoken for Android: http://code.google.com/p/androidtoken/
-    ...
+  - Google Authenticator (Android/iPhone/iPad/BlackBerry)
+  - oathtoken for iPhone/iPad: http://code.google.com/p/oathtoken/
+  - androidtoken for Android: http://code.google.com/p/androidtoken/
+  - ...
 
-Hardware tokens
-  Any tokens that are OATH certified
-  Feitian provides OATH compliant HOTP and TOTP tokens
-     (seed is provided in a standardized token definition PSKC xml file)
-   - OTP c100: OATH/HOTP, 6 digits
-   - OTP c200: OATH/TOTP, 6 digits, 60 seconds time interval
-     (seed is provided in a standardized token definition PSKC xml file)
-  ZyXEL OTP provides HOTP OATH compliant tokens (v2 and old v1 tokens)
-   - ZyWALL OTPv2 (rebranded SafeNet/Aladdin eToken PASS) : OATH/HOTP, 6 digits
-     (seed is extracted from the importAlpine.dat downloaded file,
-      the seed is the sccKey attribute)
-   - ZyWALL OTPv1 (rebranded Authenex A-Key 3600): OATH/HOTP, 6 digits
-     (seed is extracted from the OTP_data01_upgrade.sql SQL file,
-      SEED field at the end of the file)
-  Seamoon provides OATH compliant TOTP tokens
-   - Seamoon KingKey: OATH/TOTP, 6 digits, 60 seconds time interval
-     (seed is provided in a specific smd file)
-    ...
+# Hardware tokens
+  - Any tokens that are OATH certified
+    - Feitian provides OATH compliant HOTP and TOTP tokens
+       (seed is provided in a standardized token definition PSKC xml file)
+      - OTP c100: OATH/HOTP, 6 digits
+      - OTP c200: OATH/TOTP, 6 digits, 60 seconds time interval
+        (seed is provided in a standardized token definition PSKC xml file)
+    - ZyXEL OTP provides HOTP OATH compliant tokens (v2 and old v1 tokens)
+      - ZyWALL OTPv2 (rebranded SafeNet/Aladdin eToken PASS) : OATH/HOTP, 6 digits
+        (seed is extracted from the importAlpine.dat downloaded file,
+         the seed is the sccKey attribute)
+      - ZyWALL OTPv1 (rebranded Authenex A-Key 3600): OATH/HOTP, 6 digits
+        (seed is extracted from the OTP_data01_upgrade.sql SQL file,
+         SEED field at the end of the file)
+    - Seamoon provides OATH compliant TOTP tokens
+      - Seamoon KingKey: OATH/TOTP, 6 digits, 60 seconds time interval
+        (seed is provided in a specific smd file)
+    - ...
+  - YubiKeys from Yubico
+    - YubiKey standard
+    - YubiKey Nano
+    - YubiKey Neo
+    - YubiKey Neo-N
 
 If you want to use software tokens with Apps like Google Authenticator, you can
 create a QRcode provisioning in two EASY steps with the command line tool:
@@ -475,26 +479,26 @@ create a QRcode provisioning in two EASY steps with the command line tool:
  - generate the provisioning QRcode: multiotp -qrcode my_user my_qrcode.png
 
 
-HOW TO INSTALL THE MULTIOTP(r) WEB SERVICE UNDER WINDOWS ?
-==========================================================
-Installing the multiOTP(r) web service is VERY easy. Simply run the
+HOW TO INSTALL THE MULTIOTP WEB SERVICE UNDER WINDOWS ?
+=======================================================
+Installing the multiOTP web service is VERY easy. Simply run the
 webservice_install script. Mongoose configuration file will be created,
 firewall rules will be adapted and the service will be installed and started.
 The service is called multiOTPservice and is listening on port 8112 (http)
 and on port 8113 (https).
 
 
-HOW TO INSTALL THE MULTIOTP(r) RADIUS SERVER UNDER WINDOWS ?
-============================================================
-Installing the multiOTP(r) radius service is VERY easy too. Simply run the
+HOW TO INSTALL THE MULTIOTP RADIUS SERVER UNDER WINDOWS ?
+=========================================================
+Installing the multiOTP radius service is VERY easy too. Simply run the
 radius_install script. The etc/raddb/modules/multiotp file will be created,
 firewall rules will be adapted and the service will be installed and started.
 The service is called multiOTPradius and the secret is multiotpsecret for any
 client including 127.0.0.1.
 
 
-CONFIGURING MULTIOTP(r) WITH TEKRADIUS OR TEKRADIUS LT UNDER WINDOWS
-====================================================================
+CONFIGURING MULTIOTP WITH TEKRADIUS OR TEKRADIUS LT UNDER WINDOWS
+=================================================================
 TekRADIUS supports a Default Username to be used when a matching user
 profile cannot be found for an incoming RADIUS authentication request.
 So a quick and easy way is to create in the TekRADIUS Manager a User
@@ -514,21 +518,21 @@ c) Set multiOTP to send back to TekRADIUS the group of the authenticated user:
    multiotp -config group-attribute="ietf|11"
 
 
-HOW TO INSTALL THE MULTIOTP(r) WEB SERVICE UNDER LINUX ?
-========================================================
-The multiOTP(r) web service is a simple web site. If you are under Linux and you
+HOW TO INSTALL THE MULTIOTP WEB SERVICE UNDER LINUX ?
+=====================================================
+The multiOTP web service is a simple web site. If you are under Linux and you
 are reading this document, you have for sure the necessary skill to configure
 your favorite web server in order to have an URL that will launch the page
-multiotp.server.php which is in the main folder of the multiOTP(r) distribution.
+multiotp.server.php which is in the main folder of the multiOTP distribution.
 
 
-CONFIGURING MULTIOTP(r) WITH FREERADIUS UNDER LINUX
-===================================================
+CONFIGURING MULTIOTP WITH FREERADIUS UNDER LINUX
+================================================
 Using the -request-nt-key option, NT_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX can
 now be displayed (like with the same option used with ntlm_auth).
 
 1) Create a new module file called "multiotp" in etc/raddb/modules/ containing:
-# Exec module instance for multiOTP(r) (http://www.multiotp.net/).
+# Exec module instance for multiOTP (http://www.multiotp.net/).
 # for Linux  : replace '/path/to' with the actual path to the multiotp.php file.
 # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /).
 exec multiotp {
@@ -540,45 +544,45 @@ exec multiotp {
 }
 
 2) In the configuration file called "default" in etc/raddb/sites-enabled/
-    a) Add the multiOTP(r) handling
+    a) Add the multiOTP handling
     #
-    # Handle multiOTP(r) (http://www.multiotp.net/) authentication.
+    # Handle multiOTP (http://www.multiotp.net/) authentication.
     # This must be add BEFORE the first "pap" entry found in the file.
     multiotp
     
-    b) Add the multiOTP(r) authentication handling
+    b) Add the multiOTP authentication handling
     #
-    # Handle multiOTP(r) (http://www.multiotp.net/) authentication.
+    # Handle multiOTP (http://www.multiotp.net/) authentication.
     # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.
     Auth-Type multiotp {
         multiotp
     }
     
     c) Comment the first line containing only "chap"
-    #chap is now handled by multiOTP(r)
+    #chap is now handled by multiOTP
     
 3) In the configuration file called "inner-tunnel" in etc/raddb/sites-enabled/
-    a) Add the multiOTP(r) handling
+    a) Add the multiOTP handling
     #
-    # Handle multiOTP(r) (http://www.multiotp.net/) authentication.
+    # Handle multiOTP (http://www.multiotp.net/) authentication.
     # This must be add BEFORE the first "pap" entry found in the file.
     multiotp
     
-    b) Add the multiOTP(r) authentication handling
+    b) Add the multiOTP authentication handling
     #
-    # Handle multiOTP(r) (http://www.multiotp.net/) authentication.
+    # Handle multiOTP (http://www.multiotp.net/) authentication.
     # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.
     Auth-Type multiotp {
         multiotp
     }
     
     c) Comment the first line containing only "chap"
-    #chap is now handled by multiOTP(r)
+    #chap is now handled by multiOTP
 
 4) In the configuration file called "policy.conf" in etc/raddb/
-    a) Add the multiOTP(r) authorization policy
+    a) Add the multiOTP authorization policy
     #
-    # Handle multiOTP(r) (http://www.multiotp.net/) authorization policy.
+    # Handle multiOTP (http://www.multiotp.net/) authorization policy.
     # This must be add just before the last "}"
     multiotp.authorize {
         if (!control:Auth-Type) {
@@ -595,7 +599,7 @@ exec multiotp {
 6) In the configuration file called "clients.conf" in etc/raddb/
     a) Add the clients IP, mask and secret that you want to authorize.
     #
-    # Handle multiOTP(r) (http://www.multiotp.net/) for some clients.
+    # Handle multiOTP (http://www.multiotp.net/) for some clients.
     client 0.0.0.0 {
     netmask = 0
     secret = multiotpsecret
@@ -615,12 +619,12 @@ Some values can go back to FreeRADIUS:
 a) Set the right format options for FreeRADIUS:
    multiotp -config radius-reply-attributor=" = " radius-reply-separator=","
    
-b) Set multiOTP(r) to send back to FreeRADIUS the group of the authenticated user:
+b) Set multiOTP to send back to FreeRADIUS the group of the authenticated user:
    multiotp -config group-attribute="Filter-Id"
 
 
-HOW TO CONFIGURE MULTIOTP(r) TO SYNCHRONIZED THE USERS FROM AN ACTIVE DIRECTORY ?
-=================================================================================
+HOW TO CONFIGURE MULTIOTP TO SYNCHRONIZED THE USERS FROM AN ACTIVE DIRECTORY ?
+==============================================================================
 1) Decide if you want that by default, created users need to type a prefix PIN (1|0):
    multiotp -config default-request-prefix-pin=1
    
@@ -679,12 +683,14 @@ HOW TO CONFIGURE MULTIOTP(r) TO SYNCHRONIZED THE USERS FROM AN ACTIVE DIRECTORY 
     multiotp -config ldap-activated=1
    
 17) Let's go for an AD/LDAP users synchronisation !
-    (users removed or desactivated in the AD/LDAP are desactivated in multiOTP(r))
+    (users removed or desactivated in the AD/LDAP are desactivated in multiOTP)
     multiotp -debug -display-log -ldap-users-sync
+    
+DON'T FORGET TO SCHEDULE A SCRIPT THAT WILL DO THE USERS SYNCHRONIZATION REGULARY!
 
 
-HOW TO CONFIGURE MULTIOTP(r) TO SYNCHRONIZED THE USERS FROM A STANDARD LDAP ?
-=============================================================================
+HOW TO CONFIGURE MULTIOTP TO SYNCHRONIZED THE USERS FROM A STANDARD LDAP ?
+==========================================================================
 1) Decide if you want that by default, created users need to type a prefix PIN (1|0):
    multiotp -config default-request-prefix-pin=1
    
@@ -737,16 +743,18 @@ HOW TO CONFIGURE MULTIOTP(r) TO SYNCHRONIZED THE USERS FROM A STANDARD LDAP ?
     multiotp -config ldap-activated=1
    
 17) Let's go for an AD/LDAP users synchronisation !
-    (users removed or desactivated in the AD/LDAP are desactivated in multiOTP(r))
+    (users removed or desactivated in the AD/LDAP are desactivated in multiOTP)
     multiotp -debug -display-log -ldap-users-sync
 
+DON'T FORGET TO SCHEDULE A SCRIPT THAT WILL DO THE USERS SYNCHRONIZATION REGULARY!
 
-HOW TO CONFIGURE MULTIOTP(r) TO USE THE CLIENT/SERVER FEATURE ?
-===============================================================
+
+HOW TO CONFIGURE MULTIOTP TO USE THE CLIENT/SERVER FEATURE ?
+============================================================
 A) On the server
-1) Install the multiOTP(r) web service on the server side. If you are
+1) Install the multiOTP web service on the server side. If you are
    using the unmodified included installer to install it under Windows, the
-   URL for the multiOTP(r) web service is http://ip.address.of.server:8112
+   URL for the multiOTP web service is http://ip.address.of.server:8112
    The web service script installer is called webservice_install.cmd.
 2) Set the shared secret key you will use to encode the data between the
    server and the client: multiotp -config server-secret=MySharedSecret
@@ -757,13 +765,13 @@ A) On the server
    (this command line will change the configuration file config/multiotp.ini)
 4) Create your users on the server using the web GUI interface. If you are
    using the unmodified included installer to install it under Windows, the
-   URL for the multiOTP(r) web service is http://ip.address.of.server:8112
+   URL for the multiOTP web service is http://ip.address.of.server:8112
 
 B) On the client(s)
 1) Set the shared secret key you will use to encode the data between the
    client and the server: multiotp -config server-secret=MySharedSecret
    (this command line will change the configuration file config/multiotp.ini)
-2) If you want to have cache support (if allowed by the multiOTP(r) web service),
+2) If you want to have cache support (if allowed by the multiOTP web service),
    set the option accordingly: multiotp -config server-cache-level=1
    (this command line will change the configuration file config/multiotp.ini)
 3) Define the timeout after which you will switch to the next server(s), and
@@ -784,7 +792,7 @@ B) On the client(s)
 HOW TO INSTALL A CENTRALIZED STRONG AUTHENTICATION SERVER
 FOR STRONG AUTHENTICATION ON DESKTOPS ?
 =========================================================
-1) Install a client/server multiOTP(r) environment like explained above.
+1) Install a client/server multiOTP environment like explained above.
 2) On each client, install MultiOneTimePassword Credential Provider (mOTP-CP)
    (https://code.google.com/p/multi-one-time-password--credential-provider/).
    It works with Windows Vista/7/2008/8/2012 in both 32 and 64 bits.
@@ -866,18 +874,18 @@ MultiOneTimePassword Credential Provider (mOTP-CP)
 If you want to have strong authentication on Windows logon, have a look at the
 open source MultiOneTimePassword Credential Provider from Last Squirrel IT.
 It works with Windows Vista/7/2008/8/2012 in both 32 and 64 bits.
-The Credential Provider is using directly a local version of multiOTP(r) which
-can be configured as a client of a centralized multiOTP(r) server (with caching support)
+The Credential Provider is using directly a local version of multiOTP which
+can be configured as a client of a centralized multiOTP server (with caching support)
 (https://code.google.com/p/multi-one-time-password--credential-provider/)
 
 LSE Experts is providing a commercial Radius Credential Provider which can talk
-directly with any radius server to check the token. multiOTP(r) will work with it.
+directly with any radius server to check the token. multiOTP will work with it.
 (http://www.lsexperts.de)
 
-Any firewall can connect with the Radius protocol to a multiOTP(r) radius server.
+Any firewall can connect with the Radius protocol to a multiOTP radius server.
 On advanced firewalls like the ZyXEL ZyWALL USG series, you can do some advanced
 things like:
-- receiving a specific group for each multiOTP(r) user (using the Filter-Id
+- receiving a specific group for each multiOTP user (using the Filter-Id
 option). This is very useful to allow specific rules for some groups.
 - VPN connections can be set-up to have a strong authentication (X-Auth).
 - Strong Web authentication can be combined with specific firewall rules.
@@ -937,14 +945,14 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     The source files can be downloaded at http://download.multiotp.net/multiotp.zip
 
  
-MULTIOTP(r) PHP CLASS DOCUMENTATION
-===================================
+MULTIOTP PHP CLASS DOCUMENTATION
+================================
 Have a look into the source code if you want to know how to use it,
 and you may also check multiotp.cli.header.php which implements the class.
 
 
-MULTIOTP(r) COMMAND LINE TOOL
-=============================
+MULTIOTP COMMAND LINE TOOL
+==========================
 
 multiOTP 4.3.1.0 (2014-12-09), running with embedded PHP version 5.4.10
 (c) 2010-2014 SysCo systemes de communication sa
