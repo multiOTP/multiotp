@@ -537,6 +537,7 @@ Using the -request-nt-key option, NT_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX can
 now be displayed (like with the same option used with ntlm_auth).
 
 1) Create a new module file called "multiotp" in etc/raddb/modules/ containing:  
+
    # Exec module instance for multiOTP (http://www.multiotp.net/).  
    # for Linux  : replace '/path/to' with the actual path to the multiotp.php file.  
    # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /).  
@@ -550,42 +551,49 @@ now be displayed (like with the same option used with ntlm_auth).
 
 2) In the configuration file called "default" in etc/raddb/sites-enabled/  
     a) Add the multiOTP handling  
+    
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be add BEFORE the first "pap" entry found in the file.  
     multiotp  
-    
+
     b) Add the multiOTP authentication handling  
+    
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
     }  
-    
+
     c) Comment the first line containing only "chap"  
+    
     #chap is now handled by multiOTP  
     
 3) In the configuration file called "inner-tunnel" in etc/raddb/sites-enabled/  
     a) Add the multiOTP handling  
+    
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be add BEFORE the first "pap" entry found in the file.  
     multiotp  
-    
+
     b) Add the multiOTP authentication handling  
+    
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
     }  
-    
+
     c) Comment the first line containing only "chap"  
+    
     #chap is now handled by multiOTP  
 
 4) In the configuration file called "policy.conf" in etc/raddb/  
-    a) Add the multiOTP authorization policy  
+   - Add the multiOTP authorization policy  
+    
     #  
     # Handle multiOTP (http://www.multiotp.net/) authorization policy.  
     # This must be add just before the last "}"  
@@ -598,16 +606,17 @@ now be displayed (like with the same option used with ntlm_auth).
     }  
 
 5) In the configuration file called "radiusd.conf" in etc/raddb/  
-    a) Depending which port(s) and/or ip address(es) you want to listen, change
+   - Depending which port(s) and/or ip address(es) you want to listen, change
        the corresponding ipaddr and port parameters  
 
 6) In the configuration file called "clients.conf" in etc/raddb/  
-    a) Add the clients IP, mask and secret that you want to authorize.  
+   - Add the clients IP, mask and secret that you want to authorize.  
+    
     #  
     # Handle multiOTP (http://www.multiotp.net/) for some clients.  
     client 0.0.0.0 {  
-    netmask = 0  
-    secret = multiotpsecret  
+        netmask = 0  
+        secret = multiotpsecret  
     }  
    
 7) Now, to see what's going on, you can:
