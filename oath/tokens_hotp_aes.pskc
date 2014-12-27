@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pskc:KeyContainer xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:pskc="urn:ietf:params:xml:ns:keyprov:pskc" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" xmlns:xenc11="http://www.w3.org/2009/xmlenc11#" xmlns:pkcs5="http://www.rsasecurity.com/rsalabs/pkcs/schemas/pkcs-5v2-0#" Id="ExampleID" Version="1.0">
+    <pskc:EncryptionKey>
+        <ds:KeyName>Pre-shared-key</ds:KeyName>
+    </pskc:EncryptionKey>
+    <pskc:MACMethod Algorithm="http://www.w3.org/2000/09/xmldsig#hmac-sha1">
+        <pskc:MACKey>
+            <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+            <xenc:CipherData>
+                <xenc:CipherValue>wrjW00DjkG/3Ti5w/+MmSQAiBWho8CPjT7GtcQ59PWaOd00kXObQ0N2DZXEViu4i</xenc:CipherValue>
+            </xenc:CipherData>
+        </pskc:MACKey>
+    </pskc:MACMethod>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ7000000001</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:hotp" Id="ZZ7000000001">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>HMAC-SHA256</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>yEJynmqPig2WnnEdBaT7Yq3XkPbPiTNpaGmJFVOyzxzS3aSYEAZRCEf7wHA3Fvk/kDHEvQks3t9eVV0JV7Y/uA==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>OEPJcjpyjHKZSFheQU551nb0ls4=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Counter>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>mZ+p+VX8Trg1lKkndr5p7/O9ZyS2dU5DD7cpZljhQ7o=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>sFa44n9rrsfWq+KcIffF1Xl3Auw=</pskc:ValueMAC>
+                </pskc:Counter>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ7000000002</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:hotp" Id="ZZ7000000002">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>HMAC-SHA512</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>fE30qGXYpqP6D4k5cCHVMMIkaJr4cJZN7oOjRWZ8DOJ8Wk3e+MoUUO3wyRa3UOz5feOvXMGlhUH9uuS0G88U9QIYcuscHuh6X/BTAaaJyrOQZmZOzfBq9Mky8+/dihHW</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>KxF+McV9MoIwJWZkmVturQ8/GwA=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Counter>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>u2U0Zys7h+Le/fE6Y36E3+jvU8501bQaZ9bDnQKoFTo=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>qIg1lePsFokepjWYGUh14kqzsYQ=</pskc:ValueMAC>
+                </pskc:Counter>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+</pskc:KeyContainer>

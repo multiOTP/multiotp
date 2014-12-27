@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pskc:KeyContainer xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:pskc="urn:ietf:params:xml:ns:keyprov:pskc" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" xmlns:xenc11="http://www.w3.org/2009/xmlenc11#" xmlns:pkcs5="http://www.rsasecurity.com/rsalabs/pkcs/schemas/pkcs-5v2-0#" Id="ExampleID" Version="1.0">
+    <pskc:EncryptionKey>
+        <xenc11:DerivedKey>
+            <xenc11:KeyDerivationMethod Algorithm="http://www.rsasecurity.com/rsalabs/pkcs/schemas/pkcs-5v2-0#pbkdf2">
+                <pkcs5:PBKDF2-params>
+                    <Salt>
+                        <Specified>etmLw9S1kDUeGS8V5e/UAw==</Specified>
+                    </Salt>
+                    <IterationCount>1000</IterationCount>
+                    <KeyLength>16</KeyLength>
+                    <PRF/>
+                </pkcs5:PBKDF2-params>
+            </xenc11:KeyDerivationMethod>
+            <xenc:ReferenceList>
+                <xenc:DataReference URI="#ED"/>
+            </xenc:ReferenceList>
+            <xenc11:MasterKeyName>Passphrase1</xenc11:MasterKeyName>
+        </xenc11:DerivedKey>
+    </pskc:EncryptionKey>
+    <pskc:MACMethod Algorithm="http://www.w3.org/2000/09/xmldsig#hmac-sha1">
+        <pskc:MACKey>
+            <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+            <xenc:CipherData>
+                <xenc:CipherValue>lF9ReQyHsJ4LTlntuVlESIKbJiYnt5MDseTFqnmNcyHqxB/ZS4BD83ZuvTaSYCu9</xenc:CipherValue>
+            </xenc:CipherData>
+        </pskc:MACKey>
+    </pskc:MACMethod>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ8000000000</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:totp" Id="ZZ8000000000">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>HMAC-SHA1</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>1VNUGh7Jf+8QibELHTDFU8Lj+ZFu836aoFKTEVWtAW+XydPBHYmC9gnty3SJ1Vh0</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>Oy+u0zn74nlGNjMnUe2OTfrFhHI=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>OcePCm3TGaXtSHQlox1pfLMWQ1dP7boiOG92wv9Jk6g=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>STDGPo7iRGs30+pI7SZCZ+d0J7w=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>yUNeDTix60G1T5DxGWC1VtFlKktG9lPoowjiGe6uuyY=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>yZfFtq6nmW9MoxeD31C6OKVojoQ=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+</pskc:KeyContainer>

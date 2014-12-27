@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pskc:KeyContainer xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:pskc="urn:ietf:params:xml:ns:keyprov:pskc" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" xmlns:xenc11="http://www.w3.org/2009/xmlenc11#" xmlns:pkcs5="http://www.rsasecurity.com/rsalabs/pkcs/schemas/pkcs-5v2-0#" Id="ExampleID" Version="1.0">
+    <pskc:EncryptionKey>
+        <ds:KeyName>Pre-shared-key</ds:KeyName>
+    </pskc:EncryptionKey>
+    <pskc:MACMethod Algorithm="http://www.w3.org/2000/09/xmldsig#hmac-sha1">
+        <pskc:MACKey>
+            <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+            <xenc:CipherData>
+                <xenc:CipherValue>aJtbg144FkWB+rAdIZLEYGeBguzImDC/s+u6hvQpbn1HKH4d9okcfRVDE1eKc/em</xenc:CipherValue>
+            </xenc:CipherData>
+        </pskc:MACKey>
+    </pskc:MACMethod>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ1000000000</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:CryptoModuleInfo>
+            <pskc:Id>CM_ID_007</pskc:Id>
+        </pskc:CryptoModuleInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:totp" Id="ZZ1000000000">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>1/4klvTYXsM7n35dRXD8DEUmG9msDTFGj7iYPbSWd62eEdnBUDTHvuHSo0H1Oa8x</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>FSJiyiNOXUvDl42te34LPpmQA00=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:PlainValue>0</pskc:PlainValue>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:PlainValue>30</pskc:PlainValue>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ1100000000</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:CryptoModuleInfo>
+            <pskc:Id>CM_ID_007</pskc:Id>
+        </pskc:CryptoModuleInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:totp" Id="ZZ1100000000">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>LHgaE/1m+DeXjNhWVA5BJsX/yv6KZmAWnVG5q6dQkkWbGu0ZO9QvqhBUxU0qoe4W</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>1HZvOMVLYU52SnE+98BTxDZrDds=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:PlainValue>0</pskc:PlainValue>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:PlainValue>30</pskc:PlainValue>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ1000000001</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:CryptoModuleInfo>
+            <pskc:Id>CM_ID_007</pskc:Id>
+        </pskc:CryptoModuleInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:totp" Id="ZZ1000000001">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>HMAC-SHA256</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>gDk4Xm6Ab4cABb8oVzDbxbHP2UqjdhwuoV2z9NQvW5uV3dqpU7uApCTF9y20IX8uEViEur80QzgftiNlnX6RRw==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>H1cru72pCCWvSuL7jES0Rp0nKOM=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:PlainValue>0</pskc:PlainValue>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:PlainValue>30</pskc:PlainValue>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ1100000001</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:CryptoModuleInfo>
+            <pskc:Id>CM_ID_007</pskc:Id>
+        </pskc:CryptoModuleInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:totp" Id="ZZ1100000001">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>HMAC-SHA256</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>HbKFsvEFtqDd8fOrKbigA+7wv47Fdfv1m8BWclZGupgixFiqY9B5LrZq7e5Vd4QcTNatmMW2fDmNdSVbMs91rw==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>xQvm4mScVI+7GivxvodoTIy3rLs=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:PlainValue>0</pskc:PlainValue>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:PlainValue>30</pskc:PlainValue>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+</pskc:KeyContainer>
+
