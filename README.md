@@ -159,15 +159,6 @@ WHAT'S NEW IN THE RELEASES
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
-    2014-12-27 4.3.2.0beta0 SysCo/al Empty users are refused
-                                More accuracy in the logged information
-    2014-12-15 4.3.1.1 SysCo/al Better generic LDAP support
-                                  - description sync done in the following order: description, gecos, displayName
-                                  - memberOf is not always implemented, alternative method to sync users based on group names.
-                                  - disabled account synchronization using shadowExpire or sambaAcctFlags
-                                Better Active Directory support
-                                  - accountExpires is now supported for synchronization
-                                  - ms-DS-User-Account-Control-Computed (to handle locked out accounts, available since Windows 2003)
     2014-12-09 4.3.1.0 SysCo/al MULTIOTP_PATH environment variable support
                                 CLI proxy added to speed up the command line
                                 Scratch password need also the prefix PIN if it's activated
