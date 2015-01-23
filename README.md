@@ -71,6 +71,10 @@ is always welcome even if it's as low as $1!
 You can also sponsor the development of a specific feature. Please contact
 us in order to discuss the detail of the implementation.
 
+**Donate via *PayPal.*** [![Donate via PayPal][2]][1]
+[1]: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PRS3VDNYL58HJ
+[2]: https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg
+
 Thanks to our main donators and sponsors:
 Donator AB (SE)
 Henk van der Helm (NL)
