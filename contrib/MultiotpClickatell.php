@@ -6,8 +6,8 @@ class MultiotpClickatell
  * @brief     SMS message using Clickatell infrastructure.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.2.4.3
- * @date      2014-06-12
+ * @version   4.3.0.1
+ * @date      2015-05-11
  * @since     2013-05-14
  */
 {
@@ -20,6 +20,8 @@ class MultiotpClickatell
     var $servers;
     var $session_id;
     var $userkey;
+    var $reply;
+
 
     function MultiotpClickatell($userkey, $password, $api_id)
     {
@@ -33,25 +35,30 @@ class MultiotpClickatell
         $this->useRegularServer();
     }
 
+
     function useRegularServer()
     {
         $this->servers = array("api.clickatell.com:80" );
     }
+
 
     function useSslServer()
     {
         $this->servers = array("ssl://api.clickatell.com:443" );
     }
 
+
     function setTimeout($timeout)
     {
         $this->server_timeout = $timeout;
     }
 
+
     function setOriginator($originator)
     {
         $this->originator = $originator;
     }
+
 
     function setRecipient($r, $id = null)
     {
@@ -68,10 +75,24 @@ class MultiotpClickatell
         $this->recipient = array( "number" => $recipient, "transaction" => $id);
     }
 
+
     function setContent($content)
     {
         $this->content = $content;
     }
+
+
+    function setReply($reply)
+    {
+		$this->reply = $reply;
+    }
+
+
+    function getReply()
+    {
+		return $this->reply;
+    }
+
 
     function getAuthXML()
     {
@@ -122,18 +143,47 @@ class MultiotpClickatell
     }
 
     function sendSMS()
+    /*
+     * Result: 1=ok / 0=ko
+     */
     {
         return $this->send($this->getOneSendXML(htmlspecialchars($this->content, ENT_QUOTES | ENT_HTML401, 'UTF-8')));
     }
 
+
+    function getCredits()
+    {
+        $credits = '';
+
+        $full_content = sprintf("data=<clickAPI>".
+                                "<getBalance>".
+                                "<api_id>".$this->api_id."</api_id>".
+                                "<user>".$this->userkey."</user>".
+                                "<password>".$this->password."</password>".
+                                "</getBalance>".
+                                "</clickAPI>");
+
+		if (1 == $this->send($full_content)) {
+            $reply = $this->getReply();
+            if (FALSE !== strpos($reply,"<ok>")) {
+                $begin_ok_pos = strpos($reply,"<ok>");
+                $end_ok_pos = strpos($reply,"</ok>");
+                $credits = substr($reply, $begin_ok_pos + strlen("<ok>"), $end_ok_pos - $begin_ok_pos - strlen("<ok>"));
+            }
+        }
+        return $credits;
+    }
+
+
     function send($msg)
     {
         $result = 0;
+
         foreach ($this->servers as $server)
         {
             list($host, $port) = explode(":", $server);
             $result = $this->sendToServer($msg, $host, $port);
-            if ($result == 1)
+            if (1 == $result)
             {
                 return $result;
             }
@@ -143,6 +193,8 @@ class MultiotpClickatell
 
     function sendToServer($msg, $host, $port)
     {
+        $result = 0;
+
         $errno = 0;
         $errdesc = 0;
         $fp = fsockopen($host, $port, $errno, $errdesc, $this->server_timeout);
@@ -161,15 +213,13 @@ class MultiotpClickatell
             {
                 $reply.= fgets($fp, 1024);
             }
+            $this->setReply($reply);
 
             fclose($fp);
             
-            $result = (FALSE !== strpos($reply,'<apiMsgId>'))?'1':'0';
+            $result = ((FALSE !== strpos($reply,'<apiMsgId>')) ||((FALSE !== strpos($reply,'<ok>'))))?'1':'0';
         }
-        else
-        {
-            $result = 0;
-        }
+
         return $result;
     }
 }

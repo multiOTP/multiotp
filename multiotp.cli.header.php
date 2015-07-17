@@ -37,7 +37,7 @@
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2014 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2015 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -62,10 +62,10 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.1.0
- * @date      2014-12-09
+ * @version   4.3.2.5
+ * @date      2015-07-15
  * @since     2010-06-08
- * @copyright (c) 2010-2014 SysCo systemes de communication sa
+ * @copyright (c) 2010-2015 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *
@@ -78,6 +78,9 @@
  * Return codes
  *
  *   0 OK: Token accepted
+
+ *  10 INFO: Access Challenge returned back to the client
+
  *  11 INFO: User successfully created or updated
  *  12 INFO: User successfully deleted
  *  13 INFO: User PIN code successfully changed
@@ -87,6 +90,7 @@
  *  17 INFO: UrlLink successfully created
  *  18 INFO: SMS code request received
  *  19 INFO: Requested operation successfully done
+
  *  21 ERROR: User doesn't exist
  *  22 ERROR: User already exists
  *  23 ERROR: Invalid algorithm
@@ -96,23 +100,34 @@
  *  27 ERROR: Resynchronization of the token has failed
  *  28 ERROR: Unable to write the changes in the file
  *  29 ERROR: Token doesn't exist
+ *
  *  30 ERROR: At least one parameter is missing
  *  31 ERROR: Tokens definition file doesn't exist
  *  32 ERROR: Tokens definition file not successfully imported
  *  33 ERROR: Encryption hash error, encryption key is not the same
  *  34 ERROR: Linked user doesn't exist
  *  35 ERROR: User not created
+ *  37 ERROR: Token already attributed
+ *  38 ERROR: User is desactivated
  *  39 ERROR: Requested operation aborted
+ *
  *  41 ERROR: SQL error
+ *
  *  50 ERROR: QRcode not created
  *  51 ERROR: UrlLink not created (no provisionable client for this protocol)
+ *
  *  60 ERROR: No information on where to send SMS code
  *  61 ERROR: SMS code request received, but an error occured during transmission
  *  62 ERROR: SMS provider not supported
+ *
  *  70 ERROR: Server authentication error
  *  71 ERROR: Server request is not correctly formatted
  *  72 ERROR: Server answer is not correctly formatted
+ *
  *  80 ERROR: Server cache error
+ *  81 ERROR: Cache too old for this user, account autolocked
+ *
+ *  98 ERROR: Authentication failed (wrong token length)
  *  99 ERROR: Authentication failed (and other possible unknown errors)
  *
  *
@@ -162,13 +177,57 @@
  *
  * Users feedbacks and comments
  *
+ * 2015-06-23 Jun Li (CN)
+ *   As proposed by Jun Li, launching the command line version without
+ *    enough parameters returns now a 30 error (instead of a 19 info).
+ *    Side effect is that -help is now required to display help page.
+ *
+ * 2015-06-02 Jean-François Perillo, Kudelski Security (CH)
+ *   As proposed by Jean-François, token length error information has been
+ *    added in the regular log and the autoresync is now enabled by default.
+ *
+ * 2015-06-02 Sébastien Charlier, Thesis SA (CH)
+ * 2015-03-09 Martin
+ *   Martin and Sébastien informed us that passwords containing the minus sign are not accepted.
+ *
+ * 2015-02-16 Sylvain Maret, Kudelski Security (CH)
+ *   Sylvain informed us that Gemalto PSKC file don't provide the time interval for TOTP tokens.
+ *   RFC default value (30 seconds) is now set by default if no time interval is given.
+ *
+ * 2015-01-27 Thomas Klute, ingenit GmbH & Co. KG (DE)
+ *   Thanks Thomas for you feedback concerning a potential exploit with dots and slashes in a username.
+ *   Even if no information can be extracted using this method, it's always good to patch this kind of weakness.
+ *
+ * 2015-01-08 Markus Arnoldi, LEWA Attendorn GmbH (DE)
+ *   Useful comments about prefix PIN handling, documentation has been enhanced.
+ *   Two new command line options are now available (fastcreatenopin and fastecreatewithpin)
+ *
+ * 2014-12-22 Sajid Hameed, Network Places Ltd (UK)
+ *   Questions about users lockout, documentation has been enhanced.
+ *   Three command line options information has been added in the documentation.
+ *
+ * 2014-12-15 Steve Jacot-Guillarmod, Swissdotnet SA (CH)
+ *   Thanks Steve for your valuable feedback about LDAP sync and groups
+ *   handling with a specific Synology OpenLDAP server implementation.
+ *
+ * 2014-11-04 Yubico Inc. (USA) / Yubico AB (S) / Yubico Ltd. (UK)
+ *   BIG THANKS to the Yubico team which provides us several YubiKeys for the
+ *   workshop organized during the Application Security Forum in Yverdon-les-Bains (Switzerland).
+ *   Starting with version 4.3.0.0, YubiKeys (both Yubico OTP and HOTP) are now also supported and easy to import.
+ *   (simply import the YubiKey traditional format log file)
+ *
+ * 2014-10-13 Adam Twardowski, Choopa LLC (USA)
+ *   Thanks Adam for your valuable feedback concerning a bug with the NT_KEY generation if prefix PIN is enabled.
+ *   Adam discovered the bug and fixed it when he configured pptpd with
+ *   FreeRADIUS in order to set up a PPTP VPN with strong authentication.
+ *
  * 2014-04-04 Stefan Kügler, SerNet GmbH (DE)
  * 2014-04-01 Daniel Särnström, Donator AB (SE)
  *   Daniel & Stefan asks some info in order to import tokens without a know format.
  *   Good question, multiOTP supports now importation of tokens from CSV file.
  *
  * 2014-04-02 Prashant Kumar, Alscient (UK)
- *   Prash, is playing with FreeRADIUS and VPN (PPTP with MPPE). This requires radius to send MPPE keys.
+ *   Prash is playing with FreeRADIUS and VPN (PPTP with MPPE). This requires radius to send MPPE keys.
  *   Interesting feedback, multiOTP provides now NT_KEY, like the ntlm_auth external helper.
  *
  * 2014-03-31 Alex Tasikas (GR)
@@ -190,7 +249,7 @@
  * 2014-01-19 Erik Nylund (FI)
  *   Thanks four your feedback concerning specific parameters order in QRCode for Microsoft Authenticator
  *
- * 2014-01-14 Sylvain Maret (CH)
+ * 2014-01-14 Sylvain Maret, Kudelski Security (CH)
  *   Thanks for your feedback concerning possible zero division in the ComputeOathTruncate method.
  *    Method has been altered in order to be more compatible with almost any PHP version.
  *   Thanks also for the suggestion to resync without the prefix PIN. Both are supported now.
@@ -207,7 +266,7 @@
  *   MANY thanks for your appreciated $$$ sponsorship to support us to add MS-CHAP and MS-CHAPv2 in a next release.
  *
  * 2013-12-18 Xavier Céspedes (ES)
- *   Thanks to Xavier who noticed a problem with the hex2bin() function during the scratch password generation.
+ *   Thanks to Xavier who noticed a problem with the hex2bin() function duringthe scratch password generation.
  *   In the meantime, the GetUserScratchPasswordsList() function has been improved and fixed and is in the 4.1 release.
  *
  * 2013-09-20 Sean Butler-Lee (IE)
@@ -274,7 +333,7 @@
  * 2010-09-13 Brenno Hiemstra (NL)
  *   Brenno reported bad extra spaces after the #!/usr/bin/php in the Linux version of multiotp.php
  *
- * 2010-08-20 BirdNet, C. Christophi (CH)
+ * 2010-08-20 C. Christophi, BirdNet (CH)
  *   Documentation enhancement proposal for the TekRADIUS part, thanks !
  *
  * 2010-07-19 SysCo/al (CH)
@@ -283,6 +342,12 @@
  *
  * Change Log
  *
+ *   2015-07-15 4.3.2.5 SysCo/al Calling multiotp CLI without parameter returns now error code 30 (instead of 19)
+ *   2015-06-24 4.3.2.4 SysCo/al multiotp_account automatic support
+ *   2015-06-10 4.3.2.3 SysCo/al Enhancements for the Dev(Talks): demo
+ *   2015-06-09 4.3.2.2 SysCo/al Additional CLI features (fastcreatenopin, fastcreatewithpin)
+ *                               Initialize-backend process enhanced
+ *                               Resync during authentication (autoresync) is now better handled in the class directly
  *   2014-12-09 4.3.1.0 SysCo/al MULTIOTP_PATH environment variable support
  *                               CLI proxy added to speed up the command line
  *                               Scratch password need also the prefix PIN if it's activated
@@ -301,7 +366,7 @@
  *                               New option -user-info added
  *   2014-03-30 4.2.4   SysCo/al Fixed bug concerning MySQL handling and mysqli support added
  *                               Enhanced SetAttributesToEncrypt function
- *                               New implementation fo some external classes
+ *                               New implementation for some external classes
  *                               Generated QRcode are better
  *                               LOT of new QA tests, more than 60 different tests (including PHP class and command line versions)
  *                               Enhanced documentation
@@ -396,7 +461,7 @@ function get_script_dir()
         $current_script_folder = $_SERVER['SCRIPT_FILENAME'];
     }
     
-    if (FALSE === strpos($current_script_folder,"/"))
+    if (false === strpos($current_script_folder,"/"))
     {
         $current_script_folder_detected = dirname($current_folder."/fake.file");
     }
@@ -424,7 +489,7 @@ function convert_to_unix_path($path)
 function convert_to_windows_path_if_needed($path)
 {
     $result = $path;
-    if (FALSE !== strpos($result,":"))
+    if (false !== strpos($result,":"))
     {
         $result = str_replace("/","\\",$result);
     }
@@ -448,14 +513,14 @@ if (!function_exists('clean_quotes'))
 
 
 // CLI mode (if not, it's the http proxy mode)
-$cli_mode = TRUE;
+$cli_mode = true;
 
 
 if ('127.0.0.1'==(isset($_SERVER['REMOTE_ADDR'])?$_SERVER['REMOTE_ADDR']:''))
 {
     if (isset($_POST['argv']) || isset($_GET['argv']))
     {
-        $cli_mode = FALSE;
+        $cli_mode = false;
         $folder_path = '';
         $detected_folder_path = '';
         ob_start();
@@ -499,16 +564,17 @@ if ($cli_mode)
 // Initialize some variables
 $command            = 'check';
 $call_method        = '';
-$display_help       = FALSE;
-$display_status     = FALSE;
-$prefix_pin         = FALSE;
+$display_help       = false;
+$display_status     = false;
+$prefix_pin         = false;
 $crlf               = "\n"; // was chr(13).chr(10);
 $result             = 99; // Unknown error
-$token_id_creation  = FALSE;
-$mysql_backend      = FALSE;
+$token_id_creation  = false;
+$mysql_backend      = false;
 $mysql_parameters   = array();
-$param_info_debug   = FALSE;
-$show_false_pin     = FALSE;
+$no_php_info        = false;
+$param_info_debug   = false;
+$show_false_pin     = false;
 $base_dir           = '';
 $source_tag         = '';
 $source_ip          = '';
@@ -522,17 +588,18 @@ $ms_chap_challenge  = '';
 $ms_chap_response   = '';
 $ms_chap2_response  = '';
 $verbose_prefix     = '';
-$display_log        = FALSE;
-$enable_log         = FALSE;
-$verbose_log        = FALSE;
-$initialize_backend = FALSE;
-$keep_local         = FALSE;
-$encrypted_password = FALSE;
-$request_nt_key     = FALSE;
+$display_log        = false;
+$enable_log         = false;
+$verbose_log        = false;
+$initialize_backend = false;
+$keep_local         = false;
+$encrypted_password = false;
+$request_nt_key     = false;
 
 // Extract all parameters
 $param_count = 0;
 $all_args = array();
+$all_args_size = 20;
 
 if ($cli_mode)
 {
@@ -561,8 +628,9 @@ else
 
 for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
 {
+
     $current_arg = clean_quotes($argv[$arg_loop]);
-    
+
     if ("-base-dir=" == substr(strtolower($current_arg),0,10))
     {
         $base_array = explode("=",$current_arg,2);
@@ -647,7 +715,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
             }
             else
             {
-                $encrypted_password = TRUE;
+                $encrypted_password = true;
             }
         }
     }
@@ -676,7 +744,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
             }
             else
             {
-                $encrypted_password = TRUE;
+                $encrypted_password = true;
             }
         }
     }
@@ -692,7 +760,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
             }
             else
             {
-                $encrypted_password = TRUE;
+                $encrypted_password = true;
             }
         }
     }
@@ -732,6 +800,14 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
     elseif ("-fastcreate" == strtolower($current_arg))
     {
         $command = "fastcreate";
+    }
+    elseif ("-fastcreatenopin" == strtolower($current_arg))
+    {
+        $command = "fastcreatenopin";
+    }
+    elseif ("-fastcreatewithpin" == strtolower($current_arg))
+    {
+        $command = "fastcreatewithpin";
     }
     elseif ("-createga" == strtolower($current_arg))
     {
@@ -791,11 +867,11 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
     }
     elseif ("-debug" == strtolower($current_arg))
     {
-        $verbose_log = TRUE;
+        $verbose_log = true;
     }
     elseif ("-display-log" == strtolower($current_arg))
     {
-        $display_log = TRUE;
+        $display_log = true;
     }
     elseif ("-delete" == strtolower($current_arg))
     {
@@ -852,10 +928,11 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
     elseif ("-initialize-backend" == strtolower($current_arg))
     {
         $initialize_backend = true;
+        $command = "initialize-backend";
     }
     elseif ("-keep-local" == strtolower($current_arg))
     {
-        $keep_local = TRUE;
+        $keep_local = true;
     }
     elseif ("-lock" == strtolower($current_arg))
     {
@@ -863,15 +940,19 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
     }
     elseif ("-log" == strtolower($current_arg))
     {
-        $enable_log = TRUE;
+        $enable_log = true;
+    }
+    elseif ("-no-php-info" == strtolower($current_arg))
+    {
+        $no_php_info = true;
     }
     elseif ("-no-prefix-pin" == strtolower($current_arg))
     {
-        $set_prefix_pin = FALSE;
+        $set_prefix_pin = false;
     }
     elseif ("-prefix-pin" == strtolower($current_arg))
     {
-        $set_prefix_pin = TRUE;
+        $set_prefix_pin = true;
     }
     elseif ("-resync" == strtolower($current_arg))
     {
@@ -883,15 +964,15 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
     }
     elseif ("-show-false-pin" == strtolower($current_arg))
     {
-        $show_false_pin = TRUE;
+        $show_false_pin = true;
     }
     elseif ("-status" == strtolower($current_arg))
     {
-        $display_status = TRUE;
+        $display_status = true;
     }
     elseif ("-token-id" == strtolower($current_arg))
     {
-        $token_id_creation = TRUE;
+        $token_id_creation = true;
     }
     elseif ("-unlock" == strtolower($current_arg))
     {
@@ -921,7 +1002,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
             ("--request-nt-key" == strtolower($current_arg)) // Typo for ntlm_auth users ;-)
            )
     {
-        $request_nt_key = TRUE;
+        $request_nt_key = true;
     }
     elseif (("-version" == strtolower($current_arg)) || ("-v" == strtolower($current_arg)))
     {
@@ -937,11 +1018,11 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
     }
     elseif ("-param" == strtolower($current_arg))
     {
-        $param_info_debug = TRUE;
+        $param_info_debug = true;
     }
     elseif ("-mysql" == strtolower($current_arg))
     {
-        $mysql_backend = TRUE;
+        $mysql_backend = true;
         $arg_loop++;
         if ($arg_loop < $argc)
         {
@@ -956,19 +1037,22 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
 }
 
 
-// Be sure that inexistant parameters are empty
-for ($i = ($param_count+1); $i <= 100; $i++)
+// Be sure that non-existent parameters are empty
+for ($i = ($param_count+1); $i <= $all_args_size; $i++)
 {
-    $all_args[$i] = "";
+    $all_args[$i] = '';
 }
 
 
-// if not enough parameters, display help
+// if not enough parameters, display error message
+//  and indicate how to display the help page
 if (($param_count < 1) &&
     ($command != "backup-config") &&
     ($command != "call-method") &&
     ($command != "checkpam") &&
     ($command != "custominfo") &&
+    ($command != "help") &&
+    ($command != "initialize-backend") &&
     ($command != "ldap-check") &&
     ($command != "ldap-users-list") &&
     ($command != "ldap-users-sync") &&
@@ -982,7 +1066,7 @@ if (($param_count < 1) &&
     ($command != "php-version") &&
     ($command != "version-only"))
 {
-    $command = "help";
+    $command = "noparam";
 }
 
 
@@ -996,7 +1080,7 @@ if ('' != $base_dir)
 
 // If an environment variable is defined, we use it
 $env_folder_path = getenv('MULTIOTP_PATH');
-if (($env_folder_path !== FALSE) && ($env_folder_path != ''))
+if (($env_folder_path !== false) && ($env_folder_path != ''))
 {
     $folder_path = $env_folder_path;
     $result = chdir($folder_path);
@@ -1014,7 +1098,7 @@ if (($command == "libhash") || ($command == "help"))
 {
     if (!isset($multiotp))
     {
-        $multiotp = new Multiotp('DefaultCliEncryptionKey', FALSE, $folder_path);
+        $multiotp = new Multiotp('DefaultCliEncryptionKey', false, $folder_path);
     }
 }
 else
@@ -1105,7 +1189,7 @@ switch ($command)
             $call_result = $multiotp->$call_method();
             if ($multiotp->GetVerboseFlag())
             {
-                $multiotp->WriteLog('Debug: Method '.$call_method.' returned the following result: '.print_r($call_result, TRUE), FALSE, FALSE, 19, 'Debug', '');
+                $multiotp->WriteLog('Debug: Method '.$call_method.' returned the following result: '.print_r($call_result, true), false, false, 19, 'Debug', '');
             }
             $result = 19;
         }
@@ -1121,7 +1205,7 @@ switch ($command)
         {
             if (!$multiotp->CheckUserExists($all_args[1]))
             {
-                if (FALSE !== strpos($all_args[1], ':'))
+                if (false !== strpos($all_args[1], ':'))
                 {
                     /*************************************************************************
                      * Here we check special cases
@@ -1146,7 +1230,7 @@ switch ($command)
                         $otp_inline = $part2;
                     }
                 }
-                if (FALSE !== strpos($all_args[1], '@'))
+                if (false !== strpos($all_args[1], '@'))
                 {
                     $cleaned_user = substr($all_args[1], 0, strpos($all_args[1], '@'));
                     if ($multiotp->CheckUserExists($cleaned_user))
@@ -1155,7 +1239,7 @@ switch ($command)
                         $multiotp->SetUser($all_args[1]);
                     }
                 }
-                elseif (FALSE !== strpos($all_args[1], "\\"))
+                elseif (false !== strpos($all_args[1], "\\"))
                 {
                     $cleaned_user = substr($all_args[1], strpos($all_args[1], "\\")+1);
                     if ($multiotp->CheckUserExists($cleaned_user))
@@ -1193,28 +1277,17 @@ switch ($command)
         }
         else
         {
-            $sync_info = '';
-            if ($multiotp->IsAutoResync())
-            {
-                if (strlen($all_args[2]) == strlen($all_args[3]))
+            // Resynchronization information splitting (for autoresync) is now handled in CheckToken directly
+            if ('' != $all_args[3]) {
+                for ($i = 3; $i <= $all_args_size; $i++)
                 {
-                    $sync_info = $all_args[3];
-                }
-                elseif ((FALSE !== strpos($all_args[2], ' ')) && ((strlen($all_args[2]) % 2) > 0))
-                {
-                    $space_pos = strpos($all_args[2], ' ');
-                    if ($space_pos == ((strlen($all_args[2]) -1) / 2))
+                    if ('' != $all_args[$i])
                     {
-                        $sync_info = substr($all_args[2],$space_pos);
-                        $all_args[2] = substr($all_args[2],0, $space_pos);
+                        $all_args[2] = $all_args[2]." ".$all_args[$i];
                     }
                 }
             }
-            elseif ("" != $all_args[3])
-            {
-                $all_args[2] = $all_args[2]." ".$all_args[3];
-            }
-            $result = $multiotp->CheckToken($all_args[2], $sync_info, FALSE, FALSE, FALSE, FALSE, $self_registration); // Result provided by the MultiOTP class
+            $result = $multiotp->CheckToken($all_args[2], '', false, false, false, false, $self_registration); // Result provided by the MultiOTP class
             if (($multiotp->IsAutoResync()) && (14 == $result))
             {
                 $result = 0;
@@ -1240,11 +1313,11 @@ switch ($command)
         break;
     case "create":
     case "update":
-        if (("create" == $command) && $multiotp->ReadUserData($all_args[1], TRUE, TRUE))
+        if (("create" == $command) && $multiotp->ReadUserData($all_args[1], true, true))
         {
             $result = 22; // ERROR: user already exists.
         }
-        elseif (("update" == $command) && (!$multiotp->ReadUserData($all_args[1], FALSE, TRUE)))
+        elseif (("update" == $command) && (!$multiotp->ReadUserData($all_args[1], false, true)))
         {
             $result = 21; // ERROR: user doesn't exist.
         }
@@ -1307,16 +1380,16 @@ switch ($command)
                 else
                 {
                     $multiotp->SetUserPin($all_args[4]);
-                    if ("" == $all_args[5])
+                    if ('' == $all_args[5])
                     {
-                        $all_args[5] = 6; // Default numnber of digits is set to 6
+                        $all_args[5] = 6; // Default number of digits is set to 6
                     }
                     $multiotp->SetUserTokenNumberOfDigits($all_args[5]);
                     switch (strtoupper($all_args[2]))
                     {
                         // This is the time interval for mOTP
                         case "MOTP":
-                            if ("" == $all_args[6])
+                            if ('' == $all_args[6])
                             {
                                 $all_args[6] = 10; // Default windows value interval for mOTP
                             }
@@ -1324,7 +1397,7 @@ switch ($command)
                             break;
                         // This is the time interval for TOTP
                         case "TOTP":
-                            if ("" == $all_args[6])
+                            if ('' == $all_args[6])
                             {
                                 $all_args[6] = 30; // Default windows value interval for TOTP
                             }
@@ -1333,7 +1406,7 @@ switch ($command)
                         // This is the next event for HOTP
                         case "HOTP":
                         default:
-                            if ("" == $all_args[6])
+                            if ('' == $all_args[6])
                             {
                                 $all_args[6] = 0; // Default next event
                             }
@@ -1496,7 +1569,7 @@ switch ($command)
         $result = 19;
         break;
     case "set":
-        $write_user_data = FALSE;
+        $write_user_data = false;
         if  ($param_count < 2)
         {
             $result = 30; // ERROR: At least one parameter is missing
@@ -1516,33 +1589,33 @@ switch ($command)
                     {
                         case 'description':
                             $multiotp->SetUserDescription($actual_array[1]);
-                            $write_user_data = TRUE;
+                            $write_user_data = true;
                             break;
                         case 'email':
                             $multiotp->SetUserEmail($actual_array[1]);
-                            $write_user_data = TRUE;
+                            $write_user_data = true;
                             break;
                         case 'pin':
                             $multiotp->SetUserPin($actual_array[1]);
-                            $write_user_data = TRUE;
+                            $write_user_data = true;
                             break;
                         case 'ldap-pwd':
                             $multiotp->$multiotp->SetUserRequestLdapPassword(intval($actual_array[1]));
-                            $write_user_data = TRUE;
+                            $write_user_data = true;
                             break;
                         case 'prefix-pin':
                             $multiotp->$multiotp->SetUserPrefixPin(intval($actual_array[1]));
-                            $write_user_data = TRUE;
+                            $write_user_data = true;
                             break;
                         case 'sms':
                             $multiotp->SetUserSms($actual_array[1]);
-                            $write_user_data = TRUE;
+                            $write_user_data = true;
                             break;
                         default: // Just in case we need to change additional values that have no related method
                             $internal_user_option = str_replace("-", "_", $actual_array[0]);
                             if ($multiotp->SetUserAttribute($internal_user_option, $actual_array[1]))
                             {
-                                $write_user_data = TRUE;
+                                $write_user_data = true;
                             }
                             break;
                     }
@@ -1558,8 +1631,8 @@ switch ($command)
         }
         break;
     case "config":
-        $config_result = TRUE;
-        $write_config_data = FALSE;
+        $config_result = true;
+        $write_config_data = false;
         if  ($param_count < 1)
         {
             $result = 30; // ERROR: At least one parameter is missing
@@ -1578,223 +1651,223 @@ switch ($command)
                             $internal_config_option = str_replace("-", "_", $actual_array[0]);
                             if ($multiotp->SetConfigAttribute($internal_config_option, $actual_array[1]))
                             {
-                                $write_config_data = TRUE;
+                                $write_config_data = true;
                             }
                             break;
                         case 'autoresync':
                             $multiotp->SetAutoResync($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'backend-type':
                             $multiotp->SetBackendType($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'clear-otp-attribute':
                             $multiotp->SetClearOtpAttribute($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'debug':
                             $multiotp->SetDebugOption(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'display-log':
                             $multiotp->SetDisplayLogOption(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'debug-prefix':
                             $multiotp->SetVerboseLogPrefix($actual_array[1]);
                             $verbose_prefix = $multiotp->GetVerboseLogPrefix();
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'default-request-prefix-pin':
                             $multiotp->SetDefaultRequestPrefixPin(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'default-request-ldap-pwd':
                             $multiotp->SetDefaultRequestLdapPwd(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'group-attribute':
                             $multiotp->SetGroupAttribute($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'issuer':
                             $multiotp->SetIssuer($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-account-suffix':
                             $multiotp->SetLdapAccountSuffix($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-activated':
                             $multiotp->SetLdapActivated($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-base-dn':
                             $multiotp->SetLdapBaseDn($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-bind-dn':
                             $multiotp->SetLdapBindDn($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-cn-identifier':
                             $multiotp->SetLdapCnIdentifier($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-domain-controllers':
                             $multiotp->SetLdapDomainControllers($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-group-attribute':
                             $multiotp->SetLdapGroupAttribute($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-group-cn-identifier':
                             $multiotp->SetLdapGroupCnIdentifier($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-in-group':
                             $multiotp->SetLdapInGroup($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-network-timeout':
                             $multiotp->SetLdapNetworkTimeout(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-port':
                             $multiotp->SetLdapPort(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-server-password':
                             $multiotp->SetLdapServerPassword($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-server-type':
-                            $multiotp->SetLdapServerType(intval($actual_array[1]), TRUE);
-                            $write_config_data = TRUE;
+                            $multiotp->SetLdapServerType(intval($actual_array[1]), true);
+                            $write_config_data = true;
                             break;
                         case 'ldap-ssl':
                             $multiotp->SetLdapSsl($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'ldap-time-limit':
                             $multiotp->SetLdapTimeLimit(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'log':
                             $multiotp->SetLogOption(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'radius-reply-attributor':
                             $multiotp->SetRadiusReplyAttributor($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'radius-reply-separator':
                             $multiotp->SetRadiusReplySeparator($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'self-registration':
                             $multiotp->SetSelfRegistration(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'server-cache-level':
                             $multiotp->SetServerCacheLevel(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'server-cache-lifetime':
                             $multiotp->SetServerCacheLifetime(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'server-secret':
                             $multiotp->SetServerSecret($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'server-timeout':
                             $multiotp->SetServerTimeout(intval($actual_array[1]));
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'server-type':
                             $multiotp->SetServerType($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'server-url':
                             $multiotp->SetServerUrl($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sms-api-id':
                             $multiotp->SetSmsApiId($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sms-message':
                             $multiotp->SetSmsMessage($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sms-originator':
                             $multiotp->SetSmsOriginator($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sms-password':
                             $multiotp->SetSmsPassword($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sms-provider':
                             $multiotp->SetSmsProvider($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sms-userkey':
                             $multiotp->SetSmsUserkey($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sql-server':
                             $multiotp->SetSqlServer($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sql-username':
                             $multiotp->SetSqlUsername($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sql-password':
                             $multiotp->SetSqlPassword($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sql-database':
                             $multiotp->SetSqlDatabase($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sql-config-table':
                             $multiotp->SetSqlTableName('config',$actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sql-devices-table':
                             $multiotp->SetSqlTableName('devices',$actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sql-log-table':
                             $multiotp->SetSqlTableName('log',$actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sql-tokens-table':
                             $multiotp->SetSqlTableName('tokens',$actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'sql-users-table':
                             $multiotp->SetSqlTableName('users',$actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'tel-default-country-code':
                             $multiotp->SetTelDefaultCountryCode($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         case 'token-serial-number-length':
                             $multiotp->SetTokenSerialNumberLength($actual_array[1]);
-                            $write_config_data = TRUE;
+                            $write_config_data = true;
                             break;
                         default: // Just in case we need to change additional values that have no related method
                             $internal_config_option = str_replace("-", "_", $actual_array[0]);
                             if ($multiotp->SetConfigAttribute($internal_config_option, $actual_array[1]))
                             {
-                                $write_config_data = TRUE;
+                                $write_config_data = true;
                             }
                             break;
                     }
@@ -1977,7 +2050,7 @@ switch ($command)
         }
         else
         {
-            if (FALSE !== ($url_result = $multiotp->GetUserTokenUrlLink($all_args[1])))
+            if (false !== ($url_result = $multiotp->GetUserTokenUrlLink($all_args[1])))
             {
                 echo $url_result.$crlf;
                 $result = 17; // INFO: UrlLink successfully created.
@@ -2024,7 +2097,7 @@ switch ($command)
         }
         break;
     case "ldap-user-info":
-        print_r($multiotp->GetLdapUsersInfoArray($all_args[1], TRUE, TRUE));
+        print_r($multiotp->GetLdapUsersInfoArray($all_args[1], true, true));
         $result = 19;
         break;
     case "ldap-users-sync":
@@ -2041,28 +2114,27 @@ switch ($command)
         $result = (($multiotp->CheckUserLdapPassword($all_args[1],$all_args[2]))?19:99);
         break;
     case "fastcreate":
-        if ($multiotp->CheckUserExists($all_args[1]))
-        {
+    case "fastcreatenopin":
+    case "fastcreatewithpin":
+        if ($multiotp->CheckUserExists($all_args[1])) {
             $result = 22; // ERROR: user already exists.
-        }
-        elseif  ($param_count < 1)
-        {
+        } elseif  ($param_count < 1) {
             $result = 30; // ERROR: At least one parameter is missing
-        }
-        else
-        {
-            if ($multiotp->CreateUser($all_args[1], $prefix_pin?1:0, "TOTP", '', (''!=$all_args[2])?$all_args[2]:''))
-            {
-                $result = 11; // INFO: user successfully created or updated
+        } else {
+            if ('fastcreatenopin' == $command) {
+                $prefix_pin = false;
+            } elseif ('fastcreatewithpin' == $command) {
+                $prefix_pin = true;
             }
-            else
-            {
+            if ($multiotp->CreateUser($all_args[1], $prefix_pin?1:0, "TOTP", '', (''!=$all_args[2])?$all_args[2]:'')) {
+                $result = 11; // INFO: user successfully created or updated
+            } else {
                 $result = 35; // ERROR: user not created
             }
         }
         break;
     case "createga":
-        if ($multiotp->ReadUserData($all_args[1], TRUE))
+        if ($multiotp->ReadUserData($all_args[1], true))
         {
             $result = 22; // ERROR: user already exists.
         }
@@ -2093,6 +2165,19 @@ switch ($command)
         echo $multiotp->GetCustomInfo()."\n";
         $result = 19;
         break;
+    case "noparam":
+        $result = 30;
+        echo $multiotp->GetClassName()." ".$multiotp->GetVersion()." (".$multiotp->GetDate().")";
+        if (!$no_php_info) {
+            echo ", running with embedded PHP version ".phpversion();
+        }
+        echo $crlf;
+        echo $multiotp->GetCopyright().$crlf;
+        echo $multiotp->GetWebsite()."   (you can try the [Donate] button ;-)".$crlf;
+        echo $crlf;
+        echo "Not enough parameters, type multiotp -help for information about the options.";
+        echo $crlf;
+        break;
     case "error":
         break;
     case "help":
@@ -2102,7 +2187,11 @@ switch ($command)
         {
             $result = 999; // Info only
             echo $multiotp->GetClassName()." ".$multiotp->GetVersion()." (".$multiotp->GetDate().")";
-            echo ", running with embedded PHP version ".phpversion().$crlf;
+            if (!$no_php_info)
+            {
+                echo ", running with embedded PHP version ".phpversion();
+            }
+            echo $crlf;
             echo $multiotp->GetCopyright().$crlf;
             echo $multiotp->GetWebsite()."   (you can try the [Donate] button ;-)".$crlf;
             echo $crlf;
@@ -2117,7 +2206,7 @@ switch ($command)
                 {
                     echo "base_dir option folder: ".$folder_path.$crlf;
                 }
-                if (($env_folder_path !== FALSE) && ($env_folder_path != ''))
+                if (($env_folder_path !== false) && ($env_folder_path != ''))
                 {
                     echo "MULTIOTP_PATH variable folder: ".$env_folder_path.$crlf;
                 }
@@ -2128,7 +2217,7 @@ switch ($command)
             echo "algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226) ".$crlf;
             echo "and OATH/TOTP (RFC 6238) are implemented). PSKC format supported (RFC 6030).".$crlf;
             echo "Supported encryption methods are PAP and CHAP.".$crlf;
-            echo "YubicoOTP format supported (44 bytes long, with prefixed serial number).".$crlf;
+            echo "Yubico OTP format supported (44 bytes long, with prefixed serial number).".$crlf;
             echo "SMS-code are supported (current providers: aspsms,clickatell,intellisms).".$crlf;
             echo "Customized SMS sender program supported by specifying exec as SMS provider.".$crlf;
             echo $crlf;
@@ -2136,8 +2225,15 @@ switch ($command)
             echo "Google Authenticator TOTP tokens must have a 30 seconds interval.".$crlf;
             echo "Available characters in base32 are only ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".$crlf;
             echo $crlf;
-            echo "To quickly create a user, use the -fascreate option with the name of the user.".$crlf;
+            echo "To quickly create a user, use the -fastcreate option with the name of the user.".$crlf;
             echo "A quickly created user is compatible with Google Auth (30 seconds, 6 digits).".$crlf;
+            echo "Depending on the prefix PIN option (WHICH IS ENABLED BY DEFAULT), a prefix PIN".$crlf;
+            echo "will be requested or not before the displayed token.".$crlf;
+            echo "If the PIN is not given, it is generated randomly.".$crlf;
+            echo $crlf;
+            echo "To quickly create a user without a prefix PIN request, use -fastcreatenopin".$crlf;
+            echo $crlf;
+            echo "To quickly create a user with a prefix PIN request, use -fastecreatewithpin".$crlf;
             echo $crlf;
             echo "If a token is locked (return code 24), you have to resync the token to unlock.".$crlf;
             echo "Requesting an SMS token (put sms as the password), and typing the received".$crlf;
@@ -2156,11 +2252,13 @@ switch ($command)
             reset($multiotp->_errors_text);
             while(list($key, $value) = each($multiotp->_errors_text))
             {
-                echo substr('  '.$key,-2)." ".$value.$crlf;
+                echo substr('  '.$key,-2)." ".$value."  ".$crlf;
             }
             echo $crlf;
             echo $crlf;
             echo "Usage:".$crlf;
+            echo $crlf;
+            echo " PLEASE NOT THAT BY DEFAULT, A PREFIX PIN IS REQUIRED.".$crlf;
             echo $crlf;
             echo " multiotp user token (to check if the token is accepted)".$crlf;
             echo " multiotp -checkpam (to check with pam-script, using PAM_USER and PAM_AUTHTOK)".$crlf;
@@ -2172,9 +2270,11 @@ switch ($command)
             echo "   (the first byte of the chap-password value can contain the chap-id value)".$crlf;
             echo $crlf;
             echo " multiotp -fastcreate user [pin] (create a Google Auth compatible token)".$crlf;
+            echo " multiotp -fastcreatenopin user [pin] (create a user without a prefix PIN)".$crlf;
+            echo " multiotp -fastecreatewithpin user [pin] (create a user with a prefix PIN)".$crlf;
             echo " multiotp -createga user base32_seed [pin] (create Google Authenticator user)".$crlf;
-            echo " multiotp -create [-prefix-pin] user algo seed pin digits [pos|interval]".$crlf;
-            echo " multiotp -create -token-id [-prefix-pin] user token-id pin".$crlf;
+            echo " multiotp -create [-no-prefix-pin] user algo seed pin digits [pos|interval]".$crlf;
+            echo " multiotp -create -token-id [-no-prefix-pin] [-prefix-pin] user token-id pin".$crlf;
             echo $crlf;
             echo "  token-id: id of the previously imported token to attribute to the user".$crlf;
             echo "      user: name of the user (should be the account name)".$crlf;
@@ -2332,6 +2432,8 @@ switch ($command)
             echo " -mysql          MySQL connection information, comma separated (server,user,".$crlf;
             echo "                 password,database[,log_table[,users_table[,tokens_table]]])".$crlf;
             echo "                 (this switch is DEPRECATED, use the -config switch instead)".$crlf;
+            echo " -no-prefix-pin  No prefix pin must be merged with the token by the user".$crlf;
+            echo "                 (this switch is DEPRECATED, use the -set switch instead)".$crlf;
             echo " -param          All parameters are logged for debugging purposes".$crlf;
             echo " -prefix-pin     The pin and the token must be typed merged by the user".$crlf;
             echo "                 (if you pin is 1234 and your token displays 5556677,".$crlf;
@@ -2419,16 +2521,16 @@ switch ($command)
             echo "must be called like this: C:\multiotp\multiotp.exe %ietf|1% %ietf|2%".$crlf;
             echo $crlf;
             echo "Some of other products and services based on multiOTP".$crlf;
-            echo " multiOTP Pro 405V  a Pro version with full web GUI in a tiny virtual appliance".$crlf;
-            echo "                    (http://www.multiOTP.com)".$crlf;
-            echo " multiOTP Pro 420B  a Pro version with full web GUI in a tiny hardware device".$crlf;
-            echo "                    (http://www.multiOTP.com)".$crlf;
-            echo " secuPASS.net       a simple SMS trusting service for free WLAN Hotspot".$crlf;
-            echo "                    (http://www.secuPASS.net)".$crlf;
-            echo " mOTP-CP            an Open-Source Credential Provider for the Windows Logon".$crlf;
-            echo "                    (http://goo.gl/BZAhKR)".$crlf;
-            echo " ownCloud OTP       a One Time Password app for ownCloud (http://owncloud.org)".$crlf;
-            echo "                    (http://apps.owncloud.com/content/show.php/?content=159196)".$crlf;
+            echo " - multiOTP Pro 405V  Pro version with full web GUI in a tiny virtual appliance".$crlf;
+            echo "                      (http://www.multiOTP.com)".$crlf;
+            echo " - multiOTP Pro 420B  Pro version with full web GUI in a tiny hardware device".$crlf;
+            echo "                      (http://www.multiOTP.com)".$crlf;
+            echo " - secuPASS.net       simple SMS trusting service for free WLAN Hotspot".$crlf;
+            echo "                      (http://www.secuPASS.net)".$crlf;
+            echo " - mOTP-CP            an Open-Source Credential Provider for the Windows Logon".$crlf;
+            echo "                      (http://goo.gl/YDWZm3)".$crlf;
+            echo " - ownCloud OTP       One Time Password app for ownCloud (http://owncloud.org)".$crlf;
+            echo "                      (http://goo.gl/mKjt43)".$crlf;
             echo $crlf;
             echo "Visit http://forum.multiotp.net/ for additional support".$crlf;
             echo $crlf;
@@ -2456,13 +2558,13 @@ if ($command != "libhash")
                 $param_info .= $one_arg.' ';
             }
         }
-        $multiotp->WriteLog('Debug: Parameters are: '.trim($param_info), FALSE, FALSE, 8888, 'Debug', '');
+        $multiotp->WriteLog('Debug: Parameters are: '.trim($param_info), false, false, 8888, 'Debug', '');
     }
 
 
-    if (999 == $result) // Help information only, we don't want to display the result code in this case
+    if (999 == $result) // Help page only, we don't want to display the result code in this case
     {
-        $result = 19;
+        $result = 30; // ERROR: At least one parameter is missing
     }
     else
     {
@@ -2485,7 +2587,7 @@ if ($command != "libhash")
         }
         if ($multiotp->GetVerboseFlag())
         {
-            $multiotp->WriteLog('Debug: '.$result_log, FALSE, TRUE, 8888, 'Debug', '');
+            $multiotp->WriteLog('Debug: '.$result_log, false, true, 8888, 'Debug', '');
         }
         if ($multiotp->GetDisplayLogFlag())
         {
@@ -2500,13 +2602,13 @@ if ($command != "libhash")
             $ignore_radius_array = explode(";","xxxx;yyyy");
             foreach ($multiotp->GetReplyArrayForRadius() as $one_radius_message)
             {
-                $ignore_attribute = FALSE;
+                $ignore_attribute = false;
                 $current_attribute = trim(substr($one_radius_message, 0, strpos($one_radius_message, trim($multiotp->GetRadiusReplyAttributor()))));
                 foreach ($ignore_radius_array as $one_ignore_attribute)
                 {
-                    if (FALSE !== strpos(strtoupper($current_attribute),strtoupper($one_ignore_attribute)))
+                    if (false !== strpos(strtoupper($current_attribute),strtoupper($one_ignore_attribute)))
                     {
-                        $ignore_attribute = TRUE;
+                        $ignore_attribute = true;
                     }
                 }
                 if (!$ignore_attribute)
@@ -2528,7 +2630,7 @@ if ($command != "libhash")
         {
             if ($multiotp->GetVerboseFlag())
             {
-                $multiotp->WriteLog('Debug: Attributes sent to the RADIUS server: '.$radius_additional, FALSE, FALSE, 8888, 'Debug', '');
+                $multiotp->WriteLog('Debug: Attributes sent to the RADIUS server: '.$radius_additional, false, false, 8888, 'Debug', '');
             }
           echo $radius_additional."\r\n";
         }

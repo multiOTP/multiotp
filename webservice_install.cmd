@@ -5,11 +5,11 @@ REM multiOTP - Strong two-factor authentication web service
 REM http://www.multiotp.net
 REM
 REM      Filename: webservice_install.cmd
-REM       Version: 4.0.7
+REM       Version: 4.3.2.5
 REM      Language: Windows batch file for Windows 2K/XP/2003/7/2008/8/2012
 REM     Copyright: SysCo systèmes de communication sa
+REM Last modified: 2015-07-15 SysCo/al
 REM       Created: 2013-08-19 SysCo/al
-REM Last modified: 2013-08-26 SysCo/al
 REM      Web site: http://developer.sysco.ch/multiotp/
 REM         Email: developer@sysco.ch
 REM
@@ -28,7 +28,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2014 SysCo systemes de communication sa
+REM   Copyright (c) 2010-2015 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systèmes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -38,12 +38,13 @@ REM
 REM
 REM Change Log
 REM
-REM   2014-02-24 4.2.1 SysCo/al Adding md5.js redirector
-REM   2013-08-26 4.0.7 SysCo/al Adding no web display parameter
-REM   2013-08-25 4.0.6 SysCo/al Service can also be set in the command line
-REM                             (webservice_install [http_port [https_port [service_tag [service_name]]]])
-REM   2013-08-21 4.0.5 SysCo/al Ports can be set in the command line
-REM   2013-08-19 4.0.4 SysCo/al Initial release
+REM   2015-07-15 4.3.2.5 SysCo/al Version synchronisation
+REM   2014-02-24 4.2.1   SysCo/al Adding md5.js redirector
+REM   2013-08-26 4.0.7   SysCo/al Adding no web display parameter
+REM   2013-08-25 4.0.6   SysCo/al Service can also be set in the command line
+REM                               (webservice_install [http_port [https_port [service_tag [service_name]]]])
+REM   2013-08-21 4.0.5   SysCo/al Ports can be set in the command line
+REM   2013-08-19 4.0.4   SysCo/al Initial release
 REM
 REM ************************************************************
 
@@ -75,6 +76,9 @@ REM Stop and delete the service (if already existing)
 SC stop %_service_tag% >NUL
 SC delete %_service_tag% >NUL
 
+SET _url_rewrite_patterns=
+IF "multiOTPserverTest"=="%_service_tag%" SET _url_rewrite_patterns=/check=%_folder%check.multiotp.class.php,
+
 REM Create the mongoose configuration file for the multiOTP web service
 ECHO # %_service_name%> "%_web_folder%webservice\mongoose.conf"
 ECHO.>> "%_web_folder%webservice\mongoose.conf"
@@ -85,7 +89,7 @@ ECHO index_files multiotp.server.php>> "%_web_folder%webservice\mongoose.conf"
 ECHO listening_ports %_web_port%,%_web_ssl_port%s>> "%_web_folder%webservice\mongoose.conf"
 ECHO document_root web_root>> "%_web_folder%webservice\mongoose.conf"
 ECHO ssl_certificate ssl_cert.pem>> "%_web_folder%webservice\mongoose.conf"
-ECHO url_rewrite_patterns /md5.js=%_folder%\md5.js,**=%_folder%\multiotp.server.php>> %_web_folder%webservice\mongoose.conf"
+ECHO url_rewrite_patterns %_url_rewrite_patterns%/md5.js=%_folder%md5.js,**=%_folder%multiotp.server.php>> %_web_folder%webservice\mongoose.conf"
 
 REM Create the service
 SC create %_service_tag% binPath= "%_web_folder%webservice\SRVANY.EXE" start= auto displayname= "%_service_name%" >NUL
@@ -111,6 +115,7 @@ IF NOT "%_no_web_display%"=="1" START http://127.0.0.1:%_web_port%
 
 REM Clean the environment variables
 SET _folder=
+SET _url_rewrite_patterns=
 SET _web_folder=
 SET _service_tag=
 SET _web_port=

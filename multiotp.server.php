@@ -27,17 +27,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <developer@sysco.ch>
- * @version   4.3.1.0
- * @date      2014-12-09
+ * @version   4.3.2.5
+ * @date      2015-07-15
  * @since     2013-08-06
- * @copyright (c) 2013-2014 SysCo systemes de communication sa
+ * @copyright (c) 2013-2015 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2014 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2015 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -80,6 +80,9 @@
  *
  * Change Log
  *
+ *   2015-07-15 4.3.2.5 SysCo/al Change of the admin password has been fixed
+ *   2015-06-10 4.3.2.3 SysCo/al Enhancements for the Dev(Talks): demo
+ *   2015-06-09 4.3.2.2 SysCo/al More option available from the GUI, Dev Talks Edition
  *   2014-12-09 4.3.1.0 SysCo/al Speed improvement (apc options have been tuned)
  *   2014-11-04 4.3.0.0 SysCo/al Updated GUI
  *   2014-04-13 4.2.4.2 SysCo/al Version synchronization
@@ -231,6 +234,43 @@ else
                 color: black;
                 text-decoration: none;
             }
+            
+            /*************************/
+            /* Custom colors - BEGIN */
+            body {
+                background-color: black;
+                color: white;
+                font-family: Verdana, Helvetica, Arial;
+                font-size: 10pt;
+                font-weight: normal;
+                text-decoration: none;
+            }
+            .custom_logo_white {
+                color: white;
+                font-weight: bold;
+                font-size: 20px;
+            }
+            .custom_logo_red {
+                color: red;
+                font-weight: bold;
+                font-size: 20px;
+            }
+            a {
+                color: white;
+                font-weight: bold;
+                text-decoration: none;
+            }
+            a:hover {
+                color: red;
+            }
+            .section_title a {
+                color: white;
+                text-decoration: none;
+            }
+            /* Custom colors - END */
+            /***********************/
+
+
         </style>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
         <script type="text/javascript" src="md5.js"></script>
@@ -240,11 +280,24 @@ else
 
             // Shared secret
             var hash_salt = '$hash_salt';
-            
+
             var selected_color = 'red';
             var unselected_color = 'black';
             var selected_background_color = '#e0e0e0';
             var unselected_background_color = '';
+            var succeeded_color = '#80ff80';
+            var failed_color = 'red';
+
+            /*************************/
+            /* Custom colors - BEGIN */
+
+            var selected_color = 'red';
+            var unselected_color = 'white';
+            var selected_background_color = '#303030';
+            var unselected_background_color = '';
+
+            /* Custom colors - END */
+            /***********************/
             
             function ChangeAdminPassword()
             {
@@ -327,6 +380,25 @@ else
                 {
                     document.getElementById('resync_otp1').select();
                     document.getElementById('resync_otp1').focus();
+                }
+            }
+
+            function CheckUserNow(check_user_user, check_user_otp)
+            {
+                var result = eval(RemoteCall('CheckToken', check_user_user+"\t"+check_user_otp));
+                UpdatePage();
+                if ('true' == result)
+                {
+                    document.getElementById('check_user_result').innerHTML = '<span style="color:'+succeeded_color+';">succeeded</span>';
+                    document.getElementById('check_user_user').value = '';
+                    document.getElementById('check_user_otp').value = '';
+                }
+                else
+                {
+                    document.getElementById('check_user_result').innerHTML = '<span style="color:'+failed_color+';">failed ('+result+')</span>';
+                    document.getElementById('check_user_user').select();
+                    document.getElementById('check_user_user').focus();
+                    document.getElementById('check_user_otp').value = '';
                 }
             }
 
@@ -474,7 +546,12 @@ else
 
             function Toggle(my_section, set_value)
             {
-                var all_sections = ['add_user', 'change_password', 'import_tokens', 'resync', 'list_tokens'];
+                var all_sections = ['add_user', 'change_password', 'import_tokens', 'resync', 'check_user', 'list_tokens'];
+
+                // Flush the check section
+                document.getElementById('check_user_user').value = '';
+                document.getElementById('check_user_otp').value = '';
+                document.getElementById('check_user_result').innerHTML = '';
 
                 set_value = typeof set_value !== 'undefined' ? set_value : '';
                 
@@ -532,6 +609,17 @@ else
                         ifrm.document.open();
                         ifrm.document.write('Waiting...');
                         ifrm.document.close();
+                    }
+                    else if ('resync' == my_section) {
+                        document.getElementById('resync_user').select();
+                        document.getElementById('resync_user').focus();
+                        document.getElementById('resync_otp1').value = '';
+                        document.getElementById('resync_otp2').value = '';
+                    }
+                    else if ('check_user' == my_section)
+                    {
+                        document.getElementById('check_user_user').select();
+                        document.getElementById('check_user_user').focus();
                     }
                 }
                 else
@@ -732,6 +820,12 @@ else
         <br />
         $class_name $class_version $class_date
         <br />
+        <!-- div id="custom_info">
+            <br />
+            <span class="custom_logo_white">Dev</span><span class="custom_logo_red">(</span><span class="custom_logo_white">Talks</span><span class="custom_logo_red">)</span><span class="custom_logo_white">: Edition</span>
+            <br />
+            <br />
+        </div -->
         Web service is ready $actual_date
         $rpi_info<hr />
         <div id="login_section">
@@ -797,7 +891,7 @@ else
                 <table>
                     <tr>
                         <th>
-                            Import tokens definition file (PSKC, Authenex, SafeWord (alpine.dat), ZyXEL):
+                            Import tokens definition file (OATH PSKC, Yubico, etc.):
                         </th>
                         <td>
                             <input type="file" name="token_file" id="token_file" />
@@ -945,6 +1039,44 @@ else
                 </table>
             </form>
             </div>
+            <div class="section_title" id="check_user_title"><a href="#" onclick="Toggle('check_user');"><span id="check_user_toggle">[+]</span> <span id="check_user_text">Check a user</span></a></div>
+            <div id="check_user_section" style="display:none;">
+            <form>
+                <table>
+                    <tr>
+                        <th>
+                            User to check:
+                        </th>
+                        <td>
+                            <input type="text" name="check_user_user" id="check_user_user" length="50" value="" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                             OTP (with prefix if needed):
+                        </th>
+                        <td>
+                            <input type="text" name="check_user_otp" id="check_user_otp" length="50" value="" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                        </th>
+                        <td>
+                            <button type="button" onclick="CheckUserNow(document.getElementById('check_user_user').value, document.getElementById('check_user_otp').value);">Check now</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            Test result: 
+                        </th>
+                        <td>
+                            <span id="check_user_result"></span>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            </div>
             <hr />
             <div class="section_title" id="list_users_title"><span id="list_users_toggle"></span><span id="list_users_text"><span id="userstitle">List of users</span></span> <span class="info" id="userscounter"></span></div>
             <div id="list_users_section" style="display:block;">
@@ -1079,8 +1211,23 @@ EOWEBPAGE;
                                 }
                             }
                             break;
+                        case strtoupper("CheckToken"):
+                            $ajax_result = '21 '.$multiotp->GetErrorText(21);
+                            if ($multiotp->ReadUserData($options_array[0]))
+                            {
+                                $result = $multiotp->CheckToken($options_array[1]);
+                                if (0 == $result)
+                                {
+                                    $ajax_result = "true";
+                                }
+                                else
+                                {
+                                    $ajax_result = $result.' '.$multiotp->GetErrorText($result);
+                                }
+                            }
+                            break;
                         case strtoupper("SetAdminPasswordHash"):
-                            if ($this->IsDemoMode())
+                            if ($multiotp->IsDemoMode())
                             {
                                 $result = "false";
                             }

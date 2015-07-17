@@ -5,11 +5,11 @@ REM multiOTP - Strong two-factor authentication radius server
 REM http://www.multiotp.net
 REM
 REM      Filename: radius_install.cmd
-REM       Version: 4.2.4
+REM       Version: 4.3.2.5
 REM      Language: Windows batch file for Windows 2K/XP/2003/7/2008/8/2012
 REM     Copyright: SysCo systèmes de communication sa
+REM Last modified: 2015-07-15 SysCo/al
 REM       Created: 2013-08-20 SysCo/al
-REM Last modified: 2014-03-27 SysCo/al
 REM      Web site: http://developer.sysco.ch/multiotp/
 REM         Email: developer@sysco.ch
 REM
@@ -28,7 +28,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2014 SysCo systemes de communication sa
+REM   Copyright (c) 2010-2015 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systèmes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -44,13 +44,14 @@ REM
 REM
 REM Change Log
 REM
-REM   2014-03-27 4.2.4 SysCo/al More generic usage
-REM   2013-08-25 4.0.6 SysCo/al Service can also be set in the command line
-REM                             (radius_install [auth_port [account_port [service_tag [service_name]]]])
-REM   2013-08-21 4.0.5 SysCo/al Fix the mix between _port and _auth_port in the script
-REM                             The service is now *really* using the defined ports
-REM                             Ports can be set in the command line
-REM   2013-08-20 4.0.4 SysCo/al Initial release
+REM   2015-07-15 4.3.2.5 SysCo/al Replace the localhost configuration by 222.222.222.222
+REM   2014-03-27 4.2.4   SysCo/al More generic usage
+REM   2013-08-25 4.0.6   SysCo/al Service can also be set in the command line
+REM                               (radius_install [auth_port [account_port [service_tag [service_name]]]])
+REM   2013-08-21 4.0.5   SysCo/al Fix the mix between _port and _auth_port in the script
+REM                               The service is now *really* using the defined ports
+REM                               Ports can be set in the command line
+REM   2013-08-20 4.0.4   SysCo/al Initial release
 REM
 REM ************************************************************
 
@@ -109,7 +110,10 @@ COPY "%_radius_folder%radius\etc\raddb\radiusd.template.conf" "%_radius_folder%r
 
 REM Customize the etc/raddb/clients.conf configuration file
 COPY "%_radius_folder%radius\etc\raddb\clients.template.conf" "%_radius_folder%radius\etc\raddb\clients.conf" /Y >NUL
+
 %_tools_folder%tools\FART "%_radius_folder%radius\etc\raddb\clients.conf" "_radius_secret" "%_radius_secret%" >NUL
+%_tools_folder%tools\FART "%_radius_folder%radius\etc\raddb\clients.conf" "ipaddr = 127.0.0.1" "ipaddr = 222.222.222.222" >NUL
+%_tools_folder%tools\FART "%_radius_folder%radius\etc\raddb\clients.conf" "client localhost" "client 222.222.222.222" >NUL
 
 REM Create the service
 SC create %_service_tag% binPath= "%_radius_folder%radius\SRVANY.EXE" start= auto displayname= "%_service_name%" >NUL

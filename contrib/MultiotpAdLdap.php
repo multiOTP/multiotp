@@ -2,7 +2,7 @@
 /*
     PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY
     Version 2.1+
-	Adapted 2013-2014 by SysCo/al
+	Adapted 2013-2015 by SysCo/al 4.3.2.2 (2015-06-09)
 
     Written by Scott Barnett
     email: scott@wiggumworld.com
@@ -110,6 +110,7 @@ class MultiotpAdLdap {
     var $_error_no; // Added by SysCo/al
     var $_ldap_server_type; // Added by SysCo/al
     var $_oui_sr; // Added by SysCo/al
+    var $_debug_message; // Added by SysCo/al 4.3.2.2
     var $_warning_message; // Added by SysCo/al
     var $_server_reachable; // Added by SysCo/al
 
@@ -128,6 +129,7 @@ class MultiotpAdLdap {
         $this->_error_no = 0; // Added by SysCo/al
         $this->_ldap_server_type = 1; // Added by SysCo/al
         $this->_oui_sr = NULL; // Added by SysCo/al
+        $this->_debug_message = ''; // Added by SysCo/al
         $this->_warning_message = ''; // Added by SysCo/al
         $this->_server_reachable = FALSE; // Added by SysCo/al
 
@@ -277,6 +279,13 @@ class MultiotpAdLdap {
             $this->_error = FALSE;
         }
         return ($connected);
+    }
+
+
+	// Added 2015-06-07 by SysCo/al
+    function get_debug_message()
+    {
+        return trim($this->_debug_message);
     }
 
 
@@ -529,6 +538,7 @@ class MultiotpAdLdap {
     // Return a complete list of "groups in groups"	
 	// Cache added 2014-07-21 by SysCo/al
     function recursive_groups($group, $cache_only = FALSE){
+        $this->_debug_message = "";
         $this->_warning_message = "";
         if ($group==NULL){ return (false); }
 
@@ -582,7 +592,7 @@ echo "\n";
 		}
         else
         {
-            $this->_warning_message = "The requested group $group is not in cache.";
+            $this->_debug_message = "The requested group $group is not in cache.";
         }
         return ($ret_groups);
     }
@@ -638,6 +648,41 @@ echo "\n";
         return (true);
     }
 
+    
+    // group_users($group_name)
+    //	Returns an array of users that are members of a group
+    function group_users($group_name=NUL){
+        $result = array();
+        if ($group_name==NULL){ return (false); }
+        if (!$this->_bind){ return (false); }
+        $filter="(&(|(objectClass=posixGroup)(objectClass=groupofNames))(".$this->_group_cn_identifier."=".$this->ldap_slashes($group_name)."))";
+
+        $fields=array("member","memberuid");
+        $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
+        $entries = $this->ldap_get_entries_raw($sr);
+
+        if (isset($entries[0]["member"][0]))
+        {
+            $result = $this->nice_names($entries[0]["member"]);
+            /*
+            for ($i=0; $i++; $i < $entries[0]["member"][count])
+            {
+                $result[] == ($entries[0]["member"][$i]);
+            }
+            */
+        }
+        elseif (isset($entries[0]["memberuid"][0]))
+        {
+            $result = $this->nice_names($entries[0]["memberuid"]);
+        }
+        else
+        {
+            $result = array();
+        }
+        return ($result);
+    }
+
+    
     // user_groups($user)
     //	Returns an array of groups that a user is a member off
     function user_groups($username,$recursive=NULL){
@@ -646,7 +691,8 @@ echo "\n";
         if (!$this->_bind){ return (false); }
         
         //search the directory for their information
-        $info=@$this->user_info($username,array($this->_group_attribute,"primarygroupid"));
+        $info=@$this->user_info($username,array($this->_group_attribute,"member","primarygroupid"));
+        
         $groups=$this->nice_names($info[0][$this->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
 
         if ($recursive){
@@ -655,7 +701,6 @@ echo "\n";
                 $groups=array_merge($groups,$extra_groups);
             }
         }
-        
         return ($groups);
     }
 
@@ -695,19 +740,13 @@ echo "\n";
             if (1 == $this->_ldap_server_type) // Active Directory
             {
                 $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$username."))";
-                if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","displayname","telephonenumber","primarygroupid","distinguishedname"); }
+                if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","description","displayname","telephonenumber","primarygroupid","distinguishedname"); }
             }
             else // Generic LDAP
             {
                 $filter = "(&(objectClass=posixAccount)(".$this->_cn_identifier."=".$username."))";
-                if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","displayname","telephonenumber","gidnumber","distinguishedname"); }
+                if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","gecos","description","displayname","telephonenumber","gidnumber","distinguishedname"); }
             }
-/*
-echo "DEBUG USER filter: $filter\n";
-$fields=array();
-echo "DEBUG (all) fields: \n";
-print_r($fields);
-*/
 
 			$this->_oui_sr = @ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
             if (4 == ldap_errno($this->_conn))
@@ -722,24 +761,26 @@ print_r($fields);
 		}
 		if ($one_entry = $this->ldap_get_one_entry_raw("ONE_USER", $first, $this->_oui_sr))
 		{
-
-/*
-echo "DEBUG USER an entry\n";
-print_r($one_entry);
-*/
+            $add_primary_group = FALSE;
 			if ($this->_real_primarygroup)
 			{
 				if (isset($one_entry["primarygroupid"][0]))
 				{
 					$one_entry[$this->_group_attribute][]=$this->group_cn($one_entry["primarygroupid"][0], $group_cn_cache_only);
+                    $add_primary_group = TRUE;
 				}
 			}
 			else
 			{
 				$one_entry[$this->_group_attribute][]="CN=Domain Users,CN=Users,".$this->_base_dn;
+                $add_primary_group = TRUE;
 			}
-			@$one_entry[$this->_group_attribute]["count"]++;
+            if ($add_primary_group)
+            {
+                @$one_entry[$this->_group_attribute]["count"]++;
+            }
 		}
+
 		return ($one_entry);
     }
 
@@ -750,7 +791,7 @@ print_r($one_entry);
         if (!$this->_bind){ return (false); }
 
         $filter = "(&(".$this->_cn_identifier."=".$username."))";
-        if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","displayname","telephonenumber","primarygroupid"); }
+        if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","description","displayname","gecos","telephonenumber","primarygroupid"); }
         $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
         $entries = $this->ldap_get_entries_raw($sr);
         
@@ -1081,13 +1122,6 @@ print_r($one_entry);
                     {
                         $entries[$i]["primarygrouptoken"][0] = (isset($entries[$i]["gidnumber"][0])?$entries[$i]["gidnumber"][0]:NULL);
                     }
-                    
-/*
-echo "DEBUG GROUP: entry primarygrouptoken: ".$entries[$i]["primarygrouptoken"][0];
-echo "\n";
-echo "DEBUG: entry cn: ".$entries[$i][$this->_group_cn_identifier][0];
-echo "\n";
-*/
 
                     if ($this->_cache_support)
                     {
@@ -1114,12 +1148,6 @@ echo "\n";
                 ldap_control_paged_result($this->_conn, 1000);
             }
 		}
-        
-/*
-echo "DEBUG GROUP\n";
-print_r($this->_cache_group_cn);
-*/
-
         return ($r);
     }
 
@@ -1188,14 +1216,29 @@ print_r($this->_cache_group_cn);
         for ($i=0; $i<$groups["count"]; $i++){ //for each group
             if (isset($groups[$i])) // Patched by SysCo/al
             {
-                $line=$groups[$i];
+                $line=trim($groups[$i]);
                 
                 if (strlen($line)>0){ 
-                    //more presumptions, they're all prefixed with CN=
+                    //more presumptions, they're all prefixed with CN= (but no more yet, patched by SysCo/al
                     //so we ditch the first three characters and the group
                     //name goes up to the first comma
                     $bits=explode(",",$line);
-                    $group_array[]=substr($bits[0],3,(strlen($bits[0])-3));
+                    if (1== count($bits))
+                    {
+                        $group_array[]=$bits[0];  // Patched by SysCo/al
+                    }
+                    else
+                    {
+                        $prefix_len=strpos($bits[0], "=");  // Patched by SysCo/al to allow also various length (not only 3)
+                        if (FALSE === $prefix_len)
+                        {
+                            $group_array[]=$bits[0];
+                        }
+                        else
+                        {
+                            $group_array[]=substr($bits[0],$prefix_len+1);  // Patched by SysCo/al
+                        }
+                    }
                 }
             }
         }

@@ -11,34 +11,80 @@ class MultiotpYubikey
  * @brief     Class definition for Yubikey handling.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.1.0
- * @date      2014-12-09
- * @since     2014-09-29
+ * @version   4.3.1.2
+ * @date      2014-12-22
+ * @since     2014-11-04
  */
 {
     // TODO: support Dvorak keyboard "jxe.uidchtnbpygk" instead of "cbdefghijklnrtuv" (automatic detection with "x.py" detected or keyboard unknown)
 
     // How to get a Yubico API Key: https://upgrade.yubico.com/getapikey/
-    var $_yubicloud_client_id       = 19042;                          // Client ID  (by default, this ID is for multiOTP open source)
-    var $_yubicloud_secret_key      = 'a72X/qkw3vPeT+yRO6lWgipwjPM='; // Secret Key (by default, this key is for multiOTP open source)
+    var $_yubicloud_client_id        = 19042;                          // Client ID  (by default, this ID is for multiOTP open source)
+    var $_yubicloud_secret_key       = 'a72X/qkw3vPeT+yRO6lWgipwjPM='; // Secret Key (by default, this key is for multiOTP open source)
 
-    var $_yubicloud_timeout         = 10;                 // YubiCloud timeout in seconds
-    var $_yubicloud_last_response   = array();            // YubiCloud last response array
-    var $_yubicloud_last_result     = '';                 // YubiCloud last result (text)
-    var $_yubicloud_max_time_window = 600;                // YubiCloud maximum time window in seconds
-	var $_yubico_modhex_chars       = "cbdefghijklnrtuv"; // ModHex values (instead of 0,1,2,3,4,5,6,7,8,9,0,a,b,c,d,e,f)
-    var $_yubico_otp_last_count     = -1;                 // Default value of the last otp counter
+    var $_yubicloud_timeout          = 10;                 // YubiCloud timeout in seconds
+    var $_yubicloud_last_response    = array();            // YubiCloud last response array
+    var $_yubicloud_last_result      = '';                 // YubiCloud last result (text)
+    var $_yubicloud_max_time_window  = 600;                // YubiCloud maximum time window in seconds
+	var $_yubico_modhex_chars        = "cbdefghijklnrtuv"; // ModHex values (instead of 0,1,2,3,4,5,6,7,8,9,0,a,b,c,d,e,f)
+	var $_yubico_modhex_dvorak_chars = "jxe.uidchtnbpygk"; // Dvorak ModHex values (instead of 0,1,2,3,4,5,6,7,8,9,0,a,b,c,d,e,f)
+	var $_yubico_dvorak_only_chars   = "x.py";             // Dvorak only chars
+    var $_yubico_otp_last_count      = -1;                 // Default value of the last otp counter
 
     
     function MultiotpYubikey($yubicloud_client_id = 0, $yubicloud_secret_key = '')
     {
         if (0 < intval($yubicloud_client_id))
         {
-            $this->$_yubicloud_client_id = $yubicloud_client_id;
+            $this->_yubicloud_client_id = $yubicloud_client_id;
         }
         if (28 == strlen($yubicloud_secret_key))
         {
             $this->_yubicloud_secret_key = $yubicloud_secret_key;
+        }
+    }
+
+
+    function CalculateHashHmac($algo, $data, $key, $raw_output = false)
+    {
+        if (function_exists('hash_hmac'))
+        {
+            return hash_hmac($algo, $data, $key, $raw_output);
+        }
+        else
+        {
+            /***********************************************************************
+             * Simulate the function hash_hmac if it is not available
+             *   (this function is natively available only for PHP >= 5.1.2)
+             *
+             * Source: http://www.php.net/manual/fr/function.hash-hmac.php#93440
+             *
+             * @author "KC Cloyd"
+             ***********************************************************************/
+            $algo = strtolower($algo);
+            $pack = 'H'.strlen($algo('test'));
+            $size = 64;
+            $opad = str_repeat(chr(0x5C), $size);
+            $ipad = str_repeat(chr(0x36), $size);
+
+            if (strlen($key) > $size)
+            {
+                $key = str_pad(pack($pack, $algo($key)), $size, chr(0x00));
+            }
+            else
+            {
+                $key = str_pad($key, $size, chr(0x00));
+            }
+
+            for ($i = 0; $i < strlen($key) - 1; $i++)
+            {
+                $opad[$i] = $opad[$i] ^ $key[$i];
+                $ipad[$i] = $ipad[$i] ^ $key[$i];
+            }
+
+            $output = $algo($opad.pack($pack, $algo($ipad.$data)));
+
+            return ($raw_output) ? pack($pack, $output) : $output;
         }
     }
 
@@ -101,7 +147,7 @@ class MultiotpYubikey
             $counter_position = ($useCtr * 256) + $sessionCtr;
             if ($counter_position <= $last_count)
             {
-                $result = 26;
+                $result = 26; // ERROR: this token has already been used
             }
             else
             {
@@ -131,7 +177,7 @@ class MultiotpYubikey
     }
 
 
-    function CheckOnYubiCloud($yubiotp)
+    function CheckOnYubiCloud($otp_to_check)
     /**
      * Validation Protocol Version 2.0 is implemented
      *   (https://code.google.com/p/yubikey-val-server-php/wiki/ValidationProtocolV20)
@@ -141,6 +187,7 @@ class MultiotpYubikey
     {
         $this->_yubicloud_last_response = array();
         $this->_yubicloud_last_result = 'NOT_ENOUGH_ANSWERS';
+        $yubiotp = trim($otp_to_check);
         $result = 99;
         if ((44 == strlen($yubiotp)) && ($this->IsModHex($yubiotp)))
         {
@@ -172,11 +219,11 @@ class MultiotpYubikey
             
             if (28 == strlen($this->_yubicloud_secret_key))
             {
-                $yubicloud_hash = urlencode(base64_encode(hash_hmac('sha1',
-                                                                    $url_parameters,
-                                                                    base64_decode($this->_yubicloud_secret_key),
-                                                                    TRUE
-                                                                   )));
+                $yubicloud_hash = urlencode(base64_encode($this->CalculateHashHmac('sha1',
+                                                                                   $url_parameters,
+                                                                                   base64_decode($this->_yubicloud_secret_key),
+                                                                                   TRUE
+                                                                                  )));
                 $url_parameters.= '&h='.$yubicloud_hash;
             }
             
@@ -311,11 +358,11 @@ class MultiotpYubikey
                         $check_response_hash = "NO-VALID-SECRET-KEY";
                         if (28 == strlen($this->_yubicloud_secret_key))
                         {
-                            $check_response_hash = base64_encode(hash_hmac('sha1',
-                                                                           $parameters_for_hash,
-                                                                           base64_decode($this->_yubicloud_secret_key),
-                                                                           TRUE
-                                                                          ));
+                            $check_response_hash = base64_encode($this->CalculateHashHmac('sha1',
+                                                                                          $parameters_for_hash,
+                                                                                          base64_decode($this->_yubicloud_secret_key),
+                                                                                          TRUE
+                                                                                         ));
                         }
                         if (($check_response_hash != $response['h']) && ("NO-VALID-SECRET-KEY" != $check_response_hash))
                         {
@@ -325,6 +372,11 @@ class MultiotpYubikey
                         elseif ($yubicloud_parameters['nonce'] != $response['nonce'])
                         {
                             $this->_yubicloud_last_result = 'BAD_NONCE';
+                            $result = 99;
+                        }
+                        elseif($yubiotp != $response['otp'])
+                        {
+                            $this->_yubicloud_last_result = 'OTP_IS_DIFFERENT';
                             $result = 99;
                         }
                         elseif ((($response['t_utc'] - $this->_yubicloud_max_time_window) > $response['now_utc']) ||
@@ -436,5 +488,4 @@ class MultiotpYubikey
 		return $result;		
 	}
 }
-
 ?>

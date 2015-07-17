@@ -11,10 +11,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012
 REM 
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   4.3.1.0
-REM @date      2014-12-07
+REM @version   4.3.2.5
+REM @date      2015-07-15
 REM @since     2010-07-10
-REM @copyright (c) 2010-2014 SysCo systemes de communication sa
+REM @copyright (c) 2010-2015 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -62,6 +62,8 @@ REM
 REM
 REM Change Log
 REM
+REM   2015-07-15 4.3.2.5 SysCo/al Some tests improved
+REM   2015-06-09 4.3.2.2 SysCo/al Some tests improved
 REM   2014-12-07 4.3.1.0 SysCo/al Some tests improved
 REM   2014-03-30 4.2.4.2 SysCo/al Version synchronization
 REM   2014-03-30 4.2.4.1 SysCo/al Typo to come back to the default encryption at the end of the test
@@ -280,25 +282,25 @@ IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user using CHAP
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
-REM Delete the user test_user@my.domain (if existing)
-%_multiotp% -log -delete test_user@my.domain
+REM Delete the user test_user@one.domain (if existing)
+%_multiotp% -log -delete test_user@one.domain
 IF NOT ERRORLEVEL 13 ECHO.
-IF NOT ERRORLEVEL 13 ECHO - User test_user@my.domain successfully deleted
+IF NOT ERRORLEVEL 13 ECHO - User test_user@one.domain successfully deleted
 
 ECHO.
-ECHO Create user test_user@my.domain with the RFC test values HOTP token
-%_multiotp% -log -create -no-prefix-pin test_user@my.domain HOTP 3132333435363738393031323334353637383930 1234 6 0
-IF NOT ERRORLEVEL 12 ECHO - OK! User test_user@my.domain successfully created
+ECHO Create user test_user@one.domain with the RFC test values HOTP token
+%_multiotp% -log -create -no-prefix-pin test_user@one.domain HOTP 3132333435363738393031323334353637383930 1234 6 0
+IF NOT ERRORLEVEL 12 ECHO - OK! User test_user@one.domain successfully created
 IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
-IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user@my.domain
+IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user@one.domain
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
-ECHO Authenticate test_user@my.domain with the first token of the RFC test values
-%_multiotp% -keep-local -log test_user@my.domain 755224
-IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user@my.domain successfully accepted
+ECHO Authenticate test_user@one.domain with the first token of the RFC test values
+%_multiotp% -keep-local -log test_user@one.domain 755224
+IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user@one.domain successfully accepted
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
-IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user@my.domain with the first token
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user@one.domain with the first token
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 REM Delete the test_user2 (if existing)
@@ -309,15 +311,15 @@ IF NOT ERRORLEVEL 13 ECHO - User test_user2 successfully deleted
 ECHO.
 ECHO Create user test_user2 with the RFC test values HOTP token and a big PIN prefix
 ECHO (like Authenex / ZyXEL / Billion is doing for their OTP solution)
-%_multiotp% -log -create -prefix-pin test_user2 HOTP 3132333435363738393031323334353637383930 "ThisIsAnOtherBigAlphaNumericPrefixPin" 6 0
+%_multiotp% -log -create -prefix-pin test_user2 HOTP 3132333435363738393031323334353637383930 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space" 6 0
 IF NOT ERRORLEVEL 12 ECHO - OK! User test_user2 successfully created
 IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user2
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
-ECHO Authenticate test_user2 with the first token of the RFC test values with PIN
-%_multiotp% -keep-local -log test_user2 "ThisIsAnOtherBigAlphaNumericPrefixPin755224"
+ECHO Authenticate test_user2 with the first token of the RFC test value with big PIN
+%_multiotp% -keep-local -log test_user2 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space755224"
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user2 (with prefix PIN) successfully accepted
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user2 with the first token and PIN prefix
@@ -329,12 +331,12 @@ IF NOT EXIST %_radius_dir%radius GOTO NoRadiusCheck
 ECHO.
 ECHO - Install and start the RADIUS server (wait 5 seconds)
 CALL %_check_dir%radius_install.cmd %_check_r_auth_port% %_check_r_acct_port% multiOTPradiusTest
-PING 127.0.0.1 -n 5 >NUL 
+PING 127.0.0.1 -n 5 >NUL
 
 ECHO.
 ECHO Authenticate test_user2 with the second token through the RADIUS server
 ECHO User-Name = "test_user2">%TEMP%\radiustest.conf
-ECHO User-Password = "ThisIsAnOtherBigAlphaNumericPrefixPin287082">>%TEMP%\radiustest.conf
+ECHO User-Password = "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space287082">>%TEMP%\radiustest.conf
 ECHO NAS-IP-Address = 127.0.0.1>>%TEMP%\radiustest.conf
 ECHO NAS-Port = %_check_r_auth_port%>>%TEMP%\radiustest.conf
 %_radius_dir%radius\bin\radclient.exe -c 1 -d %_radius_dir%radius\etc\raddb -f %TEMP%\radiustest.conf -q -r 1 -t 5 127.0.0.1:%_check_r_auth_port% auth multiotpsecret
@@ -368,6 +370,17 @@ SET /A TOTAL_TESTS=TOTAL_TESTS+1
 DEL %TEMP%\multiOTPwebservice.check /Q
 
 ECHO.
+ECHO Check the https default multiOTP web service page
+%_tools_dir%tools\wget https://127.0.0.1:%_check_ssl_port% --no-check-certificate --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=10 --tries=2
+FIND /C "Web service is ready" %TEMP%\multiOTPwebservice.check >NUL
+IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
+IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
+IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on https://127.0.0.1:%_check_ssl_port%
+IF ERRORLEVEL 1 TYPE %TEMP%\multiOTPwebservice.check
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
+DEL %TEMP%\multiOTPwebservice.check /Q
+
+ECHO.
 ECHO Authenticate test_user2 through web service using default secret
 REM Default secret is ClientServerSecret, full token is 1234359152
 %_multiotp% -log -set test_user2 pin=1234
@@ -391,10 +404,6 @@ SET _chap_challenge=
 SET _chap_password=
 
 ECHO.
-ECHO - Stop and uninstall the multiOTP web service
-CALL %_check_dir%webservice_uninstall.cmd multiOTPserverTest
-
-ECHO.
 ECHO Generate scratch passwords for test_user2
 FOR /f "tokens=1*" %%a, in ('%_multiotp% -keep-local -scratchlist test_user2') DO (
 SET _password=%%a
@@ -406,16 +415,16 @@ IF ERRORLEVEL 20 ECHO - KO! Scratch list for test_user2 NOT successfully created
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
-ECHO Test the last scratch password (%_password%) for test_user2
-%_multiotp% -keep-local -log test_user2 %_password%
+ECHO Test the last scratch password (%_password%) for test_user2 with prefix
+%_multiotp% -keep-local -log test_user2 1234%_password%
 IF NOT ERRORLEVEL 1 ECHO - OK! Scratch password accepted for test_user2
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Scratch password NOT accepted for test_user2
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
-ECHO Test again the last scratch password (%_password%) for test_user2
-%_multiotp% -keep-local -log test_user2 %_password%
+ECHO Test again the last scratch password (%_password%) for test_user2 with prefix
+%_multiotp% -keep-local -log test_user2 1234%_password%
 IF NOT ERRORLEVEL 1 ECHO - KO! Scratch password IS WRONGLY accepted a second time for test_user2
 IF NOT ERRORLEVEL 1 GOTO ErrorScratch
 ECHO - OK! Scratch password is not accepted a second time for test_user2
@@ -430,10 +439,10 @@ REM Delete the test_user
 IF NOT ERRORLEVEL 13 ECHO.
 IF NOT ERRORLEVEL 13 ECHO - User test_user successfully deleted
 
-REM Delete the test_user@my.domain
-%_multiotp% -log -delete test_user@my.domain
+REM Delete the test_user@one.domain
+%_multiotp% -log -delete test_user@one.domain
 IF NOT ERRORLEVEL 13 ECHO.
-IF NOT ERRORLEVEL 13 ECHO - User test_user@my.domain successfully deleted
+IF NOT ERRORLEVEL 13 ECHO - User test_user@one.domain successfully deleted
 
 REM Delete the test_user2
 %_multiotp% -log -delete test_user2
@@ -465,10 +474,29 @@ REM List of attributes to encrypt is set to default value
 
 
 ECHO.
-ECHO End of the multiOTP tests
+ECHO End of the CLI multiOTP tests
 ECHO.
 
 :DelTestUserSkip
+
+
+ECHO.
+ECHO Check the PHP multiOTP class using the check.multiotp.class.php file.
+%_tools_dir%tools\wget http://127.0.0.1:%_check_web_port%/check?minima=1 --quiet --output-document=%TEMP%\check.multiOTP.class.check --timeout=10 --tries=2
+FIND /C "OK! ALL" %TEMP%\check.multiOTP.class.check >NUL
+IF NOT ERRORLEVEL 1 TYPE %TEMP%\check.multiOTP.class.check
+IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP class tests successful
+IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
+IF ERRORLEVEL 1 ECHO - KO! multiOTP class tests failed
+IF ERRORLEVEL 1 TYPE %TEMP%\check.multiOTP.class.check
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
+DEL %TEMP%\check.multiOTP.class.check /Q
+
+
+ECHO.
+ECHO - Stop and uninstall the multiOTP web service
+CALL %_check_dir%webservice_uninstall.cmd multiOTPserverTest
+
 
 ECHO.
 ECHO.

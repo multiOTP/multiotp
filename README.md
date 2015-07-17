@@ -3,10 +3,10 @@ multiOTP open source
 multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
 multiOTP open source is OATH certified for HOTP/TOTP
 
-(c) 2010-2014 SysCo systemes de communication sa  
+(c) 2010-2015 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 4.3.1.0 (2014-12-09)
+Current build: 4.3.2.5 (2015-07-15) - Summer Edition
 
 Visit http://forum.multiotp.net/ for additional support.
 
@@ -17,15 +17,14 @@ that is interested about security issues, it's a fully open source solution!
 This package is the result of a *bunch* of work. If you are happy using this
 package, [Donation] are always welcome to support this project.
 Please check http://www.multiOTP.net/ and you will find the magic button ;-)
-(OATH membership and certifications are not free, sponsorship welcome)
 
 If you need some specific features in the open source edition of multiOTP,
 please contact us in order to discuss about a sponsorship in order to
 prioritize your needs.
 
 The multiOTP class supports currently the following algorithms and RFC's:
-- RFC4226 OATH/HOTP (http://www.ietf.org/rfc/rfc4226.txt)
-- RFC6238 OATH/TOTP (http://www.ietf.org/rfc/rfc6238.txt)
+- RFC4226 OATH/HOTP (HOTP: An HMAC-Based One-Time Password Algorithm)
+- RFC6238 OATH/TOTP (TOTP: Time-Based One-Time Password Algorithm)
 - Yubico OTP (https://www.yubico.com/)
 - mOTP (http://motp.sourceforge.net)
 - Google Authenticator (OATH/HOTP or OATH/TOTP, base32 seed, QRcode provisioning)
@@ -35,6 +34,8 @@ The multiOTP class supports currently the following algorithms and RFC's:
 - RFC2433 MS-CHAP (Microsoft PPP CHAP Extensions)
 - RFC2759 MS-CHAPv2 (Microsoft PPP CHAP Extensions, Version 2)
 - RFC5424 Syslog Protocol (client)
+- RFC2821 SMTP (Simple Mail Transfer Protocol)
+- RFC2487 SMTP Service Extension for Secure SMTP over TLS
 
 
 TABLE OF CONTENTS
@@ -45,6 +46,9 @@ TABLE OF CONTENTS
  * Change Log of released version
  * Content of the package
  * When and how can I use this package ?
+ * What is the prefix PIN option ?
+ * How the lockout of an account is working ?
+ * How to debug ?
  * How to install the multiOTP web service under Windows ?
  * How to install the multiOTP radius server under Windows ?
  * Configuring multiOTP with TekRADIUS or TekRADIUS LT under Windows
@@ -75,27 +79,28 @@ us in order to discuss the detail of the implementation.
 [1]: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PRS3VDNYL58HJ
 [2]: https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg
 
-Thanks to our main donators and sponsors:
-Donator AB (SE)
-Henk van der Helm (NL)
-Hermann Wegener GmbH & Co. KG (DE)
-SerNet GmbH (DE)
+Thanks to our main donators and sponsors:  
+Donator AB (SE)  
+Henk van der Helm (NL)  
+Hermann Wegener GmbH & Co. KG (DE)  
+SerNet GmbH (DE)  
 
 
 ROADMAP FOR NEXT RELEASES
 =========================
-- Radius challenge/response support (4.3.1.2)
-- Doxygen documentation format
+- Radius challenge/response support
+- Multiple hardware tokens support for one account
 - Generic web based SMS provider support
+- Doxygen documentation format
 - Users CSV import
   (username;pin;prefix_pin_needed;email;sms;serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
-- Multiple hardware tokens support for one account
 - Radius gateway support
 - YubiCloud support
 - FIDO support
 - SMS-revolution SMS provider support
 - SOAP API
 - PostgreSQL support
+- AngularJS frontend
 
 
 WHAT'S NEW IN THE RELEASES
@@ -104,9 +109,10 @@ WHAT'S NEW IN THE RELEASES
 - Raspberry Pi edition has now a special proxy to speed up the command line (4.3.1)
 - Generic LDAP support (no more only Microsoft AD compatible LDAP) (4.3.1)
 - New AD/LDAP sync algorithm to support larger AD (4.3.0)
-- If users are synced with an AD, it's now possible to use the AD/LDAP password (4.3.0)
-  instead of the PIN code (4.3.0)
+- If users are synced with an AD, it's now possible to use
+  the AD/LDAP password instead of the PIN code (4.3.0)
 - Yubico OTP support, including keys import using the log file in Traditional format (4.3.0)
+- Resync during authentication (autoresync) is now better handled in the class directly
 
 # What's new in 4.2 releases
 - A new option -user-info is now available (4.2.4.1)
@@ -122,7 +128,7 @@ WHAT'S NEW IN THE RELEASES
 
 # What's new in 4.1 releases
 - Syslog support
-- Token resync doesn't need prefix PIN anymore
+- Token resync only (without login) doesn't need prefix PIN anymore
 - Specific parameters order in QRCode for Microsoft Authenticator support
 - The open source edition of multiOTP is also OATH certified for HOTP and TOTP,
   which includes encrypted PSKC import support
@@ -157,167 +163,190 @@ WHAT'S NEW IN THE RELEASES
 
 # What's new in 3.2 releases
 - Google Authenticator support. Special information to handle the base 32 seed.
-- Better MySQL backend integration (still in beta). Now it is possible to store
-  all information in a MySQL backend instead of a flat file 
+- Better MySQL backend integration. Now it is possible to store all
+  information in a MySQL backend instead of a flat file .
 
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
-    2014-12-09 4.3.1.0 SysCo/al MULTIOTP_PATH environment variable support
-                                CLI proxy added to speed up the command line
-                                Scratch password need also the prefix PIN if it's activated
-                                OTP with integrated serial numbers better supported (in PAP)
-                                Generic LDAP support (instead of Microsoft AD support only)
-                                Raspberry Pi edition has now a special proxy to speed up the command line
-    2014-11-04 4.3.0.0 SysCo/al It's now possible to use the AD/LDAP password instead of the PIN code
-                                Yubico OTP support, including keys import using the log file in Traditional format
-                                qrcode() stub enhanced to check if the required folders are available
-                                SyncLdapUsers completely redesigned
-                                  - no more complete array in memory
-                                  - MultiotpAdLdap class also enhanced accordingly
-                                    - cached group_cn requests
-                                    - cached recursive_groups requests
-                                    - new "by element" functions
-                                Demo mode support
-                                Bug fix concerning the NT_KEY generation with enabled prefix PIN (thanks Adam)
-                                ResyncToken() method added (instead of using CheckToken() method for synchronization)
-    2014-06-12 4.2.4.3 SysCo/al Bug fix concerning aspsms provider
-    2014-04-13 4.2.4.2 SysCo/al XML parsing consolidation, one library for the whole project
-                                Fixed bug concerning tokens CSV import
-    2014-04-13 4.2.4.2 SysCo/al XML parsing consolidation, one library for the whole project
-                                Fixed bug concerning tokens CSV import
-    2014-04-06 4.2.4.1 SysCo/al Fixed bug concerning LDAP handling
-                                NT_KEY support added (for FreeRADIUS further handling)
-                                Tokens CSV import (serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
-                                When a user is deleted, the token(s) attributed to this user is/are unassigned
-                                New option -user-info added
-    2014-03-30 4.2.4   SysCo/al Fixed bug concerning MySQL handling and mysqli support added
-                                Enhanced SetAttributesToEncrypt function
-                                New implementation fo some external classes
-                                Generated QRcode are better
-                                LOT of new QA tests, more than 60 different tests (including PHP class and command line versions)
-                                Enhanced documentation
-    2014-03-13 4.2.3   SysCo/al Fixed bug for clear text password going back to TekRADIUS (PIN was always prefixed for mOTP)
-    2014-03-03 4.2.2   SysCo/al Better AD/LDAP integration
-                                Web GUI is now complete for a simple usage, including hardware tokens import
-                                Better template for provisioning information
-                                Some values can now go back to TekRADIUS
-                                If activated, prefix PIN is now also requested for SMS authentication
-                                More information in the logs
-                                Better list of the external packages used
-    2014-02-14 4.2.1   SysCo/al AD/LDAP is now fully supported in order to create users based on AD/LDAP content
-                                 (with groups filtering)
-    2014-02-07 4.2.0   SysCo/al MS-CHAP and MS-CHAPv2 are now supported
-                                 (md4 implementation added for PHP backward compatibility)
-                                Enhanced LDAP configuration structure
-                                Fixed bug during token attribution to users
-                                 (a "no name" token appeared sometimes)
-    2014-01-20 4.1.1   SysCo/al md5.js was missing in the public distribution
-                                Alternate json_encode function is defined if the JSON extension is not loaded
-                                Fixed possible image functions incompatibilities with some PHP versions
-                                 during QRcode generation
-                                As suggested by Sylvain, token resync doesn't need prefix PIN anymore
-                                 (but still accepted)
-                                More verbosity in the logs in debug mode
-                                Specific parameters order in QRCode for Microsoft Authenticator support
-                                 (thanks to Erik Nylund)
-    2013-12-23 4.1.0   SysCo/al The open source edition of multiOTP is OATH certified ;-)
-                                 (that means full compatibility with any OATH tokens and encrypted PSKC import support)
-                                Raspberry Pi nano-computer is now fully supported
-                                Basic web interface
-                                Self-registration of hardware tokens is now possible
-                                 PAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
-                                 [serial number][OTP] instead of [OTP]. If user has a prefix PIN, type [serial number][PIN][OTP])
-                                 PAP/CHAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
-                                 [username:serialnumber] as the username and the [OTP] in the password field. If user has a prefix PIN,
-                                 he must type [PIN][OTP] in the password field
-                                Automatic resync/unlock option during authentication (PAP only). When the autoresync option is enabled,
-                                 any user can resync his token by typing [OTP1] [OTP2] in the password field. If user has a prefix PIN,
-                                 he must type [PIN][OTP1] [PIN][OTP2].
-                                Tokens with less than 3 characters are not accepted anymore in CheckToken()
-                                Default Linux file mode is now set by default (0666 for created and changed files)
-                                Error 28 is returned if the file is not writable, even after a successful login
-                                Added GetUsersCount() function
-                                Added GenerateSmsToken() function
-                                Added Groups management functions
-                                Added Tokens assignation functions
-                                Added SetUserActivated(1|0) and GetUserActivated() function
-                                Added SetUserSynchronized(1|0) and GetUserSynchronized() function
-                                scratch_passwords is now a text field in the database
-                                The third parameter of the Decrypt method is now mandatory
-                                Some modifications in order to correctly handle the class methods
-    2013-09-22 4.0.9   SysCo/al Fixed a bug in GetUserScratchPasswordsArray. If a user had no scratch password
-                                 and the implementation accepted blank password, it was accepted
-    2013-08-30 4.0.7   SysCo/al GetScriptFolder() was still buggy sometimes, thanks Frank for the feedback
-                                File mode of the created QRcode file is also changed base on GetLinuxFileMode()
-                                'sms' as the password to request an SMS token can now be sent in lower or uppercase
-                                Added a description attribute for the tokens
-    2013-08-25 4.0.6   SysCo/al base32_encode() is now RFC compliant with uppercases
-                                GetUserTokenQrCode() and GetTokenQrCode() where buggy
-                                GetScriptFolder() use now __FILE__ if the full path is included
-                                When doing a check in the CLI header, @xxx is automatically removed from the
-                                 username if the user doesn't exist, and the check is done on the clean name
-                                Added a lot of tests to enhance release quality
-    2013-08-21 4.0.5   SysCo/al Fixed the check of the cache lifetime
-                                Added a temporary server blacklist during the same instances
-                                Default server timeout is now set to 1 second
-    2013-08-20 4.0.4   SysCo/al Adding an optional group attribute for the user
-                                 (which will be send with the Radius Filter-Id option)
-                                Adding scratch passwords generation (if the token is lost)
-                                Automatic database schema upgrade using method UpgradeSchemaIfNeeded()
-                                Adding client/server support with local cache
-                                Adding CHAP authentication support (PAP is of course still supported)
-                                The encryption key is now a parameter of the class constructor
-                                The method SetEncryptionKey('MyPersonalEncryptionKey') is DEPRECATED
-                                The method DefineMySqlConnection is DEPRECATED
-                                Full MySQL support, including tables creation (see example and SetSqlXXXX methods)
-                                Adding email, sms and seed_password to users attributes
-                                Adding sms support (aspsms, clickatell, intellisms, exec)
-                                Adding prefix support for debug mode (in order to send Reply-Message := to Radius)
-                                Adding a lot of new methods to handle easier the users and the tokens
-                                General speedup by using available native functions for hash_hmac and others
-                                Default max_time_window has been lowered to 600 seconds (thanks Stefan for suggestion)
-                                Integrated Google Authenticator support with integrated base 32 seed handling
-                                Integrated QRcode generator library (from Y. Swetake)
-                                General options in an external configuration file
-                                Comments have been reformatted and enhanced for automatic documentation
-                                Development process enhanced, source code reorganized, external contributions are
-                                 added automatically at the end of the library after an internal build release
-    2011-10-25 3.9.2   SysCo/al Some quick fixes after intensive check
-                                Improved get_script_dir() in CLI for Linux/Windows compatibility
-    2011-09-15 3.9.1   SysCo/al Some quick fixes concerning multiple users
-    2011-09-13 3.9.0   SysCo/al Adding support for account with multiple users
-    2011-07-06 3.2.0   SysCo/al Encryption hash handling with additional error message 33
-                                 (if the key has changed)
-                                Adding more examples
-                                Adding generic user with multiple account
-                                 (Real account name is combined: "user" and "account password")
-                                Adding log options, now default doesn't log token value anymore
-                                Debugging MySQL backend support for the token handling
-                                Fixed automatic detection of \ or / for script path detection
-    2010-12-19 3.1.1   SysCo/al Better MySQL backend support (still in beta), including in CLI version
-    2010-09-15 3.1.0   SysCo/al Removed bad extra spaces in the multiotp.php file for Linux
-                                Beta MySQL backend support
-    2010-09-02 3.0.0   SysCo/al Adding tokens handling support, including importing XML tokens definition file
-                                Enhanced flat database file format
-                                 (multiOTP is still compatible with old versions)
-                                Internal method SetDataReadFlag renamed to SetUserDataReadFlag
-                                Internal method GetDataReadFlag renamed to GetUserDataReadFlag
-    2010-08-21 2.0.4   SysCo/al Enhancement in order to use an alternate php "compiler"
-                                 for Windows command line
-                                Documentation enhancement
-    2010-08-18 2.0.3   SysCo/al Minor notice fix, define timezone if not defined (for embedded command line)
-                                If user doesn't exist, do not create the related flat file after a check
-    2010-07-21 2.0.2   SysCo/al Fix to create correctly the folders "users" and "log" if needed
-    2010-07-19 2.0.1   SysCo/al Foreach was not working well in PHP4, replaced at some places
-    2010-07-19 2.0.0   SysCo/al New design using a class, mOTP support, cleaning of the code
-    2010-06-15 1.1.5   SysCo/al Adding OATH/TOTP support
-    2010-06-15 1.1.4   SysCo/al Project renamed to multiOTP to avoid overlapping
-    2010-06-08 1.1.3   SysCo/al Typo in script folder detection
-    2010-06-08 1.1.2   SysCo/al Typo in variable name
-    2010-06-08 1.1.1   SysCo/al Status bar during resynchronization
-    2010-06-08 1.1.0   SysCo/al Fix in the example, distribution not compressed
-    2010-06-07 1.0.0   SysCo/al Initial implementation
+2015-07-15 4.3.2.5 SysCo/al Calling multiotp CLI without parameter returns now error code 30 (instead of 19)
+2015-06-24 4.3.2.4 SysCo/al multi_account automatic support
+                            Scratch password generation (UTF)
+2015-06-10 4.3.2.3 SysCo/al Enhancements for the Dev(Talks): demo
+2015-06-09 4.3.2.2 SysCo/al Empty users are refused
+                            TOTP time interval of imported tokens is set by default to 30s
+                            More accuracy in the logged information
+                            Refactoring backend methods, sharing code
+                            Refactoring some ugly parts (!)
+                            Documentation update concerning lockout functions and prefix PIN prefix
+                            Special token entry 'Sms' is now also accepted, like 'SMS' or 'sms', to send an SMS token
+                            The minus (-) in the prefix password is now supported (it was filtered to fix some rare user issues)
+                            The autoresync option is now enabled by default
+                            Resync during authentication (autoresync) is now better handled in the class directly
+                            The server_cache_level is now set to 1 by default (instead of 0)
+                            If the token length is not correct, it's now written in the log
+                            Some LDAP messages are now only logged in debug mode
+2014-12-15 4.3.1.1 SysCo/al Better generic LDAP support
+                              - description sync done in the following order: description, gecos, displayName
+                              - memberOf is not always implemented, alternative method to sync users based on group names.
+                              - disabled account synchronization using shadowExpire or sambaAcctFlags
+                            Better Active Directory support
+                              - accountExpires is now supported for synchronization
+                              - ms-DS-User-Account-Control-Computed (to handle locked out accounts, available since Windows 2003)
+2014-12-09 4.3.1.0 SysCo/al MULTIOTP_PATH environment variable support
+                            CLI proxy added to speed up the command line
+                            Scratch password need also the prefix PIN if it's activated
+                            OTP with integrated serial numbers better supported (in PAP)
+                            Generic LDAP support (instead of Microsoft AD support only)
+                            Raspberry Pi edition has now a special proxy to speed up the command line
+2014-11-04 4.3.0.0 SysCo/al It's now possible to use the AD/LDAP password instead of the PIN code
+                            Yubico OTP support, including keys import using the log file in Traditional format
+                            qrcode() stub enhanced to check if the required folders are available
+                            SyncLdapUsers completely redesigned
+                              - no more complete array in memory
+                              - MultiotpAdLdap class also enhanced accordingly
+                                - cached group_cn requests
+                                - cached recursive_groups requests
+                                - new "by element" functions
+                            Demo mode support
+                            Bug fix concerning the NT_KEY generation with enabled prefix PIN (thanks Adam)
+                            ResyncToken() method added (instead of using CheckToken() method for synchronization)
+2014-06-12 4.2.4.3 SysCo/al Bug fix concerning aspsms provider
+2014-04-13 4.2.4.2 SysCo/al XML parsing consolidation, one library for the whole project
+                            Fixed bug concerning tokens CSV import
+2014-04-06 4.2.4.1 SysCo/al Fixed bug concerning LDAP handling
+                            NT_KEY support added (for FreeRADIUS further handling)
+                            Tokens CSV import (serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
+                            When a user is deleted, the token(s) attributed to this user is/are unassigned
+                            New option -user-info added
+2014-03-30 4.2.4   SysCo/al Fixed bug concerning MySQL handling and mysqli support added
+                            Enhanced SetAttributesToEncrypt function
+                            New implementation fo some external classes
+                            Generated QRcode are better
+                            LOT of new QA tests, more than 60 different tests (including PHP class and command line versions)
+                            Enhanced documentation
+2014-03-13 4.2.3   SysCo/al Fixed bug for clear text password going back to TekRADIUS (PIN was always prefixed for mOTP)
+                            Fixed bug when client/server mode is activated, but not working well
+2014-03-03 4.2.2   SysCo/al Better AD/LDAP integration
+                            Web GUI is now complete for a simple usage, including hardware tokens import
+                            Better template for provisioning information
+                            Some values can now go back to TekRADIUS
+                            If activated, prefix PIN is now also requested for SMS authentication
+                            More information in the logs
+                            Better list of the external packages used
+2014-02-14 4.2.1   SysCo/al AD/LDAP is now fully supported in order to create users based on AD/LDAP content
+                             (with groups filtering)
+2014-02-07 4.2.0   SysCo/al MS-CHAP and MS-CHAPv2 are now supported
+                             (md4 implementation added for PHP backward compatibility)
+                            Enhanced LDAP configuration structure
+                            Fixed bug during token attribution to users
+                             (a "no name" token appeared sometimes)
+2014-01-20 4.1.1   SysCo/al md5.js was missing in the public distribution
+                            Alternate json_encode function is defined if the JSON extension is not loaded
+                            Fixed possible image functions incompatibilities with some PHP versions
+                             during QRcode generation
+                            As suggested by Sylvain, token resync doesn't need prefix PIN anymore
+                             (but still accepted)
+                            More verbosity in the logs in debug mode
+                            Specific parameters order in QRCode for Microsoft Authenticator support
+                             (thanks to Erik Nylund)
+2013-12-23 4.1.0   SysCo/al The open source edition of multiOTP is OATH certified ;-)
+                             (that means full compatibility with any OATH tokens and encrypted PSKC import support)
+                            Raspberry Pi nanocomputer is now fully supported
+                            Basic web interface
+                            Self-registration of hardware tokens is now possible
+                             PAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
+                             [serial number][OTP] instead of [OTP]. If user has a prefix PIN, type [serial number][PIN][OTP])
+                             PAP/CHAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
+                             [username:serialnumber] as the username and the [OTP] in the password field.
+                             If user has a prefix PIN, [PIN][OTP] must be typed in the password field
+                            Automatic resync/unlock option during authentication (PAP only). When the autoresync option
+                             is enabled, any user can resync his token by typing [OTP1] [OTP2] in the password field. 
+                             If user has a prefix PIN, he must type [PIN][OTP1] [PIN][OTP2].
+                            Tokens with less than 3 characters are not accepted anymore in CheckToken()
+                            Default Linux file mode is now set by default (0666 for created and changed files)
+                            Error 28 is returned if the file is not writable, even after a successful login
+                            Added GetUsersCount() function
+                            Added GenerateSmsToken() function
+                            Added Groups management functions
+                            Added Tokens assignation functions
+                            Added SetUserActivated(1|0) and GetUserActivated() function
+                            Added SetUserSynchronized(1|0) and GetUserSynchronized() function
+                            scratch_passwords is now a text field in the database
+                            The third parameter of the Decrypt method is now mandatory
+                            Some modifications in order to correctly handle the class methods
+2013-09-22 4.0.9   SysCo/al Fixed a bug in GetUserScratchPasswordsArray. If a user had no scratch password
+                             and the implementation accepted blank password, it was accepted
+                            Fixed a bug where scratch passwords generation used odd numbers of characters for hex2bin()
+2013-08-30 4.0.7   SysCo/al GetScriptFolder() was still buggy sometimes, thanks Frank for the feedback
+                            File mode of the created QRcode file is also changed based on GetLinuxFileMode()
+                            'sms' as the password to request an SMS token can now be sent in lower or uppercase
+                            Added a description attribute for the tokens
+2013-08-25 4.0.6   SysCo/al base32_encode() is now RFC compliant with uppercases
+                            GetUserTokenQrCode() and GetTokenQrCode() where buggy
+                            GetScriptFolder() use now __FILE__ if the full path is included
+                            When doing a check in the CLI header, @... is automatically removed from the
+                             username if the user doesn't exist, and the check is done on the clean name
+                            Added a lot of tests to enhance release quality
+2013-08-21 4.0.5   SysCo/al Fixed the check of the cache lifetime
+                            Added a temporary server blacklist during the same instances
+                            Default server timeout is now set to 1 second
+2013-08-20 4.0.4   SysCo/al Added an optional group attribute for the user
+                             (which will be send with the Radius Filter-Id option)
+                            Added scratch passwords generation (if the token is lost)
+                            Automatic database schema upgrade using method UpgradeSchemaIfNeeded()
+                            Added client/server support with local cache
+                            Added CHAP authentication support (PAP is of course still supported)
+                            The encryption key is now a parameter of the class constructor
+                            The method SetEncryptionKey('MyPersonalEncryptionKey') is DEPRECATED
+                            The method DefineMySqlConnection is DEPRECATED
+                            Full MySQL support, including tables creation (see example and SetSqlXXXX methods)
+                            Added email, sms and seed_password to users attributes
+                            Added sms support (aspsms, clickatell, intellisms, exec)
+                            Added prefix support for debug mode (in order to send Reply-Message := to Radius)
+                            Added a lot of new methods to handle easier the users and the tokens
+                            General speedup by using available native functions for hash_hmac and others
+                            Default max_time_window has been lowered to 600 seconds (thanks Stefan for suggestion)
+                            Integrated Google Authenticator support with integrated base 32 seed handling
+                            Integrated QRcode generator library (from Y. Swetake)
+                            General options in an external configuration file
+                            Comments have been reformatted and enhanced for automatic documentation
+                            Development process enhanced, source code reorganized, external contributions are
+                             added automatically at the end of the library after an internal build release
+2011-10-25 3.9.2   SysCo/al Some quick fixes after intensive check
+                            Improved get_script_dir() in CLI for Linux/Windows compatibility
+2011-09-15 3.9.1   SysCo/al Some quick fixes concerning multiple users
+2011-09-13 3.9.0   SysCo/al Added support for account with multiple users
+2011-07-06 3.2.0   SysCo/al Encryption hash handling with additional error message 33
+                             (if the key has changed)
+                            Added more examples
+                            Added generic user with multiple account
+                             (Real account name is combined: "user" and "account password")
+                            Added log options, now default doesn't log token value anymore
+                            Debugging MySQL backend support for the token handling
+                            Fixed automatic detection of \ or / for script path detection
+2010-12-19 3.1.1   SysCo/al Better MySQL backend support, including in CLI version
+2010-09-15 3.1.0   SysCo/al Removed bad extra spaces in the multiotp.php file for Linux
+                            MySQL backend support
+2010-09-02 3.0.0   SysCo/al Added tokens handling support
+                             including importing XML tokens definition file
+                             (http://tools.ietf.org/html/draft-hoyer-keyprov-pskc-algorithm-profiles-00)
+                            Enhanced flat database file format (multiotp is still compatible with old versions)
+                            Internal method SetDataReadFlag renamed to SetUserDataReadFlag
+                            Internal method GetDataReadFlag renamed to GetUserDataReadFlag
+2010-08-21 2.0.4   SysCo/al Enhancement in order to use an alternate php "compiler" for Windows command line
+                            Documentation enhancement
+2010-08-18 2.0.3   SysCo/al Minor notice fix
+2010-07-21 2.0.2   SysCo/al Fix to create correctly the folders "users" and "log" if needed
+2010-07-19 2.0.1   SysCo/al Foreach was not working well in PHP4, replaced at some places
+2010-07-19 2.0.0   SysCo/al New design using a class, mOTP support, cleaning of the code
+2010-06-15 1.1.5   SysCo/al Added OATH/TOTP support
+2010-06-15 1.1.4   SysCo/al Project renamed to multiotp to avoid overlapping
+2010-06-08 1.1.3   SysCo/al Typo in script folder detection
+2010-06-08 1.1.2   SysCo/al Typo in variable name
+2010-06-08 1.1.1   SysCo/al Status bar during resynchronization
+2010-06-08 1.1.0   SysCo/al Fix in the example, distribution not compressed
+2010-06-07 1.0.0   SysCo/al Initial implementation
 
 
 CONTENT OF THE PACKAGE
@@ -356,6 +385,7 @@ In the windows folder:
 - webservice_install.cmd   : Windows script to install and start the multiOTP web service
 - webservice_uninstall.cmd : Windows script to stop and uninstall the multiOTP web service
 - test-tokens.csv          : provisioning file of test tokens
++ legacy subfolder         : contains a windows command line version with all needed files (not embedded in a mini VM)
 + oath subfolder           : contains provisioning files for oath test tokens
 + qrcode subfolder         : all necessary files to be able to generate QRcode
 + radius subfolder         : all necessary files to be able to install a Windows radius server already
@@ -457,6 +487,11 @@ Provisioning will be done simply by flashing a QRcode.
       - OTP c100: OATH/HOTP, 6 digits
       - OTP c200: OATH/TOTP, 6 digits, 60 seconds time interval
         (seed is provided in a standardized token definition PSKC xml file)
+    - Gemalto provides OATH compliant HOTP and TOTP tokens
+      - Gemalto Ezio Token
+    - Seamoon provides OATH compliant TOTP tokens
+      - Seamoon KingKey: OATH/TOTP, 6 digits, 60 seconds time interval
+        (seed is provided in a specific smd file)
     - ZyXEL OTP provides HOTP OATH compliant tokens (v2 and old v1 tokens)
       - ZyWALL OTPv2 (rebranded SafeNet/Aladdin eToken PASS) : OATH/HOTP, 6 digits
         (seed is extracted from the importAlpine.dat downloaded file,
@@ -464,10 +499,7 @@ Provisioning will be done simply by flashing a QRcode.
       - ZyWALL OTPv1 (rebranded Authenex A-Key 3600): OATH/HOTP, 6 digits
         (seed is extracted from the OTP_data01_upgrade.sql SQL file,
          SEED field at the end of the file)
-    - Seamoon provides OATH compliant TOTP tokens
-      - Seamoon KingKey: OATH/TOTP, 6 digits, 60 seconds time interval
-        (seed is provided in a specific smd file)
-  - YubiKeys from Yubico
+  - YubiKeys from Yubico (both in Yubico OTP or in OATH-HOTP format)
     - YubiKey standard
     - YubiKey Nano
     - YubiKey Neo
@@ -475,8 +507,73 @@ Provisioning will be done simply by flashing a QRcode.
 
 If you want to use software tokens with Apps like Google Authenticator, you can
 create a QRcode provisioning in two EASY steps with the command line tool:
- - create the token for the user: multiotp -fastcreate my_user
- - generate the provisioning QRcode: multiotp -qrcode my_user my_qrcode.png
+ - create the token for the user (without prefix PIN request):
+   multiotp -fastcreatenopin my_user
+ - generate the provisioning QRcode: multiotp -qrcode my_user my_qrcode.png  
+ 
+You can also create a user quickly with the prefix PIN request option based on
+the default option set in your configuration: multiotp -fastcreate my_user  
+
+And of course, you can also force to create a user quickly with a requested
+prefix PIN: multiotp -fastcreatewithpin my_user
+
+
+WHAT IS THE PREFIX PIN OPTION ?
+===============================
+The prefix PIN option is activated by default. Users will have to type their
+PIN + the displayed token. The prefix PIN option has no effect for mOTP tokens,
+and the users MUST NOT type their prefix PIN before the displayed token for
+mOTP tokens, as the prefix PIN is already used by the algorithm in order to
+generate the token.  
+
+Starting with version 4.3, it's now possible to use the synchronized AD/LDAP
+password as a prefix instead of the static PIN. Please note that even with the
+AD/LDAP password as a prefix activated, the PIN used for mOTP tokens is still
+the static PIN.  
+
+To create a user quickly with the prefix PIN request option based on
+the default option set in your configuration: multiotp -fastcreate my_user  
+
+To create a user quickly without a prefix PIN request:
+multiotp -fastcreatenopin my_user  
+ 
+To create a user quickly with a requested prefix PIN:
+multiotp -fastcreatewithpin my_user
+
+
+HOW THE LOCKOUT OF AN ACCOUNT IS WORKING ?
+==========================================
+To prevent brute-force attack, an account is temporary locked for 300 seconds
+after 3 unsuccessful trials.  
+After 6 unsuccessful trials, the account is definitely locked.  
+
+A user is unlocked by typing the following command line: 
+multiotp -unlock user
+
+A user can also unlock his account by typing two consecutive codes, 
+separated by a space (don't forget the prefix PIN/password if enabled).  
+If prefix PIN is enabled, your PIN is 1234 and the two consecutive tokens are
+984501 and 348202, you will have to type "1234984501 1234348202" as the
+password in order to unlock the account during authentication.  
+
+The lockout parameters can be modified using these command lines:  
+multiotp -config failure-delayed-time=60  
+multiotp -config max-block-failures=12  
+multiotp -config max-delayed-failures=10  
+
+
+HOW TO DEBUG ?
+==============
+In order to have debug information, you can use the -debug option. With this
+option, the debug information are saved in the file log/multiotp.log.  
+If you want to see directly the debug information on screen, add the
+-display-log and an output of the debug information will be done on screen too.
+
+In order to enable the debug mode permanently without using the option, you can
+do that like this: multiotp -config debug=1
+
+The same thing can be done for a permanent display of the debug information on
+the screen without using the option: multiotp -config display-log=1
 
 
 HOW TO INSTALL THE MULTIOTP WEB SERVICE UNDER WINDOWS ?
@@ -504,7 +601,7 @@ profile cannot be found for an incoming RADIUS authentication request.
 So a quick and easy way is to create in the TekRADIUS Manager a User
 named 'Default' that belongs to the existing 'Default' Group.
 Then add to this Default user the following attribute :
-Check  External-Executable  C:\multitop\multiotp.exe %ietf|1% %ietf|2% -chap-challenge=%msoft|60% -chap-password=%msoft|3% -ms-chap-challenge=%msoft|11% -ms-chap-response=%msoft|1% -ms-chap2-response=%msoft|25%
+Check  External-Executable  C:\multitop\multiotp.exe %ietf|1% %ietf|2% -chap-challenge=%ietf|60% -chap-password=%ietf|3% -ms-chap-challenge=%msoft|11% -ms-chap-response=%msoft|1% -ms-chap2-response=%msoft|25%
 
 Some values can go back to TekRADIUS:
 
@@ -532,28 +629,27 @@ Using the -request-nt-key option, NT_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX can
 now be displayed (like with the same option used with ntlm_auth).
 
 1) Create a new module file called "multiotp" in etc/raddb/modules/ containing:  
-
-   # Exec module instance for multiOTP (http://www.multiotp.net/).  
-   # for Linux  : replace '/path/to' with the actual path to the multiotp.php file.  
-   # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /).  
-   exec multiotp {  
-       wait = yes  
-       input_pairs = request  
-       output_pairs = reply  
-       program = "/path/to/multiotp '%{User-Name}' '%{User-Password}' -request-nt-key -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"  
-       shell_escape = yes  
-   }
+    
+    # Exec module instance for multiOTP (http://www.multiotp.net/).  
+    # for Linux  : replace '/path/to' with the actual path to the multiotp.php file.  
+    # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /).  
+    exec multiotp {  
+        wait = yes  
+        input_pairs = request  
+        output_pairs = reply  
+        program = "/path/to/multiotp '%{User-Name}' '%{User-Password}' -request-nt-key -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"  
+        shell_escape = yes  
+    }
 
 2) In the configuration file called "default" in etc/raddb/sites-enabled/  
-    a) Add the multiOTP handling  
     
+    a) Add the multiOTP handling  
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be add BEFORE the first "pap" entry found in the file.  
     multiotp  
 
     b) Add the multiOTP authentication handling  
-    
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.  
@@ -562,19 +658,17 @@ now be displayed (like with the same option used with ntlm_auth).
     }  
 
     c) Comment the first line containing only "chap"  
-    
     #chap is now handled by multiOTP  
-    
+
 3) In the configuration file called "inner-tunnel" in etc/raddb/sites-enabled/  
-    a) Add the multiOTP handling  
     
+    a) Add the multiOTP handling  
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be add BEFORE the first "pap" entry found in the file.  
     multiotp  
 
     b) Add the multiOTP authentication handling  
-    
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.  
@@ -583,11 +677,10 @@ now be displayed (like with the same option used with ntlm_auth).
     }  
 
     c) Comment the first line containing only "chap"  
-    
     #chap is now handled by multiOTP  
 
 4) In the configuration file called "policy.conf" in etc/raddb/  
-   - Add the multiOTP authorization policy  
+   Add the multiOTP authorization policy  
     
     #  
     # Handle multiOTP (http://www.multiotp.net/) authorization policy.  
@@ -601,11 +694,11 @@ now be displayed (like with the same option used with ntlm_auth).
     }  
 
 5) In the configuration file called "radiusd.conf" in etc/raddb/  
-   - Depending which port(s) and/or ip address(es) you want to listen, change
-       the corresponding ipaddr and port parameters  
+   Depending which port(s) and/or ip address(es) you want to listen, change
+   the corresponding ipaddr and port parameters  
 
 6) In the configuration file called "clients.conf" in etc/raddb/  
-   - Add the clients IP, mask and secret that you want to authorize.  
+   Add the clients IP, mask and secret that you want to authorize.  
     
     #  
     # Handle multiOTP (http://www.multiotp.net/) for some clients.  
@@ -962,15 +1055,15 @@ and you may also check multiotp.cli.header.php which implements the class.
 MULTIOTP COMMAND LINE TOOL
 ==========================
 
-multiOTP 4.3.1.0 (2014-12-09), running with embedded PHP version 5.4.10
-(c) 2010-2014 SysCo systemes de communication sa
+multiOTP 4.3.2.5 (2015-07-15)
+(c) 2010-2015 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
 multiotp will check if the token of a user is correct, based on a specified
 algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226) 
 and OATH/TOTP (RFC 6238) are implemented). PSKC format supported (RFC 6030).
 Supported encryption methods are PAP and CHAP.
-YubicoOTP format supported (44 bytes long, with prefixed serial number).
+Yubico OTP format supported (44 bytes long, with prefixed serial number).
 SMS-code are supported (current providers: aspsms,clickatell,intellisms).
 Customized SMS sender program supported by specifying exec as SMS provider.
 
@@ -978,8 +1071,15 @@ Google Authenticator base32_seed tokens must be of n*8 characters.
 Google Authenticator TOTP tokens must have a 30 seconds interval.
 Available characters in base32 are only ABCDEFGHIJKLMNOPQRSTUVWXYZ234567
 
-To quickly create a user, use the -fascreate option with the name of the user.
+To quickly create a user, use the -fastcreate option with the name of the user.
 A quickly created user is compatible with Google Auth (30 seconds, 6 digits).
+Depending on the prefix PIN option (WHICH IS ENABLED BY DEFAULT), a prefix PIN
+will be requested or not before the displayed token.
+If the PIN is not given, it is generated randomly.
+
+To quickly create a user without a prefix PIN request, use -fastcreatenopin
+
+To quickly create a user with a prefix PIN request, use -fastecreatewithpin
 
 If a token is locked (return code 24), you have to resync the token to unlock.
 Requesting an SMS token (put sms as the password), and typing the received
@@ -989,50 +1089,53 @@ The check will return 0 for a correct token, and the other return code means:
 
 Return codes:
 
- 0 OK: Token accepted
-10 INFO: Access Challenge returned back to the client
-11 INFO: User successfully created or updated
-12 INFO: User successfully deleted
-13 INFO: User PIN code successfully changed
-14 INFO: Token has been resynchronized successfully
-15 INFO: Tokens definition file successfully imported
-16 INFO: QRcode successfully created
-17 INFO: UrlLink successfully created
-18 INFO: SMS code request received
-19 INFO: Requested operation successfully done
-21 ERROR: User doesn't exist
-22 ERROR: User already exists
-23 ERROR: Invalid algorithm
-24 ERROR: User locked (too many tries)
-25 ERROR: User delayed (too many tries, but still a hope in a few minutes)
-26 ERROR: The token has already been used
-27 ERROR: Resynchronization of the token has failed
-28 ERROR: Unable to write the changes in the file
-29 ERROR: Token doesn't exist
-30 ERROR: At least one parameter is missing
-31 ERROR: Tokens definition file doesn't exist
-32 ERROR: Tokens definition file not successfully imported
-33 ERROR: Encryption hash error, encryption key is not matching
-34 ERROR: Linked user doesn't exist
-35 ERROR: User not created
-37 ERROR: Token already attributed
-38 ERROR: User is desactivated
-39 ERROR: Requested operation aborted
-41 ERROR: SQL error
-50 ERROR: QRcode not created
-51 ERROR: UrlLink not created (no provisionable client for this protocol)
-60 ERROR: No information on where to send SMS code
-61 ERROR: SMS code request received, but an error occurred during transmission
-62 ERROR: SMS provider not supported
-70 ERROR: Server authentication error
-71 ERROR: Server request is not correctly formatted
-72 ERROR: Server answer is not correctly formatted
-80 ERROR: Server cache error
-81 ERROR: Cache too old for this user, account autolocked
-99 ERROR: Authentication failed (and other possible unknown errors)
+ 0 OK: Token accepted  
+10 INFO: Access Challenge returned back to the client  
+11 INFO: User successfully created or updated  
+12 INFO: User successfully deleted  
+13 INFO: User PIN code successfully changed  
+14 INFO: Token has been resynchronized successfully  
+15 INFO: Tokens definition file successfully imported  
+16 INFO: QRcode successfully created  
+17 INFO: UrlLink successfully created  
+18 INFO: SMS code request received  
+19 INFO: Requested operation successfully done  
+21 ERROR: User doesn't exist  
+22 ERROR: User already exists  
+23 ERROR: Invalid algorithm  
+24 ERROR: User locked (too many tries)  
+25 ERROR: User delayed (too many tries, but still a hope in a few minutes)  
+26 ERROR: The token has already been used  
+27 ERROR: Resynchronization of the token has failed  
+28 ERROR: Unable to write the changes in the file  
+29 ERROR: Token doesn't exist  
+30 ERROR: At least one parameter is missing  
+31 ERROR: Tokens definition file doesn't exist  
+32 ERROR: Tokens definition file not successfully imported  
+33 ERROR: Encryption hash error, encryption key is not matching  
+34 ERROR: Linked user doesn't exist  
+35 ERROR: User not created  
+37 ERROR: Token already attributed  
+38 ERROR: User is desactivated  
+39 ERROR: Requested operation aborted  
+41 ERROR: SQL error  
+50 ERROR: QRcode not created  
+51 ERROR: UrlLink not created (no provisionable client for this protocol)  
+60 ERROR: No information on where to send SMS code  
+61 ERROR: SMS code request received, but an error occurred during transmission  
+62 ERROR: SMS provider not supported  
+70 ERROR: Server authentication error  
+71 ERROR: Server request is not correctly formatted  
+72 ERROR: Server answer is not correctly formatted  
+80 ERROR: Server cache error  
+81 ERROR: Cache too old for this user, account autolocked  
+98 ERROR: Authentication failed (wrong token length)  
+99 ERROR: Authentication failed (and other possible unknown errors)  
 
 
 Usage:
+
+ PLEASE NOT THAT BY DEFAULT, A PREFIX PIN IS REQUIRED.
 
  multiotp user token (to check if the token is accepted)
  multiotp -checkpam (to check with pam-script, using PAM_USER and PAM_AUTHTOK)
@@ -1044,9 +1147,11 @@ Usage:
    (the first byte of the chap-password value can contain the chap-id value)
 
  multiotp -fastcreate user [pin] (create a Google Auth compatible token)
+ multiotp -fastcreatenopin user [pin] (create a user without a prefix PIN)
+ multiotp -fastecreatewithpin user [pin] (create a user with a prefix PIN)
  multiotp -createga user base32_seed [pin] (create Google Authenticator user)
- multiotp -create [-prefix-pin] user algo seed pin digits [pos|interval]
- multiotp -create -token-id [-prefix-pin] user token-id pin
+ multiotp -create [-no-prefix-pin] user algo seed pin digits [pos|interval]
+ multiotp -create -token-id [-no-prefix-pin] [-prefix-pin] user token-id pin
 
   token-id: id of the previously imported token to attribute to the user
       user: name of the user (should be the account name)
@@ -1203,6 +1308,8 @@ Switches:
  -mysql          MySQL connection information, comma separated (server,user,
                  password,database[,log_table[,users_table[,tokens_table]]])
                  (this switch is DEPRECATED, use the -config switch instead)
+ -no-prefix-pin  No prefix pin must be merged with the token by the user
+                 (this switch is DEPRECATED, use the -set switch instead)
  -param          All parameters are logged for debugging purposes
  -prefix-pin     The pin and the token must be typed merged by the user
                  (if you pin is 1234 and your token displays 5556677,
@@ -1290,15 +1397,17 @@ When used with TekRADIUS (http://www.tekradius.com) the External-Executable
 must be called like this: C:\multiotp\multiotp.exe %ietf|1% %ietf|2%
 
 Some of other products and services based on multiOTP
- multiOTP Pro 405V  a Pro version with full web GUI in a tiny virtual appliance
-                    (http://www.multiOTP.com)
- multiOTP Pro 420B  a Pro version with full web GUI in a tiny hardware device
-                    (http://www.multiOTP.com)
- secuPASS.net       a simple SMS trusting service for free WLAN Hotspot
-                    (http://www.secuPASS.net)
- mOTP-CP            an Open-Source Credential Provider for the Windows Logon
-                    (http://goo.gl/BZAhKR)
- ownCloud OTP       a One Time Password app for ownCloud (http://owncloud.org)
-                    (http://apps.owncloud.com/content/show.php/?content=159196)
+ - multiOTP Pro 405V  Pro version with full web GUI in a tiny virtual appliance
+                      (http://www.multiOTP.com)
+ - multiOTP Pro 420B  Pro version with full web GUI in a tiny hardware device
+                      (http://www.multiOTP.com)
+ - secuPASS.net       simple SMS trusting service for free WLAN Hotspot
+                      (http://www.secuPASS.net)
+ - mOTP-CP            an Open-Source Credential Provider for the Windows Logon
+                      (http://goo.gl/YDWZm3)
+ - ownCloud OTP       One Time Password app for ownCloud (http://owncloud.org)
+                      (http://goo.gl/mKjt43)
 
 Visit http://forum.multiotp.net/ for additional support
+
+

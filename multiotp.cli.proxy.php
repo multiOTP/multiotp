@@ -14,7 +14,7 @@
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2014 SysCo systemes de communication sa
+ *   Copyright (c) 2014-2015 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -39,8 +39,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.1.0
- * @date      2014-12-07
+ * @version   4.3.2.5
+ * @date      2015-07-15
  * @since     2014-11-24
  * @copyright (c) 2014 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -54,56 +54,48 @@
  *
  *********************************************************************/
 
+$proxy_full_url = "http://127.0.0.1:18081/";
+$timeout = 15;
+$local_proxy_file = "multiotp.proxy.php";
+
 // Clean quotes of the parameters if any
-if (!function_exists('clean_quotes'))
-{
+if (!function_exists('clean_quotes')) {
     function clean_quotes($value)
     {
         $var = $value;
-        if ((('"' == substr($var,0,1)) || ("'" == substr($var,0,1))) && (('"' == substr($var,-1)) || ("'" == substr($var,-1))))
-        {
+        if ((('"' == substr($var,0,1)) || ("'" == substr($var,0,1))) && (('"' == substr($var,-1)) || ("'" == substr($var,-1)))) {
             $var = substr($var, 1, strlen($var)-2);
         }
         return $var;
     }
 }
 
-
 $value_unencoded = '';
 // $_SERVER["argv"][0] is useless, it's the name of the script
-for ($arg_loop=1; $arg_loop < $_SERVER["argc"]; $arg_loop++)
-{
+for ($arg_loop=1; $arg_loop < $_SERVER["argc"]; $arg_loop++) {
     $current_arg = clean_quotes($_SERVER["argv"][$arg_loop]);
-    if ('' != $value_unencoded)
-    {
+    if ('' != $value_unencoded) {
         $value_unencoded.= chr(0);
     }
     $value_unencoded.= $current_arg;
 }
 
-$proxy_file = "multiotp.proxy.php";
-$proxy_url = "http://127.0.0.1:18081/";
 $key = 'argv';
 $value = base64_encode($value_unencoded);
-$timeout = 15;
 
 $multiotp_error_level_received = FALSE;
 $multiotp_error_level = 99; // Unknown error
 
-$post_url = $proxy_url;
+$post_url = $proxy_full_url;
 
 $result = '';
 $content_to_post = $key.'='.$value;
 
 $pos = strpos($post_url, '://');
-if (FALSE === $pos)
-{
+if (FALSE === $pos) {
     $protocol = '';
-}
-else
-{
-    switch (strtolower(substr($post_url,0,$pos)))
-    {
+} else {
+    switch (strtolower(substr($post_url,0,$pos))) {
         case 'https':
         case 'ssl':
             $protocol = 'ssl://';
@@ -119,24 +111,18 @@ else
 }
 
 $pos = strpos($post_url, '/');
-if (FALSE === $pos)
-{
+if (FALSE === $pos) {
     $host = $post_url;
     $url = '/';
-}
-else
-{
+} else {
     $host = substr($post_url,0,$pos);
     $url = substr($post_url,$pos); // And not +1 as we want the / at the beginning
 }
 
 $pos = strpos($host, ':');
-if (FALSE === $pos)
-{
+if (FALSE === $pos) {
     $port = 80;
-}
-else
-{
+} else {
     $port = substr($host,$pos+1);
     $host = substr($host,0,$pos);
 }
@@ -144,8 +130,7 @@ else
 $errno = 0;
 $errdesc = 0;
 $fp = @fsockopen($protocol.$host, $port, $errno, $errdesc, $timeout);
-if (FALSE !== $fp)
-{
+if (FALSE !== $fp) {
     $info['timed_out'] = FALSE;
     fputs($fp, "POST ".$url." HTTP/1.0\r\n");
     fputs($fp, "Content-Type: application/x-www-form-urlencoded\r\n");
@@ -162,8 +147,7 @@ if (FALSE !== $fp)
 
     $reply = '';
     $last_length = 0;
-    while ((!feof($fp)) && ((!$info['timed_out']) || ($last_length != strlen($reply))))
-    {
+    while ((!feof($fp)) && ((!$info['timed_out']) || ($last_length != strlen($reply)))) {
         $last_length = strlen($reply);
         $reply.= fgets($fp, 1024);
         $info = stream_get_meta_data($fp);
@@ -172,23 +156,17 @@ if (FALSE !== $fp)
     }
     fclose($fp);
 
-    if ($info['timed_out'])
-    {
+    if ($info['timed_out']) {
         $this->WriteLog("Warning: timeout after $timeout seconds for $protocol$host:$port$url with a result code of $errno ($errdesc).", FALSE, FALSE, 8888, 'Client-Server', '');
-    }
-    else
-    {
+    } else {
         $pos = strpos(strtolower($reply), "\r\n\r\n");
         $header = substr($reply, 0, $pos);
         
         $header_array = explode("\r\n", $header);
-        foreach($header_array as $one_header)
-        {
+        foreach($header_array as $one_header) {
             $one_header_array = explode(":", $one_header, 2);
-            if (isset($one_header_array[1]))
-            {
-                if ('X-multiOTP-Error-Level' == trim($one_header_array[0]))
-                {
+            if (isset($one_header_array[1])) {
+                if ('X-multiOTP-Error-Level' == trim($one_header_array[0])) {
                     $multiotp_error_level_received = TRUE;
                     $multiotp_error_level = intval(trim($one_header_array[1]));
                     break;
@@ -199,19 +177,15 @@ if (FALSE !== $fp)
         $answer = substr($reply, $pos + 4);
         
         $result = $answer;
-        if ($errno > 0)
-        {
+        if ($errno > 0) {
             // Error ?
         }
     }
 }
 
-if (!$multiotp_error_level_received)
-{
-    require_once(dirname(__FILE__)."/".$proxy_file);
-}
-else
-{
+if (!$multiotp_error_level_received) {
+    require_once(dirname(__FILE__)."/".$local_proxy_file);
+} else {
     echo $result;
     exit($multiotp_error_level);
 }
