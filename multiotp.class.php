@@ -26,7 +26,7 @@
  * prioritize your needs.
  *
  * The multiOTP class is a strong authentication class in pure PHP
- * that supports the following algorithms (mOTP is recommended):
+ * that supports the following algorithms:
  *  - OATH/HOTP RFC 4226 (http://tools.ietf.org/html/rfc4226)
  *  - OATH/TOTP RFC 6238 (http://tools.ietf.org/html/rfc6238)
  *  - Google Authenticator (OATH/HOTP or OATH/TOTP, base32 seed, QRcode provisioning)
@@ -63,8 +63,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.2.5
- * @date      2015-07-15
+ * @version   4.3.2.6
+ * @date      2015-07-18
  * @since     2010-06-08
  * @copyright (c) 2010-2015 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -436,6 +436,9 @@
  *
  * Change Log
  *
+ *   2015-07-18 4.3.2.6 SysCo/al New ResetTempUserArray method (as we want to move away from global array in the near future)
+ *                               For _user_data, default values are now extracted from the definition array
+ *                               QRcode generation for mOTP (motp://[SITENAME]:[USERNAME]?secret=[SECRET-KEY])
  *   2015-07-15 4.3.2.5 SysCo/al Calling multiotp CLI without parameter returns now error code 30 (instead of 19)
  *   2015-06-24 4.3.2.4 SysCo/al multi_account automatic support
  *                               Scratch password generation (UTF)
@@ -622,8 +625,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.2.5
- * @date      2015-07-15
+ * @version   4.3.2.6
+ * @date      2015-07-18
  * @since     2010-07-18
  */
 {
@@ -706,8 +709,8 @@ class Multiotp
      * @retval  void
      *
      * @author  Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-     * @version 4.3.2.5
-     * @date    2015-07-15
+     * @version 4.3.2.6
+     * @date    2015-07-18
      * @since   2010-07-18
      */
     {
@@ -722,8 +725,8 @@ class Multiotp
 
 
         $this->_class = base64_decode('bXVsdGlPVFA=');
-        $this->_version = '4.3.2.5'; // You should add a suffix for your changes (for example 4.3.2.2-andy-2015-06-09)
-        $this->_date = '2015-07-15'; // You should add a suffix for your changes (for example YYYY-MM-DD / YYY2-M2-XX)
+        $this->_version = '4.3.2.6'; // You should add a suffix for your changes (for example 4.3.2.2-andy-2015-06-09)
+        $this->_date = '2015-07-18'; // You should add a suffix for your changes (for example YYYY-MM-DD / YYY2-M2-XX)
         $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxNSBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh');
         $this->_website = base64_decode('aHR0cDovL3d3dy5tdWx0aU9UUC5uZXQ=');
         
@@ -742,213 +745,255 @@ class Multiotp
                                    'users'
                                   );
         
-        $this->_sql_tables_schema['cache']   = array('active_users_count'      => "int(10) DEFAULT -1",
-                                                     'last_update'             => "int(10) DEFAULT 0",
-                                                     'locked_users_count'      => "int(10) DEFAULT -1",
-                                                     'users_count'             => "int(10) DEFAULT -1");
+        $this->_sql_tables_schema['cache']   = array(
+            'active_users_count'      => "int(10) DEFAULT -1",
+            'last_update'             => "int(10) DEFAULT 0",
+            'locked_users_count'      => "int(10) DEFAULT -1",
+            'locked_users_list'       => "int(10) DEFAULT -1",
+            'users_count'             => "int(10) DEFAULT -1");
         $this->_sql_tables_index['cache']    = '**';
         $this->_sql_tables_ignore['cache']   = "**";
         
-        $this->_sql_tables_schema['config']  = array('actual_version'             => "varchar(255) DEFAULT ''",
-                                                     'admin_password_hash'        => "varchar(255) DEFAULT ''",
-                                                     'attributes_to_encrypt'      => "varchar(255) DEFAULT ''",
-                                                     'backend_type'               => "varchar(255) DEFAULT ''",
-                                                     'backend_type_validated'     => "int(10) DEFAULT 0",
-                                                     'auto_resync'                => "int(1) DEFAULT 1",
-                                                     'cache_data'                 => "int(1) DEFAULT 0",
-                                                     'cache_ldap_hash'            => "int(1) DEFAULT 1",
-                                                     'case_sensitive_users'       => "int(1) DEFAULT 0",
-                                                     'clear_otp_attribute'        => "varchar(255) DEFAULT ''",
-                                                     'debug'                      => "int(10) DEFAULT 0",
-                                                     'default_user_group'         => "varchar(255) DEFAULT ''",
-                                                     'default_request_ldap_pwd'   => "int(10) DEFAULT 1",
-                                                     'default_request_prefix_pin' => "int(10) DEFAULT 1",
-                                                     'demo_mode'                  => "int(10) DEFAULT 0",
-                                                     'display_log'                => "int(10) DEFAULT 0",
-                                                     'domain_name'                => "varchar(255) DEFAULT ''",
-                                                     'email_admin_address'        => "varchar(255) DEFAULT ''",
-                                                     'encryption_key_full_path'   => "varchar(255) DEFAULT ''",
-                                                     'failure_delayed_time'       => "int(10) DEFAULT 0",
-                                                     'group_attribute'            => "varchar(255) DEFAULT 'Filter-Id'",
-                                                     'hash_salt_full_path'        => "varchar(255) DEFAULT ''",
-                                                     'issuer'                     => "varchar(255) DEFAULT 'multiOTP'",
-                                                     'last_update'                => "int(10) DEFAULT 0",
-                                                     'ldap_account_suffix'        => "varchar(255) DEFAULT ''",
-                                                     'ldap_activated'             => "int(1) DEFAULT 0",
-                                                     'ldap_base_dn'               => "varchar(255) DEFAULT ''",
-                                                     'ldap_bind_dn'               => "varchar(255) DEFAULT ''",
-                                                     'ldap_cn_identifier'         => "varchar(255) DEFAULT 'sAMAccountName'",
-                                                     'ldap_domain_controllers'    => "varchar(255) DEFAULT ''",
-                                                     'ldap_group_attribute'       => "varchar(255) DEFAULT 'memberOf'",
-                                                     'ldap_group_cn_identifier'   => "varchar(255) DEFAULT 'sAMAccountName'",
-                                                     'ldap_hash_cache_time'       => "int(10) DEFAULT 604800",
-                                                     'ldap_in_group'              => "varchar(255) DEFAULT ''",
-                                                     'ldap_network_timeout'       => "int(10) DEFAULT 10",
-                                                     'ldap_port'                  => "varchar(255) DEFAULT '389'",
-                                                     'ldap_server_password'       => "varchar(255) DEFAULT ''",
-                                                     'ldap_server_type'           => "int(10) DEFAULT 1",
-                                                     'ldap_ssl'                   => "int(1) DEFAULT 0",
-                                                     'ldap_time_limit'            => "int(10) DEFAULT 30",
-                                                     'log'                        => "int(10) DEFAULT 0",
-                                                     'max_block_failures'         => "int(10) DEFAULT 0",
-                                                     'max_delayed_failures'       => "int(10) DEFAULT 0",
-                                                     'max_event_resync_window'    => "int(10) DEFAULT 0",
-                                                     'max_event_window'           => "int(10) DEFAULT 0",
-                                                     'max_time_resync_window'     => "int(10) DEFAULT 0",
-                                                     'max_time_window'            => "int(10) DEFAULT 0",
-                                                     'ntp_server'                 => "varchar(255) DEFAULT ''",
-                                                     'radius_reply_attributor'    => "varchar(255) DEFAULT ' = '",
-                                                     'radius_reply_separator_hex' => "varchar(255) DEFAULT ','",
-                                                     'scratch_passwords_digits'   => "int(10) DEFAULT 6",
-                                                     'scratch_passwords_amount'   => "int(10) DEFAULT 10",
-                                                     'self_registration'          => "int(1) DEFAULT 1",
-                                                     'server_cache_level'         => "int(10) DEFAULT 1",
-                                                     'server_cache_lifetime'      => "int(10) DEFAULT 15552000",
-                                                     'server_secret'              => "varchar(255) DEFAULT ''",
-                                                     'server_timeout'             => "int(10) DEFAULT 5",
-                                                     'server_type'                => "varchar(255) DEFAULT 'xml'",
-                                                     'server_url'                 => "varchar(255) DEFAULT ''",
-                                                     'sms_api_id'                 => "varchar(255) DEFAULT ''",
-                                                     'sms_message_prefix'         => "varchar(255) DEFAULT ''",
-                                                     'sms_originator'             => "varchar(255) DEFAULT ''",
-                                                     'sms_password'               => "varchar(255) DEFAULT ''",
-                                                     'sms_provider'               => "varchar(255) DEFAULT ''",
-                                                     'sms_userkey'                => "varchar(255) DEFAULT ''",
-                                                     'sms_digits'                 => "int(10) DEFAULT 0",
-                                                     'sms_timeout'                => "int(10) DEFAULT 0",
-                                                     'smtp_auth'                  => "int(10) DEFAULT 0",
-                                                     'smtp_password'              => "varchar(255) DEFAULT ''",
-                                                     'smtp_port'                  => "int(10) DEFAULT 25",
-                                                     'smtp_sender'                => "varchar(255) DEFAULT ''",
-                                                     'smtp_sender_name'           => "varchar(255) DEFAULT ''",
-                                                     'smtp_server'                => "varchar(255) DEFAULT ''",
-                                                     'smtp_ssl'                   => "int(10) DEFAULT 0",
-                                                     'smtp_username'              => "varchar(255) DEFAULT ''",
-                                                     'sql_server'                 => "varchar(255) DEFAULT ''",
-                                                     'sql_username'               => "varchar(255) DEFAULT ''",
-                                                     'sql_password'               => "varchar(255) DEFAULT ''",
-                                                     'sql_database'               => "varchar(255) DEFAULT ''",
-                                                     'sql_config_table'           => "varchar(255) DEFAULT ''",
-                                                     'sql_cache_table'            => "varchar(255) DEFAULT ''",
-                                                     'sql_devices_table'          => "varchar(255) DEFAULT ''",
-                                                     'sql_groups_table'           => "varchar(255) DEFAULT ''",
-                                                     'sql_log_table'              => "varchar(255) DEFAULT ''",
-                                                     'sql_tokens_table'           => "varchar(255) DEFAULT ''",
-                                                     'sql_users_table'            => "varchar(255) DEFAULT ''",
-                                                     'syslog_facility'            => "int(10) DEFAULT 7",
-                                                     'syslog_level'               => "int(10) DEFAULT 5",
-                                                     'syslog_port'                => "int(10) DEFAULT 514",
-                                                     'syslog_server'              => "varchar(255) DEFAULT ''",
-                                                     'tel_default_country_code'   => "varchar(255) DEFAULT ''",
-                                                     'timezone'                   => "varchar(255) DEFAULT 'Europe/Zurich'",
-                                                     'token_serial_number_length' => "varchar(255) DEFAULT '12'",
-                                                     'token_otp_list_of_length'   => "varchar(255) DEFAULT '6'",
-                                                     'verbose_log_prefix'         => "varchar(255) DEFAULT ''",
-                                                     'encryption_hash'            => "varchar(255) DEFAULT ''");
+        $this->_sql_tables_schema['config']  = array(
+            'actual_version'             => "varchar(255) DEFAULT ''",
+            'admin_password_hash'        => "varchar(255) DEFAULT ''",
+            'attributes_to_encrypt'      => "varchar(255) DEFAULT ''",
+            // Backend storage type (files / mysql)
+            'backend_type'               => "varchar(255) DEFAULT 'files'",
+            // By default, backend_type is not validated
+            'backend_type_validated'     => "int(10) DEFAULT 0",
+            'auto_resync'                => "int(1) DEFAULT 1",
+            'cache_data'                 => "int(1) DEFAULT 0",
+            'cache_ldap_hash'            => "int(1) DEFAULT 1",
+            'case_sensitive_users'       => "int(1) DEFAULT 0",
+            'clear_otp_attribute'        => "varchar(255) DEFAULT ''",
+            // No console authentication by default
+            'console_authentication'     => "int(10) DEFAULT 0",
+            // Debug mode (to enable it permanently)
+            'debug'                      => "int(10) DEFAULT 0",
+            'default_user_group'         => "varchar(255) DEFAULT ''",
+            'default_request_ldap_pwd'   => "int(10) DEFAULT 1",
+            'default_request_prefix_pin' => "int(10) DEFAULT 1",
+            'demo_mode'                  => "int(10) DEFAULT 0",
+            // Display log mode (to enable it permanently)
+            'display_log'                => "int(10) DEFAULT 0",
+            'domain_name'                => "varchar(255) DEFAULT ''",
+            'email_admin_address'        => "varchar(255) DEFAULT ''",
+            'encryption_key_full_path'   => "varchar(255) DEFAULT ''",
+            // Locking delay in seconds between two trials after "max_delayed_failures" failures
+            'failure_delayed_time'       => "int(10) DEFAULT 300",
+            'group_attribute'            => "varchar(255) DEFAULT 'Filter-Id'",
+            'hash_salt_full_path'        => "varchar(255) DEFAULT ''",
+            'issuer'                     => "varchar(255) DEFAULT 'multiOTP'",
+            'last_update'                => "int(10) DEFAULT 0",
+            'ldap_account_suffix'        => "varchar(255) DEFAULT ''",
+            'ldap_activated'             => "int(1) DEFAULT 0",
+            'ldap_base_dn'               => "varchar(255) DEFAULT ''",
+            'ldap_bind_dn'               => "varchar(255) DEFAULT ''",
+            'ldap_cn_identifier'         => "varchar(255) DEFAULT 'sAMAccountName'",
+            'ldap_domain_controllers'    => "varchar(255) DEFAULT ''",
+            'ldap_group_attribute'       => "varchar(255) DEFAULT 'memberOf'",
+            'ldap_group_cn_identifier'   => "varchar(255) DEFAULT 'sAMAccountName'",
+            // Hash cache time: 7 * 24 * 60 * 60 = 604800 = 1 week
+            'ldap_hash_cache_time'       => "int(10) DEFAULT 604800",
+            'ldap_in_group'              => "varchar(255) DEFAULT ''",
+            'ldap_network_timeout'       => "int(10) DEFAULT 10",
+            'ldap_port'                  => "varchar(255) DEFAULT '389'",
+            'ldap_server_password'       => "varchar(255) DEFAULT ''",
+            // Default type 1 is Active Directory, 2 for Generic LDAP
+            'ldap_server_type'           => "int(10) DEFAULT 1",
+            'ldap_ssl'                   => "int(1) DEFAULT 0",
+            'ldap_time_limit'            => "int(10) DEFAULT 30",
+            'log'                        => "int(10) DEFAULT 0",
+            'max_block_failures'         => "int(10) DEFAULT 6",
+            'max_delayed_failures'       => "int(10) DEFAULT 3",
+            'max_event_resync_window'    => "int(10) DEFAULT 10000",
+            'max_event_window'           => "int(10) DEFAULT 100",
+            'max_time_resync_window'     => "int(10) DEFAULT 90000",
+            // Maximum time window to be accepted, in seconds (+/-)
+            // Initialized to a little bit more than +/- 10 minutes
+            // (was 8000 seconds in version 3.x, and Stefan Kügler suggested to put a lower default value)
+            'max_time_window'            => "int(10) DEFAULT 600",
+            'ntp_server'                 => "varchar(255) DEFAULT 'pool.ntp.org'",
+            'radius_reply_attributor'    => "varchar(255) DEFAULT ' = '",
+            'radius_reply_separator_hex' => "varchar(255) DEFAULT '".bin2hex(',')."'",
+            'scratch_passwords_digits'   => "int(10) DEFAULT 6",
+            'scratch_passwords_amount'   => "int(10) DEFAULT 10",
+            'self_registration'          => "int(1) DEFAULT 1",
+            // Client-server configuration
+            'server_cache_level'         => "int(10) DEFAULT 1",
+            // 1552000 = 6 monthes
+            'server_cache_lifetime'      => "int(10) DEFAULT 15552000",
+            'server_secret'              => "varchar(255) DEFAULT 'ClientServerSecret'",
+            'server_timeout'             => "int(10) DEFAULT 5",
+            'server_type'                => "varchar(255) DEFAULT 'xml'",
+            'server_url'                 => "varchar(255) DEFAULT ''",
+            'sms_api_id'                 => "varchar(255) DEFAULT ''",
+            'sms_message_prefix'         => "varchar(255) DEFAULT '%s is your SMS-Code'",
+            'sms_originator'             => "varchar(255) DEFAULT 'multiOTP'",
+            'sms_password'               => "varchar(255) DEFAULT ''",
+            'sms_provider'               => "varchar(255) DEFAULT ''",
+            'sms_userkey'                => "varchar(255) DEFAULT ''",
+            'sms_digits'                 => "int(10) DEFAULT 6",
+            // SMS timeout before authenticating (in seconds)
+            'sms_timeout'                => "int(10) DEFAULT 180",
+            'smtp_auth'                  => "int(10) DEFAULT 0",
+            'smtp_password'              => "varchar(255) DEFAULT ''",
+            'smtp_port'                  => "int(10) DEFAULT 25",
+            'smtp_sender'                => "varchar(255) DEFAULT ''",
+            'smtp_sender_name'           => "varchar(255) DEFAULT ''",
+            'smtp_server'                => "varchar(255) DEFAULT ''",
+            'smtp_ssl'                   => "int(10) DEFAULT 0",
+            'smtp_username'              => "varchar(255) DEFAULT ''",
+            'sql_server'                 => "varchar(255) DEFAULT ''",
+            'sql_username'               => "varchar(255) DEFAULT ''",
+            'sql_password'               => "varchar(255) DEFAULT ''",
+            'sql_database'               => "varchar(255) DEFAULT ''",
+            // Default SQL table names. If empty, the related data will be written to a file.
+            'sql_config_table'           => "varchar(255) DEFAULT 'multiotp_config'",
+            'sql_cache_table'            => "varchar(255) DEFAULT 'multiotp_cache'",
+            'sql_devices_table'          => "varchar(255) DEFAULT 'multiotp_devices'",
+            'sql_groups_table'           => "varchar(255) DEFAULT 'multiotp_groups'",
+            'sql_log_table'              => "varchar(255) DEFAULT 'multiotp_log'",
+            'sql_tokens_table'           => "varchar(255) DEFAULT 'multiotp_tokens'",
+            'sql_users_table'            => "varchar(255) DEFAULT 'multiotp_users'",
+            'syslog_facility'            => "int(10) DEFAULT 7",
+            'syslog_level'               => "int(10) DEFAULT 5",
+            'syslog_port'                => "int(10) DEFAULT 514",
+            'syslog_server'              => "varchar(255) DEFAULT ''",
+            'tel_default_country_code'   => "varchar(255) DEFAULT ''",
+            'timezone'                   => "varchar(255) DEFAULT 'Europe/Zurich'",
+            'token_serial_number_length' => "varchar(255) DEFAULT '12'",
+            'token_otp_list_of_length'   => "varchar(255) DEFAULT '6'",
+            'verbose_log_prefix'         => "varchar(255) DEFAULT ''",
+            'encryption_hash'            => "varchar(255) DEFAULT ''");
         $this->_sql_tables_index['config']   = '**';
         $this->_sql_tables_ignore['config']  = '*backend_type*backend_type_validated*sql_server*sql_username*sql_password*sql_database*sql_config_table*';
 
         
-        $this->_sql_tables_schema['devices'] = array('device_id'                  => "varchar(255) DEFAULT ''",
-                                                     'challenge_response_enabled' => "int(1) DEFAULT 0",
-                                                     'description'                => "varchar(255) DEFAULT ''",
-                                                     'device_group'               => "varchar(255) DEFAULT ''",
-                                                     'device_secret'              => "varchar(255) DEFAULT ''",
-                                                     'ip_or_fqdn'                 => "varchar(255) DEFAULT ''",
-                                                     'last_update'                => "int(10) DEFAULT 0",
-                                                     'shortname'                  => "varchar(255) DEFAULT ''",
-                                                     'sms_challenge_enabled'      => "int(1) DEFAULT 0",
-                                                     'subnet'                     => "varchar(255) DEFAULT ''",
-                                                     'text_sms_challenge'         => "varchar(255) DEFAULT ''",
-                                                     'text_token_challenge'       => "varchar(255) DEFAULT ''",
-                                                     'encryption_hash'            => "varchar(255) DEFAULT ''");
+        $this->_sql_tables_schema['devices'] = array(
+            'device_id'                  => "varchar(255) DEFAULT ''",
+            'challenge_response_enabled' => "int(1) DEFAULT 0",
+            'description'                => "varchar(255) DEFAULT ''",
+            'device_group'               => "varchar(255) DEFAULT ''",
+            'device_secret'              => "varchar(255) DEFAULT ''",
+            'ip_or_fqdn'                 => "varchar(255) DEFAULT ''",
+            'last_update'                => "int(10) DEFAULT 0",
+            'shortname'                  => "varchar(255) DEFAULT ''",
+            'sms_challenge_enabled'      => "int(1) DEFAULT 0",
+            'subnet'                     => "varchar(255) DEFAULT ''",
+            'text_sms_challenge'         => "varchar(255) DEFAULT 'Please enter the code received on your mobile phone'",
+            'text_token_challenge'       => "varchar(255) DEFAULT 'Please enter the code displayed on the token'",
+            'encryption_hash'            => "varchar(255) DEFAULT ''");
         $this->_sql_tables_index['devices']  = '*device_id*ip_or_fqdn*shortname*';
         $this->_sql_tables_ignore['devices'] = "**";
 
-        $this->_sql_tables_schema['groups']  = array('group_id'                => "varchar(255) DEFAULT ''",
-                                                     'description'             => "varchar(255) DEFAULT ''",
-                                                     'name'                    => "varchar(255) DEFAULT ''",
-                                                     'last_update'             => "int(10) DEFAULT 0",
-                                                     'encryption_hash'         => "varchar(255) DEFAULT ''");
+        $this->_sql_tables_schema['groups']  = array(
+            'group_id'                => "varchar(255) DEFAULT ''",
+            'description'             => "varchar(255) DEFAULT ''",
+            'name'                    => "varchar(255) DEFAULT ''",
+            'last_update'             => "int(10) DEFAULT 0",
+            'encryption_hash'         => "varchar(255) DEFAULT ''");
         $this->_sql_tables_index['groups']   = '*group_id*name*';
         $this->_sql_tables_ignore['groups'] = "**";
 
-        $this->_sql_tables_schema['log']     = array('category'                => "varchar(100) DEFAULT ''",
-                                                     'datetime'                => "datetime DEFAULT NULL",
-                                                     'destination'             => "varchar(100) DEFAULT ''",
-                                                     'last_update'             => "int(10) DEFAULT 0",
-                                                     'logentry'                => "text",
-                                                     'note'                    => "varchar(255) DEFAULT ''",
-                                                     'severity'                => "varchar(100) DEFAULT ''",
-                                                     'source'                  => "varchar(100) DEFAULT ''",
-                                                     'user'                    => "varchar(255) DEFAULT ''");
+        $this->_sql_tables_schema['log']     = array(
+            'category'                => "varchar(100) DEFAULT ''",
+            'datetime'                => "datetime DEFAULT NULL",
+            'destination'             => "varchar(100) DEFAULT ''",
+            'last_update'             => "int(10) DEFAULT 0",
+            'logentry'                => "text",
+            'note'                    => "varchar(255) DEFAULT ''",
+            'severity'                => "varchar(100) DEFAULT ''",
+            'source'                  => "varchar(100) DEFAULT ''",
+            'user'                    => "varchar(255) DEFAULT ''");
         $this->_sql_tables_index['log']      = '*datetime*';
         $this->_sql_tables_ignore['log']     = "**";
 
-        $this->_sql_tables_schema['tokens']  = array('algorithm'               => "varchar(255) DEFAULT ''",
-                                                     'attributed_users'        => "varchar(255) DEFAULT ''",
-                                                     'delta_time'              => "int(10) DEFAULT 0",
-                                                     'description'             => "varchar(255) DEFAULT ''",
-                                                     'error_counter'           => "int(10) DEFAULT 0",
-                                                     'format'                  => "varchar(255) DEFAULT ''",
-                                                     'issuer'                  => "varchar(255) DEFAULT ''",
-                                                     'key_algorithm'           => "varchar(255) DEFAULT ''",
-                                                     'last_error'              => "int(10) DEFAULT 0",
-                                                     'last_event'              => "int(10) DEFAULT 0",
-                                                     'last_login'              => "int(10) DEFAULT 0",
-                                                     'last_update'             => "int(10) DEFAULT 0",
-                                                     'locked'                  => "int(1) DEFAULT 0",
-                                                     'manufacturer'            => "varchar(255) DEFAULT ''",
-                                                     'number_of_digits'        => "int(10) DEFAULT 6",
-                                                     'otp'                     => "varchar(255) DEFAULT ''",
-                                                     'time_interval'           => "int(10) DEFAULT 0",
-                                                     'token_algo_suite'        => "varchar(255) DEFAULT ''",
-                                                     'token_id'                => "varchar(255) DEFAULT ''",
-                                                     'token_seed'              => "varchar(255) DEFAULT ''",
-                                                     'token_serial'            => "varchar(255) DEFAULT ''",
-                                                     'encryption_hash'         => "varchar(255) DEFAULT ''");
+        $this->_sql_tables_schema['tokens']  = array(
+            'algorithm'               => "varchar(255) DEFAULT ''",
+            'attributed_users'        => "varchar(255) DEFAULT ''",
+            'delta_time'              => "int(10) DEFAULT 0",
+            'description'             => "varchar(255) DEFAULT ''",
+            'error_counter'           => "int(10) DEFAULT 0",
+            'format'                  => "varchar(255) DEFAULT ''",
+            'issuer'                  => "varchar(255) DEFAULT ''",
+            'key_algorithm'           => "varchar(255) DEFAULT ''",
+            'last_error'              => "int(10) DEFAULT 0",
+            'last_event'              => "int(10) DEFAULT -1",
+            'last_login'              => "int(10) DEFAULT 0",
+            'last_update'             => "int(10) DEFAULT 0",
+            'locked'                  => "int(1) DEFAULT 0",
+            'manufacturer'            => "varchar(255) DEFAULT 'multiOTP'",
+            'number_of_digits'        => "int(10) DEFAULT 6",
+            'otp'                     => "varchar(255) DEFAULT ''",
+            'time_interval'           => "int(10) DEFAULT 0",
+            'token_algo_suite'        => "varchar(255) DEFAULT ''",
+            'token_id'                => "varchar(255) DEFAULT ''",
+            // Token seed, default set to the RFC test seed, hexadecimal coded
+            'token_seed'              => "varchar(255) DEFAULT '3132333435363738393031323334353637383930'",
+            'token_serial'            => "varchar(255) DEFAULT ''",
+            'encryption_hash'         => "varchar(255) DEFAULT ''");
         $this->_sql_tables_index['tokens']   = '*attributed_users*token_id*token_serial*';
         $this->_sql_tables_ignore['tokens']  = "**";
 
-        $this->_sql_tables_schema['users']   = array('algorithm'               => "varchar(255) DEFAULT ''",
-                                                     'autolock_time'           => "int(10) DEFAULT 0",
-                                                     'challenge'               => "varchar(255) DEFAULT ''",
-                                                     'challenge_validity'      => "int(10) DEFAULT 0",
-                                                     'delta_time'              => "int(10) DEFAULT 0",
-                                                     'desactivated'            => "int(1) DEFAULT 0",
-                                                     'description'             => "varchar(255) DEFAULT ''",
-                                                     'email'                   => "varchar(255) DEFAULT ''",
-                                                     'error_counter'           => "int(10) DEFAULT 0",
-                                                     'group'                   => "varchar(255) DEFAULT ''",
-                                                     'key_id'                  => "varchar(255) DEFAULT ''",
-                                                     'last_error'              => "int(10) DEFAULT 0",
-                                                     'last_event'              => "int(10) DEFAULT 0",
-                                                     'last_login'              => "int(10) DEFAULT 0",
-                                                     'last_update'             => "int(10) DEFAULT 0",
-                                                     'ldap_hash_cache'         => "varchar(255) DEFAULT ''",
-                                                     'ldap_hash_validity'      => "int(10) DEFAULT 0",
-                                                     'locked'                  => "int(1) DEFAULT 0",
-                                                     'multi_account'           => "int(10) DEFAULT 0",
-                                                     'number_of_digits'        => "int(10) DEFAULT 6",
-                                                     'request_ldap_pwd'        => "int(10) DEFAULT 0",
-                                                     'request_prefix_pin'      => "int(10) DEFAULT 0",
-                                                     'scratch_passwords'       => "text",
-                                                     'seed_password'           => "varchar(255) DEFAULT ''",
-                                                     'sms'                     => "varchar(255) DEFAULT ''",
-                                                     'sms_otp'                 => "varchar(255) DEFAULT ''",
-                                                     'sms_validity'            => "int(10) DEFAULT 0",
-                                                     'synchronized'            => "int(1) DEFAULT 0",
-                                                     'synchronized_channel'    => "varchar(255) DEFAULT ''",
-                                                     'synchronized_dn'         => "varchar(255) DEFAULT ''",
-                                                     'synchronized_server'     => "varchar(255) DEFAULT ''",
-                                                     'synchronized_time'       => "int(10) DEFAULT 0",
-                                                     'time_interval'           => "int(10) DEFAULT 0",
-                                                     'token_algo_suite'        => "varchar(255) DEFAULT ''",
-                                                     'token_seed'              => "varchar(255) DEFAULT ''",
-                                                     'token_serial'            => "varchar(255) DEFAULT ''",
-                                                     'user'                    => "varchar(255) DEFAULT ''",
-                                                     'user_pin'                => "varchar(255) DEFAULT ''",
-                                                     'encryption_hash'         => "varchar(255) DEFAULT ''");
+        $this->_sql_tables_schema['users']   = array(
+            'algorithm'               => "varchar(255) DEFAULT ''",
+            // Autolock time (for cached data)
+            'autolock_time'           => "int(10) DEFAULT 0",
+            // Challenge initialization
+            'challenge'               => "varchar(255) DEFAULT ''",
+            'challenge_validity'      => "int(10) DEFAULT 0",
+            // Delta time in seconds for a time based token
+            'delta_time'              => "int(10) DEFAULT 0",
+            // Desactivated user info
+            'desactivated'            => "int(1) DEFAULT 0",
+            'description'             => "varchar(255) DEFAULT ''",
+            'email'                   => "varchar(255) DEFAULT ''",
+            // Login error counter
+            'error_counter'           => "int(10) DEFAULT 0",
+            'group'                   => "varchar(255) DEFAULT ''",
+            'key_id'                  => "varchar(255) DEFAULT ''",
+            // Last error login
+            'last_error'              => "int(10) DEFAULT 0",
+            // Last successful event
+            'last_event'              => "int(10) DEFAULT -1",
+            // Last successful login
+            'last_login'              => "int(10) DEFAULT 0",
+            'last_update'             => "int(10) DEFAULT 0",
+            // LDAP password hash caching mechanism
+            'ldap_hash_cache'         => "varchar(255) DEFAULT ''",
+            'ldap_hash_validity'      => "int(10) DEFAULT 0",
+            // Token locked
+            'locked'                  => "int(1) DEFAULT 0",
+            // User is a special multi-account user (the real user is in the token, like this: "user[space]token"
+            'multi_account'           => "int(10) DEFAULT 0",
+            // Number of digits returned by the token
+            'number_of_digits'        => "int(10) DEFAULT 6",
+            // Request the LDAP password as a prefix of the returned token value
+            'request_ldap_pwd'        => "int(10) DEFAULT 0",
+            'request_prefix_pin'      => "int(10) DEFAULT 0",
+            'scratch_passwords'       => "text",
+            'seed_password'           => "varchar(255) DEFAULT ''",
+            'sms'                     => "varchar(255) DEFAULT ''",
+            'sms_otp'                 => "varchar(255) DEFAULT ''",
+            // User sms otp validity
+            'sms_validity'            => "int(10) DEFAULT 0",
+            // Synchronized user info
+            'synchronized'            => "int(1) DEFAULT 0",
+            'synchronized_channel'    => "varchar(255) DEFAULT ''",
+            'synchronized_dn'         => "varchar(255) DEFAULT ''",
+            'synchronized_server'     => "varchar(255) DEFAULT ''",
+            'synchronized_time'       => "int(10) DEFAULT 0",
+            // Time interval in seconds for a time based token
+            'time_interval'           => "int(10) DEFAULT 0",
+            'token_algo_suite'        => "varchar(255) DEFAULT ''",
+            // Token seed, default set to the RFC test seed, hexadecimal coded
+            'token_seed'              => "varchar(255) DEFAULT '3132333435363738393031323334353637383930'",
+            'token_serial'            => "varchar(255) DEFAULT ''",
+            'user'                    => "varchar(255) DEFAULT ''",
+            'user_pin'                => "varchar(255) DEFAULT ''",
+            'encryption_hash'         => "varchar(255) DEFAULT ''");
         $this->_sql_tables_index['users']    = '*desactivated*locked*user*';
         $this->_sql_tables_ignore['users']   = "**";
 
@@ -1216,18 +1261,18 @@ class Multiotp
     {
         // First, we reset all values (we know the key based on the schema)
         reset($this->_sql_tables_schema['cache']);
-        while(list($valid_key, $valid_format) = @each($this->_sql_tables_schema['cache']))
-        {
-            $this->_cache_data[$valid_key] = "";
+        while(list($valid_key, $valid_format) = @each($this->_sql_tables_schema['cache'])) {
+            $pos = strpos(strtoupper($valid_format), 'DEFAULT');
+            $value = "";
+            if ($pos !== FALSE) {
+                $value = trim(substr($valid_format, $pos + strlen("DEFAULT")));
+                if (("'" == substr($value,0,1)) && ("'" == substr($value,-1))) {
+                    $value = substr($value,1,-1);
+                }
+            }
+            $this->_cache_data[$valid_key] = $value;
         }
-
-        $this->_cache_data['last_update'] = 0;
-        $this->_cache_data['active_users_count'] = -1;
-        $this->_cache_data['locked_users_count'] = -1;
-        $this->_cache_data['locked_users_list'] = -1;
-        $this->_cache_data['users_count'] = -1;
     }
-    
 
     
     function WriteData(
@@ -1278,6 +1323,7 @@ class Multiotp
 
         $esc_id_value = escape_mysql_string($id_value);
         $item_created = FALSE;
+        
         $data_array['encryption_hash'] = $this->CalculateControlHash($this->GetEncryptionKey());
         
         if ((($this->GetBackendTypeValidated()) && ('' != $this->_config_data['sql_'.$table.'_table'])) || ('files' == $this->GetBackendType()) || $force_file) {
@@ -1549,155 +1595,16 @@ class Multiotp
         // First, we reset all values (we know the key based on the schema)
         reset($this->_sql_tables_schema['config']);
         while(list($valid_key, $valid_format) = @each($this->_sql_tables_schema['config'])) {
-            $this->_config_data[$valid_key] = "";
+            $pos = strpos(strtoupper($valid_format), 'DEFAULT');
+            $value = "";
+            if ($pos !== FALSE) {
+                $value = trim(substr($valid_format, $pos + strlen("DEFAULT")));
+                if (("'" == substr($value,0,1)) && ("'" == substr($value,-1))) {
+                    $value = substr($value,1,-1);
+                }
+            }
+            $this->_config_data[$valid_key] = $value;
         }
-
-        $this->_config_data['auto_resync'] = 1;
-        $this->_config_data['cache_data'] = 0;
-        $this->_config_data['cache_ldap_hash'] = 1;
-        $this->_config_data['case_sensitive_users'] = 0;
-        
-        // Backend storage type
-        $this->_config_data['backend_type'] = 'files';     // Currently, only files and mysql are supported.
-        $this->_config_data['backend_type_validated'] = 0; // By default, backend_type is not validated
-        
-        // Debug mode (to enable it permanently)
-        $this->_config_data['debug'] = 0;
-        
-        // Display log mode (to enable it permanently)
-        $this->_config_data['display_log'] = 0;
-
-        // Demo mode
-        $this->_config_data['demo_mode'] = 0;
-
-        // Domain name
-        $this->_config_data['domain_name'] = "";
-
-        // Admin email address
-        $this->_config_data['email_admin_address'] = "";
-
-        // Locking delay in seconds between two trials after "max_delayed_failures" failures
-        $this->_config_data['failure_delayed_time'] = 300;
-
-        // Password clear attribute (used for RADIUS answer)
-        $this->_config_data['clear_otp_attribute'] = "";
-        
-        // Encryption key full path (if we want to have a special encryption key stored in a file somewhere)
-        $this->_config_data['encryption_key_full_path'] = "";
-
-        // hash salt key full path (if we want to have a special hash salt stored in a file somewhere)
-        $this->_config_data['hash_salt_full_path'] = "";
-
-        // Group attribute (used for RADIUS answer)
-        $this->_config_data['group_attribute'] = 'Filter-Id';
-        
-        // Issuer attribute (used to generate soft tokens)
-        $this->_config_data['issuer'] = 'multiOTP';
-        
-        $this->_config_data['last_update'] = 0;
-        
-        // LDAP  connection information
-        $this->_config_data['ldap_activated'] = 0;
-        $this->_config_data['ldap_ssl'] = 0;
-        $this->_config_data['ldap_cn_identifier'] = 'sAMAccountName';
-        $this->_config_data['ldap_group_cn_identifier'] = 'sAMAccountName';
-        $this->_config_data['ldap_port'] = '389';
-        $this->_config_data['ldap_server_type'] = 1; // Default type 1 is Active Directory, 2 for Generic LDAP
-        $this->_config_data['ldap_time_limit'] = 30;
-        $this->_config_data['ldap_network_timeout'] = 10;
-        $this->_config_data['ldap_group_attribute'] = 'memberOf';
-        $this->_config_data['ldap_hash_cache_time'] = 7 * 24 * 60 * 60; // 1 week
-
-        // Log mode (to enable it permanently)
-        $this->_config_data['log'] = 0;
-        
-        // Number of consecutive failures before blocking the token. A blocked token needs a resync
-        $this->_config_data['max_block_failures'] = 6;
-
-        // Number of consecutive failures before locking and delaying the next request
-        $this->_config_data['max_delayed_failures'] = 3;
-
-        // Maximum number of events accepted to sync event based algorithm(s) token
-        $this->_config_data['max_event_resync_window'] = 10000;
-
-        // Maximum number of event gaps accepted for event based algorithm(s) token
-        $this->_config_data['max_event_window'] = 100;
-
-        // Maximum time window (in seconds) to be accepted for resync (+/-)
-        // Initialized to more than +/- one day
-        $this->_config_data['max_time_resync_window'] = 90000;
-
-        // Maximum time window to be accepted, in seconds (+/-)
-        // Initialized to a little bit more than +/- 10 minutes
-        // (was 8000 seconds in version 3.x, and Stefan Kügler suggested to put a lower default value)
-        $this->_config_data['max_time_window'] = 600;
-
-        $this->_config_data['ntp_server'] = 'pool.ntp.org';
-
-        $this->_config_data['timezone'] = 'Europe/Zurich';
-
-        $this->_config_data['scratch_passwords_digits'] = 6;
-
-        $this->_config_data['scratch_passwords_amount'] = 10;
-
-        $this->_config_data['self_registration'] = 1;
-
-        $this->_config_data['radius_reply_attributor'] = ' = ';
-        $this->_config_data['radius_reply_separator_hex'] = bin2hex(',');
-
-        $this->_config_data['token_serial_number_length'] = '12';
-        $this->_config_data['token_otp_list_of_length'] = '6';
-        
-        // Default parameters
-        $this->_config_data['default_request_ldap_pwd'] = 1;
-        $this->_config_data['default_request_prefix_pin'] = 1;
-        
-        $this->_config_data['default_user_group'] = "";
-
-        // Client-server configuration
-        $this->_config_data['server_cache_level'] = 1;
-        $this->_config_data['server_cache_lifetime'] = 15552000; // 6 monthes
-        $this->_config_data['server_secret'] = 'ClientServerSecret';
-        $this->_config_data['server_timeout'] = 5;
-        $this->_config_data['server_type'] = 'xml';
-
-        // SMS number of digits
-        $this->_config_data['sms_digits'] = 6;
-
-        // SMS message prefix
-        // $this->_config_data['sms_message_prefix'] = 'Your SMS-Code is:';
-        $this->_config_data['sms_message_prefix'] = '%s is your SMS-Code';
-
-        // SMS originator/sender
-        $this->_config_data['sms_originator'] = 'multiOTP';
-
-        // SMS timeout before authenticating (in seconds)
-        $this->_config_data['sms_timeout'] = 180;
-
-        // SMTP parameters
-        $this->_config_data['smtp_auth'] = 0;
-        $this->_config_data['smtp_password'] = "";
-        $this->_config_data['smtp_port'] = 25;
-        $this->_config_data['smtp_sender'] = "";
-        $this->_config_data['smtp_sender_name'] = "";
-        $this->_config_data['smtp_server'] = "";
-        $this->_config_data['smtp_ssl'] = 0;
-        $this->_config_data['smtp_username'] = "";
-
-        // Syslog parameters
-        $this->_config_data['syslog_facility'] = 7;
-        $this->_config_data['syslog_level'] = 5;
-        $this->_config_data['syslog_port'] = 514;
-        $this->_config_data['syslog_server'] = "";
-
-        // Default SQL table names. If empty, the related data will be written to a file.
-        $this->_config_data['sql_cache_table']   = 'multiotp_cache';
-        $this->_config_data['sql_config_table']  = 'multiotp_config';
-        $this->_config_data['sql_devices_table'] = 'multiotp_devices';
-        $this->_config_data['sql_groups_table']  = 'multiotp_groups';
-        $this->_config_data['sql_log_table']     = 'multiotp_log';
-        $this->_config_data['sql_tokens_table']  = 'multiotp_tokens';
-        $this->_config_data['sql_users_table']   = 'multiotp_users';
     }
 
 
@@ -1709,6 +1616,30 @@ class Multiotp
         $param4 = ""
     ) {
         return TRUE;
+    }
+
+
+    function SetConsoleAuthentication($value)
+    {
+        $this->_config_data['console_authentication'] = ((intval($value) > 0)?1:0);
+    }
+
+
+    function EnableConsoleAuthentication()
+    {
+        $this->_config_data['console_authentication'] = 1;
+    }
+
+
+    function DisableConsoleAuthentication()
+    {
+        $this->_config_data['console_authentication'] = 0;
+    }
+
+
+    function IsConsoleAuthentication()
+    {
+        return (1 == ($this->_config_data['console_authentication']));
     }
 
 
@@ -2939,78 +2870,38 @@ class Multiotp
     }
 
 
-    // Reset the user array
-    function ResetUserArray() {
+    // Reset the temporary user array
+    function ResetTempUserArray() {
+        $temp_user_array = array();
+
         // First, we reset all values (we know the key based on the schema)
         reset($this->_sql_tables_schema['users']);
         while(list($valid_key, $valid_format) = @each($this->_sql_tables_schema['users'])) {
-            $this->_user_data[$valid_key] = "";
+            $pos = strpos(strtoupper($valid_format), 'DEFAULT');
+            $value = "";
+            if ($pos !== FALSE) {
+                $value = trim(substr($valid_format, $pos + strlen("DEFAULT")));
+                if (("'" == substr($value,0,1)) && ("'" == substr($value,-1))) {
+                    $value = substr($value,1,-1);
+                }
+            }
+            $temp_user_array[$valid_key] = $value;
         }
 
-        // User is a special multi-account user (the real user is in the token, like this: "user[space]token"
-        $this->_user_data['multi_account'] = 0;
-
-        // User sms otp validity
-        $this->_user_data['sms_validity'] = 0;
-        
-        // Time interval in seconds for a time based token
-        $this->_user_data['time_interval'] = 0;
-        
-        // Number of digits returned by the token
-        $this->_user_data['number_of_digits'] = 6;
-        
-        // Request the LDAP password as a prefix of the returned token value
-        $this->_user_data['request_ldap_pwd'] = 0;
-
-        // LDAP password hash caching mechanism
-        $this->_user_data['ldap_hash_cache'] = "";
-        $this->_user_data['ldap_hash_validity'] = 0;
-        
         // Request the pin as a prefix of the returned token value
-        $this->_user_data['request_prefix_pin'] = $this->GetDefaultRequestPrefixPin();
+        $temp_user_array['request_prefix_pin'] = $this->GetDefaultRequestPrefixPin();
         
-        // Last successful login
-        $this->_user_data['last_login'] =  0;
-        
-        // Last successful event
-        $this->_user_data['last_event'] = -1;
-        
-        // Last error login
-        $this->_user_data['last_error'] =  0;
-        
-        $this->_user_data['last_update'] = 0;
+        return $temp_user_array;
+    }
 
-        // Autolock time (for cached data)
-        $this->_user_data['autolock_time'] = 0;
-        
-        // Challenge initialization
-        $this->_user_data['challenge'] = "";
-        $this->_user_data['challenge_validity'] = 0;
-        
-        // Delta time in seconds for a time based token
-        $this->_user_data['delta_time'] = 0;
-        
-        // Token seed, default set to the RFC test seed, hexadecimal coded
-        $this->_user_data['token_seed'] = '3132333435363738393031323334353637383930';
 
-        // Login error counter
-        $this->_user_data['error_counter'] = 0;
-
-        // Token locked
-        $this->_user_data['locked'] = 0;
-
-        // Desactivated user info
-        $this->_user_data['desactivated'] = 0;
-
-        // Synchronized user info
-        $this->_user_data['synchronized'] = 0;
-        $this->_user_data['synchronized_channel'] = "";
-        $this->_user_data['synchronized_dn'] = "";
-        $this->_user_data['synchronized_server'] = "";
-        $this->_user_data['synchronized_time'] = 0;
+    // Reset the user array
+    function ResetUserArray() {
+        $this->_user_data = array();
+        $this->_user_data = $this->ResetTempUserArray();
 
         // The user data array is not read actually
-        $this->SetUserDataReadFlag(FALSE);
+        $this->SetUserDataReadFlag(false);
     }
 
 
@@ -3018,38 +2909,17 @@ class Multiotp
         // First, we reset all values (we know the key based on the schema)
         reset($this->_sql_tables_schema['tokens']);
         while(list($valid_key, $valid_format) = @each($this->_sql_tables_schema['tokens'])) {
-            $this->_token_data[$valid_key] = "";
+            $pos = strpos(strtoupper($valid_format), 'DEFAULT');
+            $value = "";
+            if ($pos !== FALSE) {
+                $value = trim(substr($valid_format, $pos + strlen("DEFAULT")));
+                if (("'" == substr($value,0,1)) && ("'" == substr($value,-1))) {
+                    $value = substr($value,1,-1);
+                }
+            }
+            $this->_token_data[$valid_key] = $value;
         }
-
-        // Token encryption hash
-        $this->_token_data['manufacturer'] = 'multiOTP';
         $this->_token_data['issuer'] = $this->GetIssuer();
-        
-        // Number of digits returned by the token
-        $this->_token_data['number_of_digits'] = 6;
-        
-        // Last successful event
-        $this->_token_data['last_event'] = -1;
-        
-        $this->_token_data['delta_time'] = 0;
-        $this->_token_data['time_interval'] = 0;
-        
-        // Token seed, default set to the RFC test seed, hexadecimal coded
-        $this->_token_data['token_seed'] = '3132333435363738393031323334353637383930';
-        
-        // Last successful login
-        $this->_token_data['last_login'] =  0;
-        
-        // Last error login
-        $this->_token_data['last_error'] =  0;
-        
-        $this->_token_data['last_update'] = 0;
-
-        // Login error counter
-        $this->_token_data['error_counter'] = 0;
-
-        // Token locked
-        $this->_token_data['locked'] = 0;
         
         // The token data array is not read actually
         $this->SetTokenDataReadFlag(FALSE);
@@ -3059,22 +2929,32 @@ class Multiotp
     function ResetDeviceArray() {
         reset($this->_sql_tables_schema['devices']);
         while(list($valid_key, $valid_format) = @each($this->_sql_tables_schema['devices'])) {
-            $this->_device_data[$valid_key] = "";
+            $pos = strpos(strtoupper($valid_format), 'DEFAULT');
+            $value = "";
+            if ($pos !== FALSE) {
+                $value = trim(substr($valid_format, $pos + strlen("DEFAULT")));
+                if (("'" == substr($value,0,1)) && ("'" == substr($value,-1))) {
+                    $value = substr($value,1,-1);
+                }
+            }
+            $this->_device_data[$valid_key] = $value;
         }
-        $this->_device_data['challenge_response_enabled'] = 0;
-        $this->_device_data['sms_challenge_enabled'] = 0;
-        $this->_device_data['text_sms_challenge'] = 'Please enter the code received on your mobile phone';
-        $this->_device_data['text_token_challenge'] = 'Please enter the code displayed on the token';
-        $this->_device_data['last_update'] = 0;
     }
 
 
     function ResetGroupArray() {
         reset($this->_sql_tables_schema['groups']);
         while(list($valid_key, $valid_format) = @each($this->_sql_tables_schema['groups'])) {
-            $this->_group_data[$valid_key] = "";
+            $pos = strpos(strtoupper($valid_format), 'DEFAULT');
+            $value = "";
+            if ($pos !== FALSE) {
+                $value = trim(substr($valid_format, $pos + strlen("DEFAULT")));
+                if (("'" == substr($value,0,1)) && ("'" == substr($value,-1))) {
+                    $value = substr($value,1,-1);
+                }
+            }
+            $this->_group_data[$valid_key] = $value;
         }
-        $this->_group_data['last_update'] = 0;
     }
 
 
@@ -5385,33 +5265,34 @@ class Multiotp
      *********************************************************************/
     function GetUserTokenUrlLink($user = '', $display_name = '')
     {
-        $result = FALSE;
-        if ('' != $user)
-        {
-            $this->SetUser($user);
-        }
-
-        if ($this->ReadUserData())
-        {
-            $the_user       = $this->GetUser();
-            $description    = $this->GetUserDescription();
-            $q_algorithm    = $this->GetUserAlgorithm();
-            $q_algo_suite   = $this->GetUserTokenAlgoSuite();
-            $q_period       = $this->GetUserTokenTimeInterval();
-            $q_digits       = $this->GetUserTokenNumberOfDigits();
-            $q_seed         = $this->GetUserTokenSeed();
-            $q_counter      = $this->GetUserTokenLastEvent() + 1;
+        $result = false;
+        
+        $user_array = $this->ReadUserDataArray(('' != $user)?$user:$this->GetUser());
+        if (false !== $user_array) {
+            $the_user       = $user;
+            $description    = $user_array['description'];
+            $q_algorithm    = $user_array['algorithm'];
+            $q_algo_suite   = $user_array['token_algo_suite'];
+            $q_period       = $user_array['time_interval'];
+            $q_digits       = $user_array['number_of_digits'];
+            $q_seed         = $user_array['token_seed'];
+            $q_counter      = $user_array['last_event'] + 1;
             $q_display_name = (('' != $display_name)?$display_name:(('' != $description)?$description:$the_user));
             $q_issuer       = $this->GetIssuer();
-            switch (strtolower($q_algorithm))
-            {
+            switch (strtolower($q_algorithm)) {
                 case 'totp':
-                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&period='.$q_period.'&issuer='.$q_issuer;
+                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&period='.$q_period.'&issuer='.rawurlencode($q_issuer);
                     break;
                 case 'hotp':
-                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&counter='.$q_counter.'&issuer='.$q_issuer;
+                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&counter='.$q_counter.'&issuer='.rawurlencode($q_issuer);
+                    break;
+                case 'motp':
+                    $result = 'motp://'.rawurlencode($q_issuer).'/'.rawurlencode($q_display_name).'?secret='.$q_seed;
                     break;
                 /*
+                case 'token2':
+                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&period='.$q_period.'&issuer='.$q_issuer;
+                    break;
                 case 'motp':
                     $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&period='.$q_period.'&issuer='.$q_issuer;
                     break;
@@ -5422,9 +5303,7 @@ class Multiotp
                     $result = 'http://motp.sourceforge.net/no_qrcode_compatible_client_for_this_algorithm';
                     $this->WriteLog("Error: No known URL compatible client for this algorithm", FALSE, FALSE, 23, 'System', '');
             }
-        }
-        else
-        {
+        } else {
             // $result = '';
         }
         return $result;
@@ -5466,12 +5345,18 @@ class Multiotp
             switch (strtolower($q_algorithm))
             {
                 case 'totp':
-                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&period='.$q_period.'&issuer='.$q_issuer;
+                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&period='.$q_period.'&issuer='.rawurlencode($q_issuer);
                     break;
                 case 'hotp':
-                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&counter='.$q_counter.'&issuer='.$q_issuer;
+                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&counter='.$q_counter.'&issuer='.rawurlencode($q_issuer);
+                    break;
+                case 'motp':
+                    $result = 'motp://'.rawurlencode($q_issuer).'/'.rawurlencode($q_display_name).'?secret='.$q_seed;
                     break;
                 /*
+                case 'token2':
+                    $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&period='.$q_period.'&issuer='.$q_issuer;
+                    break;
                 case 'motp':
                     $result = 'otpauth://'.$q_algorithm.'/'.rawurlencode($q_display_name).'?secret='.base32_encode(hex2bin($q_seed)).'&digits='.$q_digits.'&period='.$q_period.'&issuer='.$q_issuer;
                     break;
@@ -5563,7 +5448,7 @@ class Multiotp
                     $prefix_required = intval($prefix_pin_needed);
                 }
             
-                $this->SetUser($user); // This will do also an automatic reset of the user array
+                $this->SetUser($user, false); // This will do also an automatic reset of the user array
 
                 $this->SetUserEmail($email);
                 $this->SetUserDescription($description);
@@ -5633,7 +5518,7 @@ class Multiotp
     }
 
 
-    function SetUser($user)
+    function SetUser($user, $auto_read_data = true)
     {
         if ('' != $user)
         {
@@ -5645,7 +5530,9 @@ class Multiotp
                 {
                     $this->_user = strtolower($this->_user);
                 }
-                $this->ReadUserData('', TRUE); // First parameter empty, otherwise it will loop with SetUser !
+                if ($auto_read_data) {
+                    $this->ReadUserData('', false); // First parameter empty, otherwise it will loop with SetUser !
+                }
             }
         }
         else
@@ -5826,7 +5713,7 @@ class Multiotp
         $result = FALSE;
         if ('' != $user)
         {
-            $this->SetUser($user);
+            $this->SetUser($user, false);
         }
         if ($this->ReadUserData('', FALSE, TRUE)) // LOCALLY ONLY, not on the server if any
         {
@@ -5847,7 +5734,7 @@ class Multiotp
         $result = FALSE;
         if ('' != $user)
         {
-            $this->SetUser($user);
+            $this->SetUser($user, false);
         }
         if ($this->ReadUserData('', FALSE, TRUE)) // LOCALLY ONLY, not on the server if any
         {
@@ -5868,7 +5755,7 @@ class Multiotp
     {
         if ('' != $user)
         {
-            $this->SetUser($user);
+            $this->SetUser($user, false);
         }
         
         $result = FALSE;
@@ -6059,22 +5946,18 @@ class Multiotp
     }
 
 
-    function ReadUserData($user = '', $create = FALSE, $no_server_check = FALSE)
+    function ReadUserDataArray($user = '', $create = false, $no_server_check = false)
     {
-
-        if ('' != $user)
-        {
-            $this->SetUser($user);
-        }
-        $result = FALSE;
+        $array_user = ('' != $user)?$user:$this->GetUser();
+        $result = false;
 
         // We reset all values (we know the key based on the schema)
-        $this->ResetUserArray();
+        $temp_user_array = $this->ResetTempUserArray();
 
         // First, we read the user file if the backend is files or when migration is enabled
         if (('files' == $this->GetBackendType()) || ($this->GetMigrationFromFile()))
         {
-            $user_filename = str_replace('/','',$this->GetUser()).'.db';
+            $user_filename = str_replace('/','',$array_user).'.db';
             if (!$this->IsCaseSensitiveUsers())
             {
                 $user_filename = strtolower($user_filename);
@@ -6083,71 +5966,60 @@ class Multiotp
             {
                 if (!$create)
                 {
-                    $this->WriteLog("Error: database file ".$this->GetUsersFolder().$user_filename." for user ".$this->_user." does not exist", FALSE, FALSE, 21, 'System', '');
+                    $this->WriteLog("Error: database file ".$this->GetUsersFolder().$user_filename." for user ".$array_user." does not exist", FALSE, FALSE, 21, 'System', '');
                 }
             }
             else
             {
-                $this->_user_data['multi_account'] = 0;
-                $this->_user_data['time_interval'] = 0;
+                $temp_user_array['multi_account'] = 0;
+                $temp_user_array['time_interval'] = 0;
                 
                 $file_handler = fopen($this->GetUsersFolder().$user_filename, "rt");
                 $first_line = trim(fgets($file_handler));
-                $v3 = (FALSE !== strpos(strtolower($first_line),"multiotp-database-format-v3"));
+                $v3 = (false !== strpos(strtolower($first_line),"multiotp-database-format-v3"));
                 
                 // First version format support
-                if (FALSE === strpos(strtolower($first_line),"multiotp-database-format"))
-                {
-                    $this->_user_data['algorithm']          = $first_line;
-                    $this->_user_data['token_seed']         = trim(fgets($file_handler));
-                    $this->_user_data['user_pin']           = trim(fgets($file_handler));
-                    $this->_user_data['number_of_digits']   = trim(fgets($file_handler));
-                    $this->_user_data['last_event']         = intval(trim(fgets($file_handler)) - 1);
-                    $this->_user_data['request_prefix_pin'] = intval(trim(fgets($file_handler)));
-                    $this->_user_data['last_login']         = intval(trim(fgets($file_handler)));
-                    $this->_user_data['error_counter']      = intval(trim(fgets($file_handler)));
-                    $this->_user_data['locked']             = intval(trim(fgets($file_handler)));
-                }
-                else
-                {
-                    while (!feof($file_handler))
-                    {
+                if (false === strpos(strtolower($first_line),"multiotp-database-format")) {
+                    $temp_user_array['algorithm']          = $first_line;
+                    $temp_user_array['token_seed']         = trim(fgets($file_handler));
+                    $temp_user_array['user_pin']           = trim(fgets($file_handler));
+                    $temp_user_array['number_of_digits']   = trim(fgets($file_handler));
+                    $temp_user_array['last_event']         = intval(trim(fgets($file_handler)) - 1);
+                    $temp_user_array['request_prefix_pin'] = intval(trim(fgets($file_handler)));
+                    $temp_user_array['last_login']         = intval(trim(fgets($file_handler)));
+                    $temp_user_array['error_counter']      = intval(trim(fgets($file_handler)));
+                    $temp_user_array['locked']             = intval(trim(fgets($file_handler)));
+                } else {
+                    while (!feof($file_handler)) {
                         $line = trim(fgets($file_handler));
                         $line_array = explode("=",$line,2);
-                        if ($v3) // v3 format, only tags followed by := instead of = are encrypted
-                        {
-                            if (":" == substr($line_array[0], -1))
-                            {
+                        if ($v3) { // v3 format, only tags followed by := instead of = are encrypted
+                            if (":" == substr($line_array[0], -1)) {
                                 $line_array[0] = substr($line_array[0], 0, strlen($line_array[0]) -1);
                                 $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                             }
-                        }
-                        else // v2 format, only defined tags are encrypted
-                        {
-                            if (FALSE !== strpos(strtolower($this->GetAttributesToEncrypt()), strtolower('*'.$line_array[0].'*')))
-                            {
+                        } else { // v2 format, only defined tags are encrypted
+                            if (FALSE !== strpos(strtolower($this->GetAttributesToEncrypt()), strtolower('*'.$line_array[0].'*'))) {
                                 $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                             }
                         }
-                        if ('' != trim($line_array[0]))
-                        {
-                            $this->_user_data[strtolower($line_array[0])] = $line_array[1];
+                        if ('' != trim($line_array[0])) {
+                            $temp_user_array[strtolower($line_array[0])] = $line_array[1];
                         }
                     }
                 }
                 fclose($file_handler);
-                $result = TRUE;
-                if ('' != $this->_user_data['encryption_hash'])
-                {
-                    if ($this->_user_data['encryption_hash'] != $this->CalculateControlHash($this->GetEncryptionKey()))
-                    {
-                        $this->_user_data['encryption_hash'] = "ERROR";
+                $result = true;
+                if ('' != $temp_user_array['encryption_hash']) {
+                    if ($temp_user_array['encryption_hash'] != $this->CalculateControlHash($this->GetEncryptionKey())) {
+                        $temp_user_array['encryption_hash'] = "ERROR";
                         $this->WriteLog("Error: the user information encryption key is not matching", FALSE, FALSE, 299, 'System', '');
-                        $result = FALSE;
+                        $result = false;
                     }
                 }
             }
         }
+
 
         // And now, we override the values if another backend type is defined
         if ($this->GetBackendTypeValidated())
@@ -6159,7 +6031,7 @@ class Multiotp
                     {
                         if ('' != $this->_config_data['sql_users_table'])
                         {
-                            $sQuery  = "SELECT * FROM `".$this->_config_data['sql_users_table']."` WHERE `user` = '".$this->_user."'";
+                            $sQuery  = "SELECT * FROM `".$this->_config_data['sql_users_table']."` WHERE `user` = '".$array_user."'";
                             $aRow = NULL;
                             
                             if (is_object($this->_mysqli))
@@ -6167,7 +6039,7 @@ class Multiotp
                                 if (!($rResult = $this->_mysqli->query($sQuery)))
                                 {
                                     $this->WriteLog("Error: SQL database query error ($sQuery) : ".trim($this->_mysqli->error).' ', TRUE, FALSE, 199, 'System', '');
-                                    $result = FALSE;
+                                    $result = false;
                                 }
                                 else
                                 {
@@ -6179,7 +6051,7 @@ class Multiotp
                                 if (!($rResult = mysql_query($sQuery, $this->_mysql_database_link)))
                                 {
                                     $this->WriteLog("Error: SQL database query error ($sQuery) : ".mysql_error(), TRUE, FALSE, 199, 'System', '');
-                                    $result = FALSE;
+                                    $result = false;
                                 }
                                 else
                                 {
@@ -6189,7 +6061,7 @@ class Multiotp
 
                             if (NULL != $aRow)
                             {
-                                $result = FALSE;
+                                $result = false;
                                 while(list($key, $value) = @each($aRow))
                                 {
                                     $in_the_schema = FALSE;
@@ -6207,32 +6079,32 @@ class Multiotp
                                         {
                                             $value = substr($value,4);
                                             $value = substr($value,0,strlen($value)-4);
-                                            $this->_user_data[$key] = $this->Decrypt($key,$value,$this->GetEncryptionKey());
+                                            $temp_user_array[$key] = $this->Decrypt($key,$value,$this->GetEncryptionKey());
                                         }
                                         else
                                         {
-                                            $this->_user_data[$key] = $value;
+                                            $temp_user_array[$key] = $value;
                                         }
                                     }                                    
                                     elseif ((!$in_the_schema) && ('unique_id' != $key)  && $this->GetVerboseFlag())
                                     {
                                         $this->WriteLog("Warning: *The key ".$key." is not in the users database schema", FALSE, FALSE, 98, 'System', '');
                                     }
-                                    $result = TRUE;
+                                    $result = true;
                                 }
                                 if(0 == count($aRow) && !$create)
                                 {
-                                    $this->WriteLog("Error: SQL database entry for user ".$this->GetUser()." does not exist", FALSE, FALSE, 299, 'System', '');
+                                    $this->WriteLog("Error: SQL database entry for user ".$array_user." does not exist", FALSE, FALSE, 299, 'System', '');
                                 }
                             }
                         }
-                        if ('' != $this->_user_data['encryption_hash'])
+                        if ('' != $temp_user_array['encryption_hash'])
                         {
-                            if ($this->_user_data['encryption_hash'] != $this->CalculateControlHash($this->GetEncryptionKey()))
+                            if ($temp_user_array['encryption_hash'] != $this->CalculateControlHash($this->GetEncryptionKey()))
                             {
-                                $this->_user_data['encryption_hash'] = "ERROR";
+                                $temp_user_array['encryption_hash'] = "ERROR";
                                 $this->WriteLog("Error: the users mysql encryption key is not matching", FALSE, FALSE, 299, 'System', '');
-                                $result = FALSE;
+                                $result = false;
                             }
                         }
                     }
@@ -6242,15 +6114,15 @@ class Multiotp
                     break;
             }
         }
-        
+
         // And now, we do the ReadUserData online on the server
         $server_result = -1;
         if ((!$no_server_check) && ('' != $this->GetServerUrl()))
         {
-            $server_result = $this->ReadUserDataOnServer($this->GetUser());
+            $server_result = $this->ReadUserDataOnServer($array_user);
             if (20 < strlen($server_result))
             {
-                $this->_user_data['encryption_hash'] = $this->CalculateControlHash($this->GetEncryptionKey());
+                $temp_user_array['encryption_hash'] = $this->CalculateControlHash($this->GetEncryptionKey());
                 $server_array = explode("\n",$server_result);
                 $server_result = 19;
 
@@ -6267,14 +6139,36 @@ class Multiotp
                     {
                         if ('encryption_hash' != strtolower($line_array[0]))
                         {
-                            $this->_user_data[strtolower($line_array[0])] = $line_array[1];
+                            $temp_user_array[strtolower($line_array[0])] = $line_array[1];
                         }
                     }
                 }
-                $result = TRUE;
+                $result = true;
             }
         }
-        
+
+        if (false !== $result) {
+            return $temp_user_array;
+        } else {
+            return false;
+        }
+    }
+
+
+    function ReadUserData($user = '', $create = FALSE, $no_server_check = FALSE)
+    {
+        if ('' != $user) {
+            $this->SetUser($user, false);
+        }
+        $result = false;
+        $temp_user_array = $this->ReadUserDataArray($user, $create, $no_server_check);
+        if (false !== $temp_user_array) {
+            $this->_user_data = $temp_user_array;
+            $result = true;
+        } else {
+            $this->_user_data = $this->ResetUserArray();
+        }
+
         $this->SetUserDataReadFlag($result);
         return $result;
     }
@@ -6957,7 +6851,7 @@ class Multiotp
         $table_name = 'sql_users_table';
         $folder = $this->GetUsersFolder();
         $parser_id = 'GET_NEXT_USER_ARRAY';
-        $user = FALSE;
+        $user_array = false;
 
         if ((($this->GetBackendTypeValidated()) && ('' != $this->_config_data[$table_name])) || ('files' == $this->GetBackendType()))
         {
@@ -7036,20 +6930,20 @@ class Multiotp
                             }
                             if (isset($aRow['user']))
                             {
-                                $user = array('user'                 => $aRow['user'],
-                                              'description'          => $aRow['description'],
-                                              'email'                => $aRow['email'],
-                                              'enabled'              => (0 == $aRow['desactivated']),
-                                              'group'                => $aRow['group'],
-                                              'locked'               => (1 == $aRow['locked']),
-                                              'sms'                  => $aRow['sms'],
-                                              'synchronized'         => (1 == $aRow['synchronized']),
-                                              'synchronized_channel' => $aRow['synchronized_channel'],
-                                              'synchronized_server'  => $aRow['synchronized_server'],
-                                              'synchronized_time'    => $aRow['synchronized_time'],
-                                              'token'                => $aRow['token_serial'],
-                                              'synchronized_dn'      => $aRow['synchronized_dn']
-                                             );
+                                $user_array = array('user'                 => $aRow['user'],
+                                                    'description'          => $aRow['description'],
+                                                    'email'                => $aRow['email'],
+                                                    'enabled'              => (0 == $aRow['desactivated']),
+                                                    'group'                => $aRow['group'],
+                                                    'locked'               => (1 == $aRow['locked']),
+                                                    'sms'                  => $aRow['sms'],
+                                                    'synchronized'         => (1 == $aRow['synchronized']),
+                                                    'synchronized_channel' => $aRow['synchronized_channel'],
+                                                    'synchronized_server'  => $aRow['synchronized_server'],
+                                                    'synchronized_time'    => $aRow['synchronized_time'],
+                                                    'token'                => $aRow['token_serial'],
+                                                    'synchronized_dn'      => $aRow['synchronized_dn']
+                                                    );
                             }
                         }
                         break;
@@ -7069,35 +6963,35 @@ class Multiotp
                         {
                             $user = substr($file,0,-3);
                             $this->SetUser($user);
-                            $user = array('user'                 => $user,
-                                          'description'          => $this->GetUserDescription(),
-                                          'email'                => $this->GetUserEmail(),
-                                          'enabled'              => (1 == $this->GetUserActivated()),
-                                          'group'                => $this->GetUserGroup(),
-                                          'locked'               => (1 == $this->GetUserLocked()),
-                                          'sms'                  => $this->GetUserSms(),
-                                          'synchronized'         => (1 == $this->GetUserSynchronized()),
-                                          'synchronized_channel' => $this->GetUserSynchronizedChannel(),
-                                          'synchronized_server'  => $this->GetUserSynchronizedServer(),
-                                          'synchronized_time'    => $this->GetUserSynchronizedTime(),
-                                          'token'                => $this->GetUserTokenSerialNumber(),
-                                          'synchronized_dn'      => $this->GetUserSynchronizedDn()
-                                         );
+                            $user_array = array('user'                 => $user,
+                                                'description'          => $this->GetUserDescription(),
+                                                'email'                => $this->GetUserEmail(),
+                                                'enabled'              => (1 == $this->GetUserActivated()),
+                                                'group'                => $this->GetUserGroup(),
+                                                'locked'               => (1 == $this->GetUserLocked()),
+                                                'sms'                  => $this->GetUserSms(),
+                                                'synchronized'         => (1 == $this->GetUserSynchronized()),
+                                                'synchronized_channel' => $this->GetUserSynchronizedChannel(),
+                                                'synchronized_server'  => $this->GetUserSynchronizedServer(),
+                                                'synchronized_time'    => $this->GetUserSynchronizedTime(),
+                                                'token'                => $this->GetUserTokenSerialNumber(),
+                                                'synchronized_dn'      => $this->GetUserSynchronizedDn()
+                                               );
                         }
                         else
                         {
-                            $user = FALSE;
+                            $user_array = FALSE;
                             closedir($this->_parser_pointers[$parser_id]);
                         }
                 }
             }
             
         }
-        if (FALSE === $user)
+        if (FALSE === $user_array)
         {
             unset($this->_parser_pointers[$parser_id]);
         }
-        return $user;
+        return $user_array;
     }
 
 
@@ -9704,7 +9598,7 @@ class Multiotp
                                                                     -1 // Set to default value if the user is created  automatically
                                                                    );
                                     if ($result) {
-                                        $this->SyncUserModified(true);
+                                        $this->SyncUserModified(true, $user);
                                         $ldap_created_counter++;
                                     }
                                 }
@@ -9772,7 +9666,7 @@ class Multiotp
                                         
                                         $this->WriteUserData(TRUE, $modified); // $automatically = TRUE, $update_last_change = $modified
                                         if ($modified) {
-                                            $this->SyncUserModified();
+                                            $this->SyncUserModified(false, $user);
                                             $modified_counter++;
                                         }
                                     }
@@ -9863,7 +9757,7 @@ class Multiotp
 
 
     // It's possible to overload this stub in order to do something when the current user is modified (or created)
-    function SyncUserModified($created = false) {
+    function SyncUserModified($created = false, $user = '') {
         return true;
     }
 
@@ -14775,6 +14669,8 @@ EOL;
         
         return $result;
     }
+    
+    
 }
 
 

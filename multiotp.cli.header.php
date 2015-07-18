@@ -62,8 +62,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.2.5
- * @date      2015-07-15
+ * @version   4.3.2.6
+ * @date      2015-07-18
  * @since     2010-06-08
  * @copyright (c) 2010-2015 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -342,6 +342,7 @@
  *
  * Change Log
  *
+ *   2015-07-18 4.3.2.6 SysCo/al Minor fixes
  *   2015-07-15 4.3.2.5 SysCo/al Calling multiotp CLI without parameter returns now error code 30 (instead of 19)
  *   2015-06-24 4.3.2.4 SysCo/al multiotp_account automatic support
  *   2015-06-10 4.3.2.3 SysCo/al Enhancements for the Dev(Talks): demo
@@ -2528,7 +2529,7 @@ switch ($command)
             echo " - secuPASS.net       simple SMS trusting service for free WLAN Hotspot".$crlf;
             echo "                      (http://www.secuPASS.net)".$crlf;
             echo " - mOTP-CP            an Open-Source Credential Provider for the Windows Logon".$crlf;
-            echo "                      (http://goo.gl/YDWZm3)".$crlf;
+            echo "                      (https://goo.gl/Y8g4ON)".$crlf;
             echo " - ownCloud OTP       One Time Password app for ownCloud (http://owncloud.org)".$crlf;
             echo "                      (http://goo.gl/mKjt43)".$crlf;
             echo $crlf;

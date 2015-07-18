@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2015 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 4.3.2.5 (2015-07-15) - Summer Edition
+Current build: 4.3.2.6 (2015-07-18)
 
 Visit http://forum.multiotp.net/ for additional support.
 
@@ -169,6 +169,9 @@ WHAT'S NEW IN THE RELEASES
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
+2015-07-18 4.3.2.6 SysCo/al New ResetTempUserArray method (as we want to move away from global array in the near future)
+                            For _user_data, default values are now extracted from the definition array
+                            QRcode generation for mOTP (motp://[SITENAME]:[USERNAME]?secret=[SECRET-KEY])
 2015-07-15 4.3.2.5 SysCo/al Calling multiotp CLI without parameter returns now error code 30 (instead of 19)
 2015-06-24 4.3.2.4 SysCo/al multi_account automatic support
                             Scratch password generation (UTF)
@@ -896,7 +899,7 @@ FOR STRONG AUTHENTICATION ON DESKTOPS ?
 =========================================================
 1) Install a client/server multiOTP environment like explained above.
 2) On each client, install MultiOneTimePassword Credential Provider (mOTP-CP)
-   (https://code.google.com/p/multi-one-time-password--credential-provider/).
+   (https://github.com/LastSquirrelIT/MultiOneTimePassword-CredentialProvider).
    It works with Windows Vista/7/2008/8/2012 in both 32 and 64 bits.
 3) During the installation, specify the folder on the client where the
    multiotp.exe file is installed and configured.
@@ -978,7 +981,7 @@ open source MultiOneTimePassword Credential Provider from Last Squirrel IT.
 It works with Windows Vista/7/2008/8/2012 in both 32 and 64 bits.
 The Credential Provider is using directly a local version of multiOTP which
 can be configured as a client of a centralized multiOTP server (with caching support)
-(https://code.google.com/p/multi-one-time-password--credential-provider/)
+(https://github.com/LastSquirrelIT/MultiOneTimePassword-CredentialProvider)
 
 LSE Experts is providing a commercial Radius Credential Provider which can talk
 directly with any radius server to check the token. multiOTP will work with it.
@@ -1055,9 +1058,11 @@ and you may also check multiotp.cli.header.php which implements the class.
 MULTIOTP COMMAND LINE TOOL
 ==========================
 
-multiOTP 4.3.2.5 (2015-07-15)
+multiOTP 4.3.2.6 (2015-07-18)
 (c) 2010-2015 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
+
+Script folder: D:\Data\projects\multiotp\core\
 
 multiotp will check if the token of a user is correct, based on a specified
 algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226) 
@@ -1404,7 +1409,7 @@ Some of other products and services based on multiOTP
  - secuPASS.net       simple SMS trusting service for free WLAN Hotspot
                       (http://www.secuPASS.net)
  - mOTP-CP            an Open-Source Credential Provider for the Windows Logon
-                      (http://goo.gl/YDWZm3)
+                      (https://goo.gl/Y8g4ON)
  - ownCloud OTP       One Time Password app for ownCloud (http://owncloud.org)
                       (http://goo.gl/mKjt43)
 

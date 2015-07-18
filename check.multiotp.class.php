@@ -22,8 +22,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.2.2
- * @date      2015-06-09
+ * @version   4.3.2.6
+ * @date      2015-07-17
  * @since     2013-07-10
  * @copyright (c) 2013-2015 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -71,6 +71,7 @@
  *
  * Change Log
  *
+ *   2015-07-17 4.3.2.6 SysCo/al Additional tests included
  *   2015-06-09 4.3.2.2 SysCo/al Additional tests included
  *   2014-11-04 4.3.0.0 SysCo/al Additional tests included
  *   2014-03-30 4.2.4.2 SysCo/al Additional tokens tests included
@@ -387,6 +388,22 @@ while ($current_backend != 'files')
     echo_full($crlf);
 
 
+   //====================================================================
+    // Delete the user test_user twice if it exists
+    echo_full($i_on);
+    echo_full("Deleting the test_user (twice)".$crlf);
+    if (!$multiotp->DeleteUser('test_user', TRUE))
+    {
+        echo_full("- INFO: User test_user doesn't exist yet".$crlf);
+    }
+    else
+    {
+        echo_full("- INFO: User test_user successfully deleted".$crlf);
+    }
+    echo_full($i_off);
+    echo_full($crlf);
+
+
     //====================================================================
     // Delete the token test_token if it exists
     echo_full($i_on);
@@ -437,7 +454,7 @@ while ($current_backend != 'files')
     $multiotp->WriteUserData();
     echo_full($crlf);
 
-
+    
     //====================================================================
     // TEST: Authenticating test_user with the first token of the RFC test values
     $tests++;
@@ -827,6 +844,13 @@ while ($current_backend != 'files')
         echo_full("<img src=\"data:image/png;base64,".base64_encode($binary_result)."\" alt=\"multiOTP TOTP test token\">".$crlf);
         echo_full($crlf);
     }
+
+
+    //====================================================================
+    // Display the user token URL link
+    echo_full("User token URL link for test_user".$crlf);
+    echo_full($multiotp->GetUserTokenUrlLink('test_user', 'multiOTP test_user token').$crlf);
+    echo_full($crlf);
 
 
     //====================================================================
