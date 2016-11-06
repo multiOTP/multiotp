@@ -3,10 +3,10 @@ multiOTP open source
 multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
 multiOTP open source is OATH certified for HOTP/TOTP
 
-(c) 2010-2015 SysCo systemes de communication sa  
+(c) 2010-2016 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 4.3.2.6 (2015-07-18)
+Current build: 5.0.2.6 (2016-11-04)
 
 Visit http://forum.multiotp.net/ for additional support.
 
@@ -41,7 +41,7 @@ The multiOTP class supports currently the following algorithms and RFC's:
 TABLE OF CONTENTS
 =================
  * Donations and sponsoring
- * Roadmap for futures releases
+ * Roadmap for next releases
  * What's new in the releases
  * Change Log of released version
  * Content of the package
@@ -86,33 +86,55 @@ Hermann Wegener GmbH & Co. KG (DE)
 SerNet GmbH (DE)  
 
 
-ROADMAP FOR NEXT RELEASES
-=========================
-- Radius challenge/response support
+WISHLIST FOR FUTURE RELEASES
+============================
+- RADIUS challenge/response support
 - Multiple hardware tokens support for one account
 - Generic web based SMS provider support
+- Radius gateway support
+- YubiCloud support
+- FIDO support (SOAP service)
+- Bootstrap/VueJS frontend
+- SMS-revolution SMS provider support
 - Doxygen documentation format
 - Users CSV import
   (username;pin;prefix_pin_needed;email;sms;serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
-- Radius gateway support
-- YubiCloud support
-- FIDO support
-- SMS-revolution SMS provider support
-- SOAP API
 - PostgreSQL support
-- AngularJS frontend
 
 
 WHAT'S NEW IN THE RELEASES
 ==========================
+# What's new in 5.0 releases
+- The first matching group defined in AD/LDAP group(s) filtering is now defined for the user
+  (this group is returned as the Filter-Id (11) option in a successful RADIUS answer) (5.0.1)
+- SOAP service available (compatible with OpenOTP SOAP service)
+- It's now possible to select a specific LDAP/AD attribute used as the synchronised account name
+  SetLdapSyncedUserAttribute(), GetLdapSyncedUserAttribute()
+- Cached requests supported (cached during a specific amount of time, useful for WebDAV, device option cache_result_enabled)
+- A try on the previous password is rejected, but the error counter is not incremented
+- ForceNoDisplayLog() method added, in order to be able to disable log on display in server mode
+- YubicoOTP private id check is now implemented
+- SSL AD/LDAP also supported with Windows 2012 server
+- SyncLdapUsers is now using a semaphore file in order to avoid concurrent process for large AD/LDAP sync
+  (tested with 1'000 groups, 100'000 users, 1'000 users in the LDAP sync group)
+- AD/LDAP additional log information
+- Special chars support enhanced in LDAP class (as described in RFC4515)
+- The default ldap_group_cn_identifier is now cn instead of sAMAccountName
+- Enhanced SMS support for Clickatell, SSL is now also working
+- Bug fix concerning QRcode generation for mOTP
+- Weekly anonymized stats added (can be disabled).
+
+
 # What's new in 4.3 releases
+- Virtual Appliances are now available (VMware, Hyper-V, generic OVA) (4.3.2.5)
 - Raspberry Pi edition has now a special proxy to speed up the command line (4.3.1)
-- Generic LDAP support (no more only Microsoft AD compatible LDAP) (4.3.1)
-- New AD/LDAP sync algorithm to support larger AD (4.3.0)
-- If users are synced with an AD, it's now possible to use
+- Generic LDAP support (in addition to Microsoft Active Directory support) (4.3.1)
+- New AD/LDAP faster sync algorithm to support larger AD (4.3.0)
+- If users are synced using AD/LDAP, it's now possible to use
   the AD/LDAP password instead of the PIN code (4.3.0)
 - Yubico OTP support, including keys import using the log file in Traditional format (4.3.0)
 - Resync during authentication (autoresync) is now better handled in the class directly
+- QRCode generation for mOTP (compatible with Token2 App for iOS, Android and Windows Phone)
 
 # What's new in 4.2 releases
 - A new option -user-info is now available (4.2.4.1)
@@ -169,6 +191,35 @@ WHAT'S NEW IN THE RELEASES
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
+2016-11-04 5.0.2.6 SysCo/al Better SSL support using context if available (for PHP >= 5.3)
+                            New methods SetTouchFolder(), GetTouchFolder(), FolderTouched() to offer implementation of asynchronous synchronization
+                            SOAP service available (compatible with OpenOTP SOAP service)
+                            Weekly anonymized stats added (can be disabled). Anonymized stats include the following information:
+                             backend type, AD/LDAP used or not, OS version, PHP version, library version, number of accounts defined,
+                             number of tokens defined. They are sent on the stats.multiotp.net FQDN which is hosted in Switzerland.
+                            It's now possible to select a specific LDAP/AD attribute used as the synchronised account name
+                             SetLdapSyncedUserAttribute(), GetLdapSyncedUserAttribute()
+                            Unified configuration backup and restore format (BackupConfiguration)
+                            Better support of MS-CHAPv2 in the provided appliances
+                            Cached requests supported (cached during a specific amount of time, useful for WebDAV authentication)
+                             (device option cache_result_enabled)
+                            A try on the previous password is rejected, but the error counter is not incremented
+                            ForceNoDisplayLog() method added, in order to be able to disable log on display in server mode
+                            XML parsing error are more verbose
+                            XmlServer is now sending XML response with the specific Content-type: text/xml
+                            YubicoOTP private id check is now implemented
+                            SSL AD/LDAP also supported with Windows 2012 server
+                            SyncLdapUsers is now using a semaphore file in order to avoid concurrent process for large AD/LDAP sync
+                             (tested with 1'000 groups, 100'000 users, 1'000 users in the LDAP sync group)
+                            AD/LDAP additional log information
+                            New GetNetworkInfo and SetNetworkInfo methods
+                            Special chars support enhanced in LDAP class (as described in RFC4515)
+                            The default ldap_group_cn_identifier is now cn instead of sAMAccountName
+                            The first matching group defined in AD/LDAP group(s) filtering is now defined for the user
+                             (this group is returned as the Filter-Id (11) option in a successful RADIUS answer)
+                            Enhanced SMS support for Clickatell, SSL is now also working
+                            Bug fix concerning QRcode generation for mOTP
+                            Code fixes
 2015-07-18 4.3.2.6 SysCo/al New ResetTempUserArray method (as we want to move away from global array in the near future)
                             For _user_data, default values are now extracted from the definition array
                             QRcode generation for mOTP (motp://[SITENAME]:[USERNAME]?secret=[SECRET-KEY])
@@ -625,6 +676,9 @@ are reading this document, you have for sure the necessary skill to configure
 your favorite web server in order to have an URL that will launch the page
 multiotp.server.php which is in the main folder of the multiOTP distribution.
 
+Please check carefully the rights of the folders, as the multiOTP web service
+has to write in the various subfolders.
+
 
 CONFIGURING MULTIOTP WITH FREERADIUS UNDER LINUX
 ================================================
@@ -634,8 +688,8 @@ now be displayed (like with the same option used with ntlm_auth).
 1) Create a new module file called "multiotp" in etc/raddb/modules/ containing:  
     
     # Exec module instance for multiOTP (http://www.multiotp.net/).  
-    # for Linux  : replace '/path/to' with the actual path to the multiotp.php file.  
-    # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /).  
+    # for Linux  : replace '/path/to/multiotp' with the actual path to the multiotp.php file, including the full file name.
+    # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /), including the fulle file name.
     exec multiotp {  
         wait = yes  
         input_pairs = request  
@@ -649,38 +703,44 @@ now be displayed (like with the same option used with ntlm_auth).
     a) Add the multiOTP handling  
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
-    # This must be add BEFORE the first "pap" entry found in the file.  
+    # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
 
     b) Add the multiOTP authentication handling  
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
-    # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.  
+    # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
     }  
 
     c) Comment the first line containing only "chap"  
     #chap is now handled by multiOTP  
+
+    d) Comment the first line containing only "mschap"  
+    #mschap is now handled by multiOTP  
 
 3) In the configuration file called "inner-tunnel" in etc/raddb/sites-enabled/  
     
     a) Add the multiOTP handling  
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
-    # This must be add BEFORE the first "pap" entry found in the file.  
+    # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
 
     b) Add the multiOTP authentication handling  
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
-    # This must be add BEFORE the first "Auth-Type PAP" entry found in the file.  
+    # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
     }  
 
     c) Comment the first line containing only "chap"  
     #chap is now handled by multiOTP  
+
+    d) Comment the first line containing only "mschap"  
+    #mschap is now handled by multiOTP  
 
 4) In the configuration file called "policy.conf" in etc/raddb/  
    Add the multiOTP authorization policy  
@@ -1001,21 +1061,29 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     CryptoJS 3.1 (BSD New)
     This product contains software provided by Jeff Mott
     https://code.google.com/p/crypto-js/
-    
+
     FreeRADIUS 2.2.3 for Windows (BSD)
     This product contains software provided by FreeRADIUS team, sfreschi and its contributors.
     http://sourceforge.net/projects/freeradius/
 
+    md5 JavaScript 2010 algorithm (BSD)
+    Joseph Myers, Paul Johnston, Greg Holt, Will Bond
+    http://www.myersdaily.org/joseph/javascript/md5-text.html
+
     Mongoose Web Server 3.7 for Windows (GPLv2)
     Cesanta Software
-    http://mongoose.googlecode.com/files/mongoose_php_bundle_3.7.zip
-    
-    phpseclib 0.3.8 (MIT License)
+    https://code.google.com/archive/p/mongoose/downloads
+
+    NuSOAP - PHP Web Services Toolkit 1.123 (LGPLv2.1)
+    NuSphere Corporation
+    http://sourceforge.net/projects/nusoap/
+
+    phpseclib 1.0.5 (MIT License)
     MMVI Jim Wigginton
     http://phpseclib.sourceforge.net/
 
     PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY 2.1 (LGPLv2.1)
-    Scott Barnett
+    Scott Barnett - enhanced by SysCo
     http://adldap.sourceforge.net/
 
     PHP radius class 1.2.2 (LGPLv3)
@@ -1034,18 +1102,18 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     dealnews.com, Inc.
     http://brian.moonspot.net/status_bar.php.txt
 
-    TCPDF 6.0.061 (LGPLv3)
+    TCPDF 6.2.13 (LGPLv3)
     Nicola Asuni
     http://www.tcpdf.org/
 
     XML Parser Class 1.3.0 (LGPLv3)
-    Adam A. Flynn
+    Adam A. Flynn - enhanced by SysCo
     http://www.criticaldevelopment.net/xml/
 
     XPertMailer package 4.0.5 (LGPLv2.1)
     Tanase Laurentiu Iulian
     http://xpertmailer.sourceforge.net/
-    
+
     The source files can be downloaded at http://download.multiotp.net/multiotp.zip
 
  
@@ -1058,11 +1126,11 @@ and you may also check multiotp.cli.header.php which implements the class.
 MULTIOTP COMMAND LINE TOOL
 ==========================
 
-multiOTP 4.3.2.6 (2015-07-18)
-(c) 2010-2015 SysCo systemes de communication sa
+multiOTP 5.0.2.6 (2016-11-04)
+(c) 2010-2016 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
-Script folder: D:\Data\projects\multiotp\core\
+*Script folder: D:\Data\projects\multiotp\core\
 
 multiotp will check if the token of a user is correct, based on a specified
 algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226) 
@@ -1094,48 +1162,42 @@ The check will return 0 for a correct token, and the other return code means:
 
 Return codes:
 
- 0 OK: Token accepted  
-10 INFO: Access Challenge returned back to the client  
-11 INFO: User successfully created or updated  
-12 INFO: User successfully deleted  
-13 INFO: User PIN code successfully changed  
-14 INFO: Token has been resynchronized successfully  
-15 INFO: Tokens definition file successfully imported  
-16 INFO: QRcode successfully created  
-17 INFO: UrlLink successfully created  
-18 INFO: SMS code request received  
-19 INFO: Requested operation successfully done  
-21 ERROR: User doesn't exist  
-22 ERROR: User already exists  
-23 ERROR: Invalid algorithm  
-24 ERROR: User locked (too many tries)  
-25 ERROR: User delayed (too many tries, but still a hope in a few minutes)  
-26 ERROR: The token has already been used  
-27 ERROR: Resynchronization of the token has failed  
-28 ERROR: Unable to write the changes in the file  
-29 ERROR: Token doesn't exist  
-30 ERROR: At least one parameter is missing  
-31 ERROR: Tokens definition file doesn't exist  
-32 ERROR: Tokens definition file not successfully imported  
-33 ERROR: Encryption hash error, encryption key is not matching  
-34 ERROR: Linked user doesn't exist  
-35 ERROR: User not created  
-37 ERROR: Token already attributed  
-38 ERROR: User is desactivated  
-39 ERROR: Requested operation aborted  
-41 ERROR: SQL error  
-50 ERROR: QRcode not created  
-51 ERROR: UrlLink not created (no provisionable client for this protocol)  
-60 ERROR: No information on where to send SMS code  
-61 ERROR: SMS code request received, but an error occurred during transmission  
-62 ERROR: SMS provider not supported  
-70 ERROR: Server authentication error  
-71 ERROR: Server request is not correctly formatted  
-72 ERROR: Server answer is not correctly formatted  
-80 ERROR: Server cache error  
-81 ERROR: Cache too old for this user, account autolocked  
-98 ERROR: Authentication failed (wrong token length)  
-99 ERROR: Authentication failed (and other possible unknown errors)  
+ 0 ERROR: Authentication failed (and other possible unknown errors)  
+ 8 INFO: Access Challenge returned back to the client  
+ 9 INFO: User successfully created or updated  
+10 INFO: User successfully deleted  
+11 INFO: User PIN code successfully changed  
+12 INFO: Token has been resynchronized successfully  
+13 INFO: Tokens definition file successfully imported  
+14 INFO: QRcode successfully created  
+15 INFO: UrlLink successfully created  
+ 1 INFO: Requested operation successfully done  
+16 ERROR: User blacklisted  
+17 ERROR: User doesn't exist  
+18 ERROR: User already exists  
+19 ERROR: Invalid algorithm  
+20 ERROR: User locked (too many tries)  
+21 ERROR: User delayed (too many tries, but still a hope in a few minutes)  
+22 ERROR: This token has already been used  
+23 ERROR: Resynchronization of the token has failed  
+ 2 ERROR: Token doesn't exist  
+24 ERROR: At least one parameter is missing  
+25 ERROR: Tokens definition file doesn't exist  
+26 ERROR: Tokens definition file not successfully imported  
+27 ERROR: Encryption hash error, encryption key is not matching  
+28 ERROR: Linked user doesn't exist  
+29 ERROR: User not created  
+31 ERROR: Token already attributed  
+ 3 ERROR: Requested operation aborted  
+33 ERROR: SQL error  
+40 ERROR: QRcode not created  
+41 ERROR: UrlLink not created (no provisionable client for this protocol)  
+48 ERROR: No information on where to send SMS code  
+49 ERROR: SMS code request received, but an error occurred during transmission  
+50 ERROR: SMS provider not supported  
+56 ERROR: Server authentication error  
+57 ERROR: Server request is not correctly formatted  
+58 ERROR: Server answer is not correctly formatted  
 
 
 Usage:
@@ -1214,6 +1276,7 @@ Usage:
                ldap-base-dn: LDAP/AD base
                ldap-bind-dn: LDAP/AD bind 
          ldap-cn-identifier: LDAP/AD cn identifier (default is sAMAccountName)
+     ldap-default-algorithm: [totp|hotp|motp] default algorithm for new users
     ldap-domain-controllers: LDAP/AD domain controller(s), comma separated
        ldap-group-attribute: LDAP/AD group attribute (default is memberOf)
    ldap-group-cn-identifier: LDAP/AD group cn identifier
@@ -1224,6 +1287,7 @@ Usage:
        ldap-server-password: LDAP/AD server password
            ldap-server-type: [1|2] LDAP/AD server type (1=AD, 2=standard LDAP)
                    ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection
+ ldap-synced-user-attribute: LDAP/AD attribute used as the account name
             ldap-time-limit: LDAP/AD number of sec. to wait for search results
                         log: [0|1] enable/disable log permanently
      radius-reply-attributor: [ = |=] how to attribute a value
@@ -1284,6 +1348,14 @@ LDAP/AD integration:
  multiotp -ldap-users-sync
 
 
+Backup/restore commands:
+
+ multiotp -backup-config password [file-name]
+ multiotp -restore-config password file-name
+   By default, the file name is multiotp.cfg in the current folder.
+   The file name *MUST BE* multiotp.cfg to be restored in a commercial edition.
+
+
 Other commands:
 
  multiotp -phpinfo
@@ -1305,6 +1377,7 @@ Switches:
                  (the permanent state of debug can be set with -config debug=1)
  -display-log    Log information will also be displayed on the console
                  (the permanent state can be set with -config display-log=1)
+ -network-info   Display network info (mode, ip, mask, gateway, dns1, dns2)
  -help           Display this help page
  -keep-local     Keep local user even if the server doesn't have it
                  (if the server doesn't have it, the local one will be checked)
@@ -1402,9 +1475,9 @@ When used with TekRADIUS (http://www.tekradius.com) the External-Executable
 must be called like this: C:\multiotp\multiotp.exe %ietf|1% %ietf|2%
 
 Some of other products and services based on multiOTP
- - multiOTP Pro 405V  Pro version with full web GUI in a tiny virtual appliance
+ - multiOTP Pro 501V  Pro version with full web GUI in a tiny virtual appliance
                       (http://www.multiOTP.com)
- - multiOTP Pro 420B  Pro version with full web GUI in a tiny hardware device
+ - multiOTP Pro 520B  Pro version with full web GUI in a tiny hardware device
                       (http://www.multiOTP.com)
  - secuPASS.net       simple SMS trusting service for free WLAN Hotspot
                       (http://www.secuPASS.net)

@@ -5,9 +5,11 @@ class MultiotpIntelliSms
  * @class     MultiotpIntelliSms
  * @brief     SMS message using IntelliSMS infrastructure.
  *
+ * http://www.intellisoftware.co.uk/sms-gateway/http-interface/
+ *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.2.4
- * @date      2014-03-30
+ * @version   5.0.2.6
+ * @date      2016-10-31
  * @since     2013-05-14
  */
 {
@@ -18,6 +20,7 @@ class MultiotpIntelliSms
     var $server_timeout;
     var $servers;
     var $userkey;
+
 
     function MultiotpIntelliSms($userkey, $password)
     {
@@ -30,27 +33,36 @@ class MultiotpIntelliSms
         $this->useRegularServer();
     }
 
+
     function useRegularServer()
     {
         $this->servers = array("www.intellisoftware.co.uk:80",
                                "www.intellisoftware2.co.uk:80" );
     }
 
+
     function useSslServer()
     {
+        /* Not working yet, see on IntelliSoftware side
         $this->servers = array("ssl://www.intellisoftware.co.uk:443",
                                "ssl://www.intellisoftware2.co.uk:443" );
+        */
+        $this->useRegularServer();
+        return false;
     }
+
 
     function setTimeout($timeout)
     {
         $this->server_timeout = $timeout;
     }
 
+
     function setOriginator($originator)
     {
         $this->originator = $originator;
     }
+
 
     function setRecipient($r)
     {
@@ -60,17 +72,26 @@ class MultiotpIntelliSms
         $recipient = str_replace(')','',$recipient);
         $recipient = str_replace('+','00',$recipient);
 
-        if ('00' == substr($recipient,0,2))
-        {
+        if ('00' == substr($recipient,0,2)) {
             $recipient = substr($recipient,2);
         }
         $this->recipient = array( "number" => $recipient);
     }
 
+
     function setContent($content)
+    /*
+     * The content is automatically converted from ISO to UTF-8 if needed
+     */
     {
-        $this->content = $content;
+        $text = $content;
+        $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
+        if ("UTF-8" != $encoding) {
+            $text = utf8_encode($text);
+        }
+        $this->content = $text;
     }
+
 
     function getOneSendContent($content)
     {
@@ -80,43 +101,75 @@ class MultiotpIntelliSms
         $send_data = $send_data.(("" == $send_data)?"":"&").'password='.urlencode($this->password);
 
         $originator = "";
-        if ($this->originator != "")
-        {
+        if ($this->originator != "") {
             $send_data = $send_data.(("" == $send_data)?"":"&").'from='.urlencode($this->originator);
         }
 
         $recipient = "";
-        if (count($this->recipient) > 0)
-        {
+        if (count($this->recipient) > 0) {
             $send_data = $send_data.(("" == $send_data)?"":"&").'to='.urlencode($this->recipient["number"]);
         }
         
         $send_data = $send_data.(("" == $send_data)?"":"&").'text='.urlencode($content);
 
+        // Optional, mesage type (1=SMS; 6 = voice-SMS)
+        $send_data = $send_data.(("" == $send_data)?"":"&").'type=1';
+
+        // Optional, maximum number of concatenated SMS messages
+        // $send_data = $send_data.(("" == $send_data)?"":"&").'maxconcat=1';
+
         return $send_data;
     }
 
-    function sendSMS()
+
+    function getOneBalanceContent($content)
     {
+        $balance_data = "";
+        
+        $balance_data = $balance_data.(("" == $balance_data)?"":"&").'username='.urlencode($this->userkey);
+        $balance_data = $balance_data.(("" == $balance_data)?"":"&").'password='.urlencode($this->password);
+
+        return $balance_data;
+    }
+
+
+    function getCredits()
+    {
+        $result = $this->send($this->getOneBalanceContent($this->content), "/smsgateway/getbalance.aspx");
+        // BALANCE:100         The number of remaining credits follows 'BALANCE:'
+        // ERR:LOGIN_INVALID   Username or Password is invalid
+        // ERR:NO_XXXXXXXXXXX  A mandatory parameter is missing
+        // ERR:INTERNAL_ERROR  Unable to process request at this time
+        if (0 === strpos($result, "BALANCE")) {
+            list($state, $result) = explode(":", $result);
+        } else {
+            $result = 0;
+        }
+        return $result;
+    }
+
+
+    function sendSMS($content = '')
+    {
+        if ('' != $content) {
+            $this->setContent($content);
+        }
+
         return $this->send($this->getOneSendContent($this->content));
     }
 
-    function send($msg)
+
+    function send($msg, $path = "")
     {
         $result = 0;
-        foreach ($this->servers as $server)
-        {
+        foreach ($this->servers as $server) {
             // list($host, $port) = explode(":", $server);
             
             $pos = strpos($server, '://');
-            if (FALSE === $pos)
-            {
+            if (FALSE === $pos) {
                 $protocol = '';
-            }
-            else
-            {
-                switch (strtolower(substr($server,0,$pos)))
-                {
+            } else {
+                switch (strtolower(substr($server,0,$pos))) {
                     case 'https':
                     case 'ssl':
                         $protocol = 'ssl://';
@@ -128,50 +181,59 @@ class MultiotpIntelliSms
                         $protocol = '';
                         break;
                 }
-                
                 $server = substr($server,$pos+3);
             }
             
             $pos = strpos($server, '/');
-            if (FALSE === $pos)
-            {
+            if (FALSE === $pos) {
                 $host = $server;
                 $url = '/';
-            }
-            else
-            {
+            } else {
                 $host = substr($server,0,$pos);
                 $url = substr($server,$pos); // And not +1 as we want the / at the beginning
             }
             
             $pos = strpos($host, ':');
-            if (FALSE === $pos)
-            {
+            if (FALSE === $pos) {
                 $port = 80;
-            }
-            else
-            {
+            } else {
                 $port = substr($host,$pos+1);
                 $host = substr($host,0,$pos);
             }
             
-            $result = trim($this->sendToServer($msg, $protocol.$host, $port));
-            if (substr($result,0,2) == "ID")
-            {
+            if ("" != $path) {
+                $result = trim($this->sendToServer($msg, $protocol.$host, $port, $path));
+            } else {
+                $result = trim($this->sendToServer($msg, $protocol.$host, $port));
+            }
+            if (substr($result,0,2) == "ID") {
                 return $result;
             }
         }
         return $result;
     }
 
-    function sendToServer($msg, $host, $port)
+
+    function sendToServer($msg, $host, $port, $path = "/smsgateway/sendmsg.aspx")
     {
         $errno = 0;
         $errdesc = 0;
-        $fp = fsockopen($host, $port, $errno, $errdesc, $this->server_timeout); // 'ssl://'.$host
-        if ($fp)
-        {
-            fputs($fp, "POST /smsgateway/sendmsg.aspx HTTP/1.0\r\n");
+        $protocol = "";
+
+        if (function_exists("stream_socket_client")) {
+            $sslContext = stream_context_create(
+                array('ssl' => array(
+                      'verify_peer'         => false,
+                      'verify_peer_name'    => false,
+                      'disable_compression' => true,
+                      'ciphers'             => 'ALL!EXPORT!EXPORT40!EXPORT56!aNULL!LOW!RC4')));
+            $fp = @stream_socket_client($protocol.$host.":".$port, $errno, $errdesc, $this->server_timeout, STREAM_CLIENT_CONNECT, $sslContext);
+        } else {
+            $fp = @fsockopen($protocol.$host, $port, $errno, $errdesc, $this->server_timeout);
+        }
+
+        if ($fp) {
+            fputs($fp, "POST $path HTTP/1.0\r\n");
             fputs($fp, "Content-Type: application/x-www-form-urlencoded\r\n");
             fputs($fp, "Content-Length: ".strlen($msg)."\r\n");
             fputs($fp, "User-Agent: multiOTP\r\n");
@@ -181,35 +243,28 @@ class MultiotpIntelliSms
             fputs($fp, "\r\n");
 
             $reply = '';
-            while (!feof($fp))
-            {
+            while (!feof($fp)) {
                 $reply.= fgets($fp, 1024);
             }
 
             fclose($fp);
 
-            $reply_array = split("\n", $reply);
+            $reply_array = explode ("\n", $reply);
             $reply = '';
 
             $end_of_header = FALSE;
             
             // loop until we have an empty line, and than take the result
-            foreach ($reply_array as $reply_one)
-            {
-                if ($end_of_header)
-                {
+            foreach ($reply_array as $reply_one) {
+                if ($end_of_header) {
                     $reply.= $reply_one;
-                }
-                elseif ("" == trim($reply_one))
-                {
+                } elseif ("" == trim($reply_one)) {
                     $end_of_header = TRUE;
                 }
             }
 
             $result = $reply;
-        }
-        else
-        {
+        } else {
             $result = "";
         }
         return $result;

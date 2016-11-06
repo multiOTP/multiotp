@@ -22,17 +22,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.2.6
- * @date      2015-07-17
+ * @version   5.0.2.6
+ * @date      2016-11-04
  * @since     2013-07-10
- * @copyright (c) 2013-2015 SysCo systemes de communication sa
+ * @copyright (c) 2013-2016 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2013-2015 SysCo systemes de communication sa
+ *   Copyright (c) 2013-2016 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systèmes de communication sa
  *   (http://www.sysco.ch/)
  *   All rights reserved.
@@ -71,6 +71,7 @@
  *
  * Change Log
  *
+ *   2016-11-04 5.0.2.6 SysCo/al GetNetworkInfo() test included
  *   2015-07-17 4.3.2.6 SysCo/al Additional tests included
  *   2015-06-09 4.3.2.2 SysCo/al Additional tests included
  *   2014-11-04 4.3.0.0 SysCo/al Additional tests included
@@ -146,7 +147,7 @@ if (!isset($multiotp))
 $multiotp->SetMaxEventResyncWindow(500); // 500 is enough and quicker for the check
 $multiotp->EnableVerboseLog(); // Could be helpful at the beginning
 
-$multiotp->_config_data['attributes_to_encrypt'] = '**';  // For test purposes only
+// $multiotp->_config_data['attributes_to_encrypt'] = '**';  // For test purposes only
 
 // Write the configuration information in the configuration file
 $multiotp->WriteConfigData();
@@ -247,6 +248,58 @@ while ($current_backend != 'files')
         echo "Selected backend: ".$b_on.$backend.$b_off.$crlf;
         echo_full($crlf);
     }
+
+
+    //====================================================================
+    // TEST: Backup
+    $tests++;
+    echo_full($b_on."Configuration backup".$b_off.$crlf);
+
+    @set_time_limit(0); // No time limit fot the backup
+
+    $backup_start = time();
+    $backup_file = sys_get_temp_dir().DIRECTORY_SEPARATOR."multiotp-backup-".date("Ymd-His").".bin";
+    if (file_exists($backup_file)) {
+      unlink($backup_file);
+    }
+    $encryption_key = "-backup-";
+    $return_content = false;
+
+    // $backup_file = "@";
+    echo_full("Backup file: ".$backup_file.$crlf);
+    $backup_content = $multiotp->BackupConfiguration(array("backup_file"    => $backup_file,
+                                                           "encryption_key" => $encryption_key,
+                                                           "encrypt_all"    => false, // is set to true by default
+                                                           "return_content" => $return_content,
+                                                           "keep_file"      => true,
+                                                           "no_send"        => true
+                                                          ));
+    if ($return_content) {
+        echo str_replace("\n", "<br />\n", $backup_content);
+    }
+    /*
+    $file_handler = fopen($backup_file,"rt");
+    while (!feof($file_handler)) {
+        echo_full(fgets($file_handler));
+        echo_full($crlf);
+    }
+    fclose($file_handler);
+    */
+
+    $backup_time = time() - $backup_start;
+    if (0 >= $backup_time) {
+        $backup_time += 1;
+    }
+
+    if (false !== $backup_content) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Configuration successfully backed up with pass $encryption_key in $backup_time second".(($backup_time > 1)?"s":"").$crlf);
+        $successes++;
+    }
+    else
+    {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to backup the configuration".$crlf);
+    }
+    echo_full($crlf);
 
 
     //====================================================================
@@ -1304,14 +1357,11 @@ while ($current_backend != 'files')
     // TEST: Show the log
     $tests++;
     echo_full($b_on."Show the log".$b_off.$crlf);
-    if (FALSE !== ($log = $multiotp->ShowLog(TRUE)))
-    {
+    if (FALSE !== ($log = $multiotp->ShowLog(TRUE))) {
         echo_full(str_replace("\n",$crlf, $log));
         echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfuly displayed".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to show the log".$crlf);
     }
     echo_full($crlf);
@@ -1322,23 +1372,25 @@ while ($current_backend != 'files')
 
 
 //====================================================================
+
+echo_full($b_on."Network information".$b_off.$crlf);
+$network_info = $multiotp->GetNetworkInfo();
+echo_full(implode($crlf, $network_info));
+echo_full($crlf);
+echo_full($crlf);
+
 // TESTS result
-if ($html_mode)
-{
+if ($html_mode) {
     echo_full('<div id="test_result">');
 }
 echo_full($b_on);
-if ($successes == $tests)
-{
+if ($successes == $tests) {
     echo($ok_on."OK! ALL $tests TESTS HAVE PASSED SUCCESSFULLY !".$ok_off.$crlf);
-}
-else
-{
+} else {
     echo($ko_on."KO! ONLY $successes/$tests TESTS HAVE PASSED SUCCESSFULLY !".$ko_off.$crlf);
 }
 echo_full($b_off);
-if ($html_mode)
-{
+if ($html_mode) {
     echo_full('</div>');
 }
 echo_full($crlf);
@@ -1353,8 +1405,7 @@ $multiotp->SetBackendType($default_backend);
 $multiotp->_config_data['attributes_to_encrypt'] = '';
 $multiotp->WriteConfigData();
 
-if ($html_mode && (!isset($GLOBALS['no_header'])))
-{
+if ($html_mode && (!isset($GLOBALS['no_header']))) {
     echo <<<EOWEBFOOTER
     </body>
 </html>

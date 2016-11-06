@@ -5,10 +5,10 @@ REM multiOTP - Strong two-factor authentication web service
 REM http://www.multiotp.net
 REM
 REM      Filename: webservice_uninstall.cmd
-REM       Version: 4.3.2.5
+REM       Version: 5.0.2.5
 REM      Language: Windows batch file for Windows 2K/XP/2003/7/2008/8/2012
 REM     Copyright: SysCo systèmes de communication sa
-REM Last modified: 2015-07-15 SysCo/al
+REM Last modified: 2016-10-16 SysCo/al
 REM       Created: 2013-08-19 SysCo/al
 REM      Web site: http://developer.sysco.ch/multiotp/
 REM         Email: developer@sysco.ch
@@ -27,7 +27,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2015 SysCo systemes de communication sa
+REM   Copyright (c) 2010-2016 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systèmes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -37,6 +37,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2016-10-16 5.0.2.5 SysCo/al Version synchronisation
 REM   2015-07-15 4.3.2.5 SysCo/al Version synchronisation
 REM   2013-08-23 4.0.6   SysCo/al Enhanced options
 REM   2013-08-21 4.0.5   Service name can be given as a parameter

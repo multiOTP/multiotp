@@ -96,7 +96,7 @@ class MultiotpXmlParser
 
         //Error handling
         if (!xml_parse($this->parser, $this->xml))
-            $this->HandleError(xml_get_error_code($this->parser), xml_get_current_line_number($this->parser), xml_get_current_column_number($this->parser));
+            $this->HandleError(xml_get_error_code($this->parser), xml_get_current_line_number($this->parser), xml_get_current_column_number($this->parser), xml_get_current_byte_index($this->parser));
 
         //Free the parser
         xml_parser_free($this->parser);
@@ -109,9 +109,15 @@ class MultiotpXmlParser
      * @param int $line Line on which the error happened
      * @param int $col Column on which the error happened
      */
-    function HandleError($code, $line, $col)
+    function HandleError($code, $line, $col, $byte_index = 0)
     {
-        trigger_error('XML Parsing Error at '.$line.':'.$col.'. Error '.$code.': '.xml_error_string($code));
+        $sample_size = 80;
+        $sample_start = $byte_index - ($sample_size / 2);
+        if ($sample_start < 0) {
+          $sample_start = 0;
+        }
+        
+        trigger_error('XML Parsing Error at '.$line.':'.$col. (($byte_index != 0)?' (byte index: '.$byte_index.')':''). '. Error '.$code.': '.xml_error_string($code). ' check sample which starts at position '.$sample_start.': html encoded: '.htmlentities(substr($this->xml, $sample_start, $sample_size)). ' (hex: '.bin2hex(substr($this->xml, $sample_start, $sample_size)).', raw: '.(substr($this->xml, $sample_start, $sample_size)).')');
     }
 
     

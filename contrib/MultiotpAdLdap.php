@@ -2,7 +2,22 @@
 /*
     PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY
     Version 2.1+
-	Adapted 2013-2015 by SysCo/al 4.3.2.2 (2015-06-09)
+
+	Adapted 2013-2015 by SysCo/al 4.3.2.8 (2015-08-13)
+
+ *   2015-08-13 4.3.2.8 SysCo/al ldap_dn_encode (RFC4514) method added
+ *                               ldap_search_encode (RFC4515) method added
+ *                               ldap_slashes method calls replaced by ldap_search_encode calls
+ *
+ *   2014-11-04 4.3.0.0 SysCo/al paged result added (if supported by the LDAP PHP library)
+ *                               more internal attributes added
+ *                               enhanced SSL support
+ *                               enhanced debug message
+ *                               cache added for better results
+ *                               ldap_get_one_entry_raw method added
+ *                               ldap_get_entries_raw method added
+
+
 
     Written by Scott Barnett
     email: scott@wiggumworld.com
@@ -146,12 +161,9 @@ class MultiotpAdLdap {
             if (array_key_exists("ldap_server_type",$options)){ $this->_ldap_server_type=$options["ldap_server_type"]; }
             
             // Added by SysCo/al
-            if ($this->_use_ssl)
-            {
+            if ($this->_use_ssl) {
                 $ldap_port = 636;
-            }
-            else
-            {
+            } else {
                 $ldap_port = 389;
             }
             if (array_key_exists("cn_identifier",$options)){ $this->_cn_identifier=strtolower($options["cn_identifier"]); }
@@ -170,8 +182,7 @@ class MultiotpAdLdap {
 
         $connected = FALSE;
         // Modified by SysCo/al (check also empty values)
-        if (($this->_ad_username!=NULL) && ($this->_ad_password!=NULL) && ($this->_ad_password!='') && ($this->_ad_username!=''))
-        {
+        if (($this->_ad_username!=NULL) && ($this->_ad_password!=NULL) && ($this->_ad_password!='') && ($this->_ad_username!='')) {
             //connect to the LDAP server as the username/password
             // Modified by SysCo/al
             $count_controllers = count($this->_domain_controllers);
@@ -181,101 +192,81 @@ class MultiotpAdLdap {
                 $controller = $dc;
                 $protocol = "ldap://";
                 // $dc=$this->random_controller();
-                if ($this->_use_ssl)
-                {
+                if ($this->_use_ssl) {
                     $protocol = "ldaps://";
                 }
                 $pos = strpos($dc, "://");
-                if ($pos !== FALSE)
-                {
+                if ($pos !== FALSE) {
                     $protocol = substr($dc, 0, $pos+3);
                     $dc = substr($dc, $pos+3);
                 }
                 $pos = strpos($dc, ":");
-                if ($pos !== FALSE)
-                {
+                if ($pos !== FALSE) {
                     $port = substr($dc, $pos+1);
                     $dc = substr($dc, 0, $pos);
                 }
-                if ($this->_conn = ldap_connect($protocol.$dc.":".$port))
-                {
+                if ($this->_conn = ldap_connect($protocol.$dc.":".$port)) {
                     //set some ldap options for talking to AD
                     ldap_set_option($this->_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
                     ldap_set_option($this->_conn, LDAP_OPT_REFERRALS, 0);
 
                     //bind as a domain admin if they've set it up
                     $this->_bind = @ldap_bind($this->_conn,$this->_ad_username.$this->_account_suffix,$this->_ad_password);
-                    if ($this->_bind)
-                    {
+                    if ($this->_bind) {
                         $this->_error = FALSE;
                         $this->_error_message = '';
                         $connected = TRUE;
                         break;
-                    }
-                    else
-                    {
+                    } else {
                         $this->_server_reachable = (!(-1 == ldap_errno($this->_conn)));
-                        if ($this->_use_ssl)
-                        {
+                        if ($this->_use_ssl) {
                             //if you have problems troubleshooting, remove the @ character from the ldap_bind command above to get the actual error message
                             // Modified by SysCo/al
                             $this->_error = TRUE;
-                            $this->_error_message = 'FATAL: AD bind failed. Either the LDAPS connection failed or the login credentials are incorrect.';
-                        }
-                        else
-                        {
+                            $this->_error_message = 'FATAL: AD bind failed. Either the LDAPS connection failed or the login credentials are incorrect ('.@ldap_error($this->_conn).').';
+                        } else {
                             // Modified by SysCo/al
                             $this->_error = TRUE;
-                            $this->_error_message = 'FATAL: AD bind failed. Check the login credentials.';
+                            $this->_error_message = 'FATAL: AD bind failed. Check the login credentials ('.@ldap_error($this->_conn).').';
                         }
                     }
-                    if ($this->_conn = ldap_connect($protocol.$dc.":".$port))
-                    {
+                    if ($this->_conn = ldap_connect($protocol.$dc.":".$port)) {
                         //set some ldap options for talking to AD
                         ldap_set_option($this->_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
                         ldap_set_option($this->_conn, LDAP_OPT_REFERRALS, 0);
 
                         //bind as a domain admin if they've set it up
                         $this->_bind = @ldap_bind($this->_conn,$this->_ad_username.$this->_account_suffix,$this->_ad_password);
-                        if ($this->_bind)
-                        {
+                        if ($this->_bind) {
                             $this->_error = FALSE;
                             $this->_error_message = '';
                             $connected = TRUE;
                             break;
-                        }
-                        else
-                        {
-                            if ($this->_use_ssl)
-                            {
+                        } else {
+                            if ($this->_use_ssl) {
                                 //if you have problems troubleshooting, remove the @ character from the ldap_bind command above to get the actual error message
                                 // Modified by SysCo/al
                                 $this->_error = TRUE;
-                                $this->_error_message = 'FATAL: AD bind failed. Either the LDAPS connection failed or the login credentials are incorrect.';
-                            }
-                            else
-                            {
+                                $this->_error_message = 'FATAL: AD bind failed. Either the LDAPS connection failed or the login credentials are incorrect ('.@ldap_error($this->_conn).').';
+                            } else {
                                 // Modified by SysCo/al
                                 $this->_error = TRUE;
-                                $this->_error_message = 'FATAL: AD bind failed. Check the login credentials.';
+                                $this->_error_message = 'FATAL: AD bind failed. Check the login credentials ('.@ldap_error($this->_conn).').';
                             }
                         }
-                    }
-                    else
-                    {
+                    } else {
                         $this->_error = TRUE;
                         $connected = FALSE;
                     }
                 }
             }
         }
-        if (!$connected)
-        {
+        if (!$connected) {
             $this->_error = TRUE;
-            $this->_error_message = 'FATAL: AD connection failed. Check the LDAP/AD controllers.';
-        }
-        else
-        {
+            if ('' == $this->_error_message) {
+                $this->_error_message = 'FATAL: AD connection failed. Check the LDAP/AD controllers ('.@ldap_error($this->_conn).').';
+            }
+        } else {
             $this->_error = FALSE;
         }
         return ($connected);
@@ -368,7 +359,7 @@ class MultiotpAdLdap {
     // Added by SysCo/al
     function ErrorMessage()
     {
-        return (IsError()?($this->_error_message):'');
+        return ($this->IsError()?($this->_error_message):'');
     }
 
     
@@ -526,11 +517,18 @@ class MultiotpAdLdap {
         if ($group_name==NULL){ return (false); }
         if (!$this->_bind){ return (false); }
         
-        $filter="(&(objectCategory=group)(name=".$this->ldap_slashes($group_name)."))";
+        $filter="(&(objectCategory=group)(".$this->_group_cn_identifier."=".$this->ldap_search_encode($group_name)."))";
 
         if ($fields==NULL){ $fields=array("member",$this->_group_attribute,"cn","description","distinguishedname","objectcategory",$this->_group_cn_identifier); }
+        
         $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
         $entries = $this->ldap_get_entries_raw($sr);
+
+        // DEBUG
+        if (0 == count($entries)) {
+            $this->_warning_message = "group_info: No entry for the specified filter $filter";
+            echo $this->_warning_message;
+        }
 
         return ($entries);
     }
@@ -655,11 +653,17 @@ echo "\n";
         $result = array();
         if ($group_name==NULL){ return (false); }
         if (!$this->_bind){ return (false); }
-        $filter="(&(|(objectClass=posixGroup)(objectClass=groupofNames))(".$this->_group_cn_identifier."=".$this->ldap_slashes($group_name)."))";
+        $filter="(&(|(objectClass=posixGroup)(objectClass=groupofNames))(".$this->_group_cn_identifier."=".$this->ldap_search_encode($group_name)."))";
 
         $fields=array("member","memberuid");
         $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
         $entries = $this->ldap_get_entries_raw($sr);
+
+        // DEBUG
+        if (0 == count($entries)) {
+            $this->_warning_message = "group_users: No entry for the specified filter $filter";
+            echo $this->_warning_message;
+        }
 
         if (isset($entries[0]["member"][0]))
         {
@@ -1171,6 +1175,62 @@ echo "\n";
         $str=str_replace($illegal,$legal,$str); //replace them
         return ($str);
     }
+
+    // Added by SysCo/al 2015-08-13
+    // This method will encode the string using RFC4514
+    // https://www.ietf.org/rfc/rfc4514.txt
+    // http://social.technet.microsoft.com/wiki/contents/articles/5312.active-directory-characters-to-escape.aspx
+    function ldap_dn_encode($str) {
+        $decoded=array("\\",",","+","<",">",";","\"","=");
+        
+        $encoded=array();
+        foreach ($decoded as $id => $char) {
+            $encoded[$id]="\\".$char;
+        }
+        
+        $str = str_replace($decoded,$encoded,$str);
+        
+        // Leading and trailing space
+        if (" " == (substr($str,0,1))) {
+            $str = "\\ ".$str;
+        }
+        if (" " == (substr($str,-1))) {
+            $str = substr($str,0,-1)."\\ ";
+        }
+        // Leading # (RFC says leading one only)
+        if ("#" == (substr($str,0,1))) {
+            $str = "\\#".$str;
+        }
+        return ($str);
+    }
+
+    
+    // Added by SysCo/al 2015-08-13
+    // This method will decode the string using RFC4514
+    // https://www.ietf.org/rfc/rfc4514.txt
+    // http://social.technet.microsoft.com/wiki/contents/articles/5312.active-directory-characters-to-escape.aspx
+    function ldap_dn_decode($str) {
+        $decoded=array(",","#","+","<",">",";","\"","="," ","\\");
+        $encoded=array();
+        foreach ($decoded as $id => $char) {
+            $encoded[$id]="\\".$char;
+        }
+        $str = str_replace($encoded,$decoded,$str);
+        return ($str);
+    }
+
+
+    // Added by SysCo/al 2015-08-13
+    // This method will encode the string using RFC4515 (and we added the / as stated by Microsoft)
+    // https://www.ietf.org/rfc/rfc4515.txt
+    // https://msdn.microsoft.com/en-us/library/aa746475%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
+    function ldap_search_encode($str) {
+        $decoded=array("\\","*","(",")",chr(0),"/");
+        $encoded=array("\\5c","\\2a","\\28","\\29","\\00","\\2f");
+        $str=str_replace($decoded,$encoded,$str);
+        return ($str);
+    }
+
 
     // Return a random controller
     function random_controller(){

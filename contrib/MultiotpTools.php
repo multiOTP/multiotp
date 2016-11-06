@@ -51,6 +51,34 @@ if (!function_exists('is_valid_ipv4'))
 
 
 /***********************************************************************
+ * Name: http_response_code
+ * Short description: Change the HTTP response code for 4.3.0 <= PHP <= 5.4.0
+ *
+ * Creation 2016-11-04
+ * Update   2016-11-04
+ * @version 1.0.0
+ *
+ * @param   string  $code_to_send  HTTP response code to be send
+ * @return  string                 Current response code
+ ***********************************************************************/
+// For 4.3.0 <= PHP <= 5.4.0
+if (!function_exists('http_response_code'))
+{
+    function http_response_code($code_to_send = 0)
+    {
+        $actual_code = 200;
+        if ($code_to_send != 0) {
+            header('X-Response-Code: '.$code_to_send, true, $code_to_send);
+            if (!headers_sent()) {
+                $actual_code = $code_to_send;
+            }
+        }       
+        return $actual_code;
+    }
+}
+
+
+/***********************************************************************
  * Name: json_encode
  * Short description: Define the custom function json_encode
  *   if it is not available in the actual configuration
@@ -187,14 +215,12 @@ if (!function_exists('str_split'))
  ***********************************************************************/
 if (!function_exists('hash_hmac'))
 {
-    function hash_hmac($algo, $data, $key, $raw_output = false)
-    {
+    function hash_hmac($algo, $data, $key, $raw_output = FALSE) {
         return hash_hmac_php($algo, $data, $key, $raw_output);
     }
 }
 
-function hash_hmac_php($algo, $data, $key, $raw_output = false)
-{
+function hash_hmac_php($algo, $data, $key, $raw_output = FALSE) {
 	$algo = strtolower($algo);
 	$pack = 'H'.strlen($algo('test'));
 	$size = 64;
@@ -667,19 +693,13 @@ if (!function_exists('hash'))
  *
  * wang yun (2010)
  */
-if (!function_exists('rmrf'))
-{
-    function rmrf($dir)
-    {
-        foreach (glob($dir) as $file)
-        {
-            if (is_dir($file))
-            {
+if (!function_exists('rmrf')) {
+    function rmrf($dir) {
+        foreach (glob($dir) as $file) {
+            if (is_dir($file)) {
                 rmrf("$file/*");
                 rmdir($file);
-            }
-            else
-            {
+            } else {
                 unlink($file);
             }
         }

@@ -6,8 +6,8 @@ class MultiotpAspSms
  * @brief     SMS message using ASPSMS infrastructure.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.0.1
- * @date      2015-05-11
+ * @version   5.0.2.6
+ * @date      2016-10-31
  * @since     2014-03-13
  */
 {
@@ -32,11 +32,23 @@ class MultiotpAspSms
         $this->server_timeout = 5;
         $this->reply          = '';
 
+        $this->useRegularServer();
+    }
+
+
+    function useRegularServer()
+    {
         $this->servers = array("xml1.aspsms.com:5061",
-							   "xml1.aspsms.com:5098",
-							   "xml2.aspsms.com:5061",
-                               "xml2.aspsms.com:5098"
-							  );
+                               "xml1.aspsms.com:5098",
+                               "xml2.aspsms.com:5061",
+                               "xml2.aspsms.com:5098");
+    }
+
+
+    function useSslServer()
+    {
+        $this->useRegularServer();
+        return false;
     }
 
 
@@ -113,8 +125,7 @@ class MultiotpAspSms
     {
 		$text = $content;
 		$encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
-		if ("UTF-8" == $encoding)
-		{
+		if ("UTF-8" == $encoding) {
 			$text = utf8_decode($text);
 		}
 		$this->content = $text;
@@ -223,9 +234,23 @@ class MultiotpAspSms
                         $this->getRawContent().
                         "</aspsms>\r\n";
 
+        $actual_timeout = $this->getServerTimeout();
         foreach ($this->servers as $server) {
             list($host, $port) = explode(":", $server);
-			$fp = fsockopen($host, $port, $errno, $errdesc, $this->getServerTimeout());
+            $protocol = "";
+
+            if (function_exists("stream_socket_client")) {
+                $sslContext = stream_context_create(
+                    array('ssl' => array(
+                          'verify_peer'         => false,
+                          'verify_peer_name'    => false,
+                          'disable_compression' => true,
+                          'ciphers'             => 'ALL!EXPORT!EXPORT40!EXPORT56!aNULL!LOW!RC4')));
+                $fp = @stream_socket_client($protocol.$host.":".$port, $errno, $errdesc, $this->getServerTimeout(), STREAM_CLIENT_CONNECT, $sslContext);
+            } else {
+                $fp = @fsockopen($host, $port, $errno, $errdesc, $this->getServerTimeout());
+            }
+
 			if ($fp) {
 				fputs($fp, "POST /xmlsvr.asp HTTP/1.0\r\n");
 				fputs($fp, "Content-Type: text/xml\r\n");

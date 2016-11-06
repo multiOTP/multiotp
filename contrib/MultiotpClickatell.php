@@ -5,10 +5,19 @@ class MultiotpClickatell
  * @class     MultiotpClickatell
  * @brief     SMS message using Clickatell infrastructure.
  *
+ * https://www.clickatell.com/downloads/xml/Clickatell_XML.pdf
+ * https://www.clickatell.com/downloads/http/Clickatell_HTTP.pdf
+ *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.0.1
- * @date      2015-05-11
+ * @version   5.0.2.6
+ * @date      2016-10-31
  * @since     2013-05-14
+ *
+ * Change Log
+ *
+ *   2016-10-31 5.0.2.6 SysCo/al Using stream_socket_client with SSL context
+ *   2016-06-09 4.3.4.3 SysCo/al Enhanced special chars supports
+ *   2015-08-28 4.3.2.9 SysCo/al Enhanced FQDN support, SSL is now working
  */
 {
     var $api_id;
@@ -38,13 +47,15 @@ class MultiotpClickatell
 
     function useRegularServer()
     {
-        $this->servers = array("api.clickatell.com:80" );
+        $this->servers = array("api.clickatell.com" );
+        return TRUE;
     }
 
 
     function useSslServer()
     {
         $this->servers = array("ssl://api.clickatell.com:443" );
+        return TRUE;
     }
 
 
@@ -68,8 +79,7 @@ class MultiotpClickatell
         $recipient = str_replace(')','',$recipient);
         $recipient = str_replace('+','00',$recipient);
 
-        if ('00' == substr($recipient,0,2))
-        {
+        if ('00' == substr($recipient,0,2)) {
             $recipient = substr($recipient,2);
         }
         $this->recipient = array( "number" => $recipient, "transaction" => $id);
@@ -77,8 +87,16 @@ class MultiotpClickatell
 
 
     function setContent($content)
+    /*
+     * The content is automatically converted from ISO to UTF-8 if needed
+     */
     {
-        $this->content = $content;
+        $text = $content;
+        $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
+        if ("UTF-8" != $encoding) {
+            $text = utf8_encode($text);
+        }
+        $this->content = $text;
     }
 
 
@@ -108,35 +126,31 @@ class MultiotpClickatell
     function getOneSendXML($content)
     {
         $originator = "";
-        if ($this->originator != "")
-        {
+        if ($this->originator != "") {
             $originator = sprintf("<from>%s</from>", $this->originator);
         }
 
         $recipient = "";
-        if (count($this->recipient) > 0)
-        {
-            if ($this->recipient["transaction"] != null)
-            {
+        if (count($this->recipient) > 0) {
+            if ($this->recipient["transaction"] != null) {
                 $recipient .= sprintf("<to>%s</to>".
                 "<climsgid>%s</climsgid>",
-                htmlspecialchars($this->recipient["number"], ENT_QUOTES | ENT_HTML401, 'UTF-8'),
-                htmlspecialchars($this->recipient["transaction"], ENT_QUOTES | ENT_HTML401, 'UTF-8'));
+                ($this->recipient["number"]),
+                ($this->recipient["transaction"]));
             }
-            else
-            {
+            else {
                 $recipient .= sprintf("<to>%s</to>",
-                htmlspecialchars($this->recipient["number"], ENT_QUOTES | ENT_HTML401, 'UTF-8'));
+                ($this->recipient["number"]));
             }
         }
 
-       return sprintf("data=<clickAPI>".
+       return ("data=<clickAPI>".
                "<sendMsg>".
                "<api_id>".$this->api_id."</api_id>".
                "<user>".$this->userkey."</user>".
                "<password>".$this->password."</password>".
                $recipient.
-               "<text>".$content."</text>".
+               "<text><![CDATA[".str_replace('&', '%26', $content)."]]></text>".
                $originator.
                "</sendMsg>".
                "</clickAPI>");
@@ -147,7 +161,7 @@ class MultiotpClickatell
      * Result: 1=ok / 0=ko
      */
     {
-        return $this->send($this->getOneSendXML(htmlspecialchars($this->content, ENT_QUOTES | ENT_HTML401, 'UTF-8')));
+        return $this->send($this->getOneSendXML(($this->content)));
     }
 
 
@@ -179,45 +193,108 @@ class MultiotpClickatell
     {
         $result = 0;
 
-        foreach ($this->servers as $server)
-        {
-            list($host, $port) = explode(":", $server);
-            $result = $this->sendToServer($msg, $host, $port);
-            if (1 == $result)
-            {
+        foreach ($this->servers as $server) {
+            $server_array = parse_url($server);
+            
+            $port = 80;
+
+            switch (isset($server_array["scheme"])?$server_array["scheme"]:'') {
+                case 'https':
+                case 'ssl':
+                    $protocol = 'ssl://';
+                    $port = 443;
+                    break;
+                case 'tls':
+                    $protocol = 'tls://';
+                    $port = 443;
+                    break;
+                default:
+                    $protocol = '';
+                    break;
+            }
+
+            $host = isset($server_array["host"])?$server_array["host"]:(isset($server_array["path"])?$server_array["path"]:'');
+
+            if (isset($server_array["port"])) {
+                $port = intval($server_array["port"]);
+            }
+
+            $result = $this->sendToServer($msg, $protocol.$host, $port);
+            if (1 == $result) {
                 return $result;
             }
         }
         return $result;
     }
 
-    function sendToServer($msg, $host, $port)
+    function sendToServer($msg, $protocol_host, $forced_port = '')
     {
-        $result = 0;
+        $server_array = parse_url($protocol_host);
 
+        $port = 80;
+
+        switch (isset($server_array["scheme"])?$server_array["scheme"]:'') {
+            case 'https':
+            case 'ssl':
+                $protocol = 'ssl://';
+                $port = 443;
+                break;
+            case 'tls':
+                $protocol = 'tls://';
+                $port = 443;
+                break;
+            default:
+                $protocol = '';
+                break;
+        }
+
+        $host = isset($server_array["host"])?$server_array["host"]:(isset($server_array["path"])?$server_array["path"]:'');
+
+        if (isset($server_array["port"])) {
+            $port = intval($server_array["port"]);
+        }
+        
+        if (intval($forced_port) > 0) {
+            $port = intval($forced_port);
+        }
+        
+        $result = 0;
         $errno = 0;
         $errdesc = 0;
-        $fp = fsockopen($host, $port, $errno, $errdesc, $this->server_timeout);
-        if ($fp)
-        {
-            fputs($fp, "POST /xml/xml HTTP/1.0\r\n");
-            fputs($fp, "Content-Type: application/x-www-form-urlencoded\r\n");
-            fputs($fp, "Content-Length: ".strlen($msg)."\r\n");
-            fputs($fp, "User-Agent: multiOTP\r\n");
-            fputs($fp, "Host: ".$host."\r\n");
-            fputs($fp, "\r\n");
-            fputs($fp, $msg);
 
+        if (function_exists("stream_socket_client")) {
+            $sslContext = stream_context_create(
+                array('ssl' => array(
+                      'verify_peer'         => false,
+                      'verify_peer_name'    => false,
+                      'disable_compression' => true,
+                      'ciphers'             => 'ALL!EXPORT!EXPORT40!EXPORT56!aNULL!LOW!RC4')));
+            $fp = @stream_socket_client($protocol.$host.":".$port, $errno, $errdesc, $this->server_timeout, STREAM_CLIENT_CONNECT, $sslContext);
+        } else {
+            $fp = @fsockopen($protocol.$host, $port, $errno, $errdesc, $this->server_timeout);
+        }
+
+        if ($fp) {
+            $temp = "POST /xml/xml HTTP/1.0\r\n";
+            $temp.= "Content-Type: application/x-www-form-urlencoded\r\n";
+            $temp.= "Content-Length: ".strlen($msg)."\r\n";
+            $temp.= "User-Agent: multiOTP\r\n";
+            $temp.= "Host: ".$host."\r\n";
+            $temp.= "\r\n";
+            $temp.= $msg;
+            $temp.= "\r\n";
+
+            fputs($fp, $temp);
+                    
             $reply = '';
-            while (!feof($fp))
-            {
+            while (!feof($fp)) {
                 $reply.= fgets($fp, 1024);
             }
             $this->setReply($reply);
 
             fclose($fp);
             
-            $result = ((FALSE !== strpos($reply,'<apiMsgId>')) ||((FALSE !== strpos($reply,'<ok>'))))?'1':'0';
+            $result = ((FALSE !== strpos($reply,'<apiMsgId>')) || ((FALSE !== strpos($reply,'<ok>'))))?'1':'0';
         }
 
         return $result;
