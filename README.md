@@ -37,6 +37,8 @@ The multiOTP class supports currently the following algorithms and RFC's:
 - RFC2821 SMTP (Simple Mail Transfer Protocol)
 - RFC2487 SMTP Service Extension for Secure SMTP over TLS
 
+This package was initially published here : http://www.phpclasses.org/package/6373.html
+
 
 TABLE OF CONTENTS
 =================
