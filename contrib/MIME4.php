@@ -1,6 +1,7 @@
 <?php
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *  Adapted by SysCo/al : Fixed method split_mail($str = null, ...)                        *
  *                                                                                         *
  *  XPertMailer is a PHP Mail Class that can send and read messages in MIME format.        *
  *  This file is part of the XPertMailer package (http://xpertmailer.sourceforge.net/)     *
@@ -508,7 +509,7 @@ class MIME4 {
 		}
 	}
 
-	function split_mail($str = null, &$headers, &$body, $debug = null) {
+	function split_mail($str, &$headers, &$body, $debug = null) {
 		if (!FUNC4::is_debug($debug)) $debug = debug_backtrace();
 		$headers = $body = false;
 		if (!$part = MIME4::split_message($str, $debug)) return false;

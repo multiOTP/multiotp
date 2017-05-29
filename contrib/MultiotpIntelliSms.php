@@ -8,8 +8,8 @@ class MultiotpIntelliSms
  * http://www.intellisoftware.co.uk/sms-gateway/http-interface/
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.2.6
- * @date      2016-10-31
+ * @version   5.0.3.0
+ * @date      2016-11-14
  * @since     2013-05-14
  */
 {

@@ -2,6 +2,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Adapted by SysCo/al to support "compilation" with a 4.x PHP interpreter                *
+ *    and fixed method _cres($conn = null, &$resp, ...)                                    *
  *                                                                                         *
  *  XPertMailer is a PHP Mail Class that can send and read messages in MIME format.        *
  *  This file is part of the XPertMailer package (http://xpertmailer.sourceforge.net/)     *
@@ -39,7 +40,7 @@ class SMTP5 {
 		$this->_func = new FUNC5;
 	}
 
-	function _cres($conn = null, &$resp, $code1 = null, $code2 = null, $debug = null) {
+	function _cres($conn, &$resp, $code1 = null, $code2 = null, $debug = null) {
 		if (!$this->_func->is_debug($debug)) $debug = debug_backtrace();
 		$err = array();
 		if (!is_resource($conn)) $err[] = 'invalid resource connection';

@@ -18,6 +18,58 @@ if (PHP_VERSION_ID < 50207)
 }  
 
 
+if (!function_exists('fnmatch')) {
+    define('FNM_PATHNAME', 1);
+    define('FNM_NOESCAPE', 2);
+    define('FNM_PERIOD', 4);
+    define('FNM_CASEFOLD', 16);
+   
+    function fnmatch($pattern, $string, $flags = 0) {
+        return pcre_fnmatch($pattern, $string, $flags);
+    }
+}
+
+function pcre_fnmatch($pattern, $string, $flags = 0) {
+    $modifiers = null;
+    $transforms = array(
+        '\*'    => '.*',
+        '\?'    => '.',
+        '\[\!'    => '[^',
+        '\['    => '[',
+        '\]'    => ']',
+        '\.'    => '\.',
+        '\\'    => '\\\\'
+    );
+   
+    // Forward slash in string must be in pattern:
+    if ($flags & FNM_PATHNAME) {
+        $transforms['\*'] = '[^/]*';
+    }
+   
+    // Back slash should not be escaped:
+    if ($flags & FNM_NOESCAPE) {
+        unset($transforms['\\']);
+    }
+   
+    // Perform case insensitive match:
+    if ($flags & FNM_CASEFOLD) {
+        $modifiers .= 'i';
+    }
+   
+    // Period at start must be the same as pattern:
+    if ($flags & FNM_PERIOD) {
+        if (strpos($string, '.') === 0 && strpos($pattern, '.') !== 0) return false;
+    }
+   
+    $pattern = '#^'
+        . strtr(preg_quote($pattern, '#'), $transforms)
+        . '$#'
+        . $modifiers;
+   
+    return (boolean)preg_match($pattern, $string);
+} 
+
+
 /***********************************************************************
  * Name: is_valid_ipv4
  * Short description: Check if the string is a valid IP address
@@ -30,22 +82,55 @@ if (PHP_VERSION_ID < 50207)
  * @param   string  $ip  String to check
  * @return  boolean      TRUE if it is a valid IP address
  ***********************************************************************/
-if (!function_exists('is_valid_ipv4'))
-{
+if (!function_exists('is_valid_ipv4')) {
     function is_valid_ipv4($ip)
     {
         // filter_var is available with PHP >= 5.2
-        if (function_exists('filter_var'))
-        {
+        if (function_exists('filter_var')) {
             return (filter_var($ip, FILTER_VALIDATE_IP) !== FALSE);
-        }
-        else
-        {
+        } else {
             return preg_match('/\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'.
                 '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'.
                 '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'.
                 '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/', $ip) !== 0;
         }
+    }
+}
+
+
+/***********************************************************************
+ * Name: ip2long32bit
+ * Short description: Patch for ip2long
+ * @author  Adapted from php.net
+ *
+ * @param   string   $ip_address  String to convert
+ * @return  unsigned              Unsigned integer, or FALSE
+ ***********************************************************************/
+if (!function_exists('ip2long32bit')) {
+    function ip2long32bit($ip_address)
+    {
+        $long = ip2long($ip_address);
+        if ($long == -1 || $long === FALSE) {
+            return(FALSE);
+        } else {
+            return(sprintf("%u", ip2long($ip_address)));
+        }
+    }
+}
+
+
+/***********************************************************************
+ * Name: long2ip32bit
+ * Short description: Patch for long2ip
+ * @author  Adapted from php.net
+ *
+ * @param   unsigned $ip_unsigned  Unsigned integer to convert
+ * @return  unsigned               String with the IP address (a.b.c.d)
+ ***********************************************************************/
+if (!function_exists('long2ip32bit')) {
+    function long2ip32bit($ip_unsigned)
+    {
+        return long2ip((float)$ip_unsigned);
     }
 }
 
@@ -126,7 +211,16 @@ if (!function_exists('json_encode'))
 }
 
 
-if ( !function_exists('sys_get_temp_dir'))
+// Phalanger compatibility
+if (!function_exists('memory_get_peak_usage')) {
+    function memory_get_peak_usage($real_usage = FALSE)
+    {
+        return memory_get_usage($real_usage);
+    }
+}
+
+
+if (!function_exists('sys_get_temp_dir'))
 {
     function sys_get_temp_dir()
     {
@@ -141,6 +235,35 @@ if ( !function_exists('sys_get_temp_dir'))
         }
         return null;
     }
+}
+
+
+/***********************************************************************
+ * Name: sys_get_temp_dir
+ * Short description: Define the custom function sys_get_temp_dir
+ *   if it is not available in the actual configuration
+ *   (because this function is natively available only for PHP >= 5.2.1)
+ *
+ * Creation 2017-05-18
+ * Update   2017-05-18
+ * @version 1.0.0
+ * @author  SysCo/al
+ *
+ * @param   none
+ * @return  string  Temporary folder
+ ***********************************************************************/
+if ( !function_exists('sys_get_temp_dir')) {
+  function sys_get_temp_dir() {
+    if (!empty($_ENV['TMP'])) { return realpath($_ENV['TMP']); }
+    if (!empty($_ENV['TMPDIR'])) { return realpath( $_ENV['TMPDIR']); }
+    if (!empty($_ENV['TEMP'])) { return realpath( $_ENV['TEMP']); }
+    $tempfile=tempnam(__FILE__,'');
+    if (file_exists($tempfile)) {
+      unlink($tempfile);
+      return realpath(dirname($tempfile));
+    }
+    return null;
+  }
 }
 
 
@@ -219,6 +342,7 @@ if (!function_exists('hash_hmac'))
         return hash_hmac_php($algo, $data, $key, $raw_output);
     }
 }
+
 
 function hash_hmac_php($algo, $data, $key, $raw_output = FALSE) {
 	$algo = strtolower($algo);
@@ -399,15 +523,16 @@ if (!function_exists('base32_decode'))
  *
  * @author SysCo/al
  *******************************************************************/
-if (!function_exists('encode_utf8_if_needed'))
-{
+if (!function_exists('encode_utf8_if_needed')) {
 	function encode_utf8_if_needed($data)
 	{
 		$text = $data;
-		$encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
-		if ("UTF-8" != $encoding)
-		{
-			$text = utf8_encode($text);
+        $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
+        if ("UTF-8" != $encoding) {
+            $text = utf8_encode($text);
+		// $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1, WINDOWS-1252');
+		// if ("UTF-8" != $encoding) {
+            // $text = mb_convert_encoding($text, "UTF-8", "UTF-8, ISO-8859-1, WINDOWS-1252");
 		}
 		return $text;
 	}
@@ -419,15 +544,16 @@ if (!function_exists('encode_utf8_if_needed'))
  *
  * @author SysCo/al
  *******************************************************************/
-if (!function_exists('decode_utf8_if_needed'))
-{
+if (!function_exists('decode_utf8_if_needed')) {
 	function decode_utf8_if_needed($data)
 	{
 		$text = $data;
-		$encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
-		if ("UTF-8" == $encoding)
-		{
-			$text = utf8_decode($text);
+        $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
+        if ("UTF-8" == $encoding) {
+            $text = utf8_decode($text);
+        // $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1, WINDOWS-1252');
+		// if ("ISO-8859-1" != $encoding) {
+            // $text = mb_convert_encoding($text, "ISO-8859-1", "UTF-8, ISO-8859-1, WINDOWS-1252");
 		}
 		return $text;
 	}
@@ -805,6 +931,78 @@ if (!function_exists('escape_mysql_string'))
                                $result
                               );
         }
+        return $result;
+    }
+}
+
+
+/***********************************************************************
+ * Custom function nice_json
+ *
+ * http://stackoverflow.com/a/9776726
+ *
+ * @author Kendall Hopkins
+ ***********************************************************************/
+if (!function_exists('nice_json'))
+{
+    function nice_json($json, $separator = "\t")
+    {
+        $result = '';
+        $level = 0;
+        $in_quotes = false;
+        $in_escape = false;
+        $ends_line_level = NULL;
+        $json_length = strlen( $json );
+
+        for( $i = 0; $i < $json_length; $i++ ) {
+            $char = $json[$i];
+            $new_line_level = NULL;
+            $post = "";
+            if( $ends_line_level !== NULL ) {
+                $new_line_level = $ends_line_level;
+                $ends_line_level = NULL;
+            }
+            if ( $in_escape ) {
+                $in_escape = false;
+            } elseif( $char === '"' ) {
+                $in_quotes = !$in_quotes;
+            } elseif( ! $in_quotes ) {
+                switch( $char ) {
+                    case '}': case ']':
+                        $level--;
+                        $ends_line_level = NULL;
+                        $new_line_level = $level;
+                        break;
+
+                    case '{':
+                    case '[':
+                        $level++;
+                    case ',':
+                        $ends_line_level = $level;
+                        break;
+
+                    case ':':
+                        $post = " ";
+                        break;
+
+                    case " ":
+                    case "\t":
+                    case "\n":
+                    case "\r":
+                        $char = "";
+                        $ends_line_level = $new_line_level;
+                        $new_line_level = NULL;
+                        break;
+                }
+            } elseif ( $char === '\\' ) {
+                $in_escape = true;
+            }
+            if( $new_line_level !== NULL ) {
+                $result .= "\n".str_repeat($separator, $new_line_level);
+            }
+            $result .= $char.$post;
+        }
+
         return $result;
     }
 }

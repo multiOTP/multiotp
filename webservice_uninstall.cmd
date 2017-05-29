@@ -1,23 +1,26 @@
 @ECHO OFF
 REM ************************************************************
+REM @file  webservice_uninstall.cmd
+REM @brief Script to uninstall the web service.
 REM
-REM multiOTP - Strong two-factor authentication web service
+REM multiOTP - Strong two-factor authentication PHP class package
 REM http://www.multiotp.net
+REM 
+REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
-REM      Filename: webservice_uninstall.cmd
-REM       Version: 5.0.2.5
-REM      Language: Windows batch file for Windows 2K/XP/2003/7/2008/8/2012
-REM     Copyright: SysCo systèmes de communication sa
-REM Last modified: 2016-10-16 SysCo/al
-REM       Created: 2013-08-19 SysCo/al
-REM      Web site: http://developer.sysco.ch/multiotp/
-REM         Email: developer@sysco.ch
+REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
+REM @version   5.0.4.5
+REM @date      2017-05-29
+REM @since     2013-08-09
+REM @copyright (c) 2013-2017 SysCo systemes de communication sa
+REM @copyright GNU Lesser General Public License
+REM
 REM
 REM Description
 REM
 REM   webservice_uninstall is a small script that will uninstall
-REM   the web service of multiOTP under Windows using mongoose.
-REM   (http://code.google.com/p/mongoose/)
+REM   the web service of multiOTP under Windows using Nginx.
+REM   (http://nginx.org/en/)
 REM
 REM
 REM Usage
@@ -27,8 +30,8 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2016 SysCo systemes de communication sa
-REM   SysCo (tm) is a trademark of SysCo systèmes de communication sa
+REM   Copyright (c) 2013-2017 SysCo systemes de communication sa
+REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
 REM
@@ -37,6 +40,9 @@ REM
 REM
 REM Change Log
 REM
+REM   2017-05-29 5.0.4.5 SysCo/al Unified script with some bug fixes
+REM   2017-01-10 5.0.3.4 SysCo/al The web server is now Nginx instead of Mongoose
+REM   2016-11-04 5.0.2.7 SysCo/al Unified file header
 REM   2016-10-16 5.0.2.5 SysCo/al Version synchronisation
 REM   2015-07-15 4.3.2.5 SysCo/al Version synchronisation
 REM   2013-08-23 4.0.6   SysCo/al Enhanced options
@@ -49,12 +55,26 @@ SET _service_tag=multiOTPservice
 
 IF NOT "%1"=="" SET _service_tag=%1
 
+IF "%_service_tag%"=="multiOTPserverTest" GOTO NoWarning
+ECHO WARNING! Please run this script as an administrator, otherwise it could fail.
+PAUSE
+:NoWarning
+
 SET _folder=%~d0%~p0
+SET _tools_folder=%~d0%~p0tools\
+SET _web_folder=%~d0%~p0
+IF NOT EXIST %_tools_folder%nircmd.exe SET _tools_folder=%~d0%~p0..\tools\
+IF NOT EXIST %_web_folder%webservice SET _web_folder=%~d0%~p0..\
 
-netsh firewall delete allowedprogram "%_folder%webservice\mongoose.exe" >NUL
-netsh advfirewall firewall delete rule name="multiOTP Web Service" >NUL
 
-SC stop %_service_tag% >NUL
-SC delete %_service_tag% >NUL
+%_tools_folder%nircmd elevate netsh firewall delete allowedprogram "%_folder%webservice\nginx.exe" >NUL
+%_tools_folder%nircmd elevate netsh advfirewall firewall delete rule name="%_service_tag%" >NUL
+
+%_tools_folder%nircmd elevate "%_web_folder%webservice\nssm" stop "%_service_tag%" >NUL
+%_tools_folder%nircmd elevate "%_web_folder%webservice\nssm" remove "%_service_tag%" confirm >NUL
+
+%_tools_folder%nircmd elevate TASKKILL /F /IM php-cgi.exe >NUL
 
 SET _folder=
+SET _tools_folder=
+SET _web_folder=

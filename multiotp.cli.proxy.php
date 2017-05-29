@@ -12,9 +12,20 @@
  * and you will find the magic button ;-)
  *
  *
+ * PHP 5.3.0 or higher is supported.
+ *
+ * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
+ * @version   5.0.4.5
+ * @date      2017-05-29
+ * @since     2010-06-08
+ * @copyright (c) 2010-2017 SysCo systemes de communication sa
+ * @copyright GNU Lesser General Public License
+ *
+ *//*
+ *
  * LICENCE
  *
- *   Copyright (c) 2014-2015 SysCo systemes de communication sa
+ *   Copyright (c) 2014-2017 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -36,16 +47,6 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  *
  *
- * PHP 5.3.0 or higher is supported.
- *
- * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.2.5
- * @date      2015-07-15
- * @since     2014-11-24
- * @copyright (c) 2014 SysCo systemes de communication sa
- * @copyright GNU Lesser General Public License
- *
- *
  * Command line usage
  *
  *   Same usage as multiotp.cli.header.php. It's just a proxy to call
@@ -54,17 +55,39 @@
  *
  *********************************************************************/
 
-$proxy_full_url = "http://127.0.0.1:18081/";
-$timeout = 15;
-$local_proxy_file = "multiotp.proxy.php";
+@set_time_limit(0); // It can take a lot of time...
+
+global $argc;
+global $argv;
+
+if (function_exists("stream_context_set_default")) {
+    $default_ssl_context = array(
+        'ssl' => array(
+            'verify_peer'         => false,
+            'verify_peer_name'    => false,
+            'disable_compression' => true,
+            'ciphers'             => 'ALL!EXPORT!EXPORT40!EXPORT56!aNULL!LOW!RC4'
+        )
+    );
+    $default_context = stream_context_set_default($default_ssl_context);
+}
+
+$proxy_full_url = isset($proxy_full_url)?$proxy_full_url:"http://127.0.0.1:18081/";
+$timeout = isset($timeout)?intval($timeout):15;
+$local_proxy_file = isset($local_proxy_file)?$local_proxy_file:"multiotp.proxy.php";
 
 // Clean quotes of the parameters if any
 if (!function_exists('clean_quotes')) {
     function clean_quotes($value)
     {
+        $cleaned = false;
         $var = $value;
         if ((('"' == substr($var,0,1)) || ("'" == substr($var,0,1))) && (('"' == substr($var,-1)) || ("'" == substr($var,-1)))) {
             $var = substr($var, 1, strlen($var)-2);
+            $cleaned = true;
+        }
+        if ($cleaned) {
+          $var = clean_quotes($var);
         }
         return $var;
     }
@@ -72,8 +95,12 @@ if (!function_exists('clean_quotes')) {
 
 $value_unencoded = '';
 // $_SERVER["argv"][0] is useless, it's the name of the script
-for ($arg_loop=1; $arg_loop < $_SERVER["argc"]; $arg_loop++) {
-    $current_arg = clean_quotes($_SERVER["argv"][$arg_loop]);
+
+$argv = isset($_SERVER["argv"]) ? $_SERVER["argv"] : (isset($argv) ? $argv : "");
+$argc = intval(isset($_SERVER["argc"]) ? $_SERVER["argc"] : (isset($argc) ? $argc : 0));
+
+for ($arg_loop=1; $arg_loop < $argc; $arg_loop++) {
+    $current_arg = clean_quotes($argv[$arg_loop]);
     if ('' != $value_unencoded) {
         $value_unencoded.= chr(0);
     }
@@ -142,7 +169,7 @@ if (FALSE !== $fp) {
     fputs($fp, "\r\n");
 
     stream_set_blocking($fp, TRUE);
-    stream_set_timeout($fp, $timeout);
+    stream_set_timeout($fp, 86400); // It can take a lot of time, if we are doing AD/LDAP sync for example
     $info = stream_get_meta_data($fp); 
 
     $reply = '';
@@ -157,8 +184,9 @@ if (FALSE !== $fp) {
     fclose($fp);
 
     if ($info['timed_out']) {
-        $this->WriteLog("Warning: timeout after $timeout seconds for $protocol$host:$port$url with a result code of $errno ($errdesc).", FALSE, FALSE, 8888, 'Client-Server', '');
+        // error_log("Warning: timeout after $timeout seconds for $protocol$host:$port$url with a result code of $errno ($errdesc)");
     } else {
+        // error_log("CLI ok");
         $pos = strpos(strtolower($reply), "\r\n\r\n");
         $header = substr($reply, 0, $pos);
         

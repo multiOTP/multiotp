@@ -22,18 +22,18 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.2.6
- * @date      2016-11-04
+ * @version   5.0.4.5
+ * @date      2017-05-29
  * @since     2013-07-10
- * @copyright (c) 2013-2016 SysCo systemes de communication sa
+ * @copyright (c) 2013-2017 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2013-2016 SysCo systemes de communication sa
- *   SysCo (tm) is a trademark of SysCo systèmes de communication sa
+ *   Copyright (c) 2013-2017 SysCo systemes de communication sa
+ *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch/)
  *   All rights reserved.
  *
@@ -71,6 +71,8 @@
  *
  * Change Log
  *
+ *   2017-05-29 5.0.4.5 SysCo/al Additional PostgreSQL backend included
+ *                               Parameters adapted (set the $check_mysql_xxx and/or the $check_pgsql_xxx parameters below)
  *   2016-11-04 5.0.2.6 SysCo/al GetNetworkInfo() test included
  *   2015-07-17 4.3.2.6 SysCo/al Additional tests included
  *   2015-06-09 4.3.2.2 SysCo/al Additional tests included
@@ -83,6 +85,37 @@
  *   2013-08-25 4.0.6   SysCo/al File renamed to check.multiotp.class.php
  *   2013-07-10 4.0.4   SysCo/al Initial release of check.multiotp.php
  ***************************************************************/
+
+/*
+
+// PostgreSQL
+
+# CREATE DATABASE multiotptest;
+# \connect multiotptest
+# CREATE USER root PASSWORD 'pass';
+# CREATE SCHEMA multiotptest;
+# GRANT ALL ON SCHEMA multiotptest to root;
+# \list
+# SELECT table_name FROM information_schema.tables WHERE table_schema='multiotptest';
+# SELECT * from multiotptest.multiotp_config;
+
+$GLOBALS['check_pgsql_server']   = '127.0.0.1:5432';
+$GLOBALS['check_pgsql_username'] = 'root';
+$GLOBALS['check_pgsql_password'] = 'pass';
+$GLOBALS['check_pgsql_database'] = 'multiotptest';
+$GLOBALS['check_pgsql_schema']   = 'multiotptest';
+
+
+// MySQL
+
+$GLOBALS['check_mysql_server']   = '127.0.0.1:3306';
+$GLOBALS['check_mysql_username'] = 'root';
+$GLOBALS['check_mysql_password'] = 'pass';
+$GLOBALS['check_mysql_database'] = 'multiotptest';
+
+*/
+
+set_time_limit(3600);
 
 $first_time = time();
 
@@ -100,17 +133,25 @@ if (!function_exists('echo_full')) {
 
 require_once('multiotp.class.php');
 
-// SQL server test parameters
-$check_sql_server   = isset($GLOBALS['check_sql_server'])?$GLOBALS['check_sql_server']:'';
-$check_sql_username = isset($GLOBALS['check_sql_username'])?$GLOBALS['check_sql_username']:'';
-$check_sql_password = isset($GLOBALS['check_sql_password'])?$GLOBALS['check_sql_password']:'';
-$check_sql_database = isset($GLOBALS['check_sql_database'])?$GLOBALS['check_sql_database']:'';
+// MySQL server test parameters
+$check_mysql_server   = isset($GLOBALS['check_mysql_server'])?$GLOBALS['check_mysql_server']:'';
+$check_mysql_username = isset($GLOBALS['check_mysql_username'])?$GLOBALS['check_mysql_username']:'';
+$check_mysql_password = isset($GLOBALS['check_mysql_password'])?$GLOBALS['check_mysql_password']:'';
+$check_mysql_database = isset($GLOBALS['check_mysql_database'])?$GLOBALS['check_mysql_database']:'';
 
+// PostgreSQL server test parameters
+$check_pgsql_server   = isset($GLOBALS['check_pgsql_server'])?$GLOBALS['check_pgsql_server']:'';
+$check_pgsql_username = isset($GLOBALS['check_pgsql_username'])?$GLOBALS['check_pgsql_username']:'';
+$check_pgsql_password = isset($GLOBALS['check_pgsql_password'])?$GLOBALS['check_pgsql_password']:'';
+$check_pgsql_database = isset($GLOBALS['check_pgsql_database'])?$GLOBALS['check_pgsql_database']:'';
+$check_pgsql_schema   = isset($GLOBALS['check_pgsql_schema'])?$GLOBALS['check_pgsql_schema']:'';
+
+$backend_array = array();
 
 // Default backend is 'files'
 $default_backend = 'files';
-$backend = $default_backend;
-$current_backend = '';
+
+$backend_array[] = $default_backend;
 
 
 // Tests counter
@@ -153,17 +194,21 @@ $multiotp->EnableVerboseLog(); // Could be helpful at the beginning
 $multiotp->WriteConfigData();
 
 
-if (('' != $check_sql_server) &&
-    ('' != $check_sql_username) &&
-    ('' != $check_sql_password) &&
-    ('' != $check_sql_database)
-   )
-{
-    $backend = 'mysql';
-    $multiotp->SetSqlServer($check_sql_server);
-    $multiotp->SetSqlUsername($check_sql_username);
-    $multiotp->SetSqlPassword($check_sql_password);
-    $multiotp->SetSqlDatabase($check_sql_database);
+if (('' != $check_mysql_server) &&
+    ('' != $check_mysql_username) &&
+    ('' != $check_mysql_password) &&
+    ('' != $check_mysql_database)
+   ) {
+    $backend_array[] = 'mysql';
+}
+
+if (('' != $check_pgsql_server) &&
+    ('' != $check_pgsql_username) &&
+    ('' != $check_pgsql_password) &&
+    ('' != $check_pgsql_database) &&
+    ('' != $check_pgsql_schema)
+   ) {
+    $backend_array[] = 'pgsql';
 }
 
 if ($html_mode && (!isset($GLOBALS['no_header']))) {
@@ -225,23 +270,33 @@ echo_full($crlf);
 echo_full($multiotp->GetFullVersionInfo());
 echo_full(", running with PHP version ".phpversion().$crlf);
 echo_full($crlf);
-echo_full("Library hash: ".str_replace("\t",", ",$multiotp->GetLibraryHash()).$crlf);
-echo_full($crlf);
+if (!$GLOBALS['minima']) {
+    echo_full("Library hash: ".str_replace("\t",", ",$multiotp->GetLibraryHash()).$crlf);
+    echo_full($crlf);
+}
 echo_full("Valid algorithms: ".str_replace("\t",", ",$multiotp->GetAlgorithmsList()).$crlf);
 echo_full($crlf);
 echo_full($b_on."List of supported SMS providers".$b_off.$crlf);
 echo_full(str_replace("\t",$crlf,$multiotp->GetSmsProvidersList()));
 echo_full($crlf);
 
-while ($current_backend != 'files')
-{
+foreach ($backend_array as $backend) {
     $multiotp->SetBackendType($backend);
-    $multiotp->WriteConfigData();
-    if ('mysql' == $backend)
-    {
+    if ('mysql' == $backend) {
+        $multiotp->SetSqlServer($check_mysql_server);
+        $multiotp->SetSqlUsername($check_mysql_username);
+        $multiotp->SetSqlPassword($check_mysql_password);
+        $multiotp->SetSqlDatabase($check_mysql_database);
+        $multiotp->InitializeBackend();
+    } elseif ('pgsql' == $backend) {
+        $multiotp->SetSqlServer($check_pgsql_server);
+        $multiotp->SetSqlUsername($check_pgsql_username);
+        $multiotp->SetSqlPassword($check_pgsql_password);
+        $multiotp->SetSqlDatabase($check_pgsql_database);
+        $multiotp->SetSqlSchema($check_pgsql_schema);
         $multiotp->InitializeBackend();
     }
-    $current_backend = $backend;
+    $multiotp->WriteConfigData();
     if (!$GLOBALS['minima']) {
         echo $hr;
         echo_full($crlf);
@@ -572,6 +627,25 @@ while ($current_backend != 'files')
     else
     {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Token of user test_user *WRONGLY* resynchronized".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Get user information
+    $tests++;
+    echo_full($b_on."Getting user information".$b_off.$crlf);
+    $test_user_info = $multiotp->GetUserInfo('test_user');
+
+    if ($test_user_info != "")
+    {
+        echo_full(nl2br($test_user_info));
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User information returned".$crlf);
+        $successes++;
+    }
+    else
+    {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." User information not returned".$crlf);
     }
     echo_full($crlf);
 
@@ -935,6 +1009,30 @@ while ($current_backend != 'files')
 
 
     //====================================================================
+    // Delaying the test_user8
+    echo_full($i_on);
+    echo_full("Delaying the test_user8".$crlf);
+    $multiotp->SetUser('test_user8');
+    $multiotp->CheckToken('LOCKME1');
+    $multiotp->CheckToken('LOCKME2');
+    $multiotp->CheckToken('LOCKME3');
+    $multiotp->CheckToken('LOCKME4');
+    echo_full($crlf);
+
+
+    //====================================================================
+    // Delaying the test_user2
+    echo_full($i_on);
+    echo_full("Delaying the test_user2".$crlf);
+    $multiotp->SetUser('test_user2');
+    $multiotp->CheckToken('LOCKME1');
+    $multiotp->CheckToken('LOCKME2');
+    $multiotp->CheckToken('LOCKME3');
+    $multiotp->CheckToken('LOCKME4');
+    echo_full($crlf);
+
+
+    //====================================================================
     // TEST: Number of existing users
     $tests++;
     echo_full($b_on."Number of existing users".$b_off.$crlf);
@@ -993,13 +1091,25 @@ while ($current_backend != 'files')
     echo_full($b_on."List of locked users".$b_off.$crlf);
     $list = $multiotp->GetLockedUsersList();
     echo_full(str_replace("\t",", ",$list).$crlf);
-    if ('' != trim($list))
-    {
+    if ('' != trim($list)) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." List is not empty".$crlf);
         $successes++;
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." List is empty".$crlf);
     }
-    else
-    {
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: List of delayed users (originally tab separated)
+    $tests++;
+    echo_full($b_on."List of delayed users".$b_off.$crlf);
+    $list = $multiotp->GetDelayedUsersList();
+    echo_full(str_replace("\t",", ",$list).$crlf);
+    if ('' != trim($list)) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." List is not empty".$crlf);
+        $successes++;
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." List is empty".$crlf);
     }
     echo_full($crlf);
@@ -1010,18 +1120,14 @@ while ($current_backend != 'files')
     $tests++;
     echo_full($b_on."List of existing users in an array".$b_off.$crlf);
     $counter = 0;
-    foreach($multiotp->GetDetailedUsersArray() as $one_detail)
-    {
+    foreach($multiotp->GetDetailedUsersArray() as $one_detail) {
         echo_full($one_detail['user'].': '.encode_utf8_if_needed($one_detail['description']).$crlf);
         $counter++;
     }
-    if ($counter > 0)
-    {
+    if ($counter > 0) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." List is not empty".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." List is empty".$crlf);
     }
     echo_full($crlf);
@@ -1032,13 +1138,10 @@ while ($current_backend != 'files')
     $tests++;
     echo_full($b_on."Check if the user fast_user does not exist".$b_off.$crlf);
 
-    if (!$multiotp->CheckUserExists('fast_user'))
-    {
+    if (!$multiotp->CheckUserExists('fast_user')) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." User fast_user does not exist".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." fast_user exist".$crlf);
     }
     echo_full($crlf);
@@ -1049,13 +1152,10 @@ while ($current_backend != 'files')
     $tests++;
     echo_full($b_on."Import CSV test tokens definition file".$b_off.$crlf);
 
-    if ($multiotp->ImportTokensFile('test-tokens.csv', 'test-tokens.csv'))
-    {
+    if ($multiotp->ImportTokensFile('test-tokens.csv', 'test-tokens.csv')) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." File test-tokens.csv successfully imported".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to import test-tokens.csv file".$crlf);
     }
     echo_full($crlf);
@@ -1067,13 +1167,10 @@ while ($current_backend != 'files')
     echo_full($b_on."List of existing CSV tokens".$b_off.$crlf);
     $list = $multiotp->GetTokensList();
     echo_full(str_replace("\t",", ",$list).$crlf);
-    if (FALSE !== strpos(strtolower($list), strtolower('ABCDEF012302')))
-    {
+    if (FALSE !== strpos(strtolower($list), strtolower('ABCDEF012302'))) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." CSV Token ABCDEF012302 is present".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." CSV Token ABCDEF012302 is missing".$crlf);
     }
     echo_full($crlf);
@@ -1083,25 +1180,52 @@ while ($current_backend != 'files')
     // TEST: Import PSKC test tokens definition file
     $tests++;
     echo_full($b_on."Import PSKC test tokens definition file".$b_off.$crlf);
+    
+    $token_import_error = FALSE;
+    if (!$multiotp->ImportTokensFile('oath/pskc-hotp-aes.txt', 'pskc-hotp-aes.txt', '12345678901234567890123456789012', '1122334455667788990011223344556677889900')) {
+      if (!file_exists('oath/pskc-hotp-aes.txt')) {
+        echo_full("- file oath/pskc-hotp-aes.txt doesn't exists".$crlf);
+      } else {
+        echo_full("- oath/pskc-hotp-aes.txt not imported correctly".$crlf);
+      }
+      $token_import_error = TRUE;
+    }
+    if (!$multiotp->ImportTokensFile('oath/pskc-hotp-pbe.txt', 'pskc-hotp-pbe.txt', 'qwerty', 'bdaab8d648e850d25a3289364f7d7eaaf53ce581')) {
+      echo_full("- oath/pskc-hotp-pbe.txt not imported correctly".$crlf);
+      $token_import_error = TRUE;
+    }
+    if (!$multiotp->ImportTokensFile('oath/pskc-totp-aes.txt', 'pskc-totp-aes.txt', '12345678901234567890123456789012', '1122334455667788990011223344556677889900')) {
+      echo_full("- oath/pskc-totp-aes.txt not imported correctly".$crlf);
+      $token_import_error = TRUE;
+    }
+    if (!$multiotp->ImportTokensFile('oath/pskc-totp-pbe.txt', 'pskc-totp-pbe.txt', 'qwerty', 'bdaab8d648e850d25a3289364f7d7eaaf53ce581')) {
+      echo_full("- oath/pskc-totp-pbe.txt not imported correctly".$crlf);
+      $token_import_error = TRUE;
+    }
+    if (!$multiotp->ImportTokensFile('oath/tokens_hotp_aes.pskc', 'tokens_hotp_aes.pskc', '12345678901234567890123456789012', '')) {
+      echo_full("- oath/tokens_hotp_aes.pskc not imported correctly".$crlf);
+      $token_import_error = TRUE;
+    }
+    if (!$multiotp->ImportTokensFile('oath/tokens_totp_aes.pskc', 'tokens_totp_aes.pskc', '12345678901234567890123456789012', '')) {
+      echo_full("- oath/tokens_totp_aes.pskc not imported correctly".$crlf);
+      $token_import_error = TRUE;
+    }
+    if (!$multiotp->ImportTokensFile('oath/tokens_hotp_pbe.pskc', 'tokens_hotp_pbe.pskc', 'qwerty', '')) {
+      echo_full("- oath/tokens_hotp_pbe.pskc not imported correctly".$crlf);
+      $token_import_error = TRUE;
+    }
+    if (!$multiotp->ImportTokensFile('oath/tokens_totp_pbe.pskc', 'tokens_totp_pbe.pskc', 'qwerty', '')) {
+      echo_full("- oath/tokens_totp_pbe.pskc not imported correctly".$crlf);
+      $token_import_error = TRUE;
+    }
+    // $multiotp->ImportTokensFile('oath/tokens_ocra_aes.pskc', 'tokens_ocra_aes.pskc', '12345678901234567890123456789012', '');
+    // $multiotp->ImportTokensFile('oath/tokens_ocra_pbe.pskc', 'tokens_ocra_pbe.pskc', 'qwerty', '');
 
-    if ($multiotp->ImportTokensFile('oath/pskc-hotp-aes.txt', 'pskc-hotp-aes.txt', '12345678901234567890123456789012', '1122334455667788990011223344556677889900') &&
-        $multiotp->ImportTokensFile('oath/pskc-hotp-pbe.txt', 'pskc-hotp-pbe.txt', 'qwerty', 'bdaab8d648e850d25a3289364f7d7eaaf53ce581') &&
-        $multiotp->ImportTokensFile('oath/pskc-totp-aes.txt', 'pskc-totp-aes.txt', '12345678901234567890123456789012', '1122334455667788990011223344556677889900') &&
-        $multiotp->ImportTokensFile('oath/pskc-totp-pbe.txt', 'pskc-totp-pbe.txt', 'qwerty', 'bdaab8d648e850d25a3289364f7d7eaaf53ce581') &&
-        $multiotp->ImportTokensFile('oath/tokens_hotp_aes.pskc', 'tokens_hotp_aes.pskc', '12345678901234567890123456789012', '') &&
-        $multiotp->ImportTokensFile('oath/tokens_totp_aes.pskc', 'tokens_totp_aes.pskc', '12345678901234567890123456789012', '') &&
-        $multiotp->ImportTokensFile('oath/tokens_hotp_pbe.pskc', 'tokens_hotp_pbe.pskc', 'qwerty', '') &&
-        $multiotp->ImportTokensFile('oath/tokens_totp_pbe.pskc', 'tokens_totp_pbe.pskc', 'qwerty', '')
-        // $multiotp->ImportTokensFile('oath/tokens_ocra_aes.pskc', 'tokens_ocra_aes.pskc', '12345678901234567890123456789012', '') &&
-        // $multiotp->ImportTokensFile('oath/tokens_ocra_pbe.pskc', 'tokens_ocra_pbe.pskc', 'qwerty', '')
-       )
-    {
+    if (!$token_import_error) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Test files from oath successfully imported".$crlf);
         $successes++;
-    }
-    else
-    {
-        echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to import test files from oath".$crlf);
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to import test files from ".getcwd()."/oath".$crlf);
     }
     echo_full($crlf);
 
@@ -1112,13 +1236,10 @@ while ($current_backend != 'files')
     echo_full($b_on."List of existing tokens".$b_off.$crlf);
     $list = $multiotp->GetTokensList();
     echo_full(str_replace("\t",", ",$list).$crlf);
-    if (FALSE !== strpos(strtolower($list), strtolower('ZZ0100000000')))
-    {
+    if (FALSE !== strpos(strtolower($list), strtolower('ZZ0100000000'))) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Token ZZ0100000000 is present".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Token ZZ0100000000 is missing".$crlf);
     }
     echo_full($crlf);
@@ -1129,13 +1250,10 @@ while ($current_backend != 'files')
     $tests++;
     echo_full($b_on."Rename token ZZ0100000000 to ZZ0100000001".$b_off.$crlf);
     $multiotp->SetToken('ZZ0100000000');
-    if ($multiotp->RenameCurrentToken('ZZ0100000001'))
-    {
+    if ($multiotp->RenameCurrentToken('ZZ0100000001')) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Token ZZ0100000000 successfully renamed to ZZ0100000001".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to rename the token ZZ0100000000".$crlf);
         $multiotp->DeleteToken('ZZ0100000000');
     }
@@ -1146,13 +1264,10 @@ while ($current_backend != 'files')
     // Check if the token ZZ0100000001 exists
     $tests++;
     echo_full($b_on."Check if the token ZZ0100000001 exists".$b_off.$crlf);
-    if ($multiotp->CheckTokenExists('ZZ0100000001'))
-    {
+    if ($multiotp->CheckTokenExists('ZZ0100000001')) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Token ZZ0100000001 exists".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Token ZZ0100000001 is missing".$crlf);
     }
     echo_full($crlf);
@@ -1169,13 +1284,10 @@ while ($current_backend != 'files')
     $multiotp->SetTokenDescription('');
     $multiotp->ReadTokenData('ZZ0100000001');
 
-    if ($test_value == $multiotp->GetTokenDescription())
-    {
+    if ($test_value == $multiotp->GetTokenDescription()) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Write/Read information concerning token ZZ0100000001 successfully done".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Write/Read information concerning token ZZ0100000001 failed".$crlf);
     }
     echo_full($crlf);
@@ -1185,13 +1297,10 @@ while ($current_backend != 'files')
     // TEST: Delete tokens ZZ0000000000 and ZZ0100000001
     $tests++;
     echo_full($b_on."Delete tokens ZZ0000000000 and ZZ0100000001".$b_off.$crlf);
-    if (($multiotp->DeleteToken('ZZ0000000000')) && ($multiotp->DeleteToken('ZZ0100000001')) && (!$multiotp->CheckTokenExists('ZZ0100000001')))
-    {
+    if (($multiotp->DeleteToken('ZZ0000000000')) && ($multiotp->DeleteToken('ZZ0100000001')) && (!$multiotp->CheckTokenExists('ZZ0100000001'))) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Tokens ZZ0000000000 and ZZ0100000001 successfully deleted".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Failed during tokens deletion".$crlf);
     }
     echo_full($crlf);
@@ -1200,15 +1309,12 @@ while ($current_backend != 'files')
     //====================================================================
     // TEST: Create the device 123456 test_device
     $tests++;
-    $multiotp->DeleteDevice(123456, TRUE);
+    $multiotp->DeleteDevice("123456", TRUE);
     echo_full($b_on."Create the device test_device (123456)".$b_off.$crlf);
-    if ($multiotp->CreateDevice(123456, 'test_device', 'test_secret', '123.124.125.126', '255.255.255.255', 'test_device', FALSE))
-    {
+    if ($multiotp->CreateDevice("123456", 'test_device', 'test_secret', '123.124.125.126', '255.255.255.255', 'test_device', FALSE)) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Device test_device successfully created".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Creation of device test_device failed".$crlf);
     }
     echo_full($crlf);
@@ -1219,15 +1325,12 @@ while ($current_backend != 'files')
     $tests++;
     echo_full($b_on."Read the device test_device (123456)".$b_off.$crlf);
     $multiotp->SetDeviceDescription('');
-    $multiotp->ReadDeviceData(123456);
+    $multiotp->ReadDeviceData("123456");
     $description = $multiotp->GetDeviceDescription();
-    if ('test_device' == $description)
-    {
+    if ('test_device' == $description) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Device test_device successfully read".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Failed to read the device test_device".$crlf);
     }
     echo_full($crlf);
@@ -1239,13 +1342,10 @@ while ($current_backend != 'files')
     echo_full($b_on."List of existing devices".$b_off.$crlf);
     $list = $multiotp->GetDevicesList();
     echo_full(str_replace("\t",", ",$list).$crlf);
-    if ('' != trim($list))
-    {
+    if ('' != trim($list)) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." List is not empty".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." List is empty".$crlf);
     }
     echo_full($crlf);
@@ -1255,13 +1355,10 @@ while ($current_backend != 'files')
     // TEST: Delete the device test_device
     $tests++;
     echo_full($b_on."Delete the device test_device".$b_off.$crlf);
-    if ($multiotp->DeleteDevice(123456))
-    {
+    if ($multiotp->DeleteDevice("123456")) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Device test_device successfully deleted".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." DeleteDevice function failed".$crlf);
     }
     echo_full($crlf);
@@ -1270,15 +1367,12 @@ while ($current_backend != 'files')
     //====================================================================
     // TEST: Create the group 123456 test_group
     $tests++;
-    $multiotp->DeleteGroup(123456, TRUE);
+    $multiotp->DeleteGroup("123456", TRUE);
     echo_full($b_on."Create the group test_group (123456)".$b_off.$crlf);
-    if ($multiotp->CreateGroup(123456, 'test_group', 'test_description'))
-    {
+    if ($multiotp->CreateGroup("123456", 'test_group', 'test_description')) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Group test_group successfully created".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Creation of group test_group failed".$crlf);
     }
     echo_full($crlf);
@@ -1289,15 +1383,12 @@ while ($current_backend != 'files')
     $tests++;
     echo_full($b_on."Read the group test_group (123456)".$b_off.$crlf);
     $multiotp->SetGroupDescription('');
-    $multiotp->ReadGroupData(123456);
+    $multiotp->ReadGroupData("123456");
     $description = $multiotp->GetGroupDescription();
-    if ('test_description' == $description)
-    {
+    if ('test_description' == $description) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Group test_group successfully read".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Failed to read the group test_group".$crlf);
     }
     echo_full($crlf);
@@ -1307,13 +1398,10 @@ while ($current_backend != 'files')
     // TEST: Check if the group 123456 test_group exists
     $tests++;
     echo_full($b_on."Check if the group test_group (123456) exists".$b_off.$crlf);
-    if ($multiotp->CheckGroupExists(123456))
-    {
+    if ($multiotp->CheckGroupExists("123456")) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Group test_group exists".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Group test_group doesn't exists".$crlf);
     }
     echo_full($crlf);
@@ -1325,13 +1413,10 @@ while ($current_backend != 'files')
     echo_full($b_on."List of existing groups".$b_off.$crlf);
     $list = $multiotp->GetGroupsList();
     echo_full(str_replace("\t",", ",$list).$crlf);
-    if ('' != trim($list))
-    {
+    if ('' != trim($list)) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." List is not empty".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." List is empty".$crlf);
     }
     echo_full($crlf);
@@ -1341,13 +1426,10 @@ while ($current_backend != 'files')
     // TEST: Delete the group test_group
     $tests++;
     echo_full($b_on."Delete the group test_group".$b_off.$crlf);
-    if ($multiotp->DeleteGroup(123456))
-    {
+    if ($multiotp->DeleteGroup(123456)) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Group test_group successfully deleted".$crlf);
         $successes++;
-    }
-    else
-    {
+    } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." DeleteGroup function failed".$crlf);
     }
     echo_full($crlf);
@@ -1365,9 +1447,6 @@ while ($current_backend != 'files')
         echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to show the log".$crlf);
     }
     echo_full($crlf);
-
-
-    $backend = $default_backend;
 }
 
 
@@ -1397,7 +1476,7 @@ echo_full($crlf);
 
 echo_full($hr);
 
-echo_full("Time spent for the whole script: less than ".(1+time()-$first_time)." second(s)");
+echo_full("Time spent for the whole check.multiotp.class.php: less than ".(1+time()-$first_time)." second(s)");
 echo_full($crlf);
 echo_full($crlf);
 

@@ -3,6 +3,10 @@
     NuSOAP - PHP Web Services Toolkit 1.123 (LGPLv2.1)
     NuSphere Corporation
     http://sourceforge.net/projects/nusoap/
+
+    Patch from SysCo/al:
+    before: function sendHTTPS($data, $timeout=0, $response_timeout=30, $cookies);
+    after: function sendHTTPS($data, $timeout=0, $response_timeout=30, $cookies = NULL);
 */
 /*
 $Id: nusoap.php,v 1.123 2010/04/26 20:15:08 snichol Exp $
@@ -2609,7 +2613,7 @@ class soap_transport_http extends nusoap_base {
 	* @access   public
 	* @deprecated
 	*/
-	function sendHTTPS($data, $timeout=0, $response_timeout=30, $cookies) {
+	function sendHTTPS($data, $timeout=0, $response_timeout=30, $cookies = NULL) {
 		return $this->send($data, $timeout, $response_timeout, $cookies);
 	}
 	

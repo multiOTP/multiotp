@@ -1,17 +1,20 @@
 @ECHO OFF
 REM ************************************************************
+REM @file  radius_debug.cmd
+REM @brief Script to launch the debug version of the radius service.
 REM
-REM multiOTP - Strong two-factor authentication radius server
+REM multiOTP - Strong two-factor authentication PHP class package
 REM http://www.multiotp.net
+REM 
+REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
-REM      Filename: radius_debug.cmd
-REM       Version: 4.2.4.3
-REM      Language: Windows batch file for Windows 2K/XP/2003/7/2008/8/2012
-REM     Copyright: SysCo systèmes de communication sa
-REM       Created: 2014-04-22 SysCo/al
-REM Last modified: 2014-04-22 SysCo/al
-REM      Web site: http://developer.sysco.ch/multiotp/
-REM         Email: developer@sysco.ch
+REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
+REM @version   5.0.4.5
+REM @date      2017-05-29
+REM @since     2014-04-22
+REM @copyright (c) 2014-2017 SysCo systemes de communication sa
+REM @copyright GNU Lesser General Public License
+REM
 REM
 REM Description
 REM
@@ -28,8 +31,8 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2014 SysCo systemes de communication sa
-REM   SysCo (tm) is a trademark of SysCo systèmes de communication sa
+REM   Copyright (c) 2014-2017 SysCo systemes de communication sa
+REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
 REM
@@ -41,6 +44,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2016-11-04 5.0.2.7 SysCo/al Unified file header
 REM   2014-04-22 4.2.4.3 SysCo/al Initial release
 REM
 REM ************************************************************

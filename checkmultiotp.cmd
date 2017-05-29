@@ -11,10 +11,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.0.2.6
-REM @date      2016-10-28
+REM @version   5.0.4.5
+REM @date      2017-05-29
 REM @since     2010-07-10
-REM @copyright (c) 2010-2016 SysCo systemes de communication sa
+REM @copyright (c) 2010-2017 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -38,8 +38,8 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2016 SysCo systemes de communication sa
-REM   SysCo (tm) is a trademark of SysCo systèmes de communication sa
+REM   Copyright (c) 2010-2017 SysCo systemes de communication sa
+REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
 REM
@@ -62,6 +62,8 @@ REM
 REM
 REM Change Log
 REM
+REM   2017-05-29 5.0.4.5 SysCo/al Tests adapted to the new services
+REM   2016-12-08 5.0.3.4 SysCo/al Tests improved (MS-CHAP was wrongly tested)
 REM   2016-10-28 5.0.2.6 SysCo/al Some tests improved
 REM   2016-08-02 5.0.1.4 SysCo/al Some tests improved
 REM   2015-07-15 4.3.2.5 SysCo/al Some tests improved
@@ -92,6 +94,14 @@ REM ************************************************************
 REM These are the various ports used for the tests.
 REM They are different from the default production ports.
 
+IF "%_multiotp_ni%"=="1" GOTO NoWarning
+ECHO WARNING! Please run this script as an administrator, otherwise it could fail.
+PAUSE
+:NoWarning
+
+REM No web display of the webservice installation
+SET _no_web_display=1
+
 REM SQL server test parameters
 IF "%_check_sql_server%"==""   SET _check_sql_server=
 IF "%_check_sql_username%"=="" SET _check_sql_username=
@@ -99,12 +109,12 @@ IF "%_check_sql_password%"=="" SET _check_sql_password=
 IF "%_check_sql_database%"=="" SET _check_sql_database=
 
 REM Radius server test ports
-IF "%_check_r_auth_port%"=="" SET _check_r_auth_port=11812
-IF "%_check_r_acct_port%"=="" SET _check_r_acct_port=11813
+IF "%_check_r_auth_port%"=="" SET _check_r_auth_port=41812
+IF "%_check_r_acct_port%"=="" SET _check_r_acct_port=41813
 
 REM Web service test ports
-IF "%_check_web_port%"=="" SET _check_web_port=18112
-IF "%_check_ssl_port%"=="" SET _check_ssl_port=18113
+IF "%_check_web_port%"=="" SET _check_web_port=58112
+IF "%_check_ssl_port%"=="" SET _check_ssl_port=58113
 
 REM Ports can also be defined as parameters
 IF NOT "%1"=="" SET _check_r_auth_port=%1
@@ -120,17 +130,19 @@ IF NOT "%_check_backend%"=="" SET _backend=%_check_backend%
 
 REM Detection of the script folder
 SET _check_dir=%~d0%~p0
-SET _radius_dir=%~d0%~p0
-SET _tools_dir=%~d0%~p0
-IF NOT EXIST %_radius_dir%radius SET _radius_dir=%~d0%~p0..\
-IF NOT EXIST %_tools_dir%radius SET _tools_dir=%~d0%~p0..\
+SET _radius_dir=%~d0%~p0radius\
+SET _tools_dir=%~d0%~p0tools\
+IF NOT EXIST %_radius_dir%bin SET _radius_dir=%~d0%~p0..\radius\
+IF NOT EXIST %_tools_dir%wget.exe SET _tools_dir=%~d0%~p0..\tools\
 
 REM Full path to the multiotp.exe file
 SET _multiotp="%_check_dir%multiotp.exe"
 IF NOT "%_check_multiotp%"=="" SET _multiotp=%_check_multiotp%
+IF NOT "%_multiotp_alternate%"=="" SET _multiotp=%_multiotp_alternate%
 
-REM No web display of the webservice installation
-SET _no_web_display=1
+SET _multiotp_class_check=check.multiotp.class.php
+IF NOT "%_multiotp_class_check_alternate%"=="" SET _multiotp_class_check=%_multiotp_class_check_alternate%
+
 
 REM Initializing the test counters
 SET SUCCESSES=0
@@ -149,6 +161,10 @@ ECHO.
 
 REM List of attributes to encrypt is set to none during the tests
 %_multiotp% -config attributes-to-encrypt=**
+
+
+REM Define server-secret to default value
+%_multiotp% -config server-secret=""
 
 
 :BackendLoop
@@ -268,7 +284,7 @@ SET /A TOTAL_TESTS=TOTAL_TESTS+1
 ECHO.
 ECHO Authenticate test_user with next token 399871 with prefix 1234 using MS-CHAP
 REM user test_user and password 1234399871
-%_multiotp% -keep-local -log test_user -set pin=1234
+%_multiotp% -keep-local -log -set test_user pin=1234
 %_multiotp% -keep-local -log test_user -request-nt-key -ms-chap-challenge=0x29c9fd75e57a83b778ed911258c35bab -ms-chap-response=0x0001dcbf446a704793383684c8ee1cde8b3130e5b788fa878f668e688cff12d7f0049cbc30d7cd88d33321d641ae1bffd830
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user successfully accepted using MS-CHAP
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
@@ -313,7 +329,7 @@ IF NOT ERRORLEVEL 13 ECHO - User test_user2 successfully deleted
 ECHO.
 ECHO Create user test_user2 with the RFC test values HOTP token and a big PIN prefix
 ECHO (like Authenex / ZyXEL / Billion is doing for their OTP solution)
-%_multiotp% -log -create -prefix-pin test_user2 HOTP 3132333435363738393031323334353637383930 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space" 6 0
+%_multiotp% -log -create -prefix-pin test_user2 HOTP 3132333435363738393031323334353637383930 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space" 6 0 -display-log -debug -param
 IF NOT ERRORLEVEL 12 ECHO - OK! User test_user2 successfully created
 IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user2
@@ -321,18 +337,18 @@ SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
 ECHO Authenticate test_user2 with the first token of the RFC test value with big PIN
-%_multiotp% -keep-local -log test_user2 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space755224"
+%_multiotp% -keep-local -log test_user2 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space755224" -display-log -debug -param
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user2 (with prefix PIN) successfully accepted
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user2 with the first token and PIN prefix
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 
-IF NOT EXIST %_radius_dir%radius GOTO NoRadiusCheck
+IF NOT EXIST %_radius_dir%bin GOTO NoRadiusCheck
 
 ECHO.
 ECHO - Install and start the RADIUS server (wait 5 seconds)
-CALL %_check_dir%radius_install.cmd %_check_r_auth_port% %_check_r_acct_port% multiOTPradiusTest
+%_tools_dir%nircmd elevate CMD /c CALL %_check_dir%radius_install.cmd %_check_r_auth_port% %_check_r_acct_port% multiOTPradiusTest multiOTPradiusTest
 PING 127.0.0.1 -n 5 >NUL
 
 ECHO.
@@ -341,7 +357,8 @@ ECHO User-Name = "test_user2">%TEMP%\radiustest.conf
 ECHO User-Password = "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space287082">>%TEMP%\radiustest.conf
 ECHO NAS-IP-Address = 127.0.0.1>>%TEMP%\radiustest.conf
 ECHO NAS-Port = %_check_r_auth_port%>>%TEMP%\radiustest.conf
-%_radius_dir%radius\bin\radclient.exe -c 1 -d %_radius_dir%radius\etc\raddb -f %TEMP%\radiustest.conf -q -r 1 -t 5 127.0.0.1:%_check_r_auth_port% auth multiotpsecret
+
+%_radius_dir%bin\radclient.exe -c 1 -d %_radius_dir%etc\raddb -f %TEMP%\radiustest.conf -q -r 1 -t 5 127.0.0.1:%_check_r_auth_port% auth multiotpsecret
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user2 successfully accepted by RADIUS server
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user2 with by the RADIUS server
@@ -350,19 +367,19 @@ DEL %TEMP%\radiustest.conf /Q
 
 ECHO.
 ECHO - Stop and uninstall the RADIUS server
-CALL %_check_dir%radius_uninstall.cmd multiOTPradiusTest
+%_tools_dir%nircmd elevate CMD /c CALL %_check_dir%radius_uninstall.cmd multiOTPradiusTest
 
 :NoRadiusCheck
 
 
 ECHO.
 ECHO - Install and start the multiOTP web service (wait 5 seconds)
-CALL %_check_dir%webservice_install.cmd %_check_web_port% %_check_ssl_port% multiOTPserverTest multiOTPserverTest
+%_tools_dir%nircmd elevate CMD /c CALL %_check_dir%webservice_install.cmd %_check_web_port% %_check_ssl_port% multiOTPserverTest multiOTPserverTest
 PING 127.0.0.1 -n 5 >NUL 
 
 ECHO.
 ECHO Check the default multiOTP web service page
-%_tools_dir%tools\wget http://127.0.0.1:%_check_web_port% --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=10 --tries=2
+%_tools_dir%wget http://127.0.0.1:%_check_web_port% --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=300 --tries=2
 FIND /C "Web service is ready" %TEMP%\multiOTPwebservice.check >NUL
 IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
@@ -373,7 +390,7 @@ DEL %TEMP%\multiOTPwebservice.check /Q
 
 ECHO.
 ECHO Check the https default multiOTP web service page
-%_tools_dir%tools\wget https://127.0.0.1:%_check_ssl_port% --no-check-certificate --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=10 --tries=2
+%_tools_dir%wget https://127.0.0.1:%_check_ssl_port% --no-check-certificate --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=300 --tries=2
 FIND /C "Web service is ready" %TEMP%\multiOTPwebservice.check >NUL
 IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
@@ -391,7 +408,7 @@ SET _chap_id=34
 SET _chap_challenge=4af06915f7cbdfd018f5c60047dc8a2f
 SET _chap_password=936660d3d0bef545c63e73fa7ee30bd1
 ECHO data=^<?xml version="1.0" encoding="UTF-8"?^>^<multiOTP version="4.0" xmlns="http://www.sysco.ch/namespaces/multiotp"^>^<ServerChallenge^>%_server_challenge%^</ServerChallenge^>^<CheckUserToken^>^<UserId^>test_user2^</UserId^>^<Chap^>^<ChapId^>%_chap_id%^</ChapId^>^<ChapChallenge^>%_chap_challenge%^</ChapChallenge^>^<ChapPassword^>%_chap_password%^</ChapPassword^>^</Chap^>^<CacheLevel^>1^</CacheLevel^>^</CheckUserToken^>^</multiOTP^> >%TEMP%\multiOTPwebservice.post
-%_tools_dir%tools\wget --post-file %TEMP%\multiOTPwebservice.post http://127.0.0.1:%_check_web_port% --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=10 --tries=2
+%_tools_dir%wget --post-file %TEMP%\multiOTPwebservice.post http://127.0.0.1:%_check_web_port% --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=300 --tries=2
 FIND /C "OK: Token accepted" %TEMP%\multiOTPwebservice.check >NUL
 IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
@@ -477,27 +494,38 @@ REM List of attributes to encrypt is set to default value
 
 ECHO.
 ECHO End of the CLI multiOTP tests
+IF %SUCCESSES% EQU %TOTAL_TESTS% ECHO (everything is OK so far...)
 ECHO.
 
 :DelTestUserSkip
 
 
 ECHO.
-ECHO Check the PHP multiOTP class using the check.multiotp.class.php file.
-%_tools_dir%tools\wget http://127.0.0.1:%_check_web_port%/check?minima=1 --quiet --output-document=%TEMP%\check.multiOTP.class.check --timeout=10 --tries=2
+ECHO Check the PHP multiOTP class using the %_multiotp_class_check% file.
+%_tools_dir%wget http://127.0.0.1:%_check_web_port%/check/?minima=1 --quiet --output-document=%TEMP%\check.multiOTP.class.check --timeout=300 --tries=2
 FIND /C "OK! ALL" %TEMP%\check.multiOTP.class.check >NUL
-IF NOT ERRORLEVEL 1 TYPE %TEMP%\check.multiOTP.class.check
-IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP class tests successful
-IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
-IF ERRORLEVEL 1 ECHO - KO! multiOTP class tests failed
-IF ERRORLEVEL 1 TYPE %TEMP%\check.multiOTP.class.check
-SET /A TOTAL_TESTS=TOTAL_TESTS+1
-DEL %TEMP%\check.multiOTP.class.check /Q
+TYPE %TEMP%\check.multiOTP.class.check
+IF ERRORLEVEL 1 GOTO CheckClassError
 
+:CheckClassOk
+ECHO - OK! multiOTP class tests successful
+SET /A SUCCESSES=SUCCESSES+1
+GOTO CheckClassEnd
+
+:CheckClassError
+ECHO - KO! multiOTP class tests failed (http://127.0.0.1:%_check_web_port%/check/?minima=1)
+CHOICE /T 5 /C ny /D n /M "Type [y] in the next 5 seconds to pause the process"
+ECHO.
+IF ERRORLEVEL 2 PAUSE
+ECHO.
+
+:CheckClassEnd
+DEL %TEMP%\check.multiOTP.class.check /Q
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
 ECHO - Stop and uninstall the multiOTP web service
-CALL %_check_dir%webservice_uninstall.cmd multiOTPserverTest
+%_tools_dir%nircmd elevate CMD /c CALL %_check_dir%webservice_uninstall.cmd multiOTPserverTest
 
 
 ECHO.
@@ -515,6 +543,7 @@ SET _check_dir=
 SET _radius_dir=
 SET _tools_dir=
 SET _multiotp=
+SET _multiotp_class_check=
 
 SET _check_r_auth_port=
 SET _check_r_acct_port=

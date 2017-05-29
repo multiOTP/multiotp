@@ -2,6 +2,7 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Adapted by SysCo/al to support "compilation" with a 4.x PHP interpreter                *
+ *    and fixed getmxrr_win($hostname = null, &$mxhosts, $debug = null)                    *
  *                                                                                         *
  *  XPertMailer is a PHP Mail Class that can send and read messages in MIME format.        *
  *  This file is part of the XPertMailer package (http://xpertmailer.sourceforge.net/)     *
@@ -172,7 +173,7 @@ class FUNC5 {
 		else $this->trace($debug, 'invalid argument type');
 	}
 
-	function getmxrr_win($hostname = null, &$mxhosts, $debug = null) {
+	function getmxrr_win($hostname, &$mxhosts, $debug = null) {
 		if (!$this->is_debug($debug)) $debug = debug_backtrace();
 		$mxhosts = array();
 		if (!is_string($hostname)) $this->trace($debug, 'invalid hostname type');

@@ -11,8 +11,8 @@ class MultiotpYubikey
  * @brief     Class definition for Yubikey handling.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   4.3.2.7
- * @date      2016-03-22
+ * @version   5.0.3.0
+ * @date      2016-11-14
  * @since     2014-11-04
  *
  *

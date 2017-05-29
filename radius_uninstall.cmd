@@ -1,17 +1,20 @@
 @ECHO OFF
 REM ************************************************************
+REM @file  radius_uninstall.cmd
+REM @brief Script to uninstall the radius service.
 REM
-REM multiOTP - Strong two-factor authentication radius server
+REM multiOTP - Strong two-factor authentication PHP class package
 REM http://www.multiotp.net
+REM 
+REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
-REM      Filename: radius_uninstall.cmd
-REM       Version: 5.0.2.5
-REM      Language: Windows batch file for Windows 2K/XP/2003/7/2008/8/2012
-REM     Copyright: SysCo systèmes de communication sa
-REM Last modified: 2016-10-16 SysCo/al
-REM       Created: 2013-08-20 SysCo/al
-REM      Web site: http://developer.sysco.ch/multiotp/
-REM         Email: developer@sysco.ch
+REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
+REM @version   5.0.4.5
+REM @date      2017-05-29
+REM @since     2013-08-20
+REM @copyright (c) 2013-2017 SysCo systemes de communication sa
+REM @copyright GNU Lesser General Public License
+REM
 REM
 REM Description
 REM
@@ -27,8 +30,8 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2016 SysCo systemes de communication sa
-REM   SysCo (tm) is a trademark of SysCo systèmes de communication sa
+REM   Copyright (c) 2013-2017 SysCo systemes de communication sa
+REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
 REM
@@ -37,6 +40,8 @@ REM
 REM
 REM Change Log
 REM
+REM   2017-05-29 5.0.4.5 SysCo/al Unified script with some bug fixes
+REM   2016-11-04 5.0.2.7 SysCo/al Unified file header
 REM   2016-10-16 5.0.2.5 SysCo/al Version synchronisation
 REM   2015-07-15 4.3.2.5 SysCo/al Version synchronisation
 REM   2014-03-27 4.2.4   SysCo/al More generic usage
@@ -50,15 +55,23 @@ SET _service_tag=multiOTPradius
 
 IF NOT "%1"=="" SET _service_tag=%1
 
+IF "%_service_tag%"=="multiOTPradiusTest" GOTO NoWarning
+ECHO WARNING! Please run this script as an administrator, otherwise it could fail.
+PAUSE
+:NoWarning
+
 SET _folder=%~d0%~p0
 SET _radius_folder=%~d0%~p0
+SET _tools_folder=%~d0%~p0tools\
 IF NOT EXIST %_radius_folder%radius SET _radius_folder=%~d0%~p0..\
+IF NOT EXIST %_tools_folder%nircmd.exe SET _tools_folder=%~d0%~p0..\tools\
 
-netsh firewall delete allowedprogram "%_radius_folder%radius\sbin\radiusd.exe" >NUL
-netsh advfirewall firewall delete rule name="multiOTP Radius server" >NUL
+%_tools_folder%nircmd elevate netsh firewall delete allowedprogram "%_radius_folder%radius\sbin\radiusd.exe" >NUL
+%_tools_folder%nircmd elevate netsh advfirewall firewall delete rule name="multiOTP Radius server" >NUL
 
-SC stop %_service_tag% >NUL
-SC delete %_service_tag% >NUL
+%_tools_folder%nircmd elevate SC stop %_service_tag% >NUL
+%_tools_folder%nircmd elevate SC delete %_service_tag% >NUL
 
 SET _folder=
 SET _radius_folder=
+SET _tools_folder=
