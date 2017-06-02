@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.4.5
- * @date      2017-05-29
+ * @version   5.0.4.6
+ * @date      2017-06-02
  * @since     2010-06-08
  * @copyright (c) 2010-2017 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -586,7 +586,7 @@ if (!function_exists('clean_quotes')) {
 }
 
 
-// CLI mode (if not, it's the http local proxy mode)
+// CLI mode initialization (if not, it's the http local proxy mode)
 $cli_mode = TRUE;
 
 
@@ -595,10 +595,10 @@ if ('127.0.0.1'==(isset($_SERVER['REMOTE_ADDR'])?$_SERVER['REMOTE_ADDR']:'')) {
     if (isset($_POST['argv']) || isset($_GET['argv'])) {
         $cli_mode = FALSE;
         $folder_path = dirname(__FILE__).'/';
-        if (!file_exists($folder_path.'scripts/')) {
+        if (!@file_exists($folder_path.'scripts/')) {
           $folder_path = '/usr/local/bin/multiotp/';
         }
-        if (!file_exists($folder_path.'templates/')) {
+        if (!@file_exists($folder_path.'templates/')) {
             $folder_path = '';
         } else {
             $chdir_result = chdir($folder_path);
@@ -1028,17 +1028,35 @@ if ('' != $base_dir) {
 // PLEASE DO NOT CHANGE THIS LINE IF YOU DON'T KNOW WHAT YOU DO!
 // IF YOU CHANGE THE ENCRYPTION KEY, YOUR PREVIOUS ENCRYPTED DATA WILL NOT BE READABLE ANYMORE
 
+$multiotp_etc_dir  = '/etc/multiotp';
+$config_folder     = $multiotp_etc_dir.'/config';
+if (false === strpos(getcwd(), '/')) {
+  // if (!@file_exists($config_folder)) {
+  $multiotp_etc_dir  = '';
+  $config_folder = '';
+}
 
 if (($command == "libhash") || ($command == "help")) {
-    if (!isset($multiotp)) {
-        $multiotp = new Multiotp('DefaultCliEncryptionKey', false, $folder_path);
-    }
+  if (!isset($multiotp)) {
+    $multiotp = new Multiotp('DefaultCliEncryptionKey', false, $folder_path, $config_folder);
+  }
 } else {
-    if (!isset($multiotp)) {
-        $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path);
+  if (!isset($multiotp)) {
+    $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path, $config_folder);
+    if ('' != $multiotp_etc_dir) {
+      $multiotp->SetConfigFolder($multiotp_etc_dir.'/config/');
+      $multiotp->SetDevicesFolder($multiotp_etc_dir.'/devices/');
+      $multiotp->SetGroupsFolder($multiotp_etc_dir.'/groups/');
+      $multiotp->SetTokensFolder($multiotp_etc_dir.'/tokens/');
+      $multiotp->SetUsersFolder($multiotp_etc_dir.'/users/');
+      $multiotp->SetCacheFolder('/tmp/cache/');
+      $multiotp->SetLogFolder('/var/log/multiotp/');
+      $multiotp->SetLinuxFileMode('0666');
     }
-    $multiotp->UpgradeSchemaIfNeeded();
-    $verbose_prefix = $multiotp->GetVerboseLogPrefix(); // for example Reply-Message := 
+    $multiotp->ReadConfigData();
+  }
+  $multiotp->UpgradeSchemaIfNeeded();
+  $verbose_prefix = $multiotp->GetVerboseLogPrefix(); // for example Reply-Message := 
 }
 
 $multiotp->SetCliMode($cli_mode);
@@ -1901,7 +1919,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "import":
-            if (!file_exists($all_args[1])) {
+            if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
                 if ($multiotp->ImportTokensFile($all_args[1], $all_args[1], $all_args[2])) {
@@ -1912,7 +1930,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "import-csv":
-            if (!file_exists($all_args[1])) {
+            if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
                 if ($multiotp->ImportTokensFromCsv($all_args[1])) {
@@ -1923,7 +1941,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "import-pskc":
-            if (!file_exists($all_args[1])) {
+            if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
                 if ($multiotp->ImportTokensFromPskc($all_args[1], $all_args[2])) {
@@ -1934,7 +1952,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "import-yubikey":
-            if (!file_exists($all_args[1])) {
+            if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
                 if ($multiotp->ImportYubikeyTraditional($all_args[1])) {
@@ -1945,7 +1963,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "import-xml":
-            if (!file_exists($all_args[1])) {
+            if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
                 if ($multiotp->ImportTokensFromXml($all_args[1])) {
@@ -1956,7 +1974,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "import-alpine-xml":
-            if (!file_exists($all_args[1])) {
+            if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
                 if ($multiotp->ImportTokensFromAlpineXml($all_args[1])) {
@@ -1967,7 +1985,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "import-dat":
-            if (!file_exists($all_args[1])) {
+            if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
                 if ($multiotp->ImportTokensFromAlpineDat($all_args[1])) {
@@ -1978,7 +1996,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "import-sql":
-            if (!file_exists($all_args[1])) {
+            if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
                 if ($multiotp->ImportTokensFromAuthenexSql($all_args[1])) {

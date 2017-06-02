@@ -6,9 +6,12 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2017 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.0.4.5 (2017-05-29)
+Current build: 5.0.4.6 (2017-06-02)
 
 Binary download: http://download.multiotp.net/
+
+[![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
+*Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
 
 Visit http://forum.multiotp.net/ for additional support.
 
@@ -85,9 +88,6 @@ is always welcome even if it's as low as $1!
 You can also sponsor the development of a specific feature. Please contact
 us in order to discuss the detail of the implementation.
 
-[![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
-*Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
-
 Thanks to our main donators and sponsors:  
 Donator AB (SE)  
 Henk van der Helm (NL)  
@@ -128,6 +128,9 @@ If you are currently using the multiOTP open source linux files, you can
 upgrade your installation by copying the extracted content of the folder and
 subfolders from linux to your current multiOTP folder
 
+!!! since 5.0.4.6 under Linux, the config, devices, groups, tokens and users folders are now
+always located in /etc/multiotp/. Please be sure to make the move when you are upgrading !!!
+
 If you are currently using the multiOTP open source windows files, you can
 upgrade your installation by copying the extracted content of the folder and
 subfolders from windows to your current multiOTP folder
@@ -136,6 +139,8 @@ subfolders from windows to your current multiOTP folder
 WHAT'S NEW IN THE RELEASES
 ==========================
 # What's new in 5.0 releases
+- Important, under Linux, the config, devices, groups, tokens and users folders are now always
+  located in /etc/multiotp/. Please be sure to make the move when you are upgrading (5.0.4.6)
 - PostgreSQL support, based on source code provided by Frank van der Aa (5.0.4.5)
 - Restore configuration added in Web GUI (5.0.4.5)
 - New GetDelayedUsersList() method (5.0.3.6)
@@ -239,6 +244,11 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2017-06-02 5.0.4.6 SysCo/al Fixed a typo in the ReadCacheData method for PostgreSQL support (thanks Frank for the feedback)
+							Fixed default folder detection for the multiotp.exe file
+                            Important, under Linux, the config, devices, groups, tokens and users folders are now always
+                             located in /etc/multiotp/. Please be sure to make the move when you are upgrading
+                            Cleaned some ugly PHP warnings when the backend is not initialized
 2017-05-29 5.0.4.5 SysCo/al Restore configuration added in Web GUI
                             Fixed configuration file directory under Windows in Web GUI
                             Fixed path with spaces handling for the command line edition (thanks Scott for the feedback)
@@ -1435,12 +1445,13 @@ and you may also check multiotp.cli.header.php which implements the class.
 
 MULTIOTP COMMAND LINE TOOL
 ==========================
-```
 
-
-```multiOTP 5.0.4.5 (2017-05-29)
+``` 
+multiOTP 5.0.4.6 (2017-06-02)
 (c) 2010-2017 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
+
+*Script folder: D:\Data\projects\multiotp\core\
 
 multiotp will check if the token of a user is correct, based on a specified
 algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226) 
@@ -1857,3 +1868,4 @@ Don't hesitate to send us an email if your product uses our multiOTP library.
 Visit http://forum.multiotp.net/ for additional support
 
 
+``` 

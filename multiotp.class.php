@@ -70,8 +70,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.4.5
- * @date      2017-05-29
+ * @version   5.0.4.6
+ * @date      2017-06-02
  * @since     2010-06-08
  * @copyright (c) 2010-2017 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -498,6 +498,10 @@
  *
  * Change Log
  *
+ *   2017-06-02 5.0.4.6 SysCo/al Fixed a typo in the ReadCacheData method for PostgreSQL support
+ *                               Important, under Linux, the config, devices, groups, tokens and users folders are now always
+ *                                located in /etc/multiotp/. Please be sure to make the move when you are upgrading
+ *                               Cleaned some ugly PHP warnings when the backend is not initialized
  *   2017-05-29 5.0.4.5 SysCo/al Restore configuration added in Web GUI
  *                               Fixed configuration file directory under Windows in Web GUI
  *                               Fixed path with spaces handling for the command line edition (thanks Scott for the feedback)
@@ -763,8 +767,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.4.5
- * @date      2017-05-29
+ * @version   5.0.4.6
+ * @date      2017-06-02
  * @since     2010-07-18
  */
 {
@@ -854,8 +858,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.0.4.5
-   * @date      2017-05-29
+   * @version   5.0.4.6
+   * @date      2017-06-02
    * @since     2010-07-18
    */
   function __construct(
@@ -882,11 +886,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.0.4.5'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.0.4.6'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2017-05-29'; // You should update the date with the date of your changes
+        $temp_date = '@date      2017-06-02'; // You should update the date with the date of your changes
         $this->_date = trim(substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxNyBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -1278,15 +1282,14 @@ class Multiotp
       $current_dir = $base_dir;
       if ("" == $current_dir) {
           $env_folder_path = getenv('MULTIOTP_PATH');
-          if (FALSE !== $env_folder_path)
-          {
+          if (false !== $env_folder_path) {
               $current_dir = $env_folder_path;
           }
       }
       $this->SetBaseDir($current_dir);
 
       if ("" != trim($config_dir)) {
-          $this->SetConfigFolder($config_dir, TRUE, FALSE);
+          $this->SetConfigFolder($config_dir, true, false);
       }
       
       $this->_parser_pointers         = array();
@@ -1308,24 +1311,24 @@ class Multiotp
       
       $this->_ms_nt_key               = "";
       
-      $this->_encryption_check        = TRUE; // Check if the encryption hash is valid, default is TRUE
+      $this->_encryption_check        = true; // Check if the encryption hash is valid, default is true
 
       $this->_user                    = ""; // Name of the current user to authenticate
-      $this->_user_data_read_flag     = FALSE; // Flag to know if the data concerning the current user has been read
+      $this->_user_data_read_flag     = false; // Flag to know if the data concerning the current user has been read
       $this->_users_folder            = ""; // Folders which contain the users flat files
 
-      $this->_last_ldap_error         = FALSE;
+      $this->_last_ldap_error         = false;
       $this->_log_file_name           = 'multiotp.log';
-      $this->_log_flag                = FALSE;
+      $this->_log_flag                = false;
       $this->_log_folder              = ""; // Folder which contains the log file
-      $this->_log_verbose_flag        = FALSE;
-      $this->_log_display_flag        = FALSE;
+      $this->_log_verbose_flag        = false;
+      $this->_log_display_flag        = false;
       
       $this->_mysql_database_link     = NULL;
       $this->_mysqli                  = NULL;
       $this->_pgsql_database_link     = NULL;
 
-      $this->_migration_from_file     = FALSE; // To allow an automatic migration of users profiles,
+      $this->_migration_from_file     = false; // To allow an automatic migration of users profiles,
                                                // enable a database backend and set the migration option ;-) !
 
       $this->_reply_array_for_radius = array();
@@ -1334,24 +1337,21 @@ class Multiotp
 
       $this->_initialize_backend = $initialize_backend;
       
-      $this->_debug_via_html = FALSE;
+      $this->_debug_via_html = false;
       
       $this->_linux_file_mode = "";
 
       $this->_last_http_status = 0;
 
-      $this->_bad_syslog_server = FALSE;
+      $this->_bad_syslog_server = false;
 
       $this->ReadConfigData(true); // Read the configuration data, for the encryption information only
-      if (("" == $encryption_key) || ('MuLtIoTpEnCrYpTiOn' == $encryption_key) || ('DefaultCliEncryptionKey' == $encryption_key))
-      {
-          if (("" != $this->GetEncryptionKeyFullPath()) && file_exists($this->GetEncryptionKeyFullPath()))
-          {
+      if (("" == $encryption_key) || ('MuLtIoTpEnCrYpTiOn' == $encryption_key) || ('DefaultCliEncryptionKey' == $encryption_key)) {
+          if (("" != $this->GetEncryptionKeyFullPath()) && file_exists($this->GetEncryptionKeyFullPath())) {
               if ($encryption_key_file_handler = @fopen($this->GetEncryptionKeyFullPath(), "rt")) {
                   $temp_encryption_key = trim(fgets($encryption_key_file_handler));
-                  if ("" != $temp_encryption_key)
-                  {
-                      $this->SetEncryptionKey($temp_encryption_key, FALSE);
+                  if ("" != $temp_encryption_key) {
+                      $this->SetEncryptionKey($temp_encryption_key, false);
                   }
                   fclose($encryption_key_file_handler);
               }
@@ -1360,9 +1360,9 @@ class Multiotp
 
       $this->_server_challenge = $this->GetEncryptionKey();
 
-      $this->_keep_local = FALSE;
+      $this->_keep_local = false;
       
-      $this->_xml_dump_in_log = FALSE; // For debugging purpose only
+      $this->_xml_dump_in_log = false; // For debugging purpose only
       
       $this->_sms_providers_array = array(array("aspsms", "aspsms", "http://www.aspsms.com/"),
                                           array("clickatell", "Clickatell", "http://www.clickatell.com/"),
@@ -1405,8 +1405,7 @@ class Multiotp
   function __destruct()
   {
       /*
-      if ($this->IsCacheData())
-      {
+      if ($this->IsCacheData()) {
           $this->WriteCacheData();
       }
       */
@@ -1473,12 +1472,14 @@ class Multiotp
       if (file_exists($folder) && touch($folder."test.cache")) {
           unlink($folder."test.cache");
           if (!file_exists($folder.".ldap_cache/")) {
-              if (@mkdir($folder.".ldap_cache/")) {
+
+              if (@mkdir(
+                      $folder.".ldap_cache/",
+                      ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                      true //recursive
+              )) {
                   if ($this->GetVerboseFlag()) {
-                    $this->WriteLog("Debug: *LDAP cache folder created (".$folder.".ldap_cache/".")", FALSE, FALSE, 8888, 'System', '');
-                  }
-                  if ('' != $this->GetLinuxFolderMode()) {
-                      @chmod($folder.".ldap_cache/", octdec($this->GetLinuxFolderMode()));
+                      $this->WriteLog("Debug: *LDAP cache folder created (".$folder.".ldap_cache/".")", FALSE, FALSE, 8888, 'System', '');
                   }
               }
           }
@@ -2436,12 +2437,12 @@ class Multiotp
                   }
                   
                   if (is_object($this->_mysqli)) {
-                      if (!($result = $this->_mysqli->query($sQuery))) {
+                      if (!($result = @$this->_mysqli->query($sQuery))) {
                           $this->WriteLog("Error: SQL query error ".trim($this->_mysqli->error)." ".$sQuery, TRUE, FALSE, 40, 'System', '', 3);
                       } else {
                           $num_rows = $result->num_rows;                                    
                       }
-                  } elseif (!($result = mysql_query($sQuery, $this->_mysql_database_link))) {
+                  } elseif (!($result = @mysql_query($sQuery, $this->_mysql_database_link))) {
                       $this->WriteLog("Error: SQL query error ($sQuery) : ".mysql_error(), TRUE, FALSE, 40, 'System', '', 3);
                   } else {
                       $num_rows = mysql_num_rows($result);
@@ -2453,11 +2454,11 @@ class Multiotp
                           $sQuery.= " WHERE `$id_field`='".$esc_id_value."'";
                       }
                       if (is_object($this->_mysqli)) {
-                          if (!($rResult = $this->_mysqli->query($sQuery))) {
+                          if (!($rResult = @$this->_mysqli->query($sQuery))) {
                               $this->WriteLog("Error: SQL query error ".trim($this->_mysqli->error)." ".$sQuery, TRUE, FALSE, 40, 'System', '', 3);
                               $result = FALSE;
                           }
-                      } elseif (!($rResult = mysql_query($sQuery, $this->_mysql_database_link))) {
+                      } elseif (!($rResult = @mysql_query($sQuery, $this->_mysql_database_link))) {
                           $this->WriteLog("Error: SQL query error ($sQuery) : ".mysql_error(), TRUE, FALSE, 40, 'System', '', 3);
                           $result = FALSE;
                       }
@@ -2468,7 +2469,7 @@ class Multiotp
                           $sQuery = "INSERT INTO `".$this->_config_data['sql_'.$table.'_table']."` (".substr($sQi_Columns,0,-1).") VALUES (".substr($sQi_Values,0,-1).")";
                       }
                       if (is_object($this->_mysqli)) {
-                          if (!($rResult = $this->_mysqli->query($sQuery))) {
+                          if (!($rResult = @$this->_mysqli->query($sQuery))) {
                               $this->WriteLog("Error: SQL query error ".trim($this->_mysqli->error)." ".$sQuery, TRUE, FALSE, 40, 'System', '', 3);
                           } elseif (0 == $this->_mysqli->affected_rows) {
                               $this->WriteLog("Error: SQL entry for ".$item_info." cannot be created or changed", FALSE, FALSE, 43, 'System', '', 3);
@@ -2476,7 +2477,7 @@ class Multiotp
                           } else {
                               $item_created = TRUE;
                           }
-                      } elseif (!($rResult = mysql_query($sQuery, $this->_mysql_database_link))) {
+                      } elseif (!($rResult = @mysql_query($sQuery, $this->_mysql_database_link))) {
                           $this->WriteLog("Error: SQL query error ($sQuery) : ".mysql_error(), TRUE, FALSE, 40, 'System', '', 3);
                           $result = FALSE;
                       } elseif (0 == mysql_affected_rows($this->_mysql_database_link)) {
@@ -2549,7 +2550,7 @@ class Multiotp
                       $sQuery.= " WHERE \"".$id_field."\" = '".$esc_id_value."'";
                   }
                   
-                  if (!($result = pg_query($this->_pgsql_database_link, $sQuery))) {
+                  if (!($result = @pg_query($this->_pgsql_database_link, $sQuery))) {
                       $this->WriteLog("Error: SQL query error ($sQuery) : ".pg_last_error(), TRUE, FALSE, 40, 'System', '', 3);
                   } else {
                       $num_rows = pg_num_rows($result);
@@ -2560,7 +2561,7 @@ class Multiotp
                       if ('' != $id_field) {
                           $sQuery.= " WHERE \"".$id_field."\" = '".$esc_id_value."'";
                       }
-                      if (!($rResult = pg_query($this->_pgsql_database_link, $sQuery))) {
+                      if (!($rResult = @pg_query($this->_pgsql_database_link, $sQuery))) {
                           $this->WriteLog("Error: SQL query error ($sQuery) : ".pg_last_error(), TRUE, FALSE, 40, 'System', '', 3);
                           $result = FALSE;
                       }
@@ -2570,7 +2571,7 @@ class Multiotp
                       } else {
                           $sQuery = "INSERT INTO \"".$this->_config_data['sql_schema']."\".\"".$this->_config_data['sql_'.$table.'_table']."\" (".substr($sQi_Columns,0,-1).") VALUES (".substr($sQi_Values,0,-1).")";
                       }
-                      if (!($rResult = pg_query($this->_pgsql_database_link, $sQuery))) {
+                      if (!($rResult = @pg_query($this->_pgsql_database_link, $sQuery))) {
                           $this->WriteLog("Error: SQL query error ($sQuery) : ".pg_last_error(), TRUE, FALSE, 40, 'System', '', 3);
                           $result = FALSE;
                       } elseif (0 == pg_affected_rows($rResult)) {
@@ -2706,7 +2707,7 @@ class Multiotp
                               $this->WriteLog("Error: ".pg_last_error()." ".$sQuery, TRUE, FALSE, 41, 'System', '', 3);
                               $result = FALSE;
                           } else {
-                              $aRow = pgsql_fetch_assoc($rResult);
+                              $aRow = pg_fetch_assoc($rResult);
                           }
 
                           if (NULL != $aRow) {
@@ -3372,7 +3373,8 @@ class Multiotp
 
 
   function SetLogFolder(
-      $folder
+      $folder,
+      $create = true
   ) {
       $new_folder = $this->ConvertToUnixPath($folder);
       if (substr($new_folder,-1) != "/") {
@@ -3383,11 +3385,13 @@ class Multiotp
       }
       $new_folder = $this->ConvertToWindowsPathIfNeeded($new_folder);
       $this->_log_folder = $new_folder;
-      if (!file_exists($new_folder)) {
-          if (@mkdir($new_folder)) {
-              if ('' != $this->GetLinuxFolderMode()) {
-                  @chmod($new_folder, octdec($this->GetLinuxFolderMode()));
-              }
+      if ($create && (!file_exists($new_folder))) {
+          if (!@mkdir(
+                  $new_folder,
+                  ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                  true //recursive
+          )) {
+              $this->WriteLog("Error: Unable to create the missing config folder ".$new_folder, true, false, 28, 'System', '', 3);
           }
       }
   }
@@ -3662,11 +3666,11 @@ class Multiotp
               }
           } else {
               if (!file_exists($this->GetLogFolder())) {
-                  if (@mkdir($this->GetLogFolder())) {
-                      if ('' != $this->GetLinuxFolderMode()) {
-                          @chmod($this->GetLogFolder(), octdec($this->GetLinuxFolderMode()));
-                      }
-                  }
+                  @mkdir(
+                      $this->GetLogFolder(),
+                      ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                      true //recursive
+                  );
               }
               $file_created = (!file_exists($this->GetLogFolder().$this->GetLogFileName()));
               if ($log_file_handle = @fopen($this->GetLogFolder().$this->GetLogFileName(),"ab+")) {
@@ -4007,12 +4011,12 @@ class Multiotp
       $new_folder = $this->ConvertToWindowsPathIfNeeded($new_folder);
       $this->_config_folder = $new_folder;
       if ($create && (!file_exists($new_folder))) {
-          if (!@mkdir($new_folder)) {
+          if (!@mkdir(
+                  $new_folder,
+                  ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                  true //recursive
+          )) {
               $this->WriteLog("Error: Unable to create the missing config folder ".$new_folder, true, false, 28, 'System', '', 3);
-          } else {
-              if ('' != $this->GetLinuxFolderMode()) {
-                  @chmod($new_folder, octdec($this->GetLinuxFolderMode()));
-              }
           }
       }
       if ($read_config) {
@@ -4040,12 +4044,12 @@ class Multiotp
           $this->SetConfigFolder($this->GetScriptFolder()."config/", $create_if_not_exist);
       } elseif (!file_exists($config_folder)) {
           if ($create_if_not_exist) {
-              if (!@mkdir($config_folder)) {
+              if (!@mkdir(
+                      $config_folder,
+                      ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                      true //recursive
+              )) {
                   $this->WriteLog("Error: Unable to create the missing config folder ".$config_folder, FALSE, FALSE, 28, 'System', '', 3);
-              } else {
-                  if ('' != $this->GetLinuxFolderMode()) {
-                      @chmod($config_folder, octdec($this->GetLinuxFolderMode()));
-                  }
               }
           }
       }
@@ -4081,12 +4085,12 @@ class Multiotp
       $new_folder = $this->ConvertToWindowsPathIfNeeded($new_folder);
       $this->_cache_folder = $new_folder;
       if ($create && (!file_exists($new_folder))) {
-          if (!@mkdir($new_folder)) {
+          if (!@mkdir(
+                  $new_folder,
+                  ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                  true //recursive
+          )) {
               $this->WriteLog("Error: Unable to create the missing cache folder ".$new_folder, TRUE, FALSE, 28, 'System', '', 3);
-          } else {
-              if ('' != $this->GetLinuxFolderMode()) {
-                  @chmod($new_folder, octdec($this->GetLinuxFolderMode()));
-              }
           }
       }
       if ($read_cache) {
@@ -4114,12 +4118,12 @@ class Multiotp
           $this->SetCacheFolder($this->GetScriptFolder()."cache/", $create_if_not_exist);
       } elseif (!file_exists($cache_folder)) {
           if ($create_if_not_exist) {
-              if (!@mkdir($cache_folder)) {
+              if (!@mkdir(
+                      $cache_folder,
+                      ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                      true //recursive
+              )) {
                   $this->WriteLog("Error: Unable to create the missing cache folder ".$cache_folder, FALSE, FALSE, 28, 'System', '', 3);
-              } else {
-                  if ('' != $this->GetLinuxFolderMode()) {
-                      @chmod($cache_folder, octdec($this->GetLinuxFolderMode()));
-                  }
               }
           }
       }
@@ -5141,27 +5145,18 @@ class Multiotp
                               
                               $aRow = NULL;
 
-                              if (is_object($this->_mysqli))
-                              {
-                                  if (!($result = $this->_mysqli->query($sQuery)))
-                                  {
+                              if (is_object($this->_mysqli)) {
+                                  if (!($result = @$this->_mysqli->query($sQuery))) {
                                       $this->WriteLog("Error: ".trim($this->_mysqli->error)." ".$sQuery, TRUE, FALSE, 41, 'System', '', 3);
                                       $result = FALSE;
-                                  }
-                                  else
-                                  {
+                                  } else {
                                       $aRow = $result->fetch_assoc();
                                   }
-                              }
-                              else
-                              {
-                                  if (!($rResult = mysql_query($sQuery, $this->_mysql_database_link)))
-                                  {
+                              } else {
+                                  if (!($rResult = @mysql_query($sQuery, $this->_mysql_database_link))) {
                                       $this->WriteLog("Error: ".mysql_error()." ".$sQuery, TRUE, FALSE, 41, 'System', '', 3);
                                       $result = FALSE;
-                                  }
-                                  else
-                                  {
+                                  } else {
                                       $aRow = mysql_fetch_assoc($rResult);
                                   }
                               }
@@ -5203,21 +5198,16 @@ class Multiotp
                       }
                       break;
                   case 'pgsql':
-                      if ($this->OpenPGSQLDatabase())
-                      {
-                          if ("" != $this->_config_data['sql_config_table'])
-                          {
+                      if ($this->OpenPGSQLDatabase()) {
+                          if ("" != $this->_config_data['sql_config_table']) {
                               $sQuery  = "SELECT * FROM \"".$this->_config_data['sql_schema']."\".\"".$this->_config_data['sql_config_table']."\" ";
                               
                               $aRow = NULL;
 
-                              if (!($rResult = pg_query($this->_pgsql_database_link, $sQuery)))
-                              {
+                              if (!($rResult = @pg_query($this->_pgsql_database_link, $sQuery))) {
                                   $this->WriteLog("Error: ".pg_last_error()." ".$sQuery, TRUE, FALSE, 41, 'System', '', 3);
                                   $result = FALSE;
-                              }
-                              else
-                              {
+                              } else {
                                   $aRow = pg_fetch_assoc($rResult);
                               }
 
@@ -12110,7 +12100,8 @@ class Multiotp
 
 
   function SetTokensFolder(
-      $folder
+      $folder,
+      $create = true
   ) {
       $new_folder = $this->ConvertToUnixPath($folder);
       if (substr($new_folder,-1) != "/") {
@@ -12121,13 +12112,13 @@ class Multiotp
       }
       $new_folder = $this->ConvertToWindowsPathIfNeeded($new_folder);
       $this->_tokens_folder = $new_folder;
-      if (!file_exists($new_folder)) {
-          if (!@mkdir($new_folder)) {
+      if ($create && (!file_exists($new_folder))) {
+          if (!@mkdir(
+                  $new_folder,
+                  ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                  true //recursive
+          )) {
               $this->WriteLog("Error: Unable to create the missing tokens folder ".$new_folder, FALSE, FALSE, 28, 'System',  '');
-          } else {
-              if ('' != $this->GetLinuxFolderMode()) {
-                  @chmod($new_folder, octdec($this->GetLinuxFolderMode()));
-              }
           }
       }
   }
@@ -13920,7 +13911,8 @@ class Multiotp
 
 
   function SetUsersFolder(
-      $folder
+      $folder,
+      $create = true
   ) {
       $new_folder = $this->ConvertToUnixPath($folder);
       if (substr($new_folder,-1) != "/") {
@@ -13931,13 +13923,13 @@ class Multiotp
       }
       $new_folder = $this->ConvertToWindowsPathIfNeeded($new_folder);
       $this->_users_folder = $new_folder;
-      if (!file_exists($new_folder)) {
-          if (!@mkdir($new_folder)) {
+      if ($create && (!file_exists($new_folder))) {
+          if (!@mkdir(
+                  $new_folder,
+                  ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                  true //recursive
+          )) {
               $this->WriteLog("Error: Unable to create the missing users folder ".$new_folder, FALSE, FALSE, 28, 'System', '');
-          } else {
-              if ('' != $this->GetLinuxFolderMode()) {
-                  @chmod($new_folder, octdec($this->GetLinuxFolderMode()));
-              }
           }
       }
   }
@@ -13953,7 +13945,8 @@ class Multiotp
 
 
   function SetDevicesFolder(
-      $folder
+      $folder,
+      $create = true
   ) {
       $new_folder = $this->ConvertToUnixPath($folder);
       if (substr($new_folder,-1) != "/") {
@@ -13964,13 +13957,13 @@ class Multiotp
       }
       $new_folder = $this->ConvertToWindowsPathIfNeeded($new_folder);
       $this->_devices_folder = $new_folder;
-      if (!file_exists($new_folder)) {
-          if (!@mkdir($new_folder)) {
+      if ($create && (!file_exists($new_folder))) {
+          if (!@mkdir(
+                  $new_folder,
+                  ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                  true //recursive
+          )) {
               $this->WriteLog("Error: Unable to create the missing devices folder ".$new_folder, FALSE, FALSE, 28, 'System', '');
-          } else {
-              if ('' != $this->GetLinuxFolderMode()) {
-                  @chmod($new_folder, octdec($this->GetLinuxFolderMode()));
-              }
           }
       }
   }
@@ -14034,7 +14027,8 @@ class Multiotp
 
 
   function SetGroupsFolder(
-      $folder
+      $folder,
+      $create = true
   ) {
       $new_folder = $this->ConvertToUnixPath($folder);
       if (substr($new_folder,-1) != "/") {
@@ -14045,13 +14039,13 @@ class Multiotp
       }
       $new_folder = $this->ConvertToWindowsPathIfNeeded($new_folder);
       $this->_groups_folder = $new_folder;
-      if (!file_exists($new_folder)) {
-          if (!@mkdir($new_folder)) {
+      if ($create && (!file_exists($new_folder))) {
+          if (!@mkdir(
+                  $new_folder,
+                  ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                  true //recursive
+          )) {
               $this->WriteLog("Error: Unable to create the missing groups folder ".$new_folder, FALSE, FALSE, 28, 'System', '');
-          } else {
-              if ('' != $this->GetLinuxFolderMode()) {
-                  @chmod($new_folder, octdec($this->GetLinuxFolderMode()));
-              }
           }
       }
   }

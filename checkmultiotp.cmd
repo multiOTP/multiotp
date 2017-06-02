@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.0.4.5
-REM @date      2017-05-29
+REM @version   5.0.4.6
+REM @date      2017-06-02
 REM @since     2010-07-10
 REM @copyright (c) 2010-2017 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -503,7 +503,7 @@ ECHO.
 ECHO.
 ECHO Check the PHP multiOTP class using the %_multiotp_class_check% file.
 %_tools_dir%wget http://127.0.0.1:%_check_web_port%/check/?minima=1 --quiet --output-document=%TEMP%\check.multiOTP.class.check --timeout=300 --tries=2
-FIND /C "OK! ALL" %TEMP%\check.multiOTP.class.check >NUL
+FIND /C "KO!" %TEMP%\check.multiOTP.class.check >NUL
 TYPE %TEMP%\check.multiOTP.class.check
 IF ERRORLEVEL 1 GOTO CheckClassError
 

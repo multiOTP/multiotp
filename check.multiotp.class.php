@@ -22,8 +22,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.4.5
- * @date      2017-05-29
+ * @version   5.0.4.6
+ * @date      2017-06-02
  * @since     2013-07-10
  * @copyright (c) 2013-2017 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -71,6 +71,7 @@
  *
  * Change Log
  *
+ *   2017-06-02 5.0.4.6 SysCo/al Enhanced tests display
  *   2017-05-29 5.0.4.5 SysCo/al Additional PostgreSQL backend included
  *                               Parameters adapted (set the $check_mysql_xxx and/or the $check_pgsql_xxx parameters below)
  *   2016-11-04 5.0.2.6 SysCo/al GetNetworkInfo() test included
@@ -126,6 +127,7 @@ if (!isset($GLOBALS['minima'])) {
 if (!function_exists('echo_full')) {
     function echo_full($to_display) {
         if (!$GLOBALS['minima']) {
+            @ob_end_flush();
             echo $to_display;
         }
     }
@@ -1476,7 +1478,7 @@ echo_full($crlf);
 
 echo_full($hr);
 
-echo_full("Time spent for the whole check.multiotp.class.php: less than ".(1+time()-$first_time)." second(s)");
+echo_full("Time spent for the whole check.multiotp.class.php: ".(1+time()-$first_time)." second(s)");
 echo_full($crlf);
 echo_full($crlf);
 

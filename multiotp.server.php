@@ -27,8 +27,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <developer@sysco.ch>
- * @version   5.0.4.5
- * @date      2017-05-29
+ * @version   5.0.4.6
+ * @date      2017-06-02
  * @since     2013-08-06
  * @copyright (c) 2013-2017 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -114,33 +114,29 @@ if (!class_exists('Multiotp')) {
   require_once('multiotp.class.php');
 }
 
-$config_folder = '/etc/multiotp/config';
-if (!file_exists($config_folder)) {
+$multiotp_etc_dir  = '/etc/multiotp';
+$config_folder     = $multiotp_etc_dir.'/config';
+if (false === strpos(getcwd(), '/')) {
+  // if (!@file_exists($config_folder)) {
+  $multiotp_etc_dir  = '';
   $config_folder = '';
 }
 
 if (!isset($multiotp)) {
-  $multiotp = new Multiotp('DefaultCliEncryptionKey', FALSE, '', $config_folder);
+  $multiotp = new Multiotp('DefaultCliEncryptionKey', false, '', $config_folder);
 }
 $multiotp->ForceNoDisplayLog(); // No log on display as we are running a web server
 
-$multiotp_etc_dir  = '/etc/multiotp';
-if (file_exists($multiotp_etc_dir)) {
-    // Let says that the new created files have this linux mode
-    $multiotp->SetLinuxFileMode('0666');
-    
-    $multiotp->SetConfigFolder   ($multiotp_etc_dir. '/config/');
-    $multiotp->SetDevicesFolder  ($multiotp_etc_dir. '/devices/');
-    $multiotp->SetGroupsFolder   ($multiotp_etc_dir. '/groups/');
-    $multiotp->SetTokensFolder   ($multiotp_etc_dir. '/tokens/');
-    $multiotp->SetUsersFolder    ($multiotp_etc_dir. '/users/');
+if ('' != $multiotp_etc_dir) {
+  $multiotp->SetConfigFolder($multiotp_etc_dir.'/config/');
+  $multiotp->SetDevicesFolder($multiotp_etc_dir.'/devices/');
+  $multiotp->SetGroupsFolder($multiotp_etc_dir.'/groups/');
+  $multiotp->SetTokensFolder($multiotp_etc_dir.'/tokens/');
+  $multiotp->SetUsersFolder($multiotp_etc_dir.'/users/');
+  $multiotp->SetCacheFolder('/tmp/cache/');
+  $multiotp->SetLogFolder('/var/log/multiotp/');
+  $multiotp->SetLinuxFileMode('0666');
 }
-
-$multiotp_log_dir  = '/var/log/multiotp';
-if (file_exists($multiotp_log_dir)) {
-    $multiotp->SetLogFolder($multiotp_log_dir. '/');
-}
-
 $multiotp->ReadConfigData();
 
 $data = isset($_POST['data'])?$_POST['data']:'';
