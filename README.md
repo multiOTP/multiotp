@@ -1,5 +1,5 @@
-multiOTP open source
-====================
+multiOTP open source community edition
+======================================
 multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
 multiOTP open source is OATH certified for HOTP/TOTP
 
