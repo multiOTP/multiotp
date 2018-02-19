@@ -9,10 +9,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.0.4.6
-REM @date      2017-06-02
+REM @version   5.1.0.3
+REM @date      2018-02-19
 REM @since     2013-08-20
-REM @copyright (c) 2013-2017 SysCo systemes de communication sa
+REM @copyright (c) 2013-2018 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -31,7 +31,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2013-2017 SysCo systemes de communication sa
+REM   Copyright (c) 2013-2018 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -88,7 +88,7 @@ IF NOT "%8"=="" SET _service_name=%_service_name% %8
 IF NOT "%9"=="" SET _service_name=%_service_name% %9
 
 IF "%_service_tag%"=="multiOTPradiusTest" GOTO NoWarning
-ECHO WARNING! Please run this script as an administrator, otherwise it could fail.
+ECHO WARNING! Please run this script as an administrator, otherwise it will fail.
 PAUSE
 :NoWarning
 
@@ -97,11 +97,11 @@ SET _folder=%~d0%~p0
 SET _radius_folder=%~d0%~p0
 SET _tools_folder=%~d0%~p0tools\
 IF NOT EXIST %_radius_folder%radius SET _radius_folder=%~d0%~p0..\
-IF NOT EXIST %_tools_folder%nircmd.exe SET _tools_folder=%~d0%~p0..\tools\
+IF NOT EXIST %_tools_folder%FART.exe SET _tools_folder=%~d0%~p0..\tools\
 
 REM Stop and delete the service (if already existing)
-%_tools_folder%nircmd elevate SC stop %_service_tag% >NUL
-%_tools_folder%nircmd elevate SC delete %_service_tag% >NUL
+SC stop %_service_tag% >NUL
+SC delete %_service_tag% >NUL
 
 REM Create the multiotp module for the radius server
 ECHO # Exec module instance for multiOTP (http://www.multiotp.net/).>%_radius_folder%radius\etc\raddb\modules\multiotp
@@ -131,24 +131,24 @@ COPY "%_radius_folder%radius\etc\raddb\clients.template.conf" "%_radius_folder%r
 %_tools_folder%FART "%_radius_folder%radius\etc\raddb\clients.conf" "client localhost" "client 222.222.222.222" >NUL
 
 REM Create the service
-%_tools_folder%nircmd elevate SC create %_service_tag% binPath= "%_radius_folder%radius\SRVANY.EXE" start= auto displayname= "%_service_name%" >NUL
-%_tools_folder%nircmd elevate SC description %_service_tag% "Runs the %_service_name% on ports %_auth_port%/%_account_port%." >NUL
+SC create %_service_tag% binPath= "%_radius_folder%radius\SRVANY.EXE" start= auto displayname= "%_service_name%" >NUL
+SC description %_service_tag% "Runs the %_service_name% on ports %_auth_port%/%_account_port%." >NUL
 
 REM Define the parameters of the service (launched by SRVANY)
-%_tools_folder%nircmd elevate REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\%_service_tag%\Parameters" /f /v Application /t REG_SZ /d "%_radius_folder%radius\sbin\radiusd.exe" >NUL
-%_tools_folder%nircmd elevate REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\%_service_tag%\Parameters" /f /v AppParameters /t REG_SZ /d "-X -d %_radius_folder%radius\etc\raddb" >NUL
-%_tools_folder%nircmd elevate REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\%_service_tag%\Parameters" /f /v AppDirectory /t REG_SZ /d "%_radius_folder%radius\sbin" >NUL
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\%_service_tag%\Parameters" /f /v Application /t REG_SZ /d "%_radius_folder%radius\sbin\radiusd.exe" >NUL
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\%_service_tag%\Parameters" /f /v AppParameters /t REG_SZ /d "-X -d %_radius_folder%radius\etc\raddb" >NUL
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\%_service_tag%\Parameters" /f /v AppDirectory /t REG_SZ /d "%_radius_folder%radius\sbin" >NUL
 
 REM Basic firewall rules for the service
-%_tools_folder%nircmd elevate netsh firewall delete allowedprogram "%_radius_folder%radius\sbin\radiusd.exe" >NUL
-%_tools_folder%nircmd elevate netsh firewall add allowedprogram "%_radius_folder%radius\sbin\radiusd.exe" "%_service_name%" ENABLE >NUL
+netsh firewall delete allowedprogram "%_radius_folder%radius\sbin\radiusd.exe" >NUL
+netsh firewall add allowedprogram "%_radius_folder%radius\sbin\radiusd.exe" "%_service_name%" ENABLE >NUL
 
 REM Enhanced firewall rules for the service
-%_tools_folder%nircmd elevate netsh advfirewall firewall delete rule name="%_service_name%" >NUL
-%_tools_folder%nircmd elevate netsh advfirewall firewall add rule name="%_service_name%" dir=in action=allow program="%_radius_folder%radius\sbin\radiusd.exe" enable=yes >NUL
+netsh advfirewall firewall delete rule name="%_service_name%" >NUL
+netsh advfirewall firewall add rule name="%_service_name%" dir=in action=allow program="%_radius_folder%radius\sbin\radiusd.exe" enable=yes >NUL
 
 REM Start the service
-%_tools_folder%nircmd elevate SC start %_service_tag% >NUL
+SC start %_service_tag% >NUL
 
 REM Clean the environment variables
 SET _account_port=

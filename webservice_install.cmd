@@ -9,10 +9,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.0.4.6
-REM @date      2017-06-02
+REM @version   5.1.0.3
+REM @date      2018-02-19
 REM @since     2013-08-09
-REM @copyright (c) 2013-2017 SysCo systemes de communication sa
+REM @copyright (c) 2013-2018 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -31,7 +31,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2013-2017 SysCo systemes de communication sa
+REM   Copyright (c) 2013-2018 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -88,15 +88,13 @@ IF NOT "%9"=="" SET _service_name=%_service_name% %9
 
 IF "%_service_tag%"=="multiOTPserverTest" SET _no_web_display=1
 IF "%_service_tag%"=="multiOTPserverTest" GOTO NoWarning
-ECHO WARNING! Please run this script as an administrator, otherwise it could fail.
+ECHO WARNING! Please run this script as an administrator, otherwise it will fail.
 PAUSE
 :NoWarning
 
 REM Define the current folder
 SET _folder=%~d0%~p0
-SET _tools_folder=%~d0%~p0tools\
 SET _web_folder=%~d0%~p0
-IF NOT EXIST %_tools_folder%nircmd.exe SET _tools_folder=%~d0%~p0..\tools\
 IF NOT EXIST %_web_folder%webservice SET _web_folder=%~d0%~p0..\
 
 SET _root_folder=%_folder%
@@ -105,8 +103,8 @@ if "!_root_folder:~-1!"=="\" (
 )
 
 REM Stop and delete the service (if already existing)
-%_tools_folder%nircmd elevate SC stop %_service_tag% >NUL
-%_tools_folder%nircmd elevate SC delete %_service_tag% >NUL
+SC stop %_service_tag% >NUL
+SC delete %_service_tag% >NUL
 
 SET _check_pattern=
 IF "multiOTPserverTest"=="%_service_tag%" SET _check_pattern=location /check { root %_root_folder%; try_files $uri $uri/ /%_web_multiotp_class_check%$is_args$args; }
@@ -173,20 +171,20 @@ ECHO }>> %_config_file%
 
 
 REM Create the service
-%_tools_folder%nircmd elevate "%_web_folder%webservice\nssm" install "%_service_tag%" "%_web_folder%webservice\start-nginx-php.cmd" >NUL
-%_tools_folder%nircmd elevate "%_web_folder%webservice\nssm" set "%_service_tag%" Description "Runs the %_service_name% on ports %_web_port%/%_web_ssl_port%." >NUL
-%_tools_folder%nircmd elevate "%_web_folder%webservice\nssm" set "%_service_tag%" DisplayName "%_service_name%" >NUL
+"%_web_folder%webservice\nssm" install "%_service_tag%" "%_web_folder%webservice\start-nginx-php.cmd" >NUL
+"%_web_folder%webservice\nssm" set "%_service_tag%" Description "Runs the %_service_name% on ports %_web_port%/%_web_ssl_port%." >NUL
+"%_web_folder%webservice\nssm" set "%_service_tag%" DisplayName "%_service_name%" >NUL
 
 REM Basic firewall rules for the service
-%_tools_folder%nircmd elevate netsh firewall delete allowedprogram "%_web_folder%webservice\nginx.exe" >NUL
-%_tools_folder%nircmd elevate netsh firewall add allowedprogram "%_web_folder%webservice\nginx.exe" "%_service_tag%" ENABLE >NUL
+netsh firewall delete allowedprogram "%_web_folder%webservice\nginx.exe" >NUL
+netsh firewall add allowedprogram "%_web_folder%webservice\nginx.exe" "%_service_tag%" ENABLE >NUL
 
 REM Enhanced firewall rules for the service
-%_tools_folder%nircmd elevate netsh advfirewall firewall delete rule name="%_service_tag%" >NUL
-%_tools_folder%nircmd elevate netsh advfirewall firewall add rule name="%_service_tag%" dir=in action=allow program="%_web_folder%webservice\nginx.exe" enable=yes >NUL
+netsh advfirewall firewall delete rule name="%_service_tag%" >NUL
+netsh advfirewall firewall add rule name="%_service_tag%" dir=in action=allow program="%_web_folder%webservice\nginx.exe" enable=yes >NUL
 
 REM Start the service
-%_tools_folder%nircmd elevate SC start %_service_tag% >NUL
+SC start %_service_tag% >NUL
 
 REM Call the URL of the multiOTP web service
 IF NOT "%_no_web_display%"=="1" START http://127.0.0.1:%_web_port%
@@ -197,7 +195,6 @@ SET _config_file=
 SET _folder=
 SET _root_folder=
 SET _service_tag=
-SET _tools_folder=
 SET _url_rewrite_patterns=
 SET _web_folder=
 SET _web_multiotp=

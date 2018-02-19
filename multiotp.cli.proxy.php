@@ -15,17 +15,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.4.6
- * @date      2017-06-02
+ * @version   5.1.0.3
+ * @date      2018-02-19
  * @since     2010-06-08
- * @copyright (c) 2010-2017 SysCo systemes de communication sa
+ * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2014-2017 SysCo systemes de communication sa
+ *   Copyright (c) 2014-2018 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -122,11 +122,11 @@ $post_url = $proxy_full_url;
 $result = '';
 $content_to_post = $key.'='.$value;
 
-$pos = strpos($post_url, '://');
+$pos = mb_strpos($post_url, '://');
 if (FALSE === $pos) {
   $protocol = '';
 } else {
-  switch (strtolower(substr($post_url,0,$pos))) {
+  switch (mb_strtolower(substr($post_url,0,$pos))) {
     case 'https':
     case 'ssl':
         $protocol = 'ssl://';
@@ -141,7 +141,7 @@ if (FALSE === $pos) {
   $post_url = substr($post_url,$pos+3);
 }
 
-$pos = strpos($post_url, '/');
+$pos = mb_strpos($post_url, '/');
 if (FALSE === $pos) {
   $host = $post_url;
   $url = '/';
@@ -150,7 +150,7 @@ if (FALSE === $pos) {
   $url = substr($post_url,$pos); // And not +1 as we want the / at the beginning
 }
 
-$pos = strpos($host, ':');
+$pos = mb_strpos($host, ':');
 if (FALSE === $pos) {
   $port = 80;
 } else {
@@ -191,7 +191,7 @@ if (FALSE !== $fp) {
     // error_log("Warning: timeout after $timeout seconds for $protocol$host:$port$url with a result code of $errno ($errdesc)");
   } else {
     // error_log("CLI ok");
-    $pos = strpos(strtolower($reply), "\r\n\r\n");
+    $pos = mb_strpos(mb_strtolower($reply), "\r\n\r\n");
     $header = substr($reply, 0, $pos);
     
     $header_array = explode("\r\n", $header);

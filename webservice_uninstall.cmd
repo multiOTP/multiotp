@@ -9,10 +9,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.0.4.6
-REM @date      2017-06-02
+REM @version   5.1.0.3
+REM @date      2018-02-19
 REM @since     2013-08-09
-REM @copyright (c) 2013-2017 SysCo systemes de communication sa
+REM @copyright (c) 2013-2018 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -30,7 +30,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2013-2017 SysCo systemes de communication sa
+REM   Copyright (c) 2013-2018 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -56,25 +56,22 @@ SET _service_tag=multiOTPservice
 IF NOT "%1"=="" SET _service_tag=%1
 
 IF "%_service_tag%"=="multiOTPserverTest" GOTO NoWarning
-ECHO WARNING! Please run this script as an administrator, otherwise it could fail.
+ECHO WARNING! Please run this script as an administrator, otherwise it will fail.
 PAUSE
 :NoWarning
 
 SET _folder=%~d0%~p0
-SET _tools_folder=%~d0%~p0tools\
 SET _web_folder=%~d0%~p0
-IF NOT EXIST %_tools_folder%nircmd.exe SET _tools_folder=%~d0%~p0..\tools\
 IF NOT EXIST %_web_folder%webservice SET _web_folder=%~d0%~p0..\
 
 
-%_tools_folder%nircmd elevate netsh firewall delete allowedprogram "%_folder%webservice\nginx.exe" >NUL
-%_tools_folder%nircmd elevate netsh advfirewall firewall delete rule name="%_service_tag%" >NUL
+netsh firewall delete allowedprogram "%_folder%webservice\nginx.exe" >NUL
+netsh advfirewall firewall delete rule name="%_service_tag%" >NUL
 
-%_tools_folder%nircmd elevate "%_web_folder%webservice\nssm" stop "%_service_tag%" >NUL
-%_tools_folder%nircmd elevate "%_web_folder%webservice\nssm" remove "%_service_tag%" confirm >NUL
+"%_web_folder%webservice\nssm" stop "%_service_tag%" >NUL
+"%_web_folder%webservice\nssm" remove "%_service_tag%" confirm >NUL
 
-%_tools_folder%nircmd elevate TASKKILL /F /IM php-cgi.exe >NUL
+TASKKILL /F /IM php-cgi.exe >NUL
 
 SET _folder=
-SET _tools_folder=
 SET _web_folder=

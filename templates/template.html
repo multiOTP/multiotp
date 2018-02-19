@@ -1,9 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-  <!-- Scratch template (multilingual en/fr) 5.0.3.3 and above -->
+  <!-- Scratch template (multilingual en/fr) 5.0.5.1 and above -->
   <!-- Please save this file in UTF-8 format (without BOM) -->
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+       <!-- motp-qrcode-format=xml -->
     <title>
       <!-- {IfMultiotpLanguage="en"} -->
         multiOTP personal information for {MultiotpUserDescription}
@@ -177,10 +178,10 @@
         <!-- {IfMultiotpUserAlgorithm="MOTP"} -->
           <table class="application">
             <tr>
-              <td>{MultiotpQrCodeUrl url=http://go.6co.ch/motp width=200 height=200}</td>
+              <td>{MultiotpQrCodeUrl url=http://go.6co.ch/motp-xml width=200 height=200}</td>
             </tr>
             <tr>
-              <td>DroidOTP / iOTP / motp7 / Mobile-OTP Token (Java)</td>
+              <td>OTP Authenticator / Yamotp / OTP Authenticator for Java ME</td>
             </tr>
           </table>
         <!-- {/IfMultiotpUserAlgorithm="MOTP"} -->
@@ -196,13 +197,12 @@
 
           <table class="application">
             <tr>
-              <td>{MultiotpQrCodeUserToken width=200 height=200}</td>
+              <td>{MultiotpQrCodeUserToken width=250 height=250}</td>
             </tr>
             <tr>
               <td class="account">{MultiotpUserDescription}</td>
             </tr>
           </table>
-          <br />
 
           <p>If you need to generate your token with another application that doesn't support QRcode provisioning, you have all the details needed below:</p>
           <ul>
@@ -291,10 +291,10 @@
         <!-- {IfMultiotpUserAlgorithm="MOTP"} -->
           <table class="application">
             <tr>
-            <td>{MultiotpQrCodeUrl url=http://go.6co.ch/motp width=200 height=200}</td>
+            <td>{MultiotpQrCodeUrl url=http://go.6co.ch/motp-xml width=200 height=200}</td>
           </tr>
           <tr>
-            <td>DroidOTP / iOTP / motp7 / Mobile-OTP Token (Java)</td>
+            <td>OTP Authenticator / Yamotp / OTP Authenticator for Java ME</td>
             </tr>
           </table>
         <!-- {/IfMultiotpUserAlgorithm="MOTP"} -->
@@ -309,13 +309,12 @@
 
           <table class="application">
             <tr>
-              <td>{MultiotpQrCodeUserToken width=200 height=200}</td>
+              <td>{MultiotpQrCodeUserToken width=250 height=250}</td>
             </tr>
             <tr>
               <td class="account">{MultiotpUserDescription}</td>
             </tr>
           </table>
-          <br />
 
           <p>Pour configurer votre générateur personnel sur une autre application ne supportant pas de QRcode, voici les détails de configuration à fournir:</p>
           <ul>
@@ -325,7 +324,7 @@
             <!-- {/IfMultiotpUserAlgorithm="TOTP,HOTP,MOTP"} -->
 
             <!-- {IfMultiotpUserAlgorithm="MOTP,TOTP"} -->
-              <li><span class="label">Intervale de temps: <span class="value">{MultiotpUserTokenTimeInterval}</span></li>
+              <li><span class="label">Intervalle de temps: <span class="value">{MultiotpUserTokenTimeInterval}</span></li>
             <!-- {/IfMultiotpUserAlgorithm="MOTP,TOTP"} -->
 
             <!-- {IfMultiotpUserAlgorithm="HOTP"} -->

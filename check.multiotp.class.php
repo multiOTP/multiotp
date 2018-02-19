@@ -22,17 +22,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.4.6
- * @date      2017-06-02
+ * @version   5.1.0.3
+ * @date      2018-02-19
  * @since     2013-07-10
- * @copyright (c) 2013-2017 SysCo systemes de communication sa
+ * @copyright (c) 2013-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2013-2017 SysCo systemes de communication sa
+ *   Copyright (c) 2013-2018 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch/)
  *   All rights reserved.
@@ -384,7 +384,7 @@ foreach ($backend_array as $backend) {
     
     $multiotp->WriteLog("Test: test tag is $test_tag", FALSE, FALSE, 19, 'System', '');
     $log_content = $multiotp->ShowLog(TRUE);
-    if (FALSE !== strpos($log_content, $test_tag))
+    if (FALSE !== mb_strpos($log_content, $test_tag))
     {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfully updated".$crlf);
         $successes++;
@@ -737,50 +737,50 @@ foreach ($backend_array as $backend) {
 
 
     //====================================================================
-    // TEST: Deleting the test_user2 if it exists
+    // TEST: Deleting the Test_user2 if it exists
     echo_full($i_on);
-    echo_full("Deleting the test_user2".$crlf);
-    if (!$multiotp->DeleteUser('test_user2', TRUE))
+    echo_full("Deleting the Test_user2".$crlf);
+    if (!$multiotp->DeleteUser('Test_user2', TRUE))
     {
-        echo_full("- INFO: User test_user2 doesn't exist yet".$crlf);
+        echo_full("- INFO: User Test_user2 doesn't exist yet".$crlf);
     }
     else
     {
-        echo_full("- INFO: User test_user2 successfully deleted".$crlf);
+        echo_full("- INFO: User Test_user2 successfully deleted".$crlf);
     }
     echo_full($i_off);
     echo_full($crlf);
 
 
     //====================================================================
-    // TEST: Creating user test_user2 with the RFC test values HOTP token and PIN prefix
+    // TEST: Creating user tEst_user2 with the RFC test values HOTP token and PIN prefix
     $tests++;
-    echo_full($b_on."Creating user test_user2 with the RFC test values HOTP token and PIN prefix".$b_off.$crlf);
-    if ($multiotp->CreateUser('test_user2',1,'HOTP','3132333435363738393031323334353637383930','*!1-2-3-4?*',6,0))
+    echo_full($b_on."Creating user tEst_user2 with the RFC test values HOTP token and PIN prefix".$b_off.$crlf);
+    if ($multiotp->CreateUser('tEst_user2',1,'HOTP','3132333435363738393031323334353637383930','*!1-2-3-4?*',6,0))
     {
-        echo_full("- ".$ok_on.'OK!'.$ok_off." User test_user2 successfully created".$crlf);
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User tEst_user2 successfully created".$crlf);
         $successes++;
     }
     else
     {
-        echo_full("- ".$ko_on.'KO!'.$ko_off." Creation of user test_user2 failed".$crlf);
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Creation of user tEst_user2 failed".$crlf);
     }
     echo_full($crlf);
 
 
     //====================================================================
-    // TEST: Authenticating test_user2 with the first token of the RFC test values with PIN
+    // TEST: Authenticating teSt_user2 with the first token of the RFC test values with PIN
     $tests++;
-    echo_full($b_on."Authenticating test_user2 with the first token of the RFC test values with PIN".$b_off.$crlf);
-    $multiotp->SetUser('test_user2');
+    echo_full($b_on."Authenticating teSt_user2 with the first token of the RFC test values with PIN".$b_off.$crlf);
+    $multiotp->SetUser('teSt_user2');
     if (0 == ($error = $multiotp->CheckToken('*!1-2-3-4?*755224')))
     {
-        echo_full("- ".$ok_on.'OK!'.$ok_off." Token of the user test_user2 (with prefix PIN) successfully accepted".$crlf);
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Token of the user teSt_user2 (with prefix PIN) successfully accepted".$crlf);
         $successes++;
     }
     else
     {
-        echo_full("- ".$ko_on.'KO!'.$ko_off." Error #".$error." authenticating user test_user2 with the first token and PIN prefix".$crlf);
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Error #".$error." authenticating user teSt_user2 with the first token and PIN prefix".$crlf);
     }
     echo_full($crlf);
 
@@ -1023,10 +1023,10 @@ foreach ($backend_array as $backend) {
 
 
     //====================================================================
-    // Delaying the test_user2
+    // Delaying the tesT_user2
     echo_full($i_on);
-    echo_full("Delaying the test_user2".$crlf);
-    $multiotp->SetUser('test_user2');
+    echo_full("Delaying the tesT_user2".$crlf);
+    $multiotp->SetUser('tesT_user2');
     $multiotp->CheckToken('LOCKME1');
     $multiotp->CheckToken('LOCKME2');
     $multiotp->CheckToken('LOCKME3');
@@ -1169,7 +1169,7 @@ foreach ($backend_array as $backend) {
     echo_full($b_on."List of existing CSV tokens".$b_off.$crlf);
     $list = $multiotp->GetTokensList();
     echo_full(str_replace("\t",", ",$list).$crlf);
-    if (FALSE !== strpos(strtolower($list), strtolower('ABCDEF012302'))) {
+    if (FALSE !== mb_strpos(mb_strtolower($list), mb_strtolower('ABCDEF012302'))) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." CSV Token ABCDEF012302 is present".$crlf);
         $successes++;
     } else {
@@ -1238,7 +1238,7 @@ foreach ($backend_array as $backend) {
     echo_full($b_on."List of existing tokens".$b_off.$crlf);
     $list = $multiotp->GetTokensList();
     echo_full(str_replace("\t",", ",$list).$crlf);
-    if (FALSE !== strpos(strtolower($list), strtolower('ZZ0100000000'))) {
+    if (FALSE !== mb_strpos(mb_strtolower($list), mb_strtolower('ZZ0100000000'))) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Token ZZ0100000000 is present".$crlf);
         $successes++;
     } else {

@@ -3,8 +3,13 @@
     PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY
     Version 2.1+
 
-	Adapted 2013-2017 by SysCo/al 5.0.3.3 (2017-01-24)
+	Adapted 2013-2018 by SysCo/al 5.1.0.2 (2017-12-05)
 
+ *   2018-02-01 5.1.0.2 SysCo/al using variable $pageSize instead of fixed value
+ *                               LDAP control paged result called with $iscritical = false
+ *
+ *   2017-12-05 5.0.6.2 SysCo/al expired password option support
+ *
  *   2017-01-24 5.0.3.3 SysCo/al cache support added
  *
  *   2015-08-13 4.3.2.8 SysCo/al ldap_dn_encode (RFC4514) method added
@@ -66,6 +71,9 @@ if (!defined('PHP_VERSION_ID'))
 }
 putenv('LDAPTLS_REQCERT=never');
 
+if (!defined('LDAP_OPT_DIAGNOSTIC_MESSAGE')) {
+    define ('LDAP_OPT_DIAGNOSTIC_MESSAGE', 0x0032);
+}
 
 // Different type of accounts in AD
 define ('ADLDAP_NORMAL_ACCOUNT', 805306368);
@@ -137,7 +145,7 @@ class MultiotpAdLdap {
     var $_linux_file_mode = '0666'; // Added by SysCo/al
 
     // default constructor
-    function MultiotpAdLdap($options=array()) {
+    function __construct($options=array()) {
 
         $this->_account_suffix = ''; // Added by SysCo/al
         $this->_base_dn = ''; // Added by SysCo/al
@@ -154,6 +162,7 @@ class MultiotpAdLdap {
         $this->_warning_message = ''; // Added by SysCo/al
         $this->_server_reachable = FALSE; // Added by SysCo/al
         $this->_cache_folder = ""; // Added by SysCo/al
+        $this->_expired_password_valid = FALSE;  // Added by SysCo/al
 
         //you can specifically override any of the default configuration options setup above
         if (count($options)>0){
@@ -168,6 +177,7 @@ class MultiotpAdLdap {
             if (array_key_exists("ldap_server_type",$options)){ $this->_ldap_server_type=$options["ldap_server_type"]; }
             if (array_key_exists("cache_support",$options)){ $this->_cache_support=$options["cache_support"]; }
             if (array_key_exists("cache_folder",$options)){ $this->_cache_folder=$options["cache_folder"]; }
+            if (array_key_exists("expired_password_valid",$options)){ $this->_expired_password_valid=(TRUE == $options["expired_password_valid"]); }
             
             // Added by SysCo/al
             if ($this->_use_ssl) {
@@ -188,6 +198,8 @@ class MultiotpAdLdap {
                 ldap_set_option($this->_conn, LDAP_OPT_NETWORK_TIMEOUT, intval($options["network_timeout"]));
             }
         }
+
+        // ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL, 7);
 
         $connected = FALSE;
         // Modified by SysCo/al (check also empty values)
@@ -221,6 +233,7 @@ class MultiotpAdLdap {
 
                     //bind as a domain admin if they've set it up
                     $this->_bind = @ldap_bind($this->_conn,$this->_ad_username.$this->_account_suffix,$this->_ad_password);
+                    // @ldap_search($this->_conn, $this->_base_dn, "(dn=test-connection)");
                     if ($this->_bind) {
                         if (FALSE !== (@ldap_search($this->_conn, $this->_base_dn, "(dn=test-connection)"))) {
                             $this->_error = FALSE;
@@ -241,8 +254,40 @@ class MultiotpAdLdap {
                         } else {
                             // Modified by SysCo/al
                             $this->_error = TRUE;
-                            $this->_error_message = 'FATAL: AD bind failed. Check the login credentials ('.@ldap_error($this->_conn).').';
+                            $this->_error_message = 'FATAL: AD bind failed. Check the login credentials ('.ldap_errno($this->_conn).": ".@ldap_error($this->_conn).').';
                         }
+                        if (ldap_get_option($this->_conn, LDAP_OPT_ERROR_STRING, $extended_error)) {
+                            if (!empty($extended_error))
+                            {
+                                $err_array = explode(',', $extended_error.',,');
+                                $err_array = explode(' ', $err_array[2].'  ');
+                                $errno = $err_array[2];
+                                
+                                if ($this->_expired_password_valid) {
+                                    /*
+                                    We accept also "password expired" and "user must reset password"
+                                    525  user not found
+                                    52e  invalid credentials
+                                    530  not permitted to logon at this time
+                                    531  not permitted to logon at this workstation
+                                    532* password expired
+                                    533  account disabled
+                                    534  The user has not been granted the requested logon type at this machine
+                                    701  account expired
+                                    773* user must reset password
+                                    775  user account locked
+                                    */
+                                    if (('532' == $errno) || ('773' == $errno)) {
+                                        $this->_error = FALSE;
+                                        $this->_error_message = 'WARNING: user must reset AD/LDAP password';
+                                        $connected = TRUE;
+                                        break;
+                                    }
+                                }
+                                $this->_error_message.= " ($extended_error)";
+                            }                          
+                        }
+                        // echo "DEBUG ERROR MESSAGE: ".$this->_error_message;
                     }
                     $this->_error = TRUE;
                     $connected = FALSE;
@@ -257,7 +302,7 @@ class MultiotpAdLdap {
         } else {
             $this->_error = FALSE;
         }
-        return ($connected);
+        return ($connected); // But it's the constructor, the result cannot be used
     }
 
 
@@ -993,7 +1038,7 @@ class MultiotpAdLdap {
         {
             if (function_exists('ldap_control_paged_result'))
             {
-                ldap_control_paged_result($this->_conn, $pageSize, true, $page_cookie);
+                ldap_control_paged_result($this->_conn, $pageSize, false, $page_cookie);
             }
             $sr = @ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
         
@@ -1024,7 +1069,7 @@ class MultiotpAdLdap {
         if (function_exists('ldap_control_paged_result'))
         {
             // Reset LDAP paged result
-            ldap_control_paged_result($this->_conn, 1000);
+            ldap_control_paged_result($this->_conn, $pageSize, false);
         }
         
         if( $sorted ){ asort($groups_array); }
@@ -1146,7 +1191,7 @@ class MultiotpAdLdap {
                 {
                     if (function_exists('ldap_control_paged_result'))
                     {
-                        ldap_control_paged_result($this->_conn, $pageSize, true, $page_cookie);
+                        ldap_control_paged_result($this->_conn, $pageSize, false, $page_cookie);
                     }
                     $sr = @ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
                 
@@ -1202,7 +1247,7 @@ class MultiotpAdLdap {
                 if (function_exists('ldap_control_paged_result'))
                 {
                     // Reset LDAP paged result
-                    ldap_control_paged_result($this->_conn, 1000);
+                    ldap_control_paged_result($this->_conn, $pageSize, false);
                 }
     		}
         }

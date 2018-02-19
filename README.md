@@ -3,12 +3,12 @@ multiOTP open source
 multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
 multiOTP open source is OATH certified for HOTP/TOTP
 
-(c) 2010-2017 SysCo systemes de communication sa  
+(c) 2010-2018 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.0.4.6 (2017-06-02)
+Current build: 5.1.0.3 (2018-02-19)
 
-Binary download: http://download.multiotp.net/
+Binary download: https://download.multiotp.net/
 
 [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
 *Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
@@ -26,6 +26,18 @@ Please check http://www.multiOTP.net/ and you will find the magic button ;-)
 If you need some specific features in the open source edition of multiOTP,
 please contact us in order to discuss about a sponsorship in order to
 prioritize your needs.
+
+You can also have a look on on http://www.multiotp.com for multiOTP Pro and
+multiOTP Enterprise, which are commercial editions of ready to use virtual
+appliances including more features like:
+ - Full Web GUI interface
+ - Automated provisioning of new account (based on Active Directory)
+ - High Availability master-slave support (Enterprise Edition)
+ - Web API support (Enterprise Edition)
+ - free virtual appliances available, including a free lifetime one user licence
+ - online demo of the full Web GUI interface
+ - ...
+
 
 The multiOTP class supports currently the following algorithms and RFC's:
 - RFC1994 CHAP (Challenge Handshake Authentication Protocol)
@@ -89,6 +101,7 @@ You can also sponsor the development of a specific feature. Please contact
 us in order to discuss the detail of the implementation.
 
 Thanks to our main donators and sponsors:  
+CSG De Lage Waard (NL)
 Donator AB (SE)  
 Henk van der Helm (NL)  
 Hermann Wegener GmbH & Co. KG (DE)  
@@ -121,7 +134,7 @@ config and backend folders defined to be located in /etc/multiotp/
 
 If you are currently using the multiOTP open source Virtual Appliance, you can upgrade
 the multiOTP version by copying the extracted content of the folder and subfolders from
-raspberry/boot-part/multiotp-tree/usr/local/bin/multiotp to /usr/local/bin/multiotp
+raspberry/boot-part/multiotp-tree/usr/local/bin/multiotp to /usr/local/bin/multiotp  
 An update through the web interface should be available in the future
 
 If you are currently using the multiOTP open source linux files, you can
@@ -139,6 +152,11 @@ subfolders from windows to your current multiOTP folder
 WHAT'S NEW IN THE RELEASES
 ==========================
 # What's new in 5.0 releases
+- Expired AD/LDAP password support (5.0.6.2)
+- multiOTP Credential Provider (for Windows) improvements
+ (user@domain.name UPN support, default domain name supported and displayed, SMS request link)
+- Better FreeRADIUS 3.x documentation
+- New QRCode provisioning format for mOTP (compatible with OTP Authenticator) (5.0.5.2)
 - Important, under Linux, the config, devices, groups, tokens and users folders are now always
   located in /etc/multiotp/. Please be sure to make the move when you are upgrading (5.0.4.6)
 - PostgreSQL support, based on source code provided by Frank van der Aa (5.0.4.5)
@@ -244,8 +262,29 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2018-02-19 5.1.0.3 SysCo/al Expired AD/LDAP password support
+                            multiOTP Credential Provider (for Windows) improvements
+                             (user@domain.name UPN support, default domain name supported and displayed, SMS request link)
+                            "force_no_prefix_pin" option for devices (for example if the device is a
+                             computer with multiOTP credential Provider and AD/LDAP synced password)
+                            Better unicode handling, multibyte fonctions used when needed (mb_strtolower(), ...)
+2017-11-04 5.0.5.6 SysCo/al Better FreeRADIUS 3.x documentation
+                            New radius tag prefix configuration option
+                            New multiple groups device option
+                            Some notice corrections (if the array element doesn't exist)
+                            A user cannot be created with a leading backslash (fixed in FastCreateUser and CreateUserFromToken)
+2017-09-29 5.0.5.2 SysCo/al The proposed mOTP generator for Android/iOS is now OTP Authenticator
+                            New QRCode provisioning format for mOTP (compatible with OTP Authenticator)
+2017-09-08 5.0.5.0 SysCo/al NirSoft nircmd.exe tool removed from the distribution (false virus detection)
+                            Multiple URLs separator for client/server config is still ";", but [space] and "," are accepted
+                            New developer mode for some specific detailed logs during development process only
+2017-07-07 5.0.4.9 SysCo/al New methods: SetLdapTlsReqcert, GetLdapTlsReqcert, SetLdapTlsCipherSuite, GetLdapTlsCipherSuite
+                             to change config parameters, instead of hard coded parameters (for SSL/TLS LDAP connection)
+                            Fixed too much detailed information in the log when trying
+                             to detect a token serial number for self-registration
+2017-06-06 5.0.4.8 SysCo/al Fixed SSL/TLS LDAP failed connection for PHP 7.x (GnuTLS TLS1.2 restriction removed for PHP 7.x)
 2017-06-02 5.0.4.6 SysCo/al Fixed a typo in the ReadCacheData method for PostgreSQL support (thanks Frank for the feedback)
-							Fixed default folder detection for the multiotp.exe file
+                            Fixed default folder detection for the multiotp.exe file
                             Important, under Linux, the config, devices, groups, tokens and users folders are now always
                              located in /etc/multiotp/. Please be sure to make the move when you are upgrading
                             Cleaned some ugly PHP warnings when the backend is not initialized
@@ -532,13 +571,16 @@ In the linux folder:
 + oath subfolder           : contains provisioning files for oath test tokens
 + qrcode subfolder         : all necessary files to be able to generate QRcode
 + templates folder         : all templates files needed to generate the provisioning pages from the web GUI
+```
 *******************************************************************************
 ***  FOR THESE PHP FILES, THE BACKEND IS FILE BASED AND THE CONFIG AND      ***
 ***  BACKEND FOLDERS ARE RELATIVE AND JUST BELOW THE MAIN MULTIOTP FOLDER   ***
 *******************************************************************************
+```
 
 In the raspberry folder:
 - all necessary files to be able to create your own strong authentication device using a Raspberry Pi
+```
 *******************************************************************************
 ***  FOR THESE PHP FILES, THE BACKEND IS SET BY DEFAULT AS FILE BASED AND   ***
 ***  THE CONFIG AND BACKEND FOLDERS DEFINED TO BE LOCATED IN /etc/multiotp/ ***
@@ -549,6 +591,7 @@ In the raspberry folder:
 *** files in raspberry/boot-part/multiotp-tree/usr/local/bin/multiotp,      ***
 *** with config and backend folders defined to be located in /etc/multiotp/ ***
 *******************************************************************************
+```
 
 In the sources folder:
 - multiotp.class.php       : the main file, it is the class itself, which requires external files
@@ -556,10 +599,12 @@ In the sources folder:
 - multiotp.server.php      : the web service file, which requires the class as external file
 - check.multiotp.class.php : PHP script to validate some multiOTP functionalities
 + contrib subfolder        : contains all external files required by the multiotp.class.php file
+```
 *******************************************************************************
 ***  FOR THESE PHP FILES, THE BACKEND IS FILE BASED AND THE CONFIG AND      ***
 ***  BACKEND FOLDERS ARE RELATIVE AND JUST BELOW THE MAIN MULTIOTP FOLDER   ***
 *******************************************************************************
+```
 
 In the windows folder:
 - multiotp.exe             : command line tool for Windows (digitally signed) with embedded PHP 7.x
@@ -585,10 +630,12 @@ In the windows folder:
 + webservice subfolder     : all necessary files to be able to install a Windows multiOTP web service
                              (using Nginx as the light web server on port 8112,
                               or as a secured SSL connection (https) on port 8113)
+```
 *******************************************************************************
 ***  FOR THESE PHP FILES, THE BACKEND IS FILE BASED AND THE CONFIG AND      ***
 ***  BACKEND FOLDERS ARE RELATIVE AND JUST BELOW THE MAIN MULTIOTP FOLDER   ***
 *******************************************************************************
+```
 
 
 HOW CAN I CREATE MYSELF THE DIFFERENT VERSIONS ?
@@ -602,8 +649,11 @@ multiotp.cli.proxy.php file.
 (the proxy version calls the multiotp.proxy.php using the web server,
 and the web server has a PHP cache to improve the speed of the whole process).
 Furthermore, the following line in the multiotp.class.php:
+```
 $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path);
+```
 is replaced by:
+```
 $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path);
 if (false !== strpos(getcwd(), '/')) {
   $multiotp->SetConfigFolder('/etc/multiotp/config/');
@@ -616,13 +666,17 @@ if (false !== strpos(getcwd(), '/')) {
   $multiotp->ReadConfigData();
 }
 $multiotp->SetLinuxFileMode('0666');
+```
 
 For the Raspberry Pi edition, the multiotp.proxy.php file is a copy of the
 multiotp.cli.header.php including the copy of all files that are included in
 the PHP code, which are multiotp.class.php and the whole contrib subfolder content.
 Furthermore, the following line in the multiotp.class.php:
+```
 $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path);
+```
 is replaced by:
+```
 $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path);
 if (false !== strpos(getcwd(), '/')) {
   $multiotp->SetConfigFolder('/etc/multiotp/config/');
@@ -635,15 +689,16 @@ if (false !== strpos(getcwd(), '/')) {
   $multiotp->ReadConfigData();
 }
 $multiotp->SetLinuxFileMode('0666');
+```
 
-The multiotp.exe is created using the free Enigma Virtual Box 7.70.
-It includes a whole PHP distribution and all the necessary multiOTP files.
-Enigma Virtual Box download : http://enigmaprotector.com/en/downloads.html
+The multiotp.exe is created using the free Enigma Virtual Box 8.00.
+It includes a whole PHP distribution and all the necessary multiOTP files.  
+Enigma Virtual Box download : http://enigmaprotector.com/en/downloads.html  
 PHP download : http://php.net/downloads.php
 
 The source files of the Credential provider are available on GitHub and needs
-the free Visual Studio Community to be compiled.
-Source files : https://github.com/multiOTP/multiOTPCredentialProvider
+the free Visual Studio Community to be compiled.  
+Source files : https://github.com/multiOTP/multiOTPCredentialProvider  
 Visual Studio Community : https://www.visualstudio.com/vs/community/
 
 
@@ -696,7 +751,7 @@ in the radius server and provide the IP address(es) of the device(s)
 If you want to have strong authentication on Windows logon, have a look at the
 open source multiOTPCredentialProvider which is based on MultiotpCPV2RDP from
 arcadejust and MultiOneTimePassword Credential Provider from Last Squirrel IT.
-It works with Windows 7/8/8.1/10/2012(R2) in both 32 and 64 bits.
+It works with Windows 7/8/8.1/10/2012(R2) in both 32 and 64 bits.  
 The Credential Provider does not need any RADIUS connection! It uses instead a
 local version of multiOTP which can be configured as a client of a
 centralized server (with caching support).
@@ -718,6 +773,7 @@ a lot of implementations like Google Authenticator.
 Provisioning will be done simply by flashing a QRcode.
 
 # Software tokens with mOTP (Mobile-OTP) support
+  - Swiss SafeLab OTP authenticator (iOS and Android)
   - iPhone:    iOTP from PDTS (type iOTP in the Apple AppStore)
   - Android:   Mobile-OTP (http://motp.sf.net/Mobile-OTP.apk)
   - PalmOS:    Mobile-OTP (http://motp.sf.net/mobileotp_palm.zip)
@@ -884,7 +940,7 @@ Using the -request-nt-key option, NT_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX can
 now be displayed (like with the same option used with ntlm_auth).
 
 1) Create a new module file called "multiotp" in etc/raddb/modules/ containing:  
-    
+```
     # Exec module instance for multiOTP (http://www.multiotp.net/).  
     # for Linux  : replace '/path/to/multiotp' with the actual path to the multiotp.php file, including the full file name.
     # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /), including the fulle file name.
@@ -895,57 +951,73 @@ now be displayed (like with the same option used with ntlm_auth).
         program = "/path/to/multiotp '%{User-Name}' '%{User-Password}' -request-nt-key -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"  
         shell_escape = yes  
     }
+```
 
 2) In the configuration file called "default" in etc/raddb/sites-enabled/  
-    
     a) Add the multiOTP handling  
+```
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
+```
 
     b) Add the multiOTP authentication handling  
+```
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
     }  
+```
 
     c) Comment the first line containing only "chap"  
+```
     #chap is now handled by multiOTP  
+```
 
     d) Comment the first line containing only "mschap"  
+```
     #mschap is now handled by multiOTP  
+```
 
 3) In the configuration file called "inner-tunnel" in etc/raddb/sites-enabled/  
     
     a) Add the multiOTP handling  
+```
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
+```
 
     b) Add the multiOTP authentication handling  
+```
     #  
     # Handle multiOTP (http://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
     }  
+```
 
     c) Comment the first line containing only "chap"  
+```
     #chap is now handled by multiOTP  
+```
 
     d) Comment the first line containing only "mschap"  
+```
     #mschap is now handled by multiOTP  
+```
 
 4) In the configuration file called "policy.conf" in etc/raddb/  
    Add the multiOTP authorization policy  
-    
+```
     #  
     # Handle multiOTP (http://www.multiotp.net/) authorization policy.  
-    # This must be add just before the last "}"  
+    # This must be added just before the last "}"  
     multiotp.authorize {  
         if (!control:Auth-Type) {  
             update control {  
@@ -953,6 +1025,7 @@ now be displayed (like with the same option used with ntlm_auth).
             }  
         }  
     }  
+```
 
 5) In the configuration file called "radiusd.conf" in etc/raddb/  
    Depending which port(s) and/or ip address(es) you want to listen, change
@@ -960,13 +1033,14 @@ now be displayed (like with the same option used with ntlm_auth).
 
 6) In the configuration file called "clients.conf" in etc/raddb/  
    Add the clients IP, mask and secret that you want to authorize.  
-    
+```
     #  
     # Handle multiOTP (http://www.multiotp.net/) for some clients.  
     client 0.0.0.0 {  
         netmask = 0  
         secret = multiotpsecret  
     }  
+```
    
 7) Now, to see what's going on, you can:
    - stop the service : /etc/init.d/freeradius stop
@@ -999,6 +1073,7 @@ Before starting or asking for help
 - Verify multiotp is setup correctly by calling the script from the commandline with the appropriate arguments
 
 1) Create 'raddb/modules/multiotp' and add the following, this will create a new instance of the exec module:
+```
 # Exec module instance for multiOTP
 # Replace '/path/to' with the actual path to the multiotp.php file
 exec multiotp {
@@ -1008,44 +1083,71 @@ exec multiotp {
         program = "/path/to/multiotp.php %{User-Name} %{User-Password} -request-nt-key -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"
         shell_escape = yes
 }
+```
 
 2) Copy module/mschap to module/multiotpmschap. Change the following line in multiotpmschap:
+```
 "mschap {"
+```
 to
+```
 "mschap multiotpmschap {"
+```
 
 Also change ntlm_auth variable:
+```
 ntlm_auth = "/path/to/multiotp.php %{User-Name} %{User-Password}
 -request-nt-key -src=%{Packet-Src-IP-Address}
 -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password}
 -ms-chap-challenge=%{MS-CHAP-Challenge}
 -ms-chap-response=%{MS-CHAP-Response}
 -ms-chap2-response=%{MS-CHAP2-Response}"
+```
 
-3) Edit 'raddb/policy.conf' and add the following to override the authorize method of the exec module:
+3) Edit 'raddb/policy.conf' and add the following to override the authorize method of the exec module: (or add a new multiotp file in the policy.d folder)
 policy {
+```
     # Change to a specific prefix if you want to deal with normal PAP authentication as well as OTP
     # e.g. "multiotp_prefix = 'otp:'"
     multiotp_prefix = ''
     multiotp.authorize {
-       # This test is for decimal OTP code only, otherwise you will have to change it
-       # Try for example this simple test: if (!control:Auth-Type) {
-        if (control:Auth-Type == 'MS-CHAP') {
-              update control {
-                      Auth-Type := multiotpmschap
-              }
+        # This test force multiOTP for any MS-CHAP(v2) attempt
+        if (control:Auth-Type == MS-CHAP) {
+            update control {
+                Auth-Type := multiotpmschap
+            }
         }
-        elsif (!control:Auth-Type && User-Password =~ /^${policy.multiotp_prefix}([0-9]{10})$/) {
+        # This test force multiOTP for any MS-CHAP(v2) attempt
+        elsif (control:Auth-Type == mschap) {
+            update control {
+                Auth-Type := multiotpmschap
+            }
+        }
+        # This test force multiOTP for any CHAP attempt
+        elsif (control:Auth-Type == chap) {
+            update control {
+                Auth-Type := multiotp
+            }
+        }
+        # This test is for decimal OTP code only, otherwise you will have to change it
+        #  elsif (!control:Auth-Type && User-Password =~ /^${policy.multiotp_prefix}([0-9]{10})$/) {
+        #
+        # Use this simple test for non decimal only OTP code: elsif (!control:Auth-Type) {
+        #
+        # This test force multiOTP for any other attempt like PAP
+        elsif (!control:Auth-Type) {
             update control {
                 Auth-Type := multiotp
             }
         }
     }
 }
+```
 
 4) Edit your virtual server file, the default for the outer server is 'raddb/sites-available/default'
 
 5) Add a call to multiotp before the pap module in authorize:
+```
 authorize {
     ...
     # Handle multiotp authentication
@@ -1055,8 +1157,10 @@ authorize {
     pap
     ...
 }
+```
 
 6) Create the multiotp sub-section in authenticate:
+```
 authenticate {
     Auth-Type multiotp {
         multiotp
@@ -1065,67 +1169,68 @@ authenticate {
         multiotpmschap
     }
 }
+```
 
 7) Start the server up in debug mode radiusd -X and test authentication
 
 
 HOW TO CONFIGURE MULTIOTP TO SYNCHRONIZED THE USERS FROM AN ACTIVE DIRECTORY ?
 ==============================================================================
-1) Decide if you want that by default, created users need to type a prefix PIN (1|0):
+1) Decide if you want that by default, created users need to type a prefix PIN (1|0):  
    multiotp -config default-request-prefix-pin=1
    
 2) Decide if you want that by default, created users need to type their
-   Active Directory password instead of PIN (1|0):
+   Active Directory password instead of PIN (1|0):  
    multiotp -config default-request-ldap-pwd=1
 
-3) Set the AD/LDAP server type (1=Active Directory | 2=standard LDAP):
+3) Set the AD/LDAP server type (1=Active Directory | 2=standard LDAP):  
    multiotp -config ldap-server-type=1
 
-4) Set the user CN identifier (sAMAccountName, eventually userPrincipalName):
+4) Set the user CN identifier (sAMAccountName, eventually userPrincipalName):  
    multiotp -config ldap-cn-identifier="sAMAccountName"
 
-5) Set the group CN identifier (sAMAccountName for Active Directory):
+5) Set the group CN identifier (sAMAccountName for Active Directory):  
    multiotp -config ldap-group-cn-identifier="sAMAccountName"
 
-6) Set the group attribute:
+6) Set the group attribute:  
    multiotp -config ldap-group-attribute="memberOf"
 
-7) Decide if you want to use by default an SSL connection or not (0|1):
+7) Decide if you want to use by default an SSL connection or not (0|1):  
    multiotp -config ldap-ssl=0
    
-8) Set the default port (389=regular | 636=SSL connection):
+8) Set the default port (389=regular | 636=SSL connection):  
    multiotp -config ldap-port=389
    
-9) Set the Active Directory server(s), comma separated:
-   multiotp -config ldap-domain-controllers=my.srv.com,ldaps://12.13.14.15:636
+9) Set the Active Directory server(s), comma separated:  
+   multiotp -config ldap-domain-controllers=my.srv.com,ldaps://12.13.14.15:636  
    (you can define more than one server, and you can also use a SSL connection
     only for one server, on a specific port)
    
-10) Set the Base DN:
-    multiotp -config ldap-base-dn="DC=demo,DC=multiotp,DC=net"
+10) Set the Base DN:  
+    multiotp -config ldap-base-dn="DC=demo,DC=multiotp,DC=net"  
     (on a Microsoft Windows Server, the different values of the base DN of the
      domain can be displayed using the command ECHO %USERDNSDOMAIN%, and the
      result will be something like DEMO.MULTIOTP.NET)
 
-11) Set the Bind DN (which is the account used to connect to the AD/LDAP):
-    multiotp -config ldap-bind-dn="CN=sync,CN=Users,DC=demo,DC=multiotp,DC=net"
+11) Set the Bind DN (which is the account used to connect to the AD/LDAP):  
+    multiotp -config ldap-bind-dn="CN=sync,CN=Users,DC=demo,DC=multiotp,DC=net"  
     (on a Microsoft Windows Server, the bind DN of the user can be displayed
      using the command dsquery user -name sync, and the result will be
      something like "CN=sync,CN=Users,DC=demo,DC=multiotp,DC=net")
    
-12) Set the password of the user used to search in the Active Directory:
+12) Set the password of the user used to search in the Active Directory:  
     multiotp -config ldap-server-password="password_of_my_ldap_user"
    
-13) In which groups users must be in the Active Directory in order to be added:
+13) In which groups users must be in the Active Directory in order to be added:  
     multiotp -config ldap-in-group="VPNuser,dialin"
    
-14) Set the network timeout
+14) Set the network timeout  
     multiotp -config ldap-network-timeout=10
    
-15) Set the transaction time limit
+15) Set the transaction time limit  
     multiotp -config ldap-time-limit=30
 
-16) Activate the AD/LDAP support (0|1):
+16) Activate the AD/LDAP support (0|1):  
     multiotp -config ldap-activated=1
    
 17) Let's go for an AD/LDAP users synchronisation !
@@ -1272,35 +1377,37 @@ FOR STRONG AUTHENTICATION ON WINDOWS DESKTOPS OR RDP ?
 
 HOW TO BUILD A RASPBERRY PI STRONG AUTHENTICATION SERVER ?
 ==========================================================
-0) If you want to download a multiOTP Raspberry Pi image ready to use, follow this URL:
+0) If you want to download a multiOTP Raspberry Pi image ready to use, follow this URL:  
    http://download.multiotp.net/raspberry/
    
+```
    Nano-computer name: multiotp
    IP address: 192.168.1.44 (netmask: 255.255.255.0, default gateway: 192.168.1.1)
    Username: pi
    Password: raspberry
+```
    
    You can now flash the SD (check point 3) and 4) if needed), put the SD Card
    into the Raspberry Pi and boot it. You can go directly to point 15)
    
 1) If you want to use a battery backed up Real Time Clock, install it now in your
    Raspberry Pi, the drivers for these models are included in the package:
-     http://afterthoughtsoftware.com/products/rasclock
-     http://www.cjemicros.co.uk/micros/products/rpirtc.shtml
-     http://www.robotshop.com/ca/en/mini-real-time-clock-rtc-module.html
-     http://nicegear.co.nz/raspberry-pi/high-precision-real-time-clock-for-raspberry-pi/
+   - http://afterthoughtsoftware.com/products/rasclock
+   - http://www.cjemicros.co.uk/micros/products/rpirtc.shtml
+   - http://www.robotshop.com/ca/en/mini-real-time-clock-rtc-module.html
+   - http://nicegear.co.nz/raspberry-pi/high-precision-real-time-clock-for-raspberry-pi/
    
-2) Download the last image of Raspbian to be flashed
-   http://downloads.raspberrypi.org/raspbian_latest (currently 2014-09-09-wheezy-raspbian.zip)
+2) Download the last image of Raspbian to be flashed  
+   http://downloads.raspberrypi.org/raspbian_latest (currently 2017-09-07-raspbian-stretch.zip)
 
-3) Format your SD Card using the SD Card Association's formatting tool
+3) Format your SD Card using the SD Card Association's formatting tool  
    https://www.sdcard.org/downloads/formatter_4/
 
 4) Flash the raw image using UNIX tool dd or Win32DiskImager for Windows
-   (http://sourceforge.net/projects/win32diskimager/files/latest/download).
+   (http://sourceforge.net/projects/win32diskimager/files/latest/download).  
    This should take about 10 minutes.
 
-5) Copy all files from multiotp/raspberry/boot-part to the root of the SD Card
+5) Copy all files from multiotp/raspberry/boot-part to the root of the SD Card  
    (it could overwrite some files like config.txt)
 
 6) When copy is done, eject the SD Card
@@ -1317,24 +1424,24 @@ HOW TO BUILD A RASPBERRY PI STRONG AUTHENTICATION SERVER ?
     1) Expand Filesystem
     2) Change User Password
     4) Internationalisation Options (if needed)
-    8) Advanced Options
+    8) Advanced Options  
        A2 Hostname (change the hostname to your favorite name, for example "multiotp")
 
 12) Select Finish and answer "<Yes>" to reboot, ore type "sudo reboot"
 
 13) Login again directly (after about 30 seconds) on your Raspberry Pi, or using SSH, with the default username "pi" and your new password
 
-14) Type "sudo /boot/install.sh"
+14) Type "sudo /boot/install.sh"  
     Everything is done automatically (it will take about 35 minutes) and the Raspberry Pi is rebooted automatically
 
-15) The fixed IP address is set to 192.168.1.44, with a default gateway at 192.168.1.1
+15) The fixed IP address is set to 192.168.1.44, with a default gateway at 192.168.1.1  
     To adapt the network configuration, edit the file /etc/network/interfaces
 
 16) Congratulations! You have now an open source and fully OATH compliant
-    strong two factors authentication server!
+    strong two factors authentication server!  
     Surf on http(s)://192.168.1.44 to use the basic interface (admin / 1234)
 
-17) The default radius secret is set to myfirstpass for the subnet 192.168.0.0/16.
+17) The default radius secret is set to myfirstpass for the subnet 192.168.0.0/16.  
     To adapt the freeradius configuration, edit the file /etc/freeradius/clients.conf.
 
 
@@ -1342,8 +1449,8 @@ COMPATIBLE CLIENTS APPLICATIONS AND DEVICES
 ===========================================
 Open source multiOTPCredentialProvider, based on MultiotpCPV2RDP and mOTP-CP
 If you want to have strong authentication on Windows logon, have a look at the
-open source multiOTPCredentialProvider.
-It works with Windows 7/8/8.1/10/2012(R2) in both 32 and 64 bits.
+open source multiOTPCredentialProvider.  
+It works with Windows 7/8/8.1/10/2012(R2) in both 32 and 64 bits.  
 The Credential Provider is using directly a local version of multiOTP which
 can be configured as a client of a centralized multiOTP server (with caching support)
 (https://github.com/multiOTP/multiOTPCredentialProvider)
@@ -1362,12 +1469,12 @@ option). This is very useful to allow specific rules for some groups.
 
 
 EXTERNAL PACKAGES AND SOFTWARE USED
-
+```
     CryptoJS 3.1 (BSD New)
     This product contains software provided by Jeff Mott
     https://code.google.com/p/crypto-js/
 
-    Enigma Virtual Box 7.70 (freeware)
+    Enigma Virtual Box 8.00 (freeware)
     http://enigmaprotector.com/en/downloads.html
     
     FreeRADIUS/WinRADIUS 2.2.6 for Windows (GPLv2)
@@ -1394,7 +1501,7 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     NuSphere Corporation
     http://sourceforge.net/projects/nusoap/
 
-    PHP 7.1.5 (PHP License v3.01)
+    PHP 7.1.14 (PHP License v3.01)
     Voluntary contributions made by many individuals on behalf of the PHP Group.    
     http://www.php.net/
     
@@ -1435,6 +1542,7 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     http://xpertmailer.sourceforge.net/
 
     The source files can be downloaded at http://download.multiotp.net/multiotp.zip
+```
 
  
 MULTIOTP PHP CLASS DOCUMENTATION
@@ -1447,11 +1555,9 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.0.4.6 (2017-06-02)
+multiOTP 5.1.0.3 (2018-02-19)
 (c) 2010-2017 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
-
-*Script folder: D:\Data\projects\multiotp\core\
 
 multiotp will check if the token of a user is correct, based on a specified
 algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226) 
@@ -1533,6 +1639,7 @@ Return codes:
 79 ERROR: AD/LDAP connection error 
 80 ERROR: Server cache error 
 81 ERROR: Cache too old for this user, account autolocked 
+82 ERROR: User not allowed for this device 
 88 ERROR: Device is not defined as a HA slave 
 89 ERROR: Device is not defined as a HA master 
 94 ERROR: API request error 
@@ -1641,6 +1748,13 @@ Usage:
                    ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection
  ldap-synced-user-attribute: LDAP/AD attribute used as the account name
             ldap-time-limit: LDAP/AD number of sec. to wait for search results
+            ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS
+                             server certificate checks (LDAPTLS_REQCERT)
+                             'auto' means 'never' for Windows and '' for Linux
+       ldaptls_cipher_suite: ['auto'|''|...] which cipher suite is used for the
+                             LDAP TLS connection (LDAPTLS_CIPHER_SUITE)
+                             'auto' means '' for PHP higher than 5.x and
+                             'NORMAL:!VERS-TLS1.2' for PHP 5.x and before
                         log: [0|1] enable/disable log permanently
             multiple-groups: [0|1] enable/disable multiple groups per user
     radius-reply-attributor: [ += |=] how to attribute a value
@@ -1843,29 +1957,34 @@ Check the readme file for more information
 
 
 Some of other products and services based on multiOTP:
- multiOTP Credential Provider (http://download.multiotp.net/)
+ multiOTP Credential Provider (https://download.multiotp.net/)
   Open-source Credential Provider for Windows Logon, based on MultiotpCPV2RDP
  MultiotpCPV2RDP (https://github.com/arcadejust/MultiotpCPV2RDP)
   Open-source Credential Provider for Windows Logon, by arcadejust
  mOTP-CP (https://goo.gl/Y8g4ON)
   Open-source Credential Provider for Windows Logon, by Last Squirrel IT
- ownCloud OTP (http://goo.gl/mKjt43)
+ ownCloud OTP (https://goo.gl/mKjt43)
   Open-source One Time Password app for ownCloud (http://owncloud.org)
  UserCredential (https://github.com/cymapgt/UserCredential)
   Open-source authentication PHP library by Cyril Ogana
- multiOTP Pro 501V (http://www.multiOTP.com)
+ multiOTP Pro 501V (https://www.multiOTP.com)
   Pro version virtual appliance, with full web GUI, 1 free user licence
- multiOTP Pro 420B (http://www.multiOTP.com)
+ multiOTP Pro 420B (https://www.multiOTP.com)
   Pro version tiny hardware device (BeagleBone Black), with full web GUI
- multiOTP Enterprise (http://firmware.multiotp.com/enterprise/)
+ multiOTP Enterprise (http:s//firmware.multiotp.com/enterprise/)
   Enterprise version virtual appliance, with HA master-slave support,
    also available as a Raspberry Pi image file
- secuPASS.net (http://www.secuPASS.net)
+ secuPASS.net (https://www.secuPASS.net)
   simple SMS trusting service for free WLAN Hotspot
 
 Don't hesitate to send us an email if your product uses our multiOTP library.
 
-Visit http://forum.multiotp.net/ for additional support
+Visit https://forum.multiotp.net/ for additional support
 
 
 ``` 
+ 
+Hash verification for multiotp_5.1.0.3.zip 
+SHA256:0bba5cdea1d6319152600908969febd962d4968ce9e140bfd9f372d9e8afa74a 
+SHA1:f62940e752b534450e32fd01cc19e9d0b27838c8 
+MD5:50c453a9ae2827ff0777d7d79747f39e 

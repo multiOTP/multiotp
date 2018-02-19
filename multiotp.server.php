@@ -27,17 +27,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <developer@sysco.ch>
- * @version   5.0.4.6
- * @date      2017-06-02
+ * @version   5.1.0.3
+ * @date      2018-02-19
  * @since     2013-08-06
- * @copyright (c) 2013-2017 SysCo systemes de communication sa
+ * @copyright (c) 2013-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2017 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2018 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -84,6 +84,7 @@
  *
  * Change Log
  *
+ *   2017-07-07 5.0.4.9 SysCo/al Code cleaning, possible web information added
  *   2017-05-29 5.0.4.5 SysCo/al Restore configuration added
  *                               Fixed configuration file directory under Windows
  *                               The file can now be included from another one that have already an instance
@@ -116,7 +117,7 @@ if (!class_exists('Multiotp')) {
 
 $multiotp_etc_dir  = '/etc/multiotp';
 $config_folder     = $multiotp_etc_dir.'/config';
-if (false === strpos(getcwd(), '/')) {
+if (false === mb_strpos(getcwd(), '/')) {
   // if (!@file_exists($config_folder)) {
   $multiotp_etc_dir  = '';
   $config_folder = '';
@@ -128,13 +129,13 @@ if (!isset($multiotp)) {
 $multiotp->ForceNoDisplayLog(); // No log on display as we are running a web server
 
 if ('' != $multiotp_etc_dir) {
+  $multiotp->SetLogFolder('/var/log/multiotp/');
   $multiotp->SetConfigFolder($multiotp_etc_dir.'/config/');
   $multiotp->SetDevicesFolder($multiotp_etc_dir.'/devices/');
   $multiotp->SetGroupsFolder($multiotp_etc_dir.'/groups/');
   $multiotp->SetTokensFolder($multiotp_etc_dir.'/tokens/');
   $multiotp->SetUsersFolder($multiotp_etc_dir.'/users/');
   $multiotp->SetCacheFolder('/tmp/cache/');
-  $multiotp->SetLogFolder('/var/log/multiotp/');
   $multiotp->SetLinuxFileMode('0666');
 }
 $multiotp->ReadConfigData();
@@ -144,10 +145,10 @@ $method = substr(isset($_GET['method'])?$_GET['method']:(isset($_POST['method'])
 $options = isset($_GET['options'])?$_GET['options']:(isset($_POST['options'])?$_POST['options']:'');
 $postdata = file_get_contents("php://input");
 
-if (FALSE !== strpos($data,'<multiOTP')) {
+if (FALSE !== mb_strpos($data,'<multiOTP')) {
     $multiotp->XmlServer($data);
     exit();
-} elseif ((FALSE !== strpos($postdata,'<SOAP-ENV')) || (isset($_GET['soap'])) || (isset($_GET['wsdl']))) {
+} elseif ((FALSE !== mb_strpos($postdata,'<SOAP-ENV')) || (isset($_GET['soap'])) || (isset($_GET['wsdl']))) {
     /*******************
      *******************
      *** SOAP SERVER ***
@@ -301,9 +302,7 @@ if (FALSE !== strpos($data,'<multiOTP')) {
 
     $soap_server->service($postdata);
     exit();
-}
-else
-{
+} else {
     session_start();
     $multiotp->SetHashSalt('AjaxH@shS@lt'); // Shared secret
     $hash_salt = $multiotp->GetHashSalt();
@@ -316,6 +315,8 @@ else
     header("Cache-Control: no-store, no-cache, must-revalidate");
     header("Cache-Control: post-check=0, pre-check=0", false);
     header("Pragma: no-cache");
+
+    $multiotp->SendWeeklyAnonymousStat();
 
     if (isset($_FILES['upgrade_file']['tmp_name'])) {
       if ((isset($_SESSION['logged']) && $_SESSION['logged'])) {
@@ -452,7 +453,7 @@ else
             $prefix_required0_checked = ' checked="checked" ';
         }
 
-        echo <<<EOWEBPAGE
+        $webpage = <<<EOWEBPAGE
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
     <head>
@@ -1121,8 +1122,8 @@ else
                 Please check <a target="_blank" href="http://www.multiOTP.net/">http://www.multiOTP.net/</a> and you will find the magic button ;-)
 				<br />
 				Visit <a target="_blank" href="http://forum.multiotp.net/">http://forum.multiotp.net/</a> for additional support.
-                <!-- <hr />
-                <i>Interested in additional features? Check out our commercial edition here: <a target="_blank" href="http://www.multiotp.com/">http://www.multiotp.com/</a></i> -->
+                <hr />
+                \-_infoweb_-/
             </div>
             <hr />
             <div class="section_title" id="login_title"><span id="login_text">Login</span></div>
@@ -1428,9 +1429,26 @@ else
     </body>
 </html>
 EOWEBPAGE;
-    }
-    else
-    {
+        $infoweb = "";
+        $infoweb_filename = "infoweb.html";
+        if (file_exists($multiotp->GetConfigFolder().$infoweb_filename)) {
+            if ($infoweb_handler = @fopen($multiotp->GetConfigFolder().$infoweb_filename, "rt")) {
+                $infoweb = trim(fgets($infoweb_handler));
+                fclose($infoweb_handler);
+            }
+        }
+        if (trim($infoweb == "")) {
+            $infoweb = <<<EOI
+<i>
+    Are you interested in additional features like automatic syncronization of AD/LDAP users, provisioning PDF automatic email distribution, API automation, HA in master-slave mode and many others, everything through an easy and fast web interface ?
+    <br />
+    Check out our commercial editions here: <a target="_blank" href="http://www.multiotp.com/">http://www.multiotp.com/</a>
+</i>
+EOI;
+        }
+        $webpage = str_replace('\-_infoweb_-/', $infoweb, $webpage);
+        echo $webpage;
+    } else {
         /*********************
          * Basic Ajax server *
          *********************/
@@ -1464,12 +1482,12 @@ EOWEBPAGE;
         
         $ajax_result = "false";
 
-        switch (strtoupper($method))
+        switch (mb_strtoupper($method))
         {
-            case strtoupper("GetRandomSalt"):
+            case mb_strtoupper("GetRandomSalt"):
                 $ajax_result = $multiotp->GetRandomSalt();
                 break;
-            case strtoupper("Login"):
+            case mb_strtoupper("Login"):
                 $result = FALSE;
                 $username = substr(isset($options_array[0])?$options_array[0]:'',0,255);
                 $password = substr(isset($options_array[1])?$options_array[1]:'',0,255);
@@ -1496,15 +1514,15 @@ EOWEBPAGE;
                     /*******************************************************
                      * The next methods are allowed only if we are logged in
                      *******************************************************/
-                    switch (strtoupper($method))
+                    switch (mb_strtoupper($method))
                     {
-                        case strtoupper("DeleteUser"):
+                        case mb_strtoupper("DeleteUser"):
                             $ajax_result = $multiotp->DeleteUser($options_array[0]);
                             break;
-                        case strtoupper("DeleteToken"):
+                        case mb_strtoupper("DeleteToken"):
                             $ajax_result = $multiotp->DeleteToken($options_array[0]);
                             break;
-                        case strtoupper("FastCreateUser"):
+                        case mb_strtoupper("FastCreateUser"):
                             $user              = trim((isset($options_array[0])?$options_array[0]:''));
                             $email             = trim((isset($options_array[1])?$options_array[1]:''));
                             $sms               = trim((isset($options_array[2])?$options_array[2]:''));
@@ -1523,26 +1541,26 @@ EOWEBPAGE;
                                 $multiotp->WriteConfigData();
                             }
                             break;
-                        case strtoupper("GetFullVersionInfo"):
+                        case mb_strtoupper("GetFullVersionInfo"):
                             $ajax_result = $multiotp->GetFullVersionInfo();
                             break;
-                        case strtoupper("GetTokensList"):
+                        case mb_strtoupper("GetTokensList"):
                             $ajax_result = $multiotp->GetTokensList();
                             break;
-                        case strtoupper("GetUsersList"):
+                        case mb_strtoupper("GetUsersList"):
                             $ajax_result = $multiotp->GetUsersList();
                             break;
-                        case strtoupper("GetDelayedUsersList"):
+                        case mb_strtoupper("GetDelayedUsersList"):
                             $ajax_result = $multiotp->GetDelayedUsersList();
                             break;
-                        case strtoupper("GetLockedUsersList"):
+                        case mb_strtoupper("GetLockedUsersList"):
                             $ajax_result = $multiotp->GetLockedUsersList();
                             break;
-                        case strtoupper("PrintQrCode"):
+                        case mb_strtoupper("PrintQrCode"):
                             echo $multiotp->GenerateHtmlQrCode($options_array[0]);
                             $ajax_result = '';
                             break;
-                        case strtoupper("ResyncUser"):
+                        case mb_strtoupper("ResyncUser"):
                             $ajax_result = "false";
                             if ($multiotp->ReadUserData($options_array[0])) {
                                 $result = $multiotp->CheckToken($options_array[1], $options_array[2]);
@@ -1551,7 +1569,7 @@ EOWEBPAGE;
                                 }
                             }
                             break;
-                        case strtoupper("CheckToken"):
+                        case mb_strtoupper("CheckToken"):
                             $ajax_result = '21 '.$multiotp->GetErrorText(21);
                             if ($multiotp->ReadUserData($options_array[0]))
                             {
@@ -1566,7 +1584,7 @@ EOWEBPAGE;
                                 }
                             }
                             break;
-                        case strtoupper("BackupConfig"):
+                        case mb_strtoupper("BackupConfig"):
                             $tmp  = '/tmp';
                             if (!file_exists($tmp)) {
                                 $tmp = $multiotp->ConvertToWindowsPathIfNeeded($multiotp->GetScriptFolder()."../_temp");
@@ -1606,7 +1624,7 @@ EOWEBPAGE;
                                 echo "*** BACKUP ERROR ***";
                             }
                             break;
-                        case strtoupper("SetAdminPasswordHash"):
+                        case mb_strtoupper("SetAdminPasswordHash"):
                             if ($multiotp->IsDemoMode())
                             {
                                 $result = "false";
@@ -1617,10 +1635,10 @@ EOWEBPAGE;
                                 $multiotp->WriteConfigData();
                             }
                             break;
-                        case strtoupper("UnlockUser"):
+                        case mb_strtoupper("UnlockUser"):
                             $ajax_result = $multiotp->UnlockUser($options_array[0]);
                             break;
-                        case strtoupper("UserLoggedIn"):
+                        case mb_strtoupper("UserLoggedIn"):
                             $ajax_result = "true"; //User is logged if code arrives here!
                             break;
                         default:

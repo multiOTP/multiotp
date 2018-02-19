@@ -35,17 +35,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.4.6
- * @date      2017-06-02
+ * @version   5.1.0.3
+ * @date      2018-02-19
  * @since     2010-06-08
- * @copyright (c) 2010-2017 SysCo systemes de communication sa
+ * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2017 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2018 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -389,6 +389,8 @@
  *
  * Change Log
  *
+ *   2018-02-19 5.1.0.3 SysCo/al Credential Provider multiOTPOptions registry entry is used if available
+ *   2017-11-10 5.0.6.0 SysCo/al New -cp option (Credential Provider mode)
  *   2017-05-29 5.0.4.5 SysCo/al PostgreSQL support, based on source code provided by Frank van der Aa
  *   2017-02-21 5.0.3.6 SysCo/al Seed can now be given in Base32 format
  *   2017-02-03 5.0.3.5 SysCo/al -user-info fixed and replaced by a call to the GetUserInfo method
@@ -534,7 +536,7 @@ function get_script_dir()
         }
     }
     
-    if (false === strpos($current_script_folder,"/")) {
+    if (false === mb_strpos($current_script_folder,"/")) {
         $current_script_folder_detected = dirname($current_folder."/fake.file");
     } else {
         $current_script_folder_detected = dirname($current_script_folder);
@@ -560,7 +562,7 @@ function convert_to_windows_path_if_needed(
     $path
 ) {
     $result = $path;
-    if (false !== strpos($result,":")) {
+    if (false !== mb_strpos($result,":")) {
         $result = str_replace("/","\\",$result);
     }
     return $result;
@@ -639,41 +641,44 @@ if ($cli_mode) {
 
 
 // Initialize some variables
-$command            = "";
-$not_a_command      = FALSE;
-$command_array      = array();
-$call_method        = "";
-$display_help       = false;
-$display_status     = false;
-$prefix_pin         = false;
-$crlf               = "\n"; // was chr(13).chr(10);
-$result             = 99; // Unknown error
-$token_id_creation  = false;
-$mysql_parameters   = array();
-$pgsql_parameters   = array();
-$no_php_info        = false;
-$param_info_debug   = false;
-$show_false_pin     = false;
-$base_dir           = '';
-$source_tag         = '';
-$source_ip          = '';
-$source_mac         = '';
-$calling_ip         = '';
-$calling_mac        = '';
-$chap_id            = '';
-$chap_challenge     = '';
-$chap_password      = '';
-$ms_chap_challenge  = '';
-$ms_chap_response   = '';
-$ms_chap2_response  = '';
-$verbose_prefix     = '';
-$display_log        = false;
-$enable_log         = false;
-$verbose_log        = false;
-$initialize_backend = false;
-$keep_local         = false;
-$encrypted_password = false;
-$request_nt_key     = false;
+$command             = "";
+$not_a_command       = false;
+$command_array       = array();
+$call_method         = "";
+$cp_mode             = false;
+$display_help        = false;
+$display_status      = false;
+$prefix_pin          = false;
+$crlf                = "\n"; // was chr(13).chr(10);
+$result              = 99; // Unknown error
+$token_id_creation   = false;
+$mysql_parameters    = array();
+$pgsql_parameters    = array();
+$no_php_info         = false;
+$param_info_debug    = false;
+$show_false_pin      = false;
+$base_dir            = '';
+$source_tag          = '';
+$source_ip           = '';
+$source_mac          = '';
+$calling_ip          = '';
+$calling_mac         = '';
+$chap_id             = '';
+$chap_challenge      = '';
+$chap_password       = '';
+$ms_chap_challenge   = '';
+$ms_chap_response    = '';
+$ms_chap2_response   = '';
+$verbose_prefix      = '';
+$display_log         = false;
+$enable_log          = false;
+$verbose_log         = false;
+$initialize_backend  = false;
+$keep_local          = false;
+$encrypted_password  = false;
+$request_nt_key      = false;
+$multiOTPOptions     = '';
+
 
 // Extract all parameters
 $param_count = 0;
@@ -709,245 +714,247 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
 
     $not_a_command = FALSE;
 
-    if ("-activate" == strtolower($current_arg)) {
+    if ("-activate" == mb_strtolower($current_arg)) {
         $command = "activate";
-    } elseif ("-assign-token" == strtolower($current_arg)) {
+    } elseif ("-assign-token" == mb_strtolower($current_arg)) {
         $command = "assign-token";
-    } elseif ("-callapi" == strtolower($current_arg)) {
+    } elseif ("-callapi" == mb_strtolower($current_arg)) {
         $command = "callapi";
-    } elseif ("-backup-config" == strtolower($current_arg)) {
+    } elseif ("-backup-config" == mb_strtolower($current_arg)) {
         $command = "backup-config";
-    } elseif ("-call-method=" == substr(strtolower($current_arg),0,13)) {
+    } elseif ("-call-method=" == substr(mb_strtolower($current_arg),0,13)) {
         $command = "call-method";
         $src_array = explode("=",$current_arg,2);
         if (2 == count($src_array)) {
             $call_method = $src_array[1];
         }
-    } elseif ("-check" == strtolower($current_arg)) {
+    } elseif ("-check" == mb_strtolower($current_arg)) {
         $command = "check";
-    } elseif ("-check-ldap-password" == strtolower($current_arg)) {
+    } elseif ("-check-ldap-password" == mb_strtolower($current_arg)) {
         $command = "check-ldap-password";
-    } elseif ("-checkpam" == strtolower($current_arg)) {
+    } elseif ("-checkpam" == mb_strtolower($current_arg)) {
         $command = "checkpam";
-    } elseif ("-config" == strtolower($current_arg)) {
+    } elseif ("-config" == mb_strtolower($current_arg)) {
         $command = "config";
-    } elseif ("-create" == strtolower($current_arg)) {
+    } elseif ("-create" == mb_strtolower($current_arg)) {
         $command = "create";
-    } elseif ("-createga" == strtolower($current_arg)) {
+    } elseif ("-createga" == mb_strtolower($current_arg)) {
         $command = "createga";
-    } elseif ("-custominfo" == strtolower($current_arg)) {
+    } elseif ("-custominfo" == mb_strtolower($current_arg)) {
         $command = "custominfo";
-    } elseif ("-default-dialin-ip-mask" == strtolower($current_arg)) {
+    } elseif ("-default-dialin-ip-mask" == mb_strtolower($current_arg)) {
         $command = "default-dialin-ip-mask";
-    } elseif ("-delete" == strtolower($current_arg)) {
+    } elseif ("-delete" == mb_strtolower($current_arg)) {
         $command = "delete";
-    } elseif ("-delete-token" == strtolower($current_arg)) {
+    } elseif ("-delete-token" == mb_strtolower($current_arg)) {
         $command = "delete-token";
-    } elseif ("-desactivate" == strtolower($current_arg)) {
+    } elseif ("-desactivate" == mb_strtolower($current_arg)) {
         $command = "desactivate";
-    } elseif ("-dialin-ip-address" == strtolower($current_arg)) {
+    } elseif ("-dialin-ip-address" == mb_strtolower($current_arg)) {
         $command = "dialin-ip-address";
-    } elseif ("-dialin-ip-mask" == strtolower($current_arg)) {
+    } elseif ("-dialin-ip-mask" == mb_strtolower($current_arg)) {
         $command = "dialin-ip-mask";
-    } elseif ("-fastcreate" == strtolower($current_arg)) {
+    } elseif ("-fastcreate" == mb_strtolower($current_arg)) {
         $command = "fastcreate";
-    } elseif ("-fastcreatenopin" == strtolower($current_arg)) {
+    } elseif ("-fastcreatenopin" == mb_strtolower($current_arg)) {
         $command = "fastcreatenopin";
-    } elseif ("-fastcreatewithpin" == strtolower($current_arg)) {
+    } elseif ("-fastcreatewithpin" == mb_strtolower($current_arg)) {
         $command = "fastcreatewithpin";
-    } elseif ("-help" == strtolower($current_arg)) {
+    } elseif ("-help" == mb_strtolower($current_arg)) {
         $command = "help";
-    } elseif ("-import" == strtolower($current_arg)) {
+    } elseif ("-import" == mb_strtolower($current_arg)) {
         $command = "import";
-    } elseif ("-import-alpine-xml" == strtolower($current_arg)) {
+    } elseif ("-import-alpine-xml" == mb_strtolower($current_arg)) {
         $command = "import-alpine-xml";
-    } elseif ("-import-csv" == strtolower($current_arg)) {
+    } elseif ("-import-csv" == mb_strtolower($current_arg)) {
         $command = "import-csv";
-    } elseif ("-import-dat" == strtolower($current_arg)) {
+    } elseif ("-import-dat" == mb_strtolower($current_arg)) {
         $command = "import-dat";
-    } elseif ("-import-pskc" == strtolower($current_arg)) {
+    } elseif ("-import-pskc" == mb_strtolower($current_arg)) {
         $command = "import-pskc";
-    } elseif ("-import-sql" == strtolower($current_arg)) {
+    } elseif ("-import-sql" == mb_strtolower($current_arg)) {
         $command = "import-sql";
-    } elseif ("-import-xml" == strtolower($current_arg)) {
+    } elseif ("-import-xml" == mb_strtolower($current_arg)) {
         $command = "import-xml";
-    } elseif ("-import-yubikey" == strtolower($current_arg)) {
+    } elseif ("-import-yubikey" == mb_strtolower($current_arg)) {
         $command = "import-yubikey";
-    } elseif ("-initialize-backend" == strtolower($current_arg)) {
+    } elseif ("-initialize-backend" == mb_strtolower($current_arg)) {
         $command = "initialize-backend";
         $initialize_backend = true;
-    } elseif ("-lockeduserslist" == strtolower($current_arg)) {
+    } elseif ("-lockeduserslist" == mb_strtolower($current_arg)) {
         $command = "lockeduserslist";
-    } elseif ("-ldap-users-list" == strtolower($current_arg)) {
+    } elseif ("-ldap-users-list" == mb_strtolower($current_arg)) {
         $command = "ldap-users-list";
-    } elseif ("-ldap-users-sync" == strtolower($current_arg)) {
+    } elseif ("-ldap-users-sync" == mb_strtolower($current_arg)) {
         $command = "ldap-users-sync";
-    } elseif ("-ldap-user-info" == strtolower($current_arg)) {
+    } elseif ("-ldap-user-info" == mb_strtolower($current_arg)) {
         $command = "ldap-user-info";
-    } elseif ("-ldap-check" == strtolower($current_arg)) {
+    } elseif ("-ldap-check" == mb_strtolower($current_arg)) {
         $command = "ldap-check";
-    } elseif ("-phpinfo" == strtolower($current_arg)) {
+    } elseif ("-phpinfo" == mb_strtolower($current_arg)) {
         $command = "phpinfo";
-    } elseif ("-libhash" == strtolower($current_arg)) {
+    } elseif ("-libhash" == mb_strtolower($current_arg)) {
         $command = "libhash";
-    } elseif ("-lock" == strtolower($current_arg)) {
+    } elseif ("-lock" == mb_strtolower($current_arg)) {
         $command = "lock";
-    } elseif ("-mysql" == strtolower($current_arg)) {
+    } elseif ("-mysql" == mb_strtolower($current_arg)) {
         $command = "mysql";
-    } elseif ("-pgsql" == strtolower($current_arg)) {
+    } elseif ("-pgsql" == mb_strtolower($current_arg)) {
         $command = "pgsql";
-    } elseif ("-php-version" == strtolower($current_arg)) {
+    } elseif ("-php-version" == mb_strtolower($current_arg)) {
         $command = "php-version";
-    } elseif ("-purge-lock-folder" == strtolower($current_arg)) {
+    } elseif ("-purge-lock-folder" == mb_strtolower($current_arg)) {
         $command = "purge-lock-folder";
-    } elseif ("-purge-ldap-cache-folder" == strtolower($current_arg)) {
+    } elseif ("-purge-ldap-cache-folder" == mb_strtolower($current_arg)) {
         $command = "purge-ldap-cache-folder";
-    } elseif ("-qrcode" == strtolower($current_arg)) {
+    } elseif ("-qrcode" == mb_strtolower($current_arg)) {
         $command = "qrcode";
-    } elseif ("-requiresms" == strtolower($current_arg)) {
+    } elseif ("-requiresms" == mb_strtolower($current_arg)) {
         $command = "requiresms";
-    } elseif ("-remove-token" == strtolower($current_arg)) {
+    } elseif ("-remove-token" == mb_strtolower($current_arg)) {
         $command = "remove-token";
-    } elseif ("-restore-config" == strtolower($current_arg)) {
+    } elseif ("-restore-config" == mb_strtolower($current_arg)) {
         $command = "restore-config";
-    } elseif ("-resync" == strtolower($current_arg)) {
+    } elseif ("-resync" == mb_strtolower($current_arg)) {
         $command = "resync";
-    } elseif ("-scratchlist" == strtolower($current_arg)) {
+    } elseif ("-scratchlist" == mb_strtolower($current_arg)) {
         $command = "scratchlist";
-    } elseif ("-seed-info" == strtolower($current_arg)) {
+    } elseif ("-seed-info" == mb_strtolower($current_arg)) {
         $command = "seed";
-    } elseif ("-set" == strtolower($current_arg)) {
+    } elseif ("-set" == mb_strtolower($current_arg)) {
         $command = "set";
-    } elseif ("-showlog" == strtolower($current_arg)) {
+    } elseif ("-showlog" == mb_strtolower($current_arg)) {
         $command = "showlog";
-    } elseif ("-tokenslist" == strtolower($current_arg)) {
+    } elseif ("-tokenslist" == mb_strtolower($current_arg)) {
         $command = "tokenslist";
-    } elseif ("-unlock" == strtolower($current_arg)) {
+    } elseif ("-unlock" == mb_strtolower($current_arg)) {
         $command = "unlock";
-    } elseif ("-update" == strtolower($current_arg)) {
+    } elseif ("-update" == mb_strtolower($current_arg)) {
         $command = "update";
-    } elseif ("-update-pin" == strtolower($current_arg)) {
+    } elseif ("-update-pin" == mb_strtolower($current_arg)) {
         $command = "update-pin";
-    } elseif ("-urllink" == strtolower($current_arg)) {
+    } elseif ("-urllink" == mb_strtolower($current_arg)) {
         $command = "urllink";
-    } elseif ("-user-info" == strtolower($current_arg)) {
+    } elseif ("-user-info" == mb_strtolower($current_arg)) {
         $command = "user-info";
-    } elseif ("-userslist" == strtolower($current_arg)) {
+    } elseif ("-userslist" == mb_strtolower($current_arg)) {
         $command = "userslist";
-    } elseif (("-version" == strtolower($current_arg)) || ("-v" == strtolower($current_arg))) {
+    } elseif (("-version" == mb_strtolower($current_arg)) || ("-v" == mb_strtolower($current_arg))) {
         $command = "version";
-    } elseif ("-version-only" == strtolower($current_arg)) {
+    } elseif ("-version-only" == mb_strtolower($current_arg)) {
         $command = "version-only";
     } else {
         // The current argument is not a command
         $not_a_command = TRUE;
-        if ("-base-dir=" == substr(strtolower($current_arg),0,10)) {
+        if ("-base-dir=" == substr(mb_strtolower($current_arg),0,10)) {
             $base_array = explode("=",$current_arg,2);
             if (2 == count($base_array)) {
                 $base_dir = $base_array[1];
             }
-        } elseif ("-src=" == substr(strtolower($current_arg),0,5)) {
+        } elseif ("-src=" == substr(mb_strtolower($current_arg),0,5)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $source_ip = $src_array[1];
             }
-        } elseif ("-tag=" == substr(strtolower($current_arg),0,5)) {
+        } elseif ("-tag=" == substr(mb_strtolower($current_arg),0,5)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $source_tag = $src_array[1];
             }
-        } elseif ("-mac=" == substr(strtolower($current_arg),0,5)) {
+        } elseif ("-mac=" == substr(mb_strtolower($current_arg),0,5)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $source_mac = $src_array[1];
             }
-        } elseif ("-calling-ip=" == substr(strtolower($current_arg),0,12)) {
+        } elseif ("-calling-ip=" == substr(mb_strtolower($current_arg),0,12)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $calling_ip = $src_array[1];
             }
-        } elseif ("-calling-mac=" == substr(strtolower($current_arg),0,13)) {
+        } elseif ("-calling-mac=" == substr(mb_strtolower($current_arg),0,13)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $calling_mac = $src_array[1];
             }
-        } elseif ("-chap-id=" == substr(strtolower($current_arg),0,16)) {
+        } elseif ("-chap-id=" == substr(mb_strtolower($current_arg),0,16)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $chap_id = $src_array[1];
-                if (("%msoft" == strtolower(substr($chap_id,0,6))) || ("%ietf" == strtolower(substr($chap_id,0,5)))) {
+                if (("%msoft" == mb_strtolower(substr($chap_id,0,6))) || ("%ietf" == mb_strtolower(substr($chap_id,0,5)))) {
                     $chap_id = '';
                 }
             }
-        } elseif ("-chap-challenge=" == substr(strtolower($current_arg),0,16)) {
+        } elseif ("-chap-challenge=" == substr(mb_strtolower($current_arg),0,16)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $chap_challenge = $src_array[1];
-                if (("%msoft" == strtolower(substr($chap_challenge,0,6))) || ("%ietf" == strtolower(substr($chap_challenge,0,5)))) {
+                if (("%msoft" == mb_strtolower(substr($chap_challenge,0,6))) || ("%ietf" == mb_strtolower(substr($chap_challenge,0,5)))) {
                     $chap_challenge = '';
                 }
             }
-        } elseif ("-chap-password=" == substr(strtolower($current_arg),0,15)) {
+        } elseif ("-chap-password=" == substr(mb_strtolower($current_arg),0,15)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $chap_password = $src_array[1];
-                if (("%msoft" == strtolower(substr($chap_password,0,6))) || ("%ietf" == strtolower(substr($chap_password,0,5)))) {
+                if (("%msoft" == mb_strtolower(substr($chap_password,0,6))) || ("%ietf" == mb_strtolower(substr($chap_password,0,5)))) {
                     $chap_password = '';
                 } else {
                     $encrypted_password = true;
                 }
             }
-        } elseif ("-ms-chap-challenge=" == substr(strtolower($current_arg),0,19)) {
+        } elseif ("-ms-chap-challenge=" == substr(mb_strtolower($current_arg),0,19)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $ms_chap_challenge = $src_array[1];
-                if (("%msoft" == strtolower(substr($ms_chap_challenge,0,6))) || ("%ietf" == strtolower(substr($ms_chap_challenge,0,5)))) {
+                if (("%msoft" == mb_strtolower(substr($ms_chap_challenge,0,6))) || ("%ietf" == mb_strtolower(substr($ms_chap_challenge,0,5)))) {
                     $ms_chap_challenge = '';
                 }
             }
-        } elseif ("-ms-chap-response=" == substr(strtolower($current_arg),0,18)) {
+        } elseif ("-ms-chap-response=" == substr(mb_strtolower($current_arg),0,18)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $ms_chap_response = $src_array[1];
-                if (("%msoft" == strtolower(substr($ms_chap_response,0,6))) || ("%ietf" == strtolower(substr($ms_chap_response,0,5)))) {
+                if (("%msoft" == mb_strtolower(substr($ms_chap_response,0,6))) || ("%ietf" == mb_strtolower(substr($ms_chap_response,0,5)))) {
                     $ms_chap_response = '';
                 } else {
                     $encrypted_password = true;
                 }
             }
-        } elseif ("-ms-chap2-response=" == substr(strtolower($current_arg),0,19)) {
+        } elseif ("-ms-chap2-response=" == substr(mb_strtolower($current_arg),0,19)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
                 $ms_chap2_response = $src_array[1];
-                if (("%msoft" == strtolower(substr($ms_chap2_response,0,6))) || ("%ietf" == strtolower(substr($ms_chap2_response,0,5)))) {
+                if (("%msoft" == mb_strtolower(substr($ms_chap2_response,0,6))) || ("%ietf" == mb_strtolower(substr($ms_chap2_response,0,5)))) {
                     $ms_chap2_response = '';
                 } else {
                     $encrypted_password = true;
                 }
             }
-        } elseif ("-debug" == strtolower($current_arg)) {
+        } elseif ("-cp" == mb_strtolower($current_arg)) {
+            $cp_mode = true;
+        } elseif ("-debug" == mb_strtolower($current_arg)) {
             $verbose_log = true;
-        } elseif ("-display-log" == strtolower($current_arg)) {
+        } elseif ("-display-log" == mb_strtolower($current_arg)) {
             $display_log = true;
-        } elseif ("-log" == strtolower($current_arg)) {
+        } elseif ("-log" == mb_strtolower($current_arg)) {
             $enable_log = true;
-        } elseif ("-keep-local" == strtolower($current_arg)) {
+        } elseif ("-keep-local" == mb_strtolower($current_arg)) {
             $keep_local = true;
-        } elseif ("-no-php-info" == strtolower($current_arg)) {
+        } elseif ("-no-php-info" == mb_strtolower($current_arg)) {
             $no_php_info = true;
-        } elseif ("-no-prefix-pin" == strtolower($current_arg)) {
+        } elseif ("-no-prefix-pin" == mb_strtolower($current_arg)) {
             $set_prefix_pin = false;
-        } elseif ("-param" == strtolower($current_arg)) {
+        } elseif ("-param" == mb_strtolower($current_arg)) {
             $param_info_debug = true;
-        } elseif ("-prefix-pin" == strtolower($current_arg)) {
+        } elseif ("-prefix-pin" == mb_strtolower($current_arg)) {
             $set_prefix_pin = true;
-        } elseif (("-request-nt-key" == strtolower($current_arg)) || ("--request-nt-key" == strtolower($current_arg))) {
+        } elseif (("-request-nt-key" == mb_strtolower($current_arg)) || ("--request-nt-key" == mb_strtolower($current_arg))) {
             $request_nt_key = true;
-        } elseif ("-show-false-pin" == strtolower($current_arg)) {
+        } elseif ("-show-false-pin" == mb_strtolower($current_arg)) {
             $show_false_pin = true;
-        } elseif ("-status" == strtolower($current_arg)) {
+        } elseif ("-status" == mb_strtolower($current_arg)) {
             $display_status = true;
-        } elseif ("-token-id" == strtolower($current_arg)) {
+        } elseif ("-token-id" == mb_strtolower($current_arg)) {
             $token_id_creation = true;
         } else {
             $param_count++;
@@ -1028,39 +1035,71 @@ if ('' != $base_dir) {
 // PLEASE DO NOT CHANGE THIS LINE IF YOU DON'T KNOW WHAT YOU DO!
 // IF YOU CHANGE THE ENCRYPTION KEY, YOUR PREVIOUS ENCRYPTED DATA WILL NOT BE READABLE ANYMORE
 
-$multiotp_etc_dir  = '/etc/multiotp';
-$config_folder     = $multiotp_etc_dir.'/config';
-if (false === strpos(getcwd(), '/')) {
+$multiotp_etc_dir = '/etc/multiotp';
+$config_folder = $multiotp_etc_dir.'/config';
+if (false === mb_strpos(getcwd(), '/')) {
   // if (!@file_exists($config_folder)) {
   $multiotp_etc_dir  = '';
   $config_folder = '';
 }
 
-if (($command == "libhash") || ($command == "help")) {
+if (($command == "libhash") || ($command == "help") || ($command == "version") || ($command == "php-version")) {
   if (!isset($multiotp)) {
     $multiotp = new Multiotp('DefaultCliEncryptionKey', false, $folder_path, $config_folder);
+    $multiotp->SetCredentialProviderMode($cp_mode);
+    $multiotp->SetCliMode($cli_mode);
+    $multiotp->SetCliProxyMode(!$cli_mode); // The CLI proxy mode is *NOT* the CLI mode
   }
 } else {
   if (!isset($multiotp)) {
     $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path, $config_folder);
+    $multiotp->SetCredentialProviderMode($cp_mode);
+    $multiotp->SetCliMode($cli_mode);
+    $multiotp->SetCliProxyMode(!$cli_mode); // The CLI proxy mode is *NOT* the CLI mode
     if ('' != $multiotp_etc_dir) {
+      $multiotp->SetLogFolder('/var/log/multiotp/');
       $multiotp->SetConfigFolder($multiotp_etc_dir.'/config/');
       $multiotp->SetDevicesFolder($multiotp_etc_dir.'/devices/');
       $multiotp->SetGroupsFolder($multiotp_etc_dir.'/groups/');
       $multiotp->SetTokensFolder($multiotp_etc_dir.'/tokens/');
       $multiotp->SetUsersFolder($multiotp_etc_dir.'/users/');
       $multiotp->SetCacheFolder('/tmp/cache/');
-      $multiotp->SetLogFolder('/var/log/multiotp/');
       $multiotp->SetLinuxFileMode('0666');
     }
     $multiotp->ReadConfigData();
   }
+  
+  // If options exists in the registry entry of the Credential Provider, we read it
+  $multiOTPOptions = '';
+  if (mb_strtolower(substr(PHP_OS, 0, 3)) === 'win') {
+    if (class_exists('COM')) {
+      try {
+        $shell = new COM("WScript.Shell");
+        $multiOTPOptions = $shell->RegRead("HKEY_CLASSES_ROOT\\CLSID\\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\\multiOTPOptions");
+        if ('' != $multiOTPOptions) {
+          $options_array = explode("\t", $multiOTPOptions);
+          foreach ($options_array as $one_options) {
+            $line_array = explode("=", $one_options, 2);
+            if (('#' != substr($one_options, 0, 1)) && (';' != substr($one_options, 0, 1)) && ("" != trim($one_options)) && (isset($line_array[1]))) {
+              if (":" == substr($line_array[0], -1)) {
+                $line_array[0] = substr($line_array[0], 0, strlen($line_array[0]) -1);
+                $line_array[1] = $multiotp->Decrypt($line_array[0],$line_array[1],$multiotp->GetEncryptionKey());
+              }
+              if ("" != $line_array[0]) {
+                $multiotp->_config_data[mb_strtolower($line_array[0])] = $line_array[1];
+              }
+            }
+          }
+        }
+      } catch (Exception $e) {
+        $multiOTPOptions = '';
+      }
+    }
+  }
+
   $multiotp->UpgradeSchemaIfNeeded();
   $verbose_prefix = $multiotp->GetVerboseLogPrefix(); // for example Reply-Message := 
 }
-
-$multiotp->SetCliMode($cli_mode);
-$multiotp->SetCliProxyMode(!$cli_mode); // The CLI proxy mode is *NOT* the CLI mode
 
 // Initialize multiOTP options
 if ($enable_log) {
@@ -1100,12 +1139,15 @@ if ($multiotp->GetVerboseFlag()) {
   for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
   {
     $one_radius = clean_quotes($argv[$arg_loop]);
-    if (false !== strpos($one_radius,' ')) {
+    if (false !== mb_strpos($one_radius,' ')) {
       $one_radius = '"'.$one_radius.'"';
     }
     $temp_radius.= $one_radius.' ';
   }
   $multiotp->WriteLog('Debug: *parameter(s) received: '.trim($temp_radius), false, false, 8888, 'Debug', '');
+  if (($multiotp->IsDeveloperMode())) {
+    $multiotp->WriteLog('Developer: *multiOTPOptions: '.trim(str_replace("\t", ";", $multiOTPOptions)), false, false, 8888, 'Debug', '');
+  }
 }
 
 
@@ -1132,29 +1174,29 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             if  ($param_count < 1) {
                 $result = 30; // ERROR: At least one parameter is missing
             } else {
-                $mysql_parameters = explode(",",strtolower($all_args[1]));
+                $mysql_parameters = explode(",",mb_strtolower($all_args[1]));
                 if (count($mysql_parameters) < 4) {
                     $result = 30; // ERROR: At least one parameter is missing
                 } else {
                     $mysql_parameters = array_pad($mysql_parameters, 7, NULL);
 
                     // Backend storage type
-                    $this->SetBackendType('mysql');
+                    $multiotp->SetBackendType('mysql');
 
-                    $this->SetSqlServer($mysql_parameters[0]);
-                    $this->SetSqlUsername($mysql_parameters[1]);
-                    $this->SetSqlPassword($mysql_parameters[2]);
-                    $this->SetSqlDatabase($mysql_parameters[3]);
+                    $multiotp->SetSqlServer($mysql_parameters[0]);
+                    $multiotp->SetSqlUsername($mysql_parameters[1]);
+                    $multiotp->SetSqlPassword($mysql_parameters[2]);
+                    $multiotp->SetSqlDatabase($mysql_parameters[3]);
                     
                     // If table names are not defined, we keep the default value defined in the class constructor.
                     if (NULL !== $mysql_parameters[4]) {
-                        $this->SetSqlTableName('log', $mysql_parameters[4]);
+                        $multiotp->SetSqlTableName('log', $mysql_parameters[4]);
                     }
                     if (NULL !== $mysql_parameters[5]) {
-                        $this->SetSqlTableName('users', $mysql_parameters[5]);
+                        $multiotp->SetSqlTableName('users', $mysql_parameters[5]);
                     }
                     if (NULL !== $mysql_parameters[6]) {
-                        $this->SetSqlTableName('tokens', $mysql_parameters[6]);
+                        $multiotp->SetSqlTableName('tokens', $mysql_parameters[6]);
                     }
                 }
             }
@@ -1163,30 +1205,30 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             if  ($param_count < 1) {
                 $result = 30; // ERROR: At least one parameter is missing
             } else {
-                $pgsql_parameters = explode(",",strtolower($all_args[1]));
+                $pgsql_parameters = explode(",",mb_strtolower($all_args[1]));
                 if (count($pgsql_parameters) < 5) {
                     $result = 30; // ERROR: At least one parameter is missing
                 } else {
                     $pgsql_parameters = array_pad($pgsql_parameters, 8, NULL);
 
                     // Backend storage type
-                    $this->SetBackendType('pgsql');
+                    $multiotp->SetBackendType('pgsql');
 
-                    $this->SetSqlServer($pgsql_parameters[0]);
-                    $this->SetSqlUsername($pgsql_parameters[1]);
-                    $this->SetSqlPassword($pgsql_parameters[2]);
-                    $this->SetSqlDatabase($pgsql_parameters[3]);
-                    $this->SetSqlSchema($pgsql_parameters[4]);
+                    $multiotp->SetSqlServer($pgsql_parameters[0]);
+                    $multiotp->SetSqlUsername($pgsql_parameters[1]);
+                    $multiotp->SetSqlPassword($pgsql_parameters[2]);
+                    $multiotp->SetSqlDatabase($pgsql_parameters[3]);
+                    $multiotp->SetSqlSchema($pgsql_parameters[4]);
                     
                     // If table names are not defined, we keep the default value defined in the class constructor.
                     if (NULL !== $pgsql_parameters[5]) {
-                        $this->SetSqlTableName('log', $pgsql_parameters[5]);
+                        $multiotp->SetSqlTableName('log', $pgsql_parameters[5]);
                     }
                     if (NULL !== $pgsql_parameters[6]) {
-                        $this->SetSqlTableName('users', $pgsql_parameters[6]);
+                        $multiotp->SetSqlTableName('users', $pgsql_parameters[6]);
                     }
                     if (NULL !== $pgsql_parameters[7]) {
-                        $this->SetSqlTableName('tokens', $pgsql_parameters[7]);
+                        $multiotp->SetSqlTableName('tokens', $pgsql_parameters[7]);
                     }
                 }
             }
@@ -1197,6 +1239,9 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 $version_info.= " [CLI PROXY]";
             } elseif ($multiotp->GetCliMode()) {
                 $version_info.= " [CLI]";
+            }
+            if ($multiotp->GetCredentialProviderMode()) {
+                $version_info.= " [CP]";
             }
             $version_info.= $crlf;
             echo $version_info;
@@ -1269,7 +1314,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             $otp_inline = '';
             if  ($param_count > 1) {
                 if (!$multiotp->CheckUserExists($all_args[1])) {
-                    if (false !== strpos($all_args[1], ':')) {
+                    if (false !== mb_strpos($all_args[1], ':')) {
                         /*************************************************************************
                          * Here we check special cases
                          *
@@ -1280,8 +1325,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                          *    For example in order to do MS-CHAPv2 authentication
                          *
                          *************************************************************************/
-                        $part1 = substr($all_args[1], 0, strpos($all_args[1], ':'));
-                        $part2 = substr($all_args[1], strpos($all_args[1], ':')+1);
+                        $part1 = substr($all_args[1], 0, mb_strpos($all_args[1], ':'));
+                        $part2 = substr($all_args[1], mb_strpos($all_args[1], ':')+1);
                         if ($multiotp->IsSelfRegistrationEnabled() && ($multiotp->CheckTokenExists($part1))) {
                             $self_registration = $part1;
                             $all_args[1] = $part2;
@@ -1290,14 +1335,14 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                             $otp_inline = $part2;
                         }
                     }
-                    if (false !== strpos($all_args[1], '@')) {
-                        $cleaned_user = substr($all_args[1], 0, strpos($all_args[1], '@'));
+                    if (false !== mb_strpos($all_args[1], '@')) {
+                        $cleaned_user = substr($all_args[1], 0, mb_strpos($all_args[1], '@'));
                         if ($multiotp->CheckUserExists($cleaned_user)) {
                             $all_args[1] = $cleaned_user;
                             $multiotp->SetUser($all_args[1]);
                         }
-                    } elseif (false !== strpos($all_args[1], "\\")) {
-                        $cleaned_user = substr($all_args[1], strpos($all_args[1], "\\")+1);
+                    } elseif (false !== mb_strpos($all_args[1], "\\")) {
+                        $cleaned_user = substr($all_args[1], mb_strpos($all_args[1], "\\")+1);
                         if ($multiotp->CheckUserExists($cleaned_user)) {
                             $all_args[1] = $cleaned_user;
                             $multiotp->SetUser($all_args[1]);
@@ -1397,7 +1442,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                             $all_args[5] = 6; // Default number of digits is set to 6
                         }
                         $multiotp->SetUserTokenNumberOfDigits($all_args[5]);
-                        switch (strtoupper($all_args[2]))
+                        switch (mb_strtoupper($all_args[2]))
                         {
                             // This is the time interval for mOTP
                             case "MOTP":
@@ -1463,7 +1508,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
         case "callapi":
             $api_result = $multiotp->CallApi(array("script_uri" => $all_args[1],
                                                    "secret"     => $all_args[2]));
-            $result = (FALSE !== strpos($api_result, 'result_code')) ? 19 : 99;
+            $result = (FALSE !== mb_strpos($api_result, 'result_code')) ? 19 : 99;
             echo $api_result;
             break;
         case "assign-token":
@@ -2343,6 +2388,13 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                   ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection".$crlf;
                 echo " ldap-synced-user-attribute: LDAP/AD attribute used as the account name".$crlf;
                 echo "            ldap-time-limit: LDAP/AD number of sec. to wait for search results".$crlf;
+                echo "            ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS".$crlf;
+                echo "                             server certificate checks (LDAPTLS_REQCERT)".$crlf;
+                echo "                             'auto' means 'never' for Windows and '' for Linux".$crlf;
+                echo "       ldaptls_cipher_suite: ['auto'|''|...] which cipher suite is used for the".$crlf;
+                echo "                             LDAP TLS connection (LDAPTLS_CIPHER_SUITE)".$crlf;
+                echo "                             'auto' means '' for PHP higher than 5.x and".$crlf;
+                echo "                             'NORMAL:!VERS-TLS1.2' for PHP 5.x and before".$crlf;
                 echo "                        log: [0|1] enable/disable log permanently".$crlf;
                 echo "            multiple-groups: [0|1] enable/disable multiple groups per user".$crlf;
                 echo "    radius-reply-attributor: [ += |=] how to attribute a value".$crlf;
@@ -2545,29 +2597,29 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo $crlf;
                 echo "Some of other products and services based on multiOTP:".$crlf;
-                echo " multiOTP Credential Provider (http://download.multiotp.net/)".$crlf;
+                echo " multiOTP Credential Provider (https://download.multiotp.net/)".$crlf;
                 echo "  Open-source Credential Provider for Windows Logon, based on MultiotpCPV2RDP".$crlf;
                 echo " MultiotpCPV2RDP (https://github.com/arcadejust/MultiotpCPV2RDP)".$crlf;
                 echo "  Open-source Credential Provider for Windows Logon, by arcadejust".$crlf;
                 echo " mOTP-CP (https://goo.gl/Y8g4ON)".$crlf;
                 echo "  Open-source Credential Provider for Windows Logon, by Last Squirrel IT".$crlf;
-                echo " ownCloud OTP (http://goo.gl/mKjt43)".$crlf;
+                echo " ownCloud OTP (https://goo.gl/mKjt43)".$crlf;
                 echo "  Open-source One Time Password app for ownCloud (http://owncloud.org)".$crlf;
                 echo " UserCredential (https://github.com/cymapgt/UserCredential)".$crlf;
                 echo "  Open-source authentication PHP library by Cyril Ogana".$crlf;
-                echo " multiOTP Pro 501V (http://www.multiOTP.com)".$crlf;
+                echo " multiOTP Pro 501V (https://www.multiOTP.com)".$crlf;
                 echo "  Pro version virtual appliance, with full web GUI, 1 free user licence".$crlf;
-                echo " multiOTP Pro 420B (http://www.multiOTP.com)".$crlf;
+                echo " multiOTP Pro 420B (https://www.multiOTP.com)".$crlf;
                 echo "  Pro version tiny hardware device (BeagleBone Black), with full web GUI".$crlf;
-                echo " multiOTP Enterprise (http://firmware.multiotp.com/enterprise/)".$crlf;
+                echo " multiOTP Enterprise (http:s//firmware.multiotp.com/enterprise/)".$crlf;
                 echo "  Enterprise version virtual appliance, with HA master-slave support,".$crlf;
                 echo "   also available as a Raspberry Pi image file".$crlf;
-                echo " secuPASS.net (http://www.secuPASS.net)".$crlf;
+                echo " secuPASS.net (https://www.secuPASS.net)".$crlf;
                 echo "  simple SMS trusting service for free WLAN Hotspot".$crlf;
                 echo $crlf;
                 echo "Don't hesitate to send us an email if your product uses our multiOTP library.".$crlf;
                 echo $crlf;
-                echo "Visit http://forum.multiotp.net/ for additional support".$crlf;
+                echo "Visit https://forum.multiotp.net/ for additional support".$crlf;
                 echo $crlf;
                 echo $crlf;
             }
@@ -2636,9 +2688,9 @@ if ($command != "libhash") {
             $ignore_radius_array = explode(";","xxxx;yyyy");
             foreach ($multiotp->GetReplyArrayForRadius() as $one_radius_message) {
                 $ignore_attribute = false;
-                $current_attribute = trim(substr($one_radius_message, 0, strpos($one_radius_message, trim($multiotp->GetRadiusReplyAttributor()))));
+                $current_attribute = trim(substr($one_radius_message, 0, mb_strpos($one_radius_message, trim($multiotp->GetRadiusReplyAttributor()))));
                 foreach ($ignore_radius_array as $one_ignore_attribute) {
-                    if (false !== strpos(strtoupper($current_attribute),strtoupper($one_ignore_attribute))) {
+                    if (false !== mb_strpos(mb_strtoupper($current_attribute),mb_strtoupper($one_ignore_attribute))) {
                         $ignore_attribute = true;
                     }
                 }
