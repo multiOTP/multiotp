@@ -11,8 +11,8 @@ class MultiotpYubikey
  * @brief     Class definition for Yubikey handling.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.3.0
- * @date      2016-11-14
+ * @version   5.1.0.6
+ * @date      2018-02-26
  * @since     2014-11-04
  *
  *
@@ -24,6 +24,7 @@ class MultiotpYubikey
  *
  * Change Log
  *
+ *   2018-02-26 5.1.0.6 SysCo/al ENH: __construct instead of the name of the class
  *   2016-03-22 4.3.2.7 SysCo/al ENH: private id support for CheckYubicoOtp method
  *   2014-11-04 4.3.0.0 SysCo/al Initial implementation of MultiotpYubikey class
  *********************************************************************/
@@ -42,7 +43,7 @@ class MultiotpYubikey
     var $_yubico_otp_last_count      = -1;                 // Default value of the last otp counter
 
     
-    function MultiotpYubikey(
+    function __construct(
         $yubicloud_client_id = 0,
         $yubicloud_secret_key = ''
     ) {

@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.1.0.3
- * @date      2018-02-19
+ * @version   5.1.1.2
+ * @date      2018-03-20
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -174,6 +174,9 @@
  *
  *
  * Users feedbacks and comments
+ *
+ * 2018-02-13 Jonathan Garber (via GitHub)
+ *   Thanks for your feedback about various issues.
  *
  * 2017-04-19 Frank van der Aa, Vanboxtel BV (NL)
  *   Thanks a lot for your valuable implementation suggestion about PostgreSQL.
@@ -389,6 +392,8 @@
  *
  * Change Log
  *
+ *   2018-03-16 5.1.1.1 SysCo/al FIX: command line -set error for ldap-pwd and prefix-pin
+ *   2018-02-26 5.1.0.6 SysCo/al Regular registry entries are now used directly from the Credential Provider.
  *   2018-02-19 5.1.0.3 SysCo/al Credential Provider multiOTPOptions registry entry is used if available
  *   2017-11-10 5.0.6.0 SysCo/al New -cp option (Credential Provider mode)
  *   2017-05-29 5.0.4.5 SysCo/al PostgreSQL support, based on source code provided by Frank van der Aa
@@ -576,7 +581,7 @@ if (!function_exists('clean_quotes')) {
     ) {
         $cleaned = FALSE;
         $var = $value;
-        if ((('"' == substr($var,0,1)) || ("'" == substr($var,0,1))) && (('"' == substr($var,-1)) || ("'" == substr($var,-1)))) {
+        if ((1 < strlen($var)) && ((('"' == substr($var,0,1)) && ('"' == substr($var,-1))) || (("'" == substr($var,0,1)) && ("'" == substr($var,-1))))) {
             $var = substr($var, 1, strlen($var)-2);
             $cleaned = TRUE;
         }
@@ -677,7 +682,12 @@ $initialize_backend  = false;
 $keep_local          = false;
 $encrypted_password  = false;
 $request_nt_key      = false;
-$multiOTPOptions     = '';
+$server_cache_level  = '';
+$server_secret       = '';
+$server_timeout      = '';
+$server_url          = '';
+$write_config_data   = false;
+$write_param_data    = false;
 
 
 // Extract all parameters
@@ -692,14 +702,11 @@ if ($cli_mode) {
 } else {
     $argv = array();
     $loop_start = 1;
-    if (isset($_POST['argv']) || isset($_GET['argv']))
-    {
+    if (isset($_POST['argv']) || isset($_GET['argv'])) {
         $argv[] = __FILE__;
         $all_argv = explode(chr(0), base64_decode(isset($_POST['argv'])?$_POST['argv']:$_GET['argv']));
-        foreach ($all_argv as $one_argv)
-        {
-            if ('' != trim($one_argv))
-            {
+        foreach ($all_argv as $one_argv) {
+            if ('' != trim($one_argv)) {
                 $argv[] = trim($one_argv);
             }
         }
@@ -849,37 +856,37 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         if ("-base-dir=" == substr(mb_strtolower($current_arg),0,10)) {
             $base_array = explode("=",$current_arg,2);
             if (2 == count($base_array)) {
-                $base_dir = $base_array[1];
+                $base_dir = clean_quotes($base_array[1]);
             }
         } elseif ("-src=" == substr(mb_strtolower($current_arg),0,5)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $source_ip = $src_array[1];
+                $source_ip = clean_quotes($src_array[1]);
             }
         } elseif ("-tag=" == substr(mb_strtolower($current_arg),0,5)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $source_tag = $src_array[1];
+                $source_tag = clean_quotes($src_array[1]);
             }
         } elseif ("-mac=" == substr(mb_strtolower($current_arg),0,5)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $source_mac = $src_array[1];
+                $source_mac = clean_quotes($src_array[1]);
             }
         } elseif ("-calling-ip=" == substr(mb_strtolower($current_arg),0,12)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $calling_ip = $src_array[1];
+                $calling_ip = clean_quotes($src_array[1]);
             }
         } elseif ("-calling-mac=" == substr(mb_strtolower($current_arg),0,13)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $calling_mac = $src_array[1];
+                $calling_mac = clean_quotes($src_array[1]);
             }
         } elseif ("-chap-id=" == substr(mb_strtolower($current_arg),0,16)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $chap_id = $src_array[1];
+                $chap_id = clean_quotes($src_array[1]);
                 if (("%msoft" == mb_strtolower(substr($chap_id,0,6))) || ("%ietf" == mb_strtolower(substr($chap_id,0,5)))) {
                     $chap_id = '';
                 }
@@ -887,7 +894,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         } elseif ("-chap-challenge=" == substr(mb_strtolower($current_arg),0,16)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $chap_challenge = $src_array[1];
+                $chap_challenge = clean_quotes($src_array[1]);
                 if (("%msoft" == mb_strtolower(substr($chap_challenge,0,6))) || ("%ietf" == mb_strtolower(substr($chap_challenge,0,5)))) {
                     $chap_challenge = '';
                 }
@@ -895,7 +902,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         } elseif ("-chap-password=" == substr(mb_strtolower($current_arg),0,15)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $chap_password = $src_array[1];
+                $chap_password = clean_quotes($src_array[1]);
                 if (("%msoft" == mb_strtolower(substr($chap_password,0,6))) || ("%ietf" == mb_strtolower(substr($chap_password,0,5)))) {
                     $chap_password = '';
                 } else {
@@ -905,7 +912,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         } elseif ("-ms-chap-challenge=" == substr(mb_strtolower($current_arg),0,19)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $ms_chap_challenge = $src_array[1];
+                $ms_chap_challenge = clean_quotes($src_array[1]);
                 if (("%msoft" == mb_strtolower(substr($ms_chap_challenge,0,6))) || ("%ietf" == mb_strtolower(substr($ms_chap_challenge,0,5)))) {
                     $ms_chap_challenge = '';
                 }
@@ -913,7 +920,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         } elseif ("-ms-chap-response=" == substr(mb_strtolower($current_arg),0,18)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $ms_chap_response = $src_array[1];
+                $ms_chap_response = clean_quotes($src_array[1]);
                 if (("%msoft" == mb_strtolower(substr($ms_chap_response,0,6))) || ("%ietf" == mb_strtolower(substr($ms_chap_response,0,5)))) {
                     $ms_chap_response = '';
                 } else {
@@ -923,12 +930,32 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         } elseif ("-ms-chap2-response=" == substr(mb_strtolower($current_arg),0,19)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $ms_chap2_response = $src_array[1];
+                $ms_chap2_response = clean_quotes($src_array[1]);
                 if (("%msoft" == mb_strtolower(substr($ms_chap2_response,0,6))) || ("%ietf" == mb_strtolower(substr($ms_chap2_response,0,5)))) {
                     $ms_chap2_response = '';
                 } else {
                     $encrypted_password = true;
                 }
+            }
+        } elseif ("-server-url=" == substr(mb_strtolower($current_arg),0,12)) {
+            $src_array = explode("=",$current_arg,2);
+            if (2 == count($src_array)) {
+                $server_url = trim(str_replace(",",";",str_replace(" ",";",clean_quotes($src_array[1]))));
+            }
+        } elseif ("-server-cache-level=" == substr(mb_strtolower($current_arg),0,20)) {
+            $src_array = explode("=",$current_arg,2);
+            if (2 == count($src_array)) {
+                $server_cache_level = clean_quotes($src_array[1]);
+            }
+        } elseif ("-server-secret=" == substr(mb_strtolower($current_arg),0,15)) {
+            $src_array = explode("=",$current_arg,2);
+            if (2 == count($src_array)) {
+                $server_secret = clean_quotes($src_array[1]);
+            }
+        } elseif ("-server-timeout=" == substr(mb_strtolower($current_arg),0,16)) {
+            $src_array = explode("=",$current_arg,2);
+            if (2 == count($src_array)) {
+                $server_timeout = clean_quotes($src_array[1]);
             }
         } elseif ("-cp" == mb_strtolower($current_arg)) {
             $cp_mode = true;
@@ -1069,37 +1096,61 @@ if (($command == "libhash") || ($command == "help") || ($command == "version") |
     $multiotp->ReadConfigData();
   }
   
-  // If options exists in the registry entry of the Credential Provider, we read it
-  $multiOTPOptions = '';
-  if (mb_strtolower(substr(PHP_OS, 0, 3)) === 'win') {
-    if (class_exists('COM')) {
-      try {
-        $shell = new COM("WScript.Shell");
-        $multiOTPOptions = $shell->RegRead("HKEY_CLASSES_ROOT\\CLSID\\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\\multiOTPOptions");
-        if ('' != $multiOTPOptions) {
-          $options_array = explode("\t", $multiOTPOptions);
-          foreach ($options_array as $one_options) {
-            $line_array = explode("=", $one_options, 2);
-            if (('#' != substr($one_options, 0, 1)) && (';' != substr($one_options, 0, 1)) && ("" != trim($one_options)) && (isset($line_array[1]))) {
-              if (":" == substr($line_array[0], -1)) {
-                $line_array[0] = substr($line_array[0], 0, strlen($line_array[0]) -1);
-                $line_array[1] = $multiotp->Decrypt($line_array[0],$line_array[1],$multiotp->GetEncryptionKey());
-              }
-              if ("" != $line_array[0]) {
-                $multiotp->_config_data[mb_strtolower($line_array[0])] = $line_array[1];
-              }
-            }
-          }
-        }
-      } catch (Exception $e) {
-        $multiOTPOptions = '';
-      }
-    }
-  }
-
   $multiotp->UpgradeSchemaIfNeeded();
   $verbose_prefix = $multiotp->GetVerboseLogPrefix(); // for example Reply-Message := 
 }
+
+// Initialize multiOTP direct Credential Provider options
+if ('' != $server_cache_level) {
+    if ($multiotp->GetServerCacheLevel() != intval($server_cache_level)) {
+        $multiotp->SetServerCacheLevel(intval($server_cache_level));
+        $write_param_data = true;
+        if (($multiotp->IsDeveloperMode())) {
+          $multiotp->WriteLog('Developer: new server_cache_level='.$server_cache_level, false, false, 8888, 'Debug', '');
+        }
+    }
+}
+if ('' != $server_secret) {
+    if ($multiotp->GetServerSecret() != $server_secret) {
+        $multiotp->SetServerSecret($server_secret);
+        $write_param_data = true;
+        if (($multiotp->IsDeveloperMode())) {
+          $multiotp->WriteLog('Developer: new server_secret='.$server_secret, false, false, 8888, 'Debug', '');
+        }
+    }
+}
+if ('' != $server_timeout) {
+    if ($multiotp->GetServerTimeout() != intval($server_timeout)) {
+        $multiotp->SetServerTimeout(intval($server_timeout));
+        $write_param_data = true;
+        if (($multiotp->IsDeveloperMode())) {
+          $multiotp->WriteLog('Developer: new server_timeout='.$server_timeout, false, false, 8888, 'Debug', '');
+        }
+    }
+}
+if ('' != $server_url) {
+    if ($multiotp->GetServerUrl() != $server_url) {
+        $multiotp->SetServerUrl($server_url);
+        $write_param_data = true;
+        if (($multiotp->IsDeveloperMode())) {
+          $multiotp->WriteLog('Developer: new server_url='.$server_url, false, false, 8888, 'Debug', '');
+        }
+    }
+}
+if ($write_param_data) {
+    $write_result = $multiotp->WriteConfigData();
+    if (($multiotp->IsDeveloperMode())) {
+        if ($write_result) {
+            $multiotp->WriteLog('Developer: new configuration automatically written', false, false, 8888, 'Debug', '');
+        } else {
+            $multiotp->WriteLog('Developer: error during new configuration writing operation', false, false, 8888, 'Debug', '');
+        }
+    }
+}
+if (($multiotp->IsDeveloperMode())) {
+    $multiotp->WriteLog('Developer: argv: '.print_r($argv, true), false, false, 8888, 'Debug', '');
+}
+
 
 // Initialize multiOTP options
 if ($enable_log) {
@@ -1133,7 +1184,7 @@ $multiotp->SetMsChapChallenge($ms_chap_challenge);
 $multiotp->SetMsChapResponse($ms_chap_response);
 $multiotp->SetMsChap2Response($ms_chap2_response);
 
-if ($multiotp->GetVerboseFlag()) {
+if (($multiotp->IsDeveloperMode())) {
   $loop_start = 1;
   $temp_radius = '';
   for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++)
@@ -1142,12 +1193,9 @@ if ($multiotp->GetVerboseFlag()) {
     if (false !== mb_strpos($one_radius,' ')) {
       $one_radius = '"'.$one_radius.'"';
     }
-    $temp_radius.= $one_radius.' ';
+    $temp_radius.= '{'.$one_radius.'} ';
   }
-  $multiotp->WriteLog('Debug: *parameter(s) received: '.trim($temp_radius), false, false, 8888, 'Debug', '');
-  if (($multiotp->IsDeveloperMode())) {
-    $multiotp->WriteLog('Developer: *multiOTPOptions: '.trim(str_replace("\t", ";", $multiOTPOptions)), false, false, 8888, 'Debug', '');
-  }
+  $multiotp->WriteLog('Developer: *parameter(s) received, displayed between {}: '.trim($temp_radius), false, false, 8888, 'Debug', '');
 }
 
 
@@ -1671,11 +1719,11 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 $write_user_data = true;
                                 break;
                             case 'ldap-pwd':
-                                $multiotp->$multiotp->SetUserRequestLdapPassword(intval($actual_array[1]));
+                                $multiotp->SetUserRequestLdapPassword(intval($actual_array[1]));
                                 $write_user_data = true;
                                 break;
                             case 'prefix-pin':
-                                $multiotp->$multiotp->SetUserPrefixPin(intval($actual_array[1]));
+                                $multiotp->SetUserPrefixPin(intval($actual_array[1]));
                                 $write_user_data = true;
                                 break;
                             case 'sms':
@@ -1954,10 +2002,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                         }
                     }
                 }
-                if ($write_config_data)
-                {
-                    if ($multiotp->WriteConfigData())
-                    {
+                if ($write_config_data) {
+                    if ($multiotp->WriteConfigData()) {
                         $result = 19; // INFO: Requested operation successfully done
                     }
                 }
@@ -2447,6 +2493,31 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                 sms: set/update the sms phone number of the user".$crlf;
                 echo $crlf;
                 echo $crlf;
+                echo "Authentication parameters:".$crlf;
+                echo $crlf;
+                echo " -calling-ip=Framed-IP-Address".$crlf;
+                echo " -calling-mac=Calling-Station-Id".$crlf;
+                echo " -chap-challenge=0x... CHAP-Challenge".$crlf;
+                echo " -chap-id=0x... Optional CHAP-Id".$crlf;
+                echo "          (the first byte of the chap-password value should contain this value)".$crlf;
+                echo " -chap-password=0x... CHAP-Password".$crlf;
+                echo " -mac=Called-Station-Id".$crlf;
+                echo " -ms-chap-challenge=0x... MS-CHAP-Challenge".$crlf;
+                echo " -ms-chap-response=0x... MS-CHAP-Response".$crlf;
+                echo " -ms-chap2-response=0x... MS-CHAP2-Response".$crlf;
+                echo " -src=Packet-Src-IP-Address".$crlf;
+                echo " -tag=Client-Shortname".$crlf;
+                echo $crlf;
+                echo $crlf;
+                echo "Client/server inline parameters:".$crlf;
+                echo $crlf;
+                echo " -server-cache-level=[0|1] enable/allow cache from server to client".$crlf;
+                echo " -server-secret=shared secret used for client/server operation".$crlf;
+                echo " -server-timeout=timeout value for the connection to the server".$crlf;
+                echo " -server-url=full url of the server(s) for client/server mode".$crlf;
+                echo "             (-server-url=server_url_1;server_url_2 is accepted)".$crlf;
+                echo $crlf;
+                echo $crlf;
                 echo "AD/LDAP integration:".$crlf;
                 echo $crlf;
                 echo " multiotp -ldap-check          : check the AD/LDAP connection".$crlf;
@@ -2718,6 +2789,10 @@ if ($command != "libhash") {
 if (!$cli_mode) {
     header('X-multiOTP-Error-Level: '.intval($result));
     ob_end_flush();
+}
+
+if ($multiotp->GetCredentialProviderMode()) {
+    echo "multiOTP Credential Provider mode";
 }
 
 exit(intval($result));

@@ -21,7 +21,7 @@
  * @author Adam A. Flynn <adamaflynn@criticaldevelopment.net>
  * @copyright Copyright (c) 2005-2007, Adam A. Flynn
  *
- * @version 1.3.0
+ * @version 1.3.0.1
  *
  * Name: MultiotpXmlParser (original name: XMLParser)
  */
@@ -69,7 +69,7 @@ class MultiotpXmlParser
      * @param string $xml The string of the XML document
      * @return MultiotpXmlParser
      */
-    function MultiotpXmlParser($xml = '', $cleanTagNames = true)
+    function __construct($xml = '', $cleanTagNames = true)
     {
         //Load XML document
         $this->xml = $xml;
@@ -283,7 +283,7 @@ class MultiotpXMLTag
      * @param int $parents
      * @return MultiotpXMLTag
      */
-    function MultiotpXMLTag($name, $attrs = array(), $parents = 0)
+    function __construct($name, $attrs = array(), $parents = 0)
     {
         //Make the keys of the attr array lower case, and store the value
         $this->tagAttrs = array_change_key_case($attrs, CASE_LOWER);

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<definitions targetNamespace="http://www.rcdevs.com/wsdl/openotp/"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:tns="http://www.rcdevs.com/wsdl/openotp/"
+    xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+<message name="openotpSimpleLoginRequest">
+    <part name="username" type="xsd:string"/>
+    <part name="domain" type="xsd:string"/>
+    <part name="anyPassword" type="xsd:string"/>
+    <part name="client" type="xsd:string"/>
+    <part name="source" type="xsd:string"/>
+    <part name="settings" type="xsd:string"/>
+</message>
+
+<message name="openotpNormalLoginRequest">
+    <part name="username" type="xsd:string"/>
+    <part name="domain" type="xsd:string"/>
+    <part name="ldapPassword" type="xsd:string"/>
+    <part name="otpPassword" type="xsd:string"/>
+    <part name="client" type="xsd:string"/>
+    <part name="source" type="xsd:string"/>
+    <part name="settings" type="xsd:string"/>
+    <part name="options" type="xsd:string"/>
+</message>
+
+<message name="openotpLoginResponse">
+    <part name="code" type="xsd:integer"/>
+    <part name="message" type="xsd:string"/>
+    <part name="session" type="xsd:string"/>
+    <part name="data" type="xsd:string"/>
+    <part name="timeout" type="xsd:integer"/>
+    <part name="otpChallenge" type="xsd:string"/>
+    <part name="u2fChallenge" type="xsd:string"/>
+</message>
+
+<message name="openotpChallengeRequest">
+    <part name="username" type="xsd:string"/>
+    <part name="domain" type="xsd:string"/>
+    <part name="session" type="xsd:string"/>
+    <part name="otpPassword" type="xsd:string"/>
+    <part name="u2fResponse" type="xsd:string"/>
+</message>
+
+<message name="openotpChallengeResponse">
+    <part name="code" type="xsd:integer"/>
+    <part name="message" type="xsd:string"/>
+    <part name="data" type="xsd:string"/>
+</message>
+
+<message name="openotpStatusRequest"/>
+
+<message name="openotpStatusResponse">
+   <part name="status" type="xsd:boolean"/>
+   <part name="message" type="xsd:string"/>
+</message>
+
+<portType name="openotpPortType">
+   <operation name="openotpSimpleLogin">
+      <input name="openotpSimpleLoginRequest" message="tns:openotpSimpleLoginRequest"/>
+      <output name="openotpSimpleLoginResponse" message="tns:openotpLoginResponse"/>
+   </operation>
+   <operation name="openotpNormalLogin">
+      <input name="openotpNormalLoginRequest" message="tns:openotpNormalLoginRequest"/>
+      <output name="openotpNormalLoginResponse" message="tns:openotpLoginResponse"/>
+   </operation>
+   <operation name="openotpLogin">
+      <input name="openotpLoginRequest" message="tns:openotpNormalLoginRequest"/>
+      <output name="openotpLoginResponse" message="tns:openotpLoginResponse"/>
+   </operation>
+   <operation name="openotpChallenge">
+      <input name="openotpChallengeRequest" message="tns:openotpChallengeRequest"/>
+      <output name="openotpChallengeResponse" message="tns:openotpChallengeResponse"/>
+   </operation>
+   <operation name="openotpStatus">
+      <input name="openotpStatusRequest" message="tns:openotpStatusRequest"/>
+      <output name="openotpStatusResponse" message="tns:openotpStatusResponse"/>
+   </operation>
+</portType>
+
+<binding name="openotpBinding" type="tns:openotpPortType">
+   <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+   <operation name="openotpSimpleLogin">
+      <soap:operation soapAction="openotpSimpleLogin"/>
+      <input><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></input>
+      <output><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></output>
+   </operation>
+   <operation name="openotpNormalLogin">
+      <soap:operation soapAction="openotpNormalLogin"/>
+      <input><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></input>
+      <output><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></output>
+   </operation>
+   <operation name="openotpLogin">
+      <!-- Operation openotpLogin is an alias of openotpNormalLogin.
+           It is kept for backward compatibility with OpenOTP v1.0. -->
+      <soap:operation soapAction="openotpLogin"/>
+      <input><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></input>
+      <output><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></output>
+   </operation>
+   <operation name="openotpChallenge">
+      <soap:operation soapAction="openotpChallenge"/>
+      <input><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></input>
+      <output><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></output>
+   </operation>
+   <operation name="openotpStatus">
+      <soap:operation soapAction="openotpStatus"/>
+      <input><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></input>
+      <output><soap:body use="encoded" namespace="urn:openotp" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/></output>
+   </operation>
+</binding>
+
+<service name="openotpService">
+   <port name="openotpPort" binding="tns:openotpBinding">
+      <soap:address location="http://localhost:8080/openotp/"/>
+   </port>
+</service>
+
+</definitions>

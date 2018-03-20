@@ -592,7 +592,7 @@ if (!function_exists('md4'))
     {
         var $sa_mode = 0; // safe_add mode. got one report about optimization
 
-        function MultiotpMD4($init = true)
+        function __construct($init = true)
         {
             if ($init) { $this->Init(); }
         }

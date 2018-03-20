@@ -14,8 +14,8 @@
  * and run multiotp.windows.php with the provided arguments.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.1.0.3
- * @date      2018-02-19
+ * @version   5.1.1.2
+ * @date      2018-03-20
  * @since     2016-12-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -48,6 +48,8 @@
  *
  * Change Log
  *
+ *   2018-03-05 5.1.0.8 SysCo/al Adapt the php.exe path automatically
+ *   2018-02-19 5.1.0.6 SysCo/al Quotes tested and debugged with Credential Provider
  *   2018-02-19 5.1.0.3 SysCo/al Comments cleaning
  *   2017-05-29 5.0.4.5 SysCo/al Quotes must by around the launch string
  *   2016-12-29 5.0.3.4 SysCo/al Initial implementation and distribution
@@ -66,8 +68,8 @@
 #include <iostream>
 
 #define SOFTWARE    "LAUNCHPHPMULTIOTP"
-#define VER_NUMBER  "5.1.0.3"
-#define VER_DATE    "2018-02-19"
+#define VER_NUMBER  "5.1.1.2"
+#define VER_DATE    "2018-03-20"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -80,11 +82,16 @@ int _tmain(int argc, _TCHAR* argv[])
   _fullpath(basePath, cli_arg_char, sizeof(basePath));
 
   std::string quote = "\"";
-  std::string pathToPhp = quote + basePath + "php.exe" + quote;
-  std::string pathToMultiotp = quote + basePath + "multiotp.windows.php" + quote;
-  std::string defaultPath = basePath;
+  
+  std::string pathToPhp = quote + basePath + "php\\php.exe" + quote;
+  std::string pathToMultiotp = quote + basePath + "php\\multiotp.windows.php" + quote;
 
-  std::string run_software = pathToPhp + " " + pathToMultiotp;
+  // std::string defaultPath = basePath + "php";
+  // char defaultPath[4096] = "";
+  // strcpy_s(defaultPath, basePath);
+  // strcat_s(defaultPath, "php");
+
+  std::string run_software = pathToPhp + " " + pathToMultiotp + " -base-dir=" + quote + basePath + "." + quote;
 
   for (int i = 1; i < argc; i = i + 1) {
       run_software = run_software + " " + quote + argv[i] + quote;
@@ -94,6 +101,7 @@ int _tmain(int argc, _TCHAR* argv[])
   run_software = quote + run_software + quote;
 
   const char* run_software_char = run_software.c_str();
+  // std::cout << "Full RUN: " << run_software_char << std::endl;
 
   _chdir(basePath);
 

@@ -8,9 +8,13 @@ class MultiotpIntelliSms
  * http://www.intellisoftware.co.uk/sms-gateway/http-interface/
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.3.0
- * @date      2016-11-14
+ * @version   5.1.0.6
+ * @date      2018-02-26
  * @since     2013-05-14
+ *
+ * Change Log
+ *
+ *   2018-02-26 5.1.0.6 SysCo/al __construct instead of the name of the class
  */
 {
     var $content;
@@ -22,7 +26,7 @@ class MultiotpIntelliSms
     var $userkey;
 
 
-    function MultiotpIntelliSms($userkey, $password)
+    function __construct($userkey, $password)
     {
         $this->userkey = $userkey;
         $this->password = $password;

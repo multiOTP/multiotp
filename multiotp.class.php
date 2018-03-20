@@ -70,8 +70,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.1.0.3
- * @date      2018-02-19
+ * @version   5.1.1.2
+ * @date      2018-03-20
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -265,6 +265,9 @@
  *
  *
  * Users feedbacks and comments
+ *
+ * 2018-02-13 Jonathan Garber (via GitHub)
+ *   Thanks for your feedback about various issues.
  *
  * 2017-11-22 vak255 (via GitHub)
  *   Thanks for your feedback about a bad handled unicode issue.
@@ -505,6 +508,15 @@
  *
  * Change Log
  *
+ *   2018-03-20 5.1.1.2 SysCo/al FIX: typo in the source code of the command line option for ldap-pwd and prefix-pin
+ *                               ENH: Dockerfile available
+ *   2018-03-05 5.1.0.8 SysCo/al FIX: Enigma Virtual Box updated to version 8.10 (to create the special all-in-one-file)
+ *   2018-02-27 5.1.0.7 SysCo/al FIX: [Receive an OTP by SMS] link is now fixed for Windows 10
+ *   2018-02-26 5.1.0.6 SysCo/al ENH: Credential Provider registry entries are now always used when calling multiOTP.exe
+ *   2018-02-21 5.1.0.5 SysCo/al FIX: To avoid virus false positive alert, multiOTP.exe is NO more packaged in one single file
+ *                                    using Enigma, a php folder is now included in the multiOTP folder
+ *                               FIX: multiOTPOptions registry entry is now useless
+ *   2018-02-21 5.1.0.4 SysCo/al ENH: Credential Provider registry entries are used if available
  *   2018-02-19 5.1.0.3 SysCo/al Expired AD/LDAP password support
  *                               multiOTP Credential Provider (for Windows) improvements
  *                                (user@domain.name UPN support, default domain name supported and displayed, SMS request link)
@@ -795,8 +807,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.1.0.3
- * @date      2018-02-19
+ * @version   5.1.1.2
+ * @date      2018-03-20
  * @since     2010-07-18
  */
 {
@@ -887,8 +899,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.1.0.3
-   * @date      2018-02-19
+   * @version   5.1.1.2
+   * @date      2018-03-20
    * @since     2010-07-18
    */
   function __construct(
@@ -907,14 +919,14 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.1.0.3'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.1.1.2'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2018-02-19'; // You should update the date with the date of your changes
+        $temp_date = '@date      2018-03-20'; // You should update the date with the date of your changes
         $this->_date = trim(substr($temp_date, 8));
       }
-      if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxNyBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
+      if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxOCBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
       if (!isset($this->_website)) { $this->_website = base64_decode('aHR0cDovL3d3dy5tdWx0aU9UUC5uZXQ='); }
       
       $this->_anonymous_stat_interval = 604800; // Stat interval: 7 * 24 * 60 * 60 = 604800 = 1 week

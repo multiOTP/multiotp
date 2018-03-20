@@ -9,12 +9,13 @@ class MultiotpClickatell
  * https://www.clickatell.com/downloads/http/Clickatell_HTTP.pdf
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.3.0
- * @date      2016-11-14
+ * @version   5.1.0.6
+ * @date      2018-02-26
  * @since     2013-05-14
  *
  * Change Log
  *
+ *   2018-02-26 5.1.0.6 SysCo/al __construct instead of the name of the class
  *   2016-10-31 5.0.2.6 SysCo/al Using stream_socket_client with SSL context
  *   2016-06-09 4.3.4.3 SysCo/al Enhanced special chars supports
  *   2015-08-28 4.3.2.9 SysCo/al Enhanced FQDN support, SSL is now working
@@ -32,7 +33,7 @@ class MultiotpClickatell
     var $reply;
 
 
-    function MultiotpClickatell($userkey, $password, $api_id)
+    function __construct($userkey, $password, $api_id)
     {
         $this->userkey = $userkey;
         $this->password = $password;

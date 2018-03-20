@@ -6,9 +6,15 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2018 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.1.0.3 (2018-02-19)
+Current build: 5.1.1.2 (2018-03-20)
 
-Binary download: https://download.multiotp.net/
+Binary download: https://download.multiotp.net/ (including virtual appliance image)
+
+Docker container available: **docker run --mount source=multiotp-data,target=/etc/multiotp -p 80:80 -p 443:443 -p 1812:1812/udp -p 1813:1813/udp -d multiotp/multiotp-open-source**
+
+**A Dockerfile is included in the distribution ZIP file**
+
+Binary download of the multiOTP open source Credential Provider V2 for Windows 7/8/8.1/10/2012(R2)/2016 with options like RDP only and UPN name support : https://download.multiotp.net/credential-provider/
 
 [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
 *Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
@@ -122,7 +128,6 @@ WISHLIST FOR FUTURE RELEASES
 - Doxygen documentation format
 - Users CSV import
   (username;pin;prefix_pin_needed;email;sms;serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
-- PostgreSQL support
 
 
 HOW CAN I UPGRADE FROM A PREVIOUS VERSION ?
@@ -151,10 +156,15 @@ subfolders from windows to your current multiOTP folder
 
 WHAT'S NEW IN THE RELEASES
 ==========================
-# What's new in 5.0 releases
-- Expired AD/LDAP password support (5.0.6.2)
+# What's new in 5.1 releases
+- Dockerfile available (5.1.1.2)
+- Credential Provider registry entries are always used when calling multiOTP.exe (5.1.0.6)
+- Expired AD/LDAP password support
 - multiOTP Credential Provider (for Windows) improvements
  (user@domain.name UPN support, default domain name supported and displayed, SMS request link)
+- Better unicode handling, multibyte fonctions used when needed (mb_strtolower(), ...)
+
+# What's new in 5.0 releases
 - Better FreeRADIUS 3.x documentation
 - New QRCode provisioning format for mOTP (compatible with OTP Authenticator) (5.0.5.2)
 - Important, under Linux, the config, devices, groups, tokens and users folders are now always
@@ -262,6 +272,15 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2018-03-20 5.1.1.2 SysCo/al FIX: typo in the source code of the command line option for ldap-pwd and prefix-pin
+                            ENH: Dockerfile available
+2018-03-05 5.1.0.8 SysCo/al FIX: Enigma Virtual Box updated to version 8.10 (to create the special all-in-one-file)
+2018-02-27 5.1.0.7 SysCo/al FIX: [Receive an OTP by SMS] link is now fixed for Windows 10
+2018-02-26 5.1.0.6 SysCo/al ENH: Credential Provider registry entries are now always used when calling multiOTP.exe
+2018-02-21 5.1.0.5 SysCo/al FIX: To avoid virus false positive alert, multiOTP.exe is NO more packaged in one single file
+                                 using Enigma, a php folder is now included in the multiOTP folder
+                            FIX: multiOTPOptions registry entry is now useless
+2018-02-21 5.1.0.4 SysCo/al ENH: Credential Provider registry entries are used if available
 2018-02-19 5.1.0.3 SysCo/al Expired AD/LDAP password support
                             multiOTP Credential Provider (for Windows) improvements
                              (user@domain.name UPN support, default domain name supported and displayed, SMS request link)
@@ -691,9 +710,8 @@ if (false !== strpos(getcwd(), '/')) {
 $multiotp->SetLinuxFileMode('0666');
 ```
 
-The multiotp.exe is created using the free Enigma Virtual Box 8.00.
-It includes a whole PHP distribution and all the necessary multiOTP files.  
-Enigma Virtual Box download : http://enigmaprotector.com/en/downloads.html  
+The multiotp.exe is stub launcher running a PHP interpreter.
+The necessary files of the PHP distribution are included in the php subfolder.  
 PHP download : http://php.net/downloads.php
 
 The source files of the Credential provider are available on GitHub and needs
@@ -1474,9 +1492,6 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     This product contains software provided by Jeff Mott
     https://code.google.com/p/crypto-js/
 
-    Enigma Virtual Box 8.00 (freeware)
-    http://enigmaprotector.com/en/downloads.html
-    
     FreeRADIUS/WinRADIUS 2.2.6 for Windows (GPLv2)
     This product contains software provided by FreeRADIUS team and its contributors.
     http://freeradius.org/ - http://winradius.eu/
@@ -1501,7 +1516,7 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     NuSphere Corporation
     http://sourceforge.net/projects/nusoap/
 
-    PHP 7.1.14 (PHP License v3.01)
+    PHP 7.2.2 (PHP License v3.01)
     Voluntary contributions made by many individuals on behalf of the PHP Group.    
     http://www.php.net/
     
@@ -1555,9 +1570,11 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.1.0.3 (2018-02-19)
-(c) 2010-2017 SysCo systemes de communication sa
+multiOTP 5.1.1.2 (2018-03-20)
+(c) 2010-2018 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
+
+*Script folder: C:\data\projects\multiotp\core\
 
 multiotp will check if the token of a user is correct, based on a specified
 algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226) 
@@ -1807,6 +1824,31 @@ Usage:
                  sms: set/update the sms phone number of the user
 
 
+Authentication parameters:
+
+ -calling-ip=Framed-IP-Address
+ -calling-mac=Calling-Station-Id
+ -chap-challenge=0x... CHAP-Challenge
+ -chap-id=0x... Optional CHAP-Id
+          (the first byte of the chap-password value should contain this value)
+ -chap-password=0x... CHAP-Password
+ -mac=Called-Station-Id
+ -ms-chap-challenge=0x... MS-CHAP-Challenge
+ -ms-chap-response=0x... MS-CHAP-Response
+ -ms-chap2-response=0x... MS-CHAP2-Response
+ -src=Packet-Src-IP-Address
+ -tag=Client-Shortname
+
+
+Client/server inline parameters:
+
+ -server-cache-level=[0|1] enable/allow cache from server to client
+ -server-secret=shared secret used for client/server operation
+ -server-timeout=timeout value for the connection to the server
+ -server-url=full url of the server(s) for client/server mode
+             (-server-url=server_url_1;server_url_2 is accepted)
+
+
 AD/LDAP integration:
 
  multiotp -ldap-check          : check the AD/LDAP connection
@@ -1984,7 +2026,9 @@ Visit https://forum.multiotp.net/ for additional support
 
 ``` 
  
-Hash verification for multiotp_5.1.0.3.zip 
-SHA256:0bba5cdea1d6319152600908969febd962d4968ce9e140bfd9f372d9e8afa74a 
-SHA1:f62940e752b534450e32fd01cc19e9d0b27838c8 
-MD5:50c453a9ae2827ff0777d7d79747f39e 
+``` 
+Hash verification for multiotp_5.1.1.2.zip 
+SHA256:d8d5011048b94b6e38f5600f56e18d4e3acba82685238e00b4fc2a333177f53a 
+SHA1:baf1cbddffca1ebdab247ab22724479e75743c56 
+MD5:e4923735c1f11b226b4532bb5fe7567d 
+``` 

@@ -8,7 +8,7 @@
  *            Copyright: SysCo systèmes de communication sa
  *         CreationDate: 2005-11-05
  *            CreatedBy: SysCo/al
- *     $LastChangedDate: 2006-05-06 00:41:29 +0200 (sam., 06 mai 2006) $
+ *     $LastChangedDate: 2018-02-26
  *       $LastChangedBy: al@sysco.ch $
  *              WebSite: http://developer.sysco.ch/php/
  *                Email: developer@sysco.ch
@@ -162,6 +162,7 @@
  *
  * Change Log
  *
+ *   2018-02-26 1.1.2.1 SysCo/al __construct instead of the name of the class
  *   2006-xx-xx 1.1.2 SysCo/al Timeout implementation, extended documentation
  *   2005-12-24 1.1   SysCo/al Generic release and documentation
  *   2005-11-05 1.0   SysCo/al Initial release
@@ -182,7 +183,7 @@
         var $_port;     // Standard syslog port (default value is 514)
         var $_timeout;  // Timeout of the UDP connection in seconds (default value is 20)
         
-        function MultiotpSyslog($facility = 16, $severity = 5, $hostname = "", $fqdn= "", $ip_from = "", $process="", $content = "")
+        function __construct($facility = 16, $severity = 5, $hostname = "", $fqdn= "", $ip_from = "", $process="", $content = "")
         {
             $this->_msg      = '';
             $this->_server   = '127.0.0.1';

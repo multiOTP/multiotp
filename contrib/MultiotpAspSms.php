@@ -6,9 +6,13 @@ class MultiotpAspSms
  * @brief     SMS message using ASPSMS infrastructure.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.0.3.0
- * @date      2016-11-14
+ * @version   5.1.0.6
+ * @date      2018-02-26
  * @since     2014-03-13
+ *
+ * Change Log
+ *
+ *   2018-02-26 5.1.0.6 SysCo/al __construct instead of the name of the class
  */
 {
     var $content;
@@ -21,7 +25,7 @@ class MultiotpAspSms
 	var $raw_content;
     var $reply;
 
-    function MultiotpAspSms(
+    function __construct(
         $userkey,
         $password
     ) {
