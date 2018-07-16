@@ -70,8 +70,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.1.1.2
- * @date      2018-03-20
+ * @version   5.2.0.2
+ * @date      2018-07-16
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -508,6 +508,8 @@
  *
  * Change Log
  *
+ *   2018-07-16 5.2.0.2 SysCo/al ENH: Enhanced AD/LDAP support for huge Microsoft Active Directory
+ *                               ENH: Base DN and Users DN are now two different parameters (Users DN optional)
  *   2018-03-20 5.1.1.2 SysCo/al FIX: typo in the source code of the command line option for ldap-pwd and prefix-pin
  *                               ENH: Dockerfile available
  *   2018-03-05 5.1.0.8 SysCo/al FIX: Enigma Virtual Box updated to version 8.10 (to create the special all-in-one-file)
@@ -807,8 +809,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.1.1.2
- * @date      2018-03-20
+ * @version   5.2.0.2
+ * @date      2018-07-16
  * @since     2010-07-18
  */
 {
@@ -899,8 +901,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.1.1.2
-   * @date      2018-03-20
+   * @version   5.2.0.2
+   * @date      2018-07-16
    * @since     2010-07-18
    */
   function __construct(
@@ -919,11 +921,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.1.1.2'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.2.0.2'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2018-03-20'; // You should update the date with the date of your changes
+        $temp_date = '@date      2018-07-16'; // You should update the date with the date of your changes
         $this->_date = trim(substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxOCBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -1071,7 +1073,7 @@ class Multiotp
           'last_failed_white_delay'     => "int(10) DEFAULT 60",
           'ldap_group_attribute'        => "varchar(255) DEFAULT 'memberOf'",
           'ldap_group_cn_identifier'    => "varchar(255) DEFAULT 'cn'",
-          'ldap_groups_dn'              => "varchar(255) DEFAULT ''",
+          'ldap_users_dn'               => "varchar(255) DEFAULT ''",
           // Hash cache time: 7 * 24 * 60 * 60 = 604800 = 1 week
           'ldap_hash_cache_time'        => "int(10) DEFAULT 604800",
           'ldap_in_group'               => "varchar(255) DEFAULT ''",
@@ -1081,7 +1083,7 @@ class Multiotp
           'ldap_recursive_cache_only'   => "int(1) DEFAULT 0",
           'ldap_recursive_groups'       => "int(1) DEFAULT 1",
           'ldap_server_password'        => "varchar(255) DEFAULT ''",
-          // Default type 1 is Active Directory, 2 for Generic LDAP
+          // Default type 1 is Active Directory, 2 for Generic LDAP, 3 for legacy Active Directory
           'ldap_server_type'            => "int(10) DEFAULT 1",
           'ldap_ssl'                    => "int(1) DEFAULT 0",
           'ldap_synced_user_attribute'  => "varchar(255) DEFAULT ''",
@@ -6101,7 +6103,7 @@ class Multiotp
 
   function GetLdapFieldsArray()
   {
-      if (1 == $this->GetLdapServerType()) { // Active Directory
+      if (2 != $this->GetLdapServerType()) { // Active Directory (not generic)
           // "department" removed, while not used
           $ldap_fields = array($this->GetLdapCnIdentifier(),
                                "mail",
@@ -6166,22 +6168,32 @@ class Multiotp
   }
 
 
-  function GetLdapBaseDn()
-  {
-      return $this->_config_data['ldap_base_dn'];
+  function GetLdapBaseDn(
+      $return_alternate_if_needed = FALSE
+  )  {
+      if ($return_alternate_if_needed && ('' == trim($this->_config_data['ldap_base_dn']))) {
+        return $this->_config_data['ldap_users_dn'];
+      } else {
+        return $this->_config_data['ldap_base_dn'];
+      }
   }
 
 
-  function SetLdapGroupsDn(
+  function SetLdapUsersDn(
       $value
   ) {
-      $this->_config_data['ldap_groups_dn'] = $value;
+      $this->_config_data['ldap_users_dn'] = $value;
   }
 
 
-  function GetLdapGroupsDn()
-  {
-      return $this->_config_data['ldap_groups_dn'];
+  function GetLdapUsersDn(
+      $return_alternate_if_needed = FALSE
+  )  {
+      if ($return_alternate_if_needed && ('' == trim($this->_config_data['ldap_users_dn']))) {
+        return $this->_config_data['ldap_base_dn'];
+      } else {
+        return $this->_config_data['ldap_users_dn'];
+      }
   }
 
 
@@ -6310,11 +6322,15 @@ class Multiotp
       // These values are not in the options for now
       if (1 == $value) { // Active Directory
           $this->SetLdapGroupCnIdentifier('cn');
+      } elseif (3 == $value) { // enhanced Active Directory
+          $this->SetLdapGroupCnIdentifier('cn');
       } else { // Generic LDAP
           $this->SetLdapGroupCnIdentifier('cn');
       }
       if ($default_parameters) {
           if (1 == $value) { // Active Directory
+              $this->SetLdapCnIdentifier('sAMAccountName');
+          } elseif (3 == $value) { // enhanced Active Directory
               $this->SetLdapCnIdentifier('sAMAccountName');
           } else { // Generic LDAP
               $this->SetLdapCnIdentifier('uid');
@@ -8986,7 +9002,7 @@ class Multiotp
                       $temp_user_array['token_seed']         = trim(fgets($file_handler));
                       $temp_user_array['user_pin']           = trim(fgets($file_handler));
                       $temp_user_array['number_of_digits']   = trim(fgets($file_handler));
-                      $temp_user_array['last_event']         = intval(trim(fgets($file_handler)) - 1);
+                      $temp_user_array['last_event']         = intval(trim(fgets($file_handler))) - 1;
                       $temp_user_array['request_prefix_pin'] = intval(trim(fgets($file_handler)));
                       $temp_user_array['last_login']         = intval(trim(fgets($file_handler)));
                       $temp_user_array['error_counter']      = intval(trim(fgets($file_handler)));
@@ -12729,17 +12745,36 @@ class Multiotp
   function GetLdapUsersList(
       $user_filter = "*"
   ) {
-      $this->DisableLdapError();
+      $include_disabled = TRUE;
+      $ignore_in_group = FALSE;
+
       $users_list = '';
-      $in_groups_array = array();
-      $users_in_groups = array();
-      $result_array = array();
+
+      if (1 == $this->GetLdapServerType()) {
+          $recursive_prefix = "1.2.840.113556.1.4.1941:=";
+      } else {
+          $recursive_prefix = "";
+      }
       
+      // Prepare the array "users_in_groups"
+      // - if we are using a generic LDAP and an LdapInGroup Filtering
+      // - if we are using enhanced Active Directory
+      if ('' != trim($this->GetLdapInGroup())) {
+        $in_groups_array_raw = explode("§",trim(str_replace(",","§",str_replace(";","§",$this->GetLdapInGroup()))));
+      } else {
+        $in_groups_array_raw = array();
+      }
+
       if (!function_exists('ldap_connect')) {
           $result = FALSE;
           $this->WriteLog("Error: LDAP library not installed", FALSE, FALSE, 39, 'System', '', 3);
           $this->EnableLdapError();
       } elseif (('' != $this->GetLdapDomainControllers()) && ('' != $this->GetLdapBindDn()) && ('' != $this->GetLdapServerPassword())) {
+          
+          $this->DisableLdapError();
+          $in_groups_array = array();
+      
+          // TODO: later, we could loop in several base-dn (semicolon separated)
           $domain_controllers = explode(" ",trim(str_replace(","," ",str_replace(";"," ",$this->GetLdapDomainControllers()))));
           $ldap_options = array('account_suffix'     => $this->GetLdapAccountSuffix(),
                                 'ad_password'        => $this->GetLdapServerPassword(),
@@ -12756,40 +12791,118 @@ class Multiotp
                                 'time_limit'         => $this->GetLdapTimeLimit(),
                                 'use_ssl'            => $this->IsLdapSsl(),
                                 'cache_support'      => $this->IsLdapCacheOn(),
-                                'cache_folder'       => $this->GetLdapCacheFolder()
+                                'cache_folder'       => $this->GetLdapCacheFolder(),
+                                'users_dn'           => $this->GetLdapUsersDn()
                                );
 
           $ldap_connection=new MultiotpAdLdap($ldap_options);
-          if ($users_info = $ldap_connection->users_info($user_filter, $this->GetLdapFieldsArray())) {
-              if ($ldap_connection->IsError()) {
-                  $this->EnableLdapError();
+
+          if ($ldap_connection->IsError()) {
+              $this->WriteLog("Error: ".$ldap_connection->ErrorMessage(), FALSE, FALSE, 79, 'LDAP', '');
+              $this->EnableLdapError();
+          } else {
+              // We continue only if there is no error
+
+              $in_groups_filtering = array();
+              $groups_filtering = "";
+              if (1 == count($in_groups_array_raw)) {
+                $group_info = $ldap_connection->group_info($in_groups_array_raw[0],array('distinguishedname'));
+                if (isset($group_info[0]['distinguishedname'][0])) {
+                    $group_info_dn = $group_info[0]['distinguishedname'][0];
+                } else {
+                    $group_info_dn = $in_groups_array_raw[0];
+                }
+                $groups_filtering.= "(".$this->GetLdapGroupAttribute().":";
+                $groups_filtering.= $recursive_prefix.$group_info_dn.")";
+                $in_groups_filtering[] = array('name' => $in_groups_array_raw[0], 'distinguishedname' => "(".$this->GetLdapGroupAttribute().":".$recursive_prefix.$group_info_dn.")");
+              } elseif (count($in_groups_array_raw) > 1) {
+                $groups_filtering = "(|";
+                foreach($in_groups_array_raw as $one_group) {
+                  $group_info = $ldap_connection->group_info($one_group,array('distinguishedname'));
+                  if (isset($group_info[0]['distinguishedname'][0])) {
+                      $group_info_dn = $group_info[0]['distinguishedname'][0];
+                  } else {
+                      $group_info_dn = $in_groups_array_raw[0];
+                  }
+                  $groups_filtering.= "(".$this->GetLdapGroupAttribute().":";
+                  $groups_filtering.= $recursive_prefix.$group_info_dn.")";
+                  $in_groups_filtering[] = array('name' => $one_group, 'distinguishedname' => "(".$this->GetLdapGroupAttribute().":".$recursive_prefix.$group_info_dn.")");
+                }
+                $groups_filtering.= ")";
               } else {
-                  // We continue only if there is no error
-                  // Prepare the array "users_in_groups" if we are using a generic LDAP and an LdapInGroup Filtering
-                  if (1 != $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
-                      $users_in_groups = array();
-                      if ('' != trim($this->GetLdapInGroup())) {
-                          $in_groups_array_raw = explode("§",trim(str_replace(",","§",str_replace(";","§",$this->GetLdapInGroup()))));
-                          foreach($in_groups_array_raw as $one_group) {
-                              $temp_array = $ldap_connection->group_users($one_group);
-                              foreach($temp_array as $one_temp) {
-                                  $one_user = $this->EncodeForBackend($one_temp);
-                                  if (!isset($users_in_groups[$this->$one_user])) {
-                                      $users_in_groups[$one_user] = $one_group;
-                                  } else {
-                                      $users_in_groups[$one_user] = $users_in_groups[$one_user].",".$one_group;
-                                  }
+                  // No group filtering, we don't need _real_primarygroup
+                  $ldap_connection->_real_primarygroup = FALSE;
+              }
+
+              // Put all group_cn in cache
+              // (don't do that for Enhanced Microsoft Active Directory server)
+              if (1 != $this->GetLdapServerType()) {
+                  $ldap_connection->group_cn(1, FALSE, TRUE);
+
+                  // Put all recursive_groups in cache
+                  if ($ldap_connection->_recursive_groups) {
+                      $all_groups = $ldap_connection->all_groups(FALSE, '*', TRUE, TRUE);
+                      reset($all_groups);
+                      while(list($key, $one_group) = each($all_groups)) {
+                          $ldap_connection->recursive_groups($one_group);
+                      }
+                  }
+              }
+
+              $pageSize = 1000;
+              $page_cookie = '';
+
+              $users_in_groups = array();
+
+              if ('' != trim($this->GetLdapInGroup())) {
+                  if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
+                      foreach($in_groups_array_raw as $one_group) {
+                          $temp_array = $ldap_connection->group_users($one_group);
+                          foreach($temp_array as $one_temp) {
+                              $one_user = $this->EncodeForBackend($one_temp);
+                              if (!isset($users_in_groups[$one_user])) {
+                                  $users_in_groups[$one_user] = $one_group;
+                              } else {
+                                  $users_in_groups[$one_user] = $users_in_groups[$one_user].",".$one_group;
                               }
                           }
                       }
                   }
-                  $all_results = (isset($users_info['count'])?$users_info['count']:0);
-                  for ($results=0; $results < $all_results; $results++) {
+              }
+
+              do { // LDAP pagination loop
+                  if (function_exists('ldap_control_paged_result')) {
+                      ldap_control_paged_result($ldap_connection->_conn_paged, $pageSize, false, $page_cookie); // Page size of 1000
+                  }
+
+                  $one_user = $ldap_connection->one_user_info(true,
+                                                              $user_filter,
+                                                              $this->GetLdapFieldsArray(),
+                                                              $this->IsLdapCacheOn(),
+                                                              $groups_filtering,
+                                                              $in_groups_filtering
+                                                             );
+
+                  if ($ldap_connection->IsError()) {
+                      $this->EnableLdapError();
+                      $this->WriteLog("Error: LDAP connection failed", false, false, 30, 'LDAP', '');
+                      return FALSE;
+                  }
+                  if ('' != $ldap_connection->get_warning_message()) {
+                      $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                  }
+                  if ($this->GetVerboseFlag() && ('' != $ldap_connection->get_debug_message())) {
+                      $this->WriteLog("Debug: *".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
+                  }
+
+                  do {
                       $accountdisable = FALSE;
-                      $groups_array = array();
+                      $groups_lower_array = array();
                       $in_groups_array = array();
                       $in_groups_lower_array = array();
-                      $one_user = $users_info[$results];
+                      $group = "";
+                      $user_in_groups = '';
+
                       $user = $this->EncodeForBackend(isset($one_user[mb_strtolower($this->GetLdapCnIdentifier())][0])?($one_user[mb_strtolower($this->GetLdapCnIdentifier())][0]):'');
                       $account = $this->EncodeForBackend(isset($one_user[mb_strtolower($this->GetLdapSyncedUserAttribute())][0])?($one_user[mb_strtolower($this->GetLdapSyncedUserAttribute())][0]):'');
                       if (!$this->IsCaseSensitiveUsers()) {
@@ -12797,88 +12910,172 @@ class Multiotp
                           $account = mb_strtolower($account);
                       }
 
-                      if (isset($one_user['useraccountcontrol'][0])) {
-                          if (0 != ($one_user['useraccountcontrol'][0] & 2)) {
-                              $accountdisable = TRUE;
-                          }
-                      }
-                      if (isset($one_user['ms-ds-user-account-control-computed'][0])) {
-                          if (0 != ($one_user['ms-ds-user-account-control-computed'][0] & 16)) {
-                              $accountdisable = TRUE;
-                          }
-                      }
-                      if (isset($one_user['accountexpires'][0])) {
-                          if (($one_user['accountexpires'][0] > 0) && ((($one_user['accountexpires'][0] / 10000000) - 11644473600) < time())) {
-                              $accountdisable = TRUE;
-                          }
-                      }
-                      
-                      if (isset($one_user['shadowexpire'][0])) {
-                          if (($one_user['shadowexpire'][0] >= 0) && ((86400 * $one_user['shadowexpire'][0]) < time())) {
-                              $accountdisable = TRUE;
-                          }
-                      }
-                      if (isset($one_user['sambaacctflags'][0])) {
-                          if ((FALSE !== mb_strpos($one_user['sambaacctflags'][0], "D")) || (FALSE !== mb_strpos($one_user['sambaacctflags'][0], "L"))) {
-                              $accountdisable = TRUE;
-                          }
-                      }
-                      
-                      if (!$accountdisable) {
-                          if ('' == trim($this->GetLdapInGroup())) {
-                              $in_a_group = TRUE;
-                          } else {
-                              $in_a_group = FALSE;
-                              $in_groups_array_raw = explode(" ",trim(str_replace(","," ",str_replace(";"," ",$this->GetLdapInGroup()))));
-                              foreach($in_groups_array_raw as $one_group) {
-                                  $in_groups_array[] = trim($one_group);
-                                  $in_groups_lower_array[] = mb_strtolower(trim($one_group));
-                              }
-                          }
-
+                      if ($account != '') {
                           
-                          // Generic LDAP, eventually no memberOf function like in AD
-                          if (1 != $this->GetLdapServerType()) {
-                              if (isset($users_in_groups[$user])) {
-                                  $in_a_group = TRUE;
-                              }
-                          // AD
-                          } else {
-                              // $groups_array_raw = $ldap_connection->user_groups($user);
-                              $groups_array_raw=$ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
+                          $one_user['msradiusframedipaddress'][0] = (isset($one_user['msradiusframedipaddress'][0])) ? long2ip32bit($one_user['msradiusframedipaddress'][0]) : "---";
+                          $one_user['radiusframedipaddress'][0] = (isset($one_user['radiusframedipaddress'][0])) ? ($one_user['radiusframedipaddress'][0]) : "---";
+                          $one_user['radiusframedipnetmask'][0] = (isset($one_user['radiusframedipnetmask'][0])) ? ($one_user['radiusframedipnetmask'][0]) : "---";
 
-                              if ($ldap_connection->_recursive_groups) {
-                                  foreach ($groups_array_raw as $id => $group_name){
-                                      $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
-                                      if ('' != $ldap_connection->get_warning_message()) {
-                                          $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                          if (isset($one_user['useraccountcontrol'][0])) {
+                              if (0 != ($one_user['useraccountcontrol'][0] & 2)) {
+                                  $accountdisable = TRUE;
+                              }
+                          }
+                          if (isset($one_user['ms-ds-user-account-control-computed'][0])) {
+                              if (0 != ($one_user['ms-ds-user-account-control-computed'][0] & 16)) {
+                                  $accountdisable = TRUE;
+                              }
+                          }
+                          if (isset($one_user['accountexpires'][0])) {
+                              if (($one_user['accountexpires'][0] > 0) && ((($one_user['accountexpires'][0] / 10000000) - 11644473600) < time())) {
+                                  $accountdisable = TRUE;
+                              }
+                          }
+
+                          if (isset($one_user['shadowexpire'][0])) {
+                              if (($one_user['shadowexpire'][0] >= 0) && ((86400 * $one_user['shadowexpire'][0]) < time())) {
+                                  $accountdisable = TRUE;
+                              }
+                          }
+                          if (isset($one_user['sambaacctflags'][0])) {
+                              if ((FALSE !== mb_strpos($one_user['sambaacctflags'][0], "D")) || (FALSE !== mb_strpos($one_user['sambaacctflags'][0], "L"))) {
+                                  $accountdisable = TRUE;
+                              }
+                          }
+                          if ($include_disabled || (!$accountdisable)) {
+                              // TODO $in_a_group discovery
+                              if ('' == trim($this->GetLdapInGroup())) {
+                                  $in_a_group = TRUE;
+                              } else {
+                                  $in_a_group = FALSE;
+                                  foreach($in_groups_array_raw as $one_group) {
+                                      $in_groups_array[] = trim($one_group);
+                                      $in_groups_lower_array[] = mb_strtolower(trim($one_group));
+                                  }
+
+
+                                  // Enhanced Active Directory
+                                  if (1 == $this->GetLdapServerType()) {
+                                      $groups_array_raw = $ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]);
+                                      // All groups are already defined
+                                      /*
+                                      $groups_array_raw=$ldap_connection->user_all_groups($one_user['distinguishedname'][0], $groups_filtering);
+                                      foreach($ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]) as $level_one_group) {
+                                          $add_it = TRUE;
+                                          foreach($groups_array_raw as $one_temp) {
+                                              if (strpos($level_one_group, $one_temp) !== FALSE) {
+                                                  $add_it = FALSE;
+                                              }
+                                          }
+                                          if ($add_it) {
+                                              $groups_array_raw[] = $level_one_group;
+                                          }
                                       }
-                                      if ($this->GetVerboseFlag() && ('' != $ldap_connection->get_debug_message())) {
-                                          $this->WriteLog("Debug: *".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                      */
+
+                                      foreach($groups_array_raw as $one_group) {
+                                          $this_group = $this->EncodeForBackend($one_group);
+                                          $groups_lower_array[] = mb_strtolower($this_group);
                                       }
-                                      $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
+                                      
+                                      foreach($in_groups_array as $one_filtered_group) {
+                                          if (in_array(mb_strtolower($one_filtered_group), $groups_lower_array)) {
+                                              $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_filtered_group;
+                                              $in_a_group = TRUE;
+                                              if ("" == $group) {
+                                                  $group = $one_filtered_group;
+                                              }
+                                          }
+                                      }
+
+                                  // Generic LDAP, eventually no memberOf function like in AD
+                                  } elseif (2 == $this->GetLdapServerType()) {
+
+                                      // Prepare the array "users_in_groups" if we are using a generic LDAP and an LdapInGroup Filtering
+                                      if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
+                                          foreach($in_groups_array_raw as $one_group) {
+                                              $temp_array = $ldap_connection->group_users($one_group);
+                                              foreach($temp_array as $one_temp) {
+                                                  $one_user = $this->EncodeForBackend($one_temp);
+                                                  if ($user == $one_user) {
+                                                      $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_group;
+                                                      $in_a_group = TRUE;
+                                                  }
+                                              }
+                                          }
+                                      }
+
+                                      if ($in_a_group) {
+                                          $temp_array = explode(",", $user_in_groups);
+                                          $group = $temp_array[0];
+                                      }
+
+                                  // Legacy Active Directory
+                                  } else {
+                                      // $groups_array_raw = $ldap_connection->user_groups($user);
+                                      $groups_array_raw=$ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
+
+                                      if ($ldap_connection->_recursive_groups) {
+                                          foreach ($groups_array_raw as $id => $group_name){
+                                              $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
+                                              if ('' != $ldap_connection->get_warning_message()) {
+                                                  $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                              }
+                                              $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
+                                          }
+                                      }
+
+                                      foreach($groups_array_raw as $one_group) {
+                                          $this_group = $this->EncodeForBackend($one_group);
+                                          $groups_lower_array[] = mb_strtolower($this_group);
+                                      }
+                                      
+                                      foreach($in_groups_array as $one_filtered_group) {
+                                          if (in_array(mb_strtolower($one_filtered_group), $groups_lower_array)) {
+                                              $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_filtered_group;
+                                              $in_a_group = TRUE;
+                                              if ("" == $group) {
+                                                  $group = $one_filtered_group;
+                                              }
+                                          }
+                                      }
                                   }
                               }
                               
-                              $groups_array = array();
-                              foreach($groups_array_raw as $one_group) {
-                                  $this_group = $this->EncodeForBackend($one_group);
-                                  $groups_array[] = $this_group;
-                                  if (in_array(mb_strtolower($this_group), $in_groups_lower_array)) {
-                                      $in_a_group = TRUE;
+                              if ($ignore_in_group || $in_a_group) {
+                                  $description = '';
+                                  if (isset($one_user['description'][0])) {
+                                      $description = trim($one_user['description'][0]);
                                   }
+                                  if (('' == $description) && (isset($one_user['gecos'][0]))) {
+                                      $description = trim($one_user['gecos'][0]);
+                                  }
+                                  if (('' == $description) && (isset($one_user['displayname'][0]))) {
+                                      $description = trim($one_user['displayname'][0]);
+                                  }
+                                  if ('' == $description) {
+                                      $description = $account;
+                                  }
+
+                                  $users_list.= (('' != $users_list)?"\t":'').$account;
                               }
                           }
+                      } // if ($account != '')
+                  } while (($one_user = $ldap_connection->one_user_info(FALSE, NULL, NULL, FALSE, $groups_filtering, $in_groups_filtering))); // $group_cn_cache_only = TRUE before
+                  // Loop of LDAP parsing and synchronization
 
-                          if ($in_a_group) {
-                              $users_list.= (('' != $users_list)?"\t":'').$account;
-                          }
+                  if (function_exists('ldap_control_paged_result_response')) {
+                      if (FALSE !== $ldap_connection->_oui_paged_sr) {
+                        ldap_control_paged_result_response($ldap_connection->_conn_paged, $ldap_connection->_oui_paged_sr, $page_cookie);
                       }
                   }
+              } while (($page_cookie !== null) && ($page_cookie != '') && ($ldap_connection->_oui_paged_sr !== FALSE));
+              // ldap pagination loop
+
+              if (function_exists('ldap_control_paged_result')) {
+                  // Reset LDAP paged result
+                  ldap_control_paged_result($ldap_connection->_conn_paged, $pageSize, false);
               }
-          } else {
-              $this->EnableLdapError();
-              $this->WriteLog("Error: no LDAP binding", FALSE, FALSE, 30, 'LDAP', '');
           }
       } else {
           $this->WriteLog("Error: No LDAP connection information", FALSE, FALSE, 30, 'LDAP', '');
@@ -12892,16 +13089,32 @@ class Multiotp
       $include_disabled = TRUE,
       $ignore_in_group = FALSE
   ) {
-      $this->DisableLdapError();
-      $in_groups_array = array();
-      $users_in_groups = array();
       $result_array = array();
 
+      if (1 == $this->GetLdapServerType()) {
+          $recursive_prefix = "1.2.840.113556.1.4.1941:=";
+      } else {
+          $recursive_prefix = "";
+      }
+      
+      // Prepare the array "users_in_groups"
+      // - if we are using a generic LDAP and an LdapInGroup Filtering
+      // - if we are using enhanced Active Directory
+      if ('' != trim($this->GetLdapInGroup())) {
+        $in_groups_array_raw = explode("§",trim(str_replace(",","§",str_replace(";","§",$this->GetLdapInGroup()))));
+      } else {
+        $in_groups_array_raw = array();
+      }
+
       if (!function_exists('ldap_connect')) {
-          $result = FALSE;
           $this->WriteLog("Error: LDAP library not installed", FALSE, FALSE, 39, 'System', '', 3);
           $this->EnableLdapError();
       } elseif (('' != $this->GetLdapDomainControllers()) && ('' != $this->GetLdapBindDn()) && ('' != $this->GetLdapServerPassword())) {
+
+          $this->DisableLdapError();
+          $in_groups_array = array();
+
+          // TODO: later, we could loop in several base-dn (semicolon separated)
           $domain_controllers = explode(" ",trim(str_replace(","," ",str_replace(";"," ",$this->GetLdapDomainControllers()))));
           $ldap_options = array('account_suffix'     => $this->GetLdapAccountSuffix(),
                                 'ad_password'        => $this->GetLdapServerPassword(),
@@ -12918,60 +13131,118 @@ class Multiotp
                                 'time_limit'         => $this->GetLdapTimeLimit(),
                                 'use_ssl'            => $this->IsLdapSsl(),
                                 'cache_support'      => $this->IsLdapCacheOn(),
-                                'cache_folder'       => $this->GetLdapCacheFolder()
+                                'cache_folder'       => $this->GetLdapCacheFolder(),
+                                'users_dn'           => $this->GetLdapUsersDn()
                                );
 
           $ldap_connection=new MultiotpAdLdap($ldap_options);
-          if ($this->GetVerboseFlag()) {
-              $this->WriteLog("Debug: *AD/LDAP connection defined", FALSE, FALSE, 8888, 'Debug', '');
-          }
-          if (!$ldap_connection->_bind) {
-            $this->WriteLog("Error: AD/LDAP not binded ".$ldap_connection->get_warning_message(), FALSE, FALSE, 30, 'LDAP', '');
-          }
-          if ($users_info = $ldap_connection->users_info($user_filter, $this->GetLdapFieldsArray())) {
-              if ($ldap_connection->IsError()) {
-                  if ($this->GetVerboseFlag()) {
-                      $this->WriteLog("Debug: *AD/LDAP error during connection : ".$ldap_connection->ErrorMessage(), FALSE, FALSE, 8888, 'Debug', '');
+
+          if ($ldap_connection->IsError()) {
+              $this->WriteLog("Error: ".$ldap_connection->ErrorMessage(), FALSE, FALSE, 79, 'LDAP', '');
+              $this->EnableLdapError();
+          } else {
+              // We continue only if there is no error
+
+              $in_groups_filtering = array();
+              $groups_filtering = "";
+              if (1 == count($in_groups_array_raw)) {
+                $group_info = $ldap_connection->group_info($in_groups_array_raw[0],array('distinguishedname'));
+                if (isset($group_info[0]['distinguishedname'][0])) {
+                    $group_info_dn = $group_info[0]['distinguishedname'][0];
+                } else {
+                    $group_info_dn = $in_groups_array_raw[0];
+                }
+                $groups_filtering.= "(".$this->GetLdapGroupAttribute().":";
+                $groups_filtering.= $recursive_prefix.$group_info_dn.")";
+                $in_groups_filtering[] = array('name' => $in_groups_array_raw[0], 'distinguishedname' => "(".$this->GetLdapGroupAttribute().":".$recursive_prefix.$group_info_dn.")");
+              } elseif (count($in_groups_array_raw) > 1) {
+                $groups_filtering = "(|";
+                foreach($in_groups_array_raw as $one_group) {
+                  $group_info = $ldap_connection->group_info($one_group,array('distinguishedname'));
+                  if (isset($group_info[0]['distinguishedname'][0])) {
+                      $group_info_dn = $group_info[0]['distinguishedname'][0];
+                  } else {
+                      $group_info_dn = $in_groups_array_raw[0];
                   }
-                  $this->EnableLdapError();
+                  $groups_filtering.= "(".$this->GetLdapGroupAttribute().":";
+                  $groups_filtering.= $recursive_prefix.$group_info_dn.")";
+                  $in_groups_filtering[] = array('name' => $one_group, 'distinguishedname' => "(".$this->GetLdapGroupAttribute().":".$recursive_prefix.$group_info_dn.")");
+                }
+                $groups_filtering.= ")";
               } else {
-                  if ($this->GetVerboseFlag()) {
-                      $this->WriteLog("Debug: *AD/LDAP GetLdapUsersInfoArray processing", FALSE, FALSE, 8888, 'Debug', '');
-                  }
-                  // We continue only if there is no error
-                  // Prepare the array "users_in_groups" if we are using a generic LDAP and an LdapInGroup Filtering
-                  if (1 != $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
-                      if ($this->GetVerboseFlag()) {
-                          $this->WriteLog("Debug: *AD/LDAP server is generic LDAP", FALSE, FALSE, 8888, 'Debug', '');
+                  // No group filtering, we don't need _real_primarygroup
+                  $ldap_connection->_real_primarygroup = FALSE;
+              }
+
+              // Put all group_cn in cache
+              // (don't do that for Enhanced Microsoft Active Directory server)
+              if (1 != $this->GetLdapServerType()) {
+                  $ldap_connection->group_cn(1, FALSE, TRUE);
+
+                  // Put all recursive_groups in cache
+                  if ($ldap_connection->_recursive_groups) {
+                      $all_groups = $ldap_connection->all_groups(FALSE, '*', TRUE, TRUE);
+                      reset($all_groups);
+                      while(list($key, $one_group) = each($all_groups)) {
+                          $ldap_connection->recursive_groups($one_group);
                       }
-                      $users_in_groups = array();
-                      if ('' != trim($this->GetLdapInGroup())) {
-                          $in_groups_array_raw = explode("§",trim(str_replace(",","§",str_replace(";","§",$this->GetLdapInGroup()))));
-                          foreach($in_groups_array_raw as $one_group) {
-                              $temp_array = $ldap_connection->group_users($one_group);
-                              foreach($temp_array as $one_temp) {
-                                  $one_user = $this->EncodeForBackend($one_temp);
-                                  if (!isset($users_in_groups[$one_user])) {
-                                      $users_in_groups[$one_user] = $one_group;
-                                  } else {
-                                      $users_in_groups[$one_user] = $users_in_groups[$one_user].",".$one_group;
-                                  }
+                  }
+              }
+
+              $pageSize = 1000;
+              $page_cookie = '';
+
+              $users_in_groups = array();
+
+              if ('' != trim($this->GetLdapInGroup())) {
+                  if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
+                      foreach($in_groups_array_raw as $one_group) {
+                          $temp_array = $ldap_connection->group_users($one_group);
+                          foreach($temp_array as $one_temp) {
+                              $one_user = $this->EncodeForBackend($one_temp);
+                              if (!isset($users_in_groups[$one_user])) {
+                                  $users_in_groups[$one_user] = $one_group;
+                              } else {
+                                  $users_in_groups[$one_user] = $users_in_groups[$one_user].",".$one_group;
                               }
                           }
                       }
-                  } else {
-                      if ($this->GetVerboseFlag()) {
-                          $this->WriteLog("Debug: *AD/LDAP server is Microsoft AD", FALSE, FALSE, 8888, 'Debug', '');
-                      }
                   }
-              
-                  $all_results = (isset($users_info['count'])?$users_info['count']:0);
-                  for ($results=0; $results < $all_results; $results++) {
+              }
+
+              do { // LDAP pagination loop
+                  if (function_exists('ldap_control_paged_result')) {
+                      ldap_control_paged_result($ldap_connection->_conn_paged, $pageSize, false, $page_cookie); // Page size of 1000
+                  }
+
+                  $one_user = $ldap_connection->one_user_info(true,
+                                                              $user_filter,
+                                                              $this->GetLdapFieldsArray(),
+                                                              $this->IsLdapCacheOn(),
+                                                              $groups_filtering,
+                                                              $in_groups_filtering
+                                                             );
+
+                  if ($ldap_connection->IsError()) {
+                      $this->EnableLdapError();
+                      $this->WriteLog("Error: LDAP connection failed", false, false, 30, 'LDAP', '');
+                      return FALSE;
+                  }
+                  if ('' != $ldap_connection->get_warning_message()) {
+                      $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                  }
+                  if ($this->GetVerboseFlag() && ('' != $ldap_connection->get_debug_message())) {
+                      $this->WriteLog("Debug: *".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
+                  }
+
+                  do {
                       $accountdisable = FALSE;
-                      $groups_array = array();
+                      $groups_lower_array = array();
                       $in_groups_array = array();
                       $in_groups_lower_array = array();
-                      $one_user = $users_info[$results];
+                      $group = "";
+                      $user_in_groups = '';
+
                       $user = $this->EncodeForBackend(isset($one_user[mb_strtolower($this->GetLdapCnIdentifier())][0])?($one_user[mb_strtolower($this->GetLdapCnIdentifier())][0]):'');
                       $account = $this->EncodeForBackend(isset($one_user[mb_strtolower($this->GetLdapSyncedUserAttribute())][0])?($one_user[mb_strtolower($this->GetLdapSyncedUserAttribute())][0]):'');
                       if (!$this->IsCaseSensitiveUsers()) {
@@ -12979,118 +13250,194 @@ class Multiotp
                           $account = mb_strtolower($account);
                       }
 
-                      $one_user['msradiusframedipaddress'][0] = (isset($one_user['msradiusframedipaddress'][0])) ? long2ip32bit($one_user['msradiusframedipaddress'][0]) : "---";
-                      $one_user['radiusframedipaddress'][0] = (isset($one_user['radiusframedipaddress'][0])) ? ($one_user['radiusframedipaddress'][0]) : "---";
-                      $one_user['radiusframedipnetmask'][0] = (isset($one_user['radiusframedipnetmask'][0])) ? ($one_user['radiusframedipnetmask'][0]) : "---";
+                      if ($account != '') {
+                          
+                          $one_user['msradiusframedipaddress'][0] = (isset($one_user['msradiusframedipaddress'][0])) ? long2ip32bit($one_user['msradiusframedipaddress'][0]) : "---";
+                          $one_user['radiusframedipaddress'][0] = (isset($one_user['radiusframedipaddress'][0])) ? ($one_user['radiusframedipaddress'][0]) : "---";
+                          $one_user['radiusframedipnetmask'][0] = (isset($one_user['radiusframedipnetmask'][0])) ? ($one_user['radiusframedipnetmask'][0]) : "---";
 
-                      if (isset($one_user['useraccountcontrol'][0])) {
-                          if (0 != ($one_user['useraccountcontrol'][0] & 2)) {
-                              $accountdisable = TRUE;
+                          if (isset($one_user['useraccountcontrol'][0])) {
+                              if (0 != ($one_user['useraccountcontrol'][0] & 2)) {
+                                  $accountdisable = TRUE;
+                              }
                           }
-                      }
-                      if (isset($one_user['ms-ds-user-account-control-computed'][0])) {
-                          if (0 != ($one_user['ms-ds-user-account-control-computed'][0] & 16)) {
-                              $accountdisable = TRUE;
+                          if (isset($one_user['ms-ds-user-account-control-computed'][0])) {
+                              if (0 != ($one_user['ms-ds-user-account-control-computed'][0] & 16)) {
+                                  $accountdisable = TRUE;
+                              }
                           }
-                      }
-                      if (isset($one_user['accountexpires'][0])) {
-                          if (($one_user['accountexpires'][0] > 0) && ((($one_user['accountexpires'][0] / 10000000) - 11644473600) < time())) {
-                              $accountdisable = TRUE;
-                          }
-                      }
-
-                      if (isset($one_user['shadowexpire'][0])) {
-                          if (($one_user['shadowexpire'][0] >= 0) && ((86400 * $one_user['shadowexpire'][0]) < time())) {
-                              $accountdisable = TRUE;
-                          }
-                      }
-                      if (isset($one_user['sambaacctflags'][0])) {
-                          if ((FALSE !== mb_strpos($one_user['sambaacctflags'][0], "D")) || (FALSE !== mb_strpos($one_user['sambaacctflags'][0], "L"))) {
-                              $accountdisable = TRUE;
-                          }
-                      }
-                      
-                      if ($include_disabled || (!$accountdisable)) {
-                          if ('' == trim($this->GetLdapInGroup())) {
-                              $in_a_group = TRUE;
-                          } else {
-                              $in_a_group = FALSE;
-                              $in_groups_array_raw = explode("§",trim(str_replace(",","§",str_replace(";","§",$this->GetLdapInGroup()))));
-                              foreach($in_groups_array_raw as $one_group) {
-                                  $in_groups_array[] = trim($one_group);
-                                  $in_groups_lower_array[] = mb_strtolower(trim($one_group));
+                          if (isset($one_user['accountexpires'][0])) {
+                              if (($one_user['accountexpires'][0] > 0) && ((($one_user['accountexpires'][0] / 10000000) - 11644473600) < time())) {
+                                  $accountdisable = TRUE;
                               }
                           }
 
-                          // Generic LDAP, eventually no memberOf function like in AD
-                          if (1 != $this->GetLdapServerType()) {
-                              if (isset($users_in_groups[$user])) {
+                          if (isset($one_user['shadowexpire'][0])) {
+                              if (($one_user['shadowexpire'][0] >= 0) && ((86400 * $one_user['shadowexpire'][0]) < time())) {
+                                  $accountdisable = TRUE;
+                              }
+                          }
+                          if (isset($one_user['sambaacctflags'][0])) {
+                              if ((FALSE !== mb_strpos($one_user['sambaacctflags'][0], "D")) || (FALSE !== mb_strpos($one_user['sambaacctflags'][0], "L"))) {
+                                  $accountdisable = TRUE;
+                              }
+                          }
+                          if ($include_disabled || (!$accountdisable)) {
+                              // TODO $in_a_group discovery
+                              if ('' == trim($this->GetLdapInGroup())) {
                                   $in_a_group = TRUE;
-                              }
-                          // AD
-                          } else {
-                              // $groups_array_raw = $ldap_connection->user_groups($user);
-                              $groups_array_raw=$ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
+                              } else {
+                                  $in_a_group = FALSE;
+                                  foreach($in_groups_array_raw as $one_group) {
+                                      $in_groups_array[] = trim($one_group);
+                                      $in_groups_lower_array[] = mb_strtolower(trim($one_group));
+                                  }
 
-                              if ($ldap_connection->_recursive_groups) {
-                                  foreach ($groups_array_raw as $id => $group_name){
-                                      $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
-                                      if ('' != $ldap_connection->get_warning_message()) {
-                                          $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+
+                                  // Enhanced Active Directory
+                                  if (1 == $this->GetLdapServerType()) {
+                                      $groups_array_raw = $ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]);
+                                      // All groups are already defined
+                                      /*
+                                      $groups_array_raw=$ldap_connection->user_all_groups($one_user['distinguishedname'][0], $groups_filtering);
+                                      foreach($ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]) as $level_one_group) {
+                                          $add_it = TRUE;
+                                          foreach($groups_array_raw as $one_temp) {
+                                              if (strpos($level_one_group, $one_temp) !== FALSE) {
+                                                  $add_it = FALSE;
+                                              }
+                                          }
+                                          if ($add_it) {
+                                              $groups_array_raw[] = $level_one_group;
+                                          }
                                       }
-                                      if ($this->GetVerboseFlag() && ('' != $ldap_connection->get_debug_message())) {
-                                          $this->WriteLog("Debug: *".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                      */
+
+                                      foreach($groups_array_raw as $one_group) {
+                                          $this_group = $this->EncodeForBackend($one_group);
+                                          $groups_lower_array[] = mb_strtolower($this_group);
                                       }
-                                      $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
+                                      
+                                      foreach($in_groups_array as $one_filtered_group) {
+                                          if (in_array(mb_strtolower($one_filtered_group), $groups_lower_array)) {
+                                              $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_filtered_group;
+                                              $in_a_group = TRUE;
+                                              if ("" == $group) {
+                                                  $group = $one_filtered_group;
+                                              }
+                                          }
+                                      }
+                                      
+                                  // Generic LDAP, eventually no memberOf function like in AD
+                                  } elseif (2 == $this->GetLdapServerType()) {
+
+                                      // Prepare the array "users_in_groups" if we are using a generic LDAP and an LdapInGroup Filtering
+                                      if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
+                                          foreach($in_groups_array_raw as $one_group) {
+                                              $temp_array = $ldap_connection->group_users($one_group);
+                                              foreach($temp_array as $one_temp) {
+                                                  $one_user = $this->EncodeForBackend($one_temp);
+                                                  if ($user == $one_user) {
+                                                      $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_group;
+                                                      $in_a_group = TRUE;
+                                                  }
+                                              }
+                                          }
+                                      }
+
+                                      if ($in_a_group) {
+                                          $temp_array = explode(",", $user_in_groups);
+                                          $group = $temp_array[0];
+                                      }
+
+                                  // Legacy Active Directory
+                                  } else {
+                                      // $groups_array_raw = $ldap_connection->user_groups($user);
+                                      $groups_array_raw=$ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
+
+                                      if ($ldap_connection->_recursive_groups) {
+                                          foreach ($groups_array_raw as $id => $group_name){
+                                              $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
+                                              if ('' != $ldap_connection->get_warning_message()) {
+                                                  $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                              }
+                                              $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
+                                          }
+                                      }
+
+                                      foreach($groups_array_raw as $one_group) {
+                                          $this_group = $this->EncodeForBackend($one_group);
+                                          $groups_lower_array[] = mb_strtolower($this_group);
+                                      }
+                                      
+                                      foreach($in_groups_array as $one_filtered_group) {
+                                          if (in_array(mb_strtolower($one_filtered_group), $groups_lower_array)) {
+                                              $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_filtered_group;
+                                              $in_a_group = TRUE;
+                                              if ("" == $group) {
+                                                  $group = $one_filtered_group;
+                                              }
+                                          }
+                                      }
                                   }
                               }
-                              
-                              $groups_array = array();
-                              foreach($groups_array_raw as $one_group) {
-                                  $this_group = $this->EncodeForBackend($one_group);
-                                  $groups_array[] = $this_group;
-                                  if (in_array(mb_strtolower($this_group), $in_groups_lower_array)) {
-                                      $in_a_group = TRUE;
-                                  }
-                              }
-                          }
 
-                          if ($ignore_in_group || $in_a_group) {
-                              $result_array[$user]['user'] = $user;
-                              $result_array[$user]['groups'] = $groups_array;
-                              $result_array[$user]['accountdisable'] = $accountdisable;
-                              $result_array[$user]['mail'] = (isset($one_user['mail'][0]) ? $this->EncodeForBackend($one_user['mail'][0]) : "");
-                              $result_array[$user]['displayname'] = (isset($one_user['displayname'][0]) ? $this->EncodeForBackend($one_user['displayname'][0]) : "");
-                              $result_array[$user]['description'] = (isset($one_user['description'][0]) ? $this->EncodeForBackend($one_user['description'][0]) : "");
-                              $result_array[$user]['mobile'] = (isset($one_user['mobile'][0]) ? $this->EncodeForBackend($one_user['mobile'][0]) : "");
-                              $result_array[$user]['msnpallowdialin'] = ("TRUE" == (isset($one_user['msnpallowdialin'][0]) ? ($one_user['msnpallowdialin'][0]) : "FALSE"));
-                              if ("---" != $one_user['msradiusframedipaddress'][0]) {
-                                  $result_array[$user]['msradiusframedipaddress'] = $one_user['msradiusframedipaddress'][0];
+                              if ($ignore_in_group || $in_a_group) {
+                                  $description = '';
+                                  if (isset($one_user['description'][0])) {
+                                      $description = trim($one_user['description'][0]);
+                                  }
+                                  if (('' == $description) && (isset($one_user['gecos'][0]))) {
+                                      $description = trim($one_user['gecos'][0]);
+                                  }
+                                  if (('' == $description) && (isset($one_user['displayname'][0]))) {
+                                      $description = trim($one_user['displayname'][0]);
+                                  }
+                                  if ('' == $description) {
+                                      $description = $account;
+                                  }
+
+                                  $result_array[$user]['user'] = $user;
+                                  $result_array[$user]['groups'] = $user_in_groups;
+                                  $result_array[$user]['accountdisable'] = $accountdisable;
+                                  $result_array[$user]['mail'] = (isset($one_user['mail'][0]) ? $this->EncodeForBackend($one_user['mail'][0]) : "");
+                                  $result_array[$user]['displayname'] = (isset($one_user['displayname'][0]) ? $this->EncodeForBackend($one_user['displayname'][0]) : "");
+                                  $result_array[$user]['description'] = (isset($one_user['description'][0]) ? $this->EncodeForBackend($one_user['description'][0]) : "");
+                                  $result_array[$user]['mobile'] = (isset($one_user['mobile'][0]) ? $this->EncodeForBackend($one_user['mobile'][0]) : "");
+                                  $result_array[$user]['msnpallowdialin'] = ("TRUE" == (isset($one_user['msnpallowdialin'][0]) ? ($one_user['msnpallowdialin'][0]) : "FALSE"));
+                                  if ("---" != $one_user['msradiusframedipaddress'][0]) {
+                                      $result_array[$user]['msradiusframedipaddress'] = $one_user['msradiusframedipaddress'][0];
+                                  }
+                                  if ("---" != $one_user['radiusframedipaddress'][0]) {
+                                      $result_array[$user]['radiusframedipaddress'] = $one_user['radiusframedipaddress'][0];
+                                  }
+                                  if ("---" != $one_user['radiusframedipnetmask'][0]) {
+                                      $result_array[$user]['radiusframedipnetmask'] = $one_user['radiusframedipnetmask'][0];
+                                  }
+                                  $result_array[$user]['synchronized_dn'] = (isset($one_user['distinguishedname'][0]) ? $this->EncodeForBackend($one_user['distinguishedname'][0]) : "");
+                                  $result_array[$user]['language'] = (isset($one_user[mb_strtolower($this->GetLdapLanguageAttribute())][0]) ? $this->EncodeForBackend($one_user[mb_strtolower($this->GetLdapLanguageAttribute())][0]) : "");
+                                  $result_array[$user]['account'] = $account;
                               }
-                              if ("---" != $one_user['radiusframedipaddress'][0]) {
-                                  $result_array[$user]['radiusframedipaddress'] = $one_user['radiusframedipaddress'][0];
-                              }
-                              if ("---" != $one_user['radiusframedipnetmask'][0]) {
-                                  $result_array[$user]['radiusframedipnetmask'] = $one_user['radiusframedipnetmask'][0];
-                              }
-                              $result_array[$user]['synchronized_dn'] = (isset($one_user['distinguishedname'][0]) ? $this->EncodeForBackend($one_user['distinguishedname'][0]) : "");
-                              $result_array[$user]['language'] = (isset($one_user[mb_strtolower($this->GetLdapLanguageAttribute())][0]) ? $this->EncodeForBackend($one_user[mb_strtolower($this->GetLdapLanguageAttribute())][0]) : "");
-                              $result_array[$user]['account'] = $account;
                           }
+                      } // if ($account != '')
+                  } while (($one_user = $ldap_connection->one_user_info(FALSE, NULL, NULL, FALSE, $groups_filtering, $in_groups_filtering))); // $group_cn_cache_only = TRUE before
+                  // Loop of LDAP parsing and synchronization
+
+                  if (function_exists('ldap_control_paged_result_response')) {
+                      if (FALSE !== $ldap_connection->_oui_paged_sr) {
+                        ldap_control_paged_result_response($ldap_connection->_conn_paged, $ldap_connection->_oui_paged_sr, $page_cookie);
                       }
                   }
+              } while (($page_cookie !== null) && ($page_cookie != '') && ($ldap_connection->_oui_paged_sr !== FALSE));
+              // ldap pagination loop
+
+              if (function_exists('ldap_control_paged_result')) {
+                  // Reset LDAP paged result
+                  ldap_control_paged_result($ldap_connection->_conn_paged, $pageSize, false);
               }
-          } else {
-              $this->EnableLdapError();
-              $this->WriteLog("Error: LDAP connection failed", FALSE, FALSE, 30, 'LDAP', '');
           }
       } else {
-          $this->EnableLdapError();
-          $this->WriteLog("Error: no LDAP connection information", FALSE, FALSE, 30, 'LDAP', '');
-      }
-
-      if ($this->GetVerboseFlag()) {
-          $this->WriteLog("Debug: *AD/LDAP GetLdapUsersInfoArray done (".$ldap_connection->ErrorMessage().")", FALSE, FALSE, 8888, 'Debug', '');
+          $this->WriteLog("Error: No LDAP connection information", FALSE, FALSE, 30, 'LDAP', '');
       }
 
       return $result_array;
@@ -13178,8 +13525,9 @@ class Multiotp
    * @return  boolean                        Function has been successfully called
    *
    * @author  Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version 4.3.3.1
-   * @date    2015-12-23
+   * @version 5.2.0.0
+   * @date    2018-07-12
+   * @since   2018-07-10 (redesigned starting with version 5.2.0.0)
    * @since   2014-11-04 (completely redesigned)
    */
   function SyncLdapUsers(
@@ -13189,6 +13537,22 @@ class Multiotp
       $state_info_interval = 60
   ) {
       $result = FALSE;
+      
+      if (1 == $this->GetLdapServerType()) {
+          $recursive_prefix = "1.2.840.113556.1.4.1941:=";
+      } else {
+          $recursive_prefix = "";
+      }
+      
+      
+      // Prepare the array "users_in_groups"
+      // - if we are using a generic LDAP and an LdapInGroup Filtering
+      // - if we are using enhanced Active Directory
+      if ('' != trim($this->GetLdapInGroup())) {
+        $in_groups_array_raw = explode("§",trim(str_replace(",","§",str_replace(";","§",$this->GetLdapInGroup()))));
+      } else {
+        $in_groups_array_raw = array();
+      }
 
       $ldap_sync_stop = FALSE;
       $ldap_sync_file_lock = $this->GetLockFolder().$this->GetLdapSyncLockFileName();
@@ -13264,7 +13628,8 @@ class Multiotp
                                 'time_limit'         => $this->GetLdapTimeLimit(),
                                 'use_ssl'            => $this->IsLdapSsl(),
                                 'cache_support'      => $this->IsLdapCacheOn(),
-                                'cache_folder'       => $this->GetLdapCacheFolder()
+                                'cache_folder'       => $this->GetLdapCacheFolder(),
+                                'users_dn'           => $this->GetLdapUsersDn()
                                );
 
           $ldap_connection = new MultiotpAdLdap($ldap_options);
@@ -13274,15 +13639,50 @@ class Multiotp
               $this->EnableLdapError();
           } else {
               // We continue only if there is no error
-              // Put all group_cn in cache
-              $ldap_connection->group_cn(1, FALSE, TRUE);
 
-              // Put all recursive_groups in cache
-              if ($ldap_connection->_recursive_groups) {
-                  $all_groups = $ldap_connection->all_groups(FALSE, '*', TRUE, TRUE);
-                  reset($all_groups);
-                  while(list($key, $one_group) = each($all_groups)) {
-                      $ldap_connection->recursive_groups($one_group);
+              $in_groups_filtering = array();
+              $groups_filtering = "";
+              if (1 == count($in_groups_array_raw)) {
+                $group_info = $ldap_connection->group_info($in_groups_array_raw[0],array('distinguishedname'));
+                if (isset($group_info[0]['distinguishedname'][0])) {
+                    $group_info_dn = $group_info[0]['distinguishedname'][0];
+                } else {
+                    $group_info_dn = $in_groups_array_raw[0];
+                }
+                $groups_filtering.= "(".$this->GetLdapGroupAttribute().":";
+                $groups_filtering.= $recursive_prefix.$group_info_dn.")";
+                $in_groups_filtering[] = array('name' => $in_groups_array_raw[0], 'distinguishedname' => "(".$this->GetLdapGroupAttribute().":".$recursive_prefix.$group_info_dn.")");
+              } elseif (count($in_groups_array_raw) > 1) {
+                $groups_filtering = "(|";
+                foreach($in_groups_array_raw as $one_group) {
+                  $group_info = $ldap_connection->group_info($one_group,array('distinguishedname'));
+                  if (isset($group_info[0]['distinguishedname'][0])) {
+                      $group_info_dn = $group_info[0]['distinguishedname'][0];
+                  } else {
+                      $group_info_dn = $in_groups_array_raw[0];
+                  }
+                  $groups_filtering.= "(".$this->GetLdapGroupAttribute().":";
+                  $groups_filtering.= $recursive_prefix.$group_info_dn.")";
+                  $in_groups_filtering[] = array('name' => $one_group, 'distinguishedname' => "(".$this->GetLdapGroupAttribute().":".$recursive_prefix.$group_info_dn.")");
+                }
+                $groups_filtering.= ")";
+              } else {
+                  // No group filtering, we don't need _real_primarygroup
+                  $ldap_connection->_real_primarygroup = FALSE;
+              }
+
+              // Put all group_cn in cache
+              // (don't do that for Enhanced Microsoft Active Directory server)
+              if (1 != $this->GetLdapServerType()) {
+                  $ldap_connection->group_cn(1, FALSE, TRUE);
+
+                  // Put all recursive_groups in cache
+                  if ($ldap_connection->_recursive_groups) {
+                      $all_groups = $ldap_connection->all_groups(FALSE, '*', TRUE, TRUE);
+                      reset($all_groups);
+                      while(list($key, $one_group) = each($all_groups)) {
+                          $ldap_connection->recursive_groups($one_group);
+                      }
                   }
               }
 
@@ -13293,15 +13693,13 @@ class Multiotp
 
               $result = TRUE;
 
+              $pageSize = 1000;
               $page_cookie = '';
 
               $users_in_groups = array();
 
               if ('' != trim($this->GetLdapInGroup())) {
-                  $in_groups_array_raw = explode("§",trim(str_replace(",","§",str_replace(";","§",$this->GetLdapInGroup()))));
-
-                  // Prepare the array "users_in_groups" if we are using a generic LDAP and an LdapInGroup Filtering
-                  if (1 != $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
+                  if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
                       foreach($in_groups_array_raw as $one_group) {
                           $temp_array = $ldap_connection->group_users($one_group);
                           foreach($temp_array as $one_temp) {
@@ -13314,20 +13712,21 @@ class Multiotp
                           }
                       }
                   }
-              } else {
-                  $in_groups_array_raw = array();
               }
 
-              do { // ldap pagination loop
+              do { // LDAP pagination loop
                   if (function_exists('ldap_control_paged_result')) {
-                      ldap_control_paged_result($ldap_connection->_conn, 1000, false, $page_cookie); // Page size of 1000
+                      ldap_control_paged_result($ldap_connection->_conn_paged, $pageSize, false, $page_cookie); // Page size of 1000
                   }
 
                   $one_user = $ldap_connection->one_user_info(true,
                                                               $user_filter,
                                                               $this->GetLdapFieldsArray(),
-                                                              $this->IsLdapCacheOn()
+                                                              $this->IsLdapCacheOn(),
+                                                              $groups_filtering,
+                                                              $in_groups_filtering
                                                              );
+
                   if ($ldap_connection->IsError()) {
                       $this->EnableLdapError();
                       $this->WriteLog("Error: LDAP connection failed", false, false, 30, 'LDAP', '');
@@ -13382,6 +13781,7 @@ class Multiotp
                           $user = mb_strtolower($user);
                           $account = mb_strtolower($account);
                       }
+
                       if ($account != '') {
 
                           $one_user['msradiusframedipaddress'][0] = (isset($one_user['msradiusframedipaddress'][0])) ? long2ip32bit($one_user['msradiusframedipaddress'][0]) : "---";
@@ -13420,17 +13820,51 @@ class Multiotp
                                   $in_a_group = TRUE;
                               } else {
                                   $in_a_group = FALSE;
-                                  $in_groups_array_raw = explode("§",trim(str_replace(",","§",str_replace(";","§",$this->GetLdapInGroup()))));
                                   foreach($in_groups_array_raw as $one_group) {
                                       $in_groups_array[] = trim($one_group);
                                       $in_groups_lower_array[] = mb_strtolower(trim($one_group));
                                   }
 
+
+                                  // Enhanced Active Directory
+                                  if (1 == $this->GetLdapServerType()) {
+                                      $groups_array_raw = $ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]);
+                                      // All groups are already defined
+                                      /*
+                                      $groups_array_raw=$ldap_connection->user_all_groups($one_user['distinguishedname'][0], $groups_filtering);
+                                      foreach($ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]) as $level_one_group) {
+                                          $add_it = TRUE;
+                                          foreach($groups_array_raw as $one_temp) {
+                                              if (strpos($level_one_group, $one_temp) !== FALSE) {
+                                                  $add_it = FALSE;
+                                              }
+                                          }
+                                          if ($add_it) {
+                                              $groups_array_raw[] = $level_one_group;
+                                          }
+                                      }
+                                      */
+
+                                      foreach($groups_array_raw as $one_group) {
+                                          $this_group = $this->EncodeForBackend($one_group);
+                                          $groups_lower_array[] = mb_strtolower($this_group);
+                                      }
+                                      
+                                      foreach($in_groups_array as $one_filtered_group) {
+                                          if (in_array(mb_strtolower($one_filtered_group), $groups_lower_array)) {
+                                              $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_filtered_group;
+                                              $in_a_group = TRUE;
+                                              if ("" == $group) {
+                                                  $group = $one_filtered_group;
+                                              }
+                                          }
+                                      }
+                                      
                                   // Generic LDAP, eventually no memberOf function like in AD
-                                  if (1 != $this->GetLdapServerType()) {
+                                  } elseif (2 == $this->GetLdapServerType()) {
 
                                       // Prepare the array "users_in_groups" if we are using a generic LDAP and an LdapInGroup Filtering
-                                      if (1 != $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
+                                      if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
                                           foreach($in_groups_array_raw as $one_group) {
                                               $temp_array = $ldap_connection->group_users($one_group);
                                               foreach($temp_array as $one_temp) {
@@ -13447,7 +13881,8 @@ class Multiotp
                                           $temp_array = explode(",", $user_in_groups);
                                           $group = $temp_array[0];
                                       }
-                                  // AD
+
+                                  // Legacy Active Directory
                                   } else {
                                       // $groups_array_raw = $ldap_connection->user_groups($user);
                                       $groups_array_raw=$ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
@@ -13476,7 +13911,6 @@ class Multiotp
                                               }
                                           }
                                       }
-                                      
                                   }
                               }
 
@@ -13654,18 +14088,20 @@ class Multiotp
                               }
                           }
                       } // if ($account != '')
-                  } while ((!$ldap_sync_stop) && ($one_user = $ldap_connection->one_user_info(FALSE, NULL, NULL, TRUE))); // $group_cn_cache_only = TRUE
+                  } while ((!$ldap_sync_stop) && ($one_user = $ldap_connection->one_user_info(FALSE, NULL, NULL, FALSE, $groups_filtering, $in_groups_filtering))); // $group_cn_cache_only = TRUE before
                   // Loop of LDAP parsing and synchronization
 
                   if (function_exists('ldap_control_paged_result_response')) {
-                      ldap_control_paged_result_response($ldap_connection->_conn, $ldap_connection->_oui_sr, $page_cookie);
+                      if (FALSE !== $ldap_connection->_oui_paged_sr) {
+                        ldap_control_paged_result_response($ldap_connection->_conn_paged, $ldap_connection->_oui_paged_sr, $page_cookie);
+                      }
                   }
-              } while ((!$ldap_sync_stop) && ($page_cookie !== null) && ($page_cookie != ''));
+              } while ((!$ldap_sync_stop) && ($page_cookie !== null) && ($page_cookie != '') && ($ldap_connection->_oui_paged_sr !== FALSE));
               // ldap pagination loop
 
               if (function_exists('ldap_control_paged_result')) {
                   // Reset LDAP paged result
-                  ldap_control_paged_result($ldap_connection->_conn, 1000, false);
+                  ldap_control_paged_result($ldap_connection->_conn_paged, $pageSize, false);
               }
 
               if (!$ldap_sync_stop) {
