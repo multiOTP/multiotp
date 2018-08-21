@@ -27,8 +27,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <developer@sysco.ch>
- * @version   5.2.0.2
- * @date      2018-07-16
+ * @version   5.3.0.0
+ * @date      2018-08-21
  * @since     2013-08-06
  * @copyright (c) 2013-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -84,6 +84,7 @@
  *
  * Change Log
  *
+ *   2018-08-21 5.3.0.0 SysCo/al without2FA algorithm added
  *   2017-07-07 5.0.4.9 SysCo/al Code cleaning, possible web information added
  *   2017-05-29 5.0.4.5 SysCo/al Restore configuration added
  *                               Fixed configuration file directory under Windows
@@ -1275,6 +1276,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
                                 <option value="TOTP" selected="selected">TOTP</option>
                                 <option value="HOTP">HOTP</option>
                                 <option value="MOTP">MOTP</option>
+                                <option value="without2FA">without2FA</option>
                             </select>
                         </td>
                     </tr>

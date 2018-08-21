@@ -15,8 +15,8 @@
 # Please check http://www.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <developer@sysco.ch>
-# @version   5.2.0.2
-# @date      2018-07-16
+# @version   5.3.0.0
+# @date      2018-08-21
 # @since     2013-11-29
 # @copyright (c) 2013-2018 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
@@ -39,7 +39,7 @@ MAINTAINER Andre Liechti <andre.liechti@multiotp.net>
 LABEL Description="multiOTP open source, running on Debian ${DEBIAN} with PHP${PHPVERSION}." \
       License="LGPLG-3.0" \
       Usage="docker run --mount source=[SOURCE PERSISTENT VOLUME],target=/etc/multiotp -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d multiotp-open-source" \
-      Version="5.2.0.2"
+      Version="5.3.0.0"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -90,15 +90,22 @@ RUN apt-get update && \
 
 
 ############################################################
+# Offline local docker image creation
+############################################################
+COPY raspberry/boot-part/*.sh /boot/
+COPY raspberry/boot-part/multiotp-tree /boot/multiotp-tree/
+
+
+############################################################
 # Take online the latest version of multiOTP open source
 # (if you want to build an image with the latest
 #  available version instead of the local one)
-
-RUN wget -q http://download.multiotp.net/multiotp.zip -O /tmp/multiotp.zip && \
-    unzip -q -o /tmp/multiotp.zip -d /tmp/multiotp
-
-RUN mv /tmp/multiotp/raspberry/boot-part/* /boot && \
-    rm -rf /tmp/multiotp
+#
+# RUN wget -q http://download.multiotp.net/multiotp.zip -O /tmp/multiotp.zip && \
+#     unzip -q -o /tmp/multiotp.zip -d /tmp/multiotp
+# 
+# RUN mv /tmp/multiotp/raspberry/boot-part/* /boot && \
+#     rm -rf /tmp/multiotp
 ############################################################
 
 

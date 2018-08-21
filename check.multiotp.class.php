@@ -22,8 +22,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.2.0.2
- * @date      2018-07-16
+ * @version   5.3.0.0
+ * @date      2018-08-21
  * @since     2013-07-10
  * @copyright (c) 2013-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -866,6 +866,114 @@ foreach ($backend_array as $backend) {
     {
         echo_full("- ".$ko_on.'KO!'.$ko_off." RenameCurrentUser function failed".$crlf);
     }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Creating user test_wo2fa without 2FA token, but with a prefix PIN
+    $tests++;
+    echo_full($b_on."Creating user test_wo2fa without 2FA token, but with a prefix PIN".$b_off.$crlf);
+    if ($multiotp->CreateUser('test_wo2fa',1,'without2FA','','!prefixpin!',0,0)) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User test_wo2fa successfully created".$crlf);
+        $successes++;
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Creation of user test_wo2fa failed".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Authenticating test_wo2fa without 2FA token and with correct PIN
+    $tests++;
+    echo_full($b_on."Authenticating test_wo2fa without 2FA token and with correct PIN".$b_off.$crlf);
+    $multiotp->SetUser('test_wo2fa');
+    if (0 == ($error = $multiotp->CheckToken('!prefixpin!'))) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User test_wo2fa (with prefix PIN) successfully accepted".$crlf);
+        $successes++;
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Error #".$error." authenticating user test_wo2fa with the prefix PIN".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Authenticating test_wo2fa without 2FA token and with incorrect PIN
+    $tests++;
+    echo_full($b_on."Authenticating test_wo2fa without 2FA token and with incorrect PIN".$b_off.$crlf);
+    $multiotp->SetUser('test_wo2fa');
+    if (0 != ($error = $multiotp->CheckToken('badprefixpin'))) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User test_wo2fa (with incorrect prefix PIN) successfully refused".$crlf);
+        $successes++;
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Authenticating user test_wo2fa with the incorrect prefix PIN accepted".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // Delete the user test_wo2fa if it exists
+    echo_full($i_on);
+    echo_full("Deleting the user test_wo2fa".$crlf);
+    if (!$multiotp->DeleteUser('test_wo2fa', TRUE)) {
+        echo_full("- INFO: User test_wo2fa doesn't exist yet".$crlf);
+    } else {
+        echo_full("- INFO: User test_wo2fa successfully deleted".$crlf);
+    }
+    echo_full($i_off);
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Creating user test_wo2fa2 without 2FA token and without a prefix PIN
+    $tests++;
+    echo_full($b_on."Creating user test_wo2fa2 without 2FA token and without prefix PIN".$b_off.$crlf);
+    if ($multiotp->CreateUser('test_wo2fa2',0,'without2FA','','!noprefixpin!',0,0)) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User test_wo2fa2 successfully created".$crlf);
+        $successes++;
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Creation of user test_wo2fa2 failed".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Authenticating test_wo2fa2 without 2FA token and without a prefix PIN
+    $tests++;
+    echo_full($b_on."Authenticating test_wo2fa2 without 2FA token and without a prefix PIN".$b_off.$crlf);
+    $multiotp->SetUser('test_wo2fa2');
+    if (0 == ($error = $multiotp->CheckToken(''))) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User test_wo2fa2 (without prefix PIN) successfully accepted".$crlf);
+        $successes++;
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Error #".$error." authenticating user test_wo2fa2 without prefix PIN".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Authenticating test_wo2fa2 without 2FA token and with incorrect prefix PIN
+    $tests++;
+    echo_full($b_on."Authenticating test_wo2fa2 without 2FA token and with incorrect prefix PIN".$b_off.$crlf);
+    $multiotp->SetUser('test_wo2fa2');
+    if (0 != ($error = $multiotp->CheckToken('badprefixpin'))) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User test_wo2fa2 (with incorrect prefix PIN) successfully refused".$crlf);
+        $successes++;
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Authenticating user test_wo2fa2 with the incorrect prefix PIN accepted".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // Delete the user test_wo2fa2 if it exists
+    echo_full($i_on);
+    echo_full("Deleting the user test_wo2fa2".$crlf);
+    if (!$multiotp->DeleteUser('test_wo2fa2', TRUE)) {
+        echo_full("- INFO: User test_wo2fa2 doesn't exist yet".$crlf);
+    } else {
+        echo_full("- INFO: User test_wo2fa2 successfully deleted".$crlf);
+    }
+    echo_full($i_off);
     echo_full($crlf);
 
 

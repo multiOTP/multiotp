@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.2.0.2
- * @date      2018-07-16
+ * @version   5.3.0.0
+ * @date      2018-08-21
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -106,7 +106,7 @@
  *  34 ERROR: Linked user doesn't exist
  *  35 ERROR: User not created
  *  37 ERROR: Token already attributed
- *  38 ERROR: User is desactivated
+ *  38 ERROR: User is deactivated
  *  39 ERROR: Requested operation aborted
  *
  *  41 ERROR: SQL error
@@ -392,9 +392,11 @@
  *
  * Change Log
  *
+ *   2018-08-21 5.3.0.0 SysCo/al ENH: help text enhanced, without2fa option added
+ *   2018-07-16 5.2.0.2 SysCo/al ENH: new commande line option ldap-users-dn
  *   2018-03-16 5.1.1.1 SysCo/al FIX: command line -set error for ldap-pwd and prefix-pin
- *   2018-02-26 5.1.0.6 SysCo/al Regular registry entries are now used directly from the Credential Provider.
- *   2018-02-19 5.1.0.3 SysCo/al Credential Provider multiOTPOptions registry entry is used if available
+ *   2018-02-26 5.1.0.6 SysCo/al ENH: Regular registry entries are now used directly from the Credential Provider.
+ *   2018-02-19 5.1.0.3 SysCo/al ENH: Credential Provider multiOTPOptions registry entry is used if available
  *   2017-11-10 5.0.6.0 SysCo/al New -cp option (Credential Provider mode)
  *   2017-05-29 5.0.4.5 SysCo/al PostgreSQL support, based on source code provided by Frank van der Aa
  *   2017-02-21 5.0.3.6 SysCo/al Seed can now be given in Base32 format
@@ -449,7 +451,7 @@
  *   2014-01-21 4.1.2   SysCo/al Direct call of class methods using -call-method
  *   2014-01-20 4.1.1   SysCo/al Minor fixes
  *   2013-12-23 4.1.0   SysCo/al Some modifications in order to correctly handle the class methods
- *                               It is now possible to activate or desactivate a user
+ *                               It is now possible to activate or deactivate a user
  *                               Encrypted pskc files are now supported
  *   2013-08-30 4.0.7   SysCo/al GetScriptFolder() was still buggy sometimes, thanks Frank for the feedback
  *                               File mode of the created QRcode file is also changed base on GetLinuxFileMode()
@@ -755,6 +757,8 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "delete";
     } elseif ("-delete-token" == mb_strtolower($current_arg)) {
         $command = "delete-token";
+    } elseif ("-deactivate" == mb_strtolower($current_arg)) {
+        $command = "deactivate";
     } elseif ("-desactivate" == mb_strtolower($current_arg)) {
         $command = "desactivate";
     } elseif ("-dialin-ip-address" == mb_strtolower($current_arg)) {
@@ -1629,6 +1633,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 }
             }
             break;
+        case "deactivate":
         case "desactivate":
             if (!$multiotp->ReadUserData($all_args[1])) {
                 $result = 21; // ERROR: user doesn't exist.
@@ -2361,7 +2366,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo "  token-id: id of the previously imported token to attribute to the user".$crlf;
                 echo "      user: name of the user (should be the account name)".$crlf;
-                echo "      algo: available algorithms are mOTP, HOTP and TOTP".$crlf;
+                echo "      algo: available algorithms are mOTP, HOTP, TOTP, YubicoOTP and without2FA".$crlf;
                 echo "      seed: hexadecimal or base32 seed of the token".$crlf;
                 echo "       pin: private pin code of the user".$crlf;
                 echo "    digits: number of digits given by the token".$crlf;
@@ -2425,7 +2430,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "               ldap-base-dn: LDAP/AD base".$crlf;
                 echo "               ldap-bind-dn: LDAP/AD bind ".$crlf;
                 echo "         ldap-cn-identifier: LDAP/AD cn identifier (default is sAMAccountName)".$crlf;
-                echo "     ldap-default-algorithm: [totp|hotp|motp] default algorithm for new users".$crlf;
+                echo "     ldap-default-algorithm: [totp|hotp|motp|without2fa] default algorithm".$crlf;
+                echo "                             for new LDAP/AD users".$crlf;
                 echo "    ldap-domain-controllers: LDAP/AD domain controller(s), comma separated".$crlf;
                 echo "       ldap-group-attribute: LDAP/AD group attribute (default is memberOf)".$crlf;
                 echo "   ldap-group-cn-identifier: LDAP/AD group cn identifier".$crlf;
@@ -2438,6 +2444,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                   ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection".$crlf;
                 echo " ldap-synced-user-attribute: LDAP/AD attribute used as the account name".$crlf;
                 echo "            ldap-time-limit: LDAP/AD number of sec. to wait for search results".$crlf;
+                echo "              ldap-users-dn: LDAP/AD users DN (optional, use base-dn if empty)".$crlf;
                 echo "            ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS".$crlf;
                 echo "                             server certificate checks (LDAPTLS_REQCERT)".$crlf;
                 echo "                             'auto' means 'never' for Windows and '' for Linux".$crlf;

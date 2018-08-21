@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2018 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.2.0.2 (2018-07-16)
+Current build: 5.3.0.0 (2018-08-21)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -149,6 +149,7 @@ subfolders from linux to your current multiOTP folder
 
 !!! since 5.0.4.6 under Linux, the config, devices, groups, tokens and users folders are now
 always located in /etc/multiotp/. Please be sure to make the move when you are upgrading !!!
+(before 5.0.4.6, theses subfolders where located just below the main multiOTP folder)
 
 If you are currently using the multiOTP open source windows files, you can
 upgrade your installation by copying the extracted content of the folder and
@@ -157,7 +158,16 @@ subfolders from windows to your current multiOTP folder
 
 WHAT'S NEW IN THE RELEASES
 ==========================
+# What's new in 5.3 releases
+- Multiple semicolon separated "Users DN" supported for AD/LDAP synchronization
+- New windows executable build process, using PHP 7.2.8
+- Special all-in-one-file created with the updated Enigma Virtual Box version 9.00
+- without2FA algorithm now available (useful to do 2FA only for some accounts and not for others)
+
 # What's new in 5.2 releases
+- Multiple semicolon separated Users DN supported (since 5.2.0.3)
+- Active Directory nested groups support
+  (user1 in groupA, groupA in groupB, setting the OTP groups to "groupB" will add user1)
 - Enhanced AD/LDAP support for huge Microsoft Active Directory
 - Base DN and Users DN are now two different parameters (Users DN optional)
 
@@ -277,7 +287,17 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
-2018-07-16 5.2.0.2 ENH: Enhanced AD/LDAP support for huge Microsoft Active Directory
+2018-08-21 5.3.0.0 FIX: stream_timeout is no more pushed to 20 seconds in PostHttpDataXmlRequest if we are in Credential Provider mode
+                   FIX: RemoveTokenFromUser() method corrected. Token administrative information corrected,
+                        new software token created for the user
+                   ENH: Multiple semicolon separated "Users DN" supported for AD/LDAP synchronization
+                   ENH: Additional debug messages for disabled users during synchronization
+                   ENH: Enigma Virtual Box updated to version 9.00 (to create the special all-in-one-file)
+                   ENH: PHP 7.2.8 used in the one single file
+                   ENH: without2FA algorithm now available (useful to do 2FA only for some accounts and not for others)
+2018-07-16 5.2.0.2 ENH: Active Directory nested groups support
+                        (user1 in groupA, groupA in groupB, setting the OTP groups to "groupB" will add user1)
+                   ENH: Enhanced AD/LDAP support for huge Microsoft Active Directory
                    ENH: Base DN and Users DN are now two different parameters (Users DN optional)
 2018-03-20 5.1.1.2 FIX: typo in the source code of the command line option for ldap-pwd and prefix-pin
                    ENH: Dockerfile available
@@ -288,12 +308,12 @@ CHANGE LOG OF RELEASED VERSIONS
                         using Enigma, a php folder is now included in the multiOTP folder
                    FIX: multiOTPOptions registry entry is now useless
 2018-02-21 5.1.0.4 ENH: Credential Provider registry entries are used if available
-2018-02-19 5.1.0.3 Expired AD/LDAP password support
-                   multiOTP Credential Provider (for Windows) improvements
-                     (user@domain.name UPN support, default domain name supported and displayed, SMS request link)
-                   "force_no_prefix_pin" option for devices (for example if the device is a
-                    computer with multiOTP credential Provider and AD/LDAP synced password)
-                   Better unicode handling, multibyte fonctions used when needed (mb_strtolower(), ...)
+2018-02-19 5.1.0.3 FIX: Better unicode handling, multibyte fonctions used when needed (mb_strtolower(), ...)
+                   ENH: Expired AD/LDAP password support
+                   ENH: multiOTP Credential Provider (for Windows) improvements
+                         (user@domain.name UPN support, default domain name supported and displayed, SMS request link)
+                   ENH: "force_no_prefix_pin" option for devices (for example if the device is a
+                        computer with multiOTP credential Provider and AD/LDAP synced password)
 2017-11-04 5.0.5.6 Better FreeRADIUS 3.x documentation
                    New radius tag prefix configuration option
                    New multiple groups device option
@@ -823,6 +843,9 @@ library supports mOTP, TOTP, HOTP, SMS or scratch passwords (printed on paper).
 mOTP is a free implementation of strong tokens that asks a PIN to generate a
 code. This code depends of the time and the PIN typed by the user.
 
+A special without2FA token type is also available. It could be useful to do 2FA
+only for some accounts and not for others.
+
 The easiest tokens to use are TOTP, they are time based and well supported by
 a lot of implementations like Google Authenticator.
 Provisioning will be done simply by flashing a QRcode.
@@ -1289,7 +1312,7 @@ HOW TO CONFIGURE MULTIOTP TO SYNCHRONIZED THE USERS FROM AN ACTIVE DIRECTORY ?
     multiotp -config ldap-activated=1
    
 17) Let's go for an AD/LDAP users synchronisation !
-    (users removed or desactivated in the AD/LDAP are desactivated in multiOTP)
+    (users removed or deactivated in the AD/LDAP are deactivated in multiOTP)
     multiotp -debug -display-log -ldap-users-sync
     
 DON'T FORGET TO SCHEDULE A SCRIPT THAT WILL DO THE USERS SYNCHRONIZATION REGULARY!
@@ -1349,7 +1372,7 @@ HOW TO CONFIGURE MULTIOTP TO SYNCHRONIZED THE USERS FROM A STANDARD LDAP ?
     multiotp -config ldap-activated=1
    
 17) Let's go for an AD/LDAP users synchronisation !
-    (users removed or desactivated in the AD/LDAP are desactivated in multiOTP)
+    (users removed or deactivated in the AD/LDAP are deactivated in multiOTP)
     multiotp -debug -display-log -ldap-users-sync
 
 DON'T FORGET TO SCHEDULE A SCRIPT THAT WILL DO THE USERS SYNCHRONIZATION REGULARY!
@@ -1606,7 +1629,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.2.0.2 (2018-07-16)
+multiOTP 5.3.0.0 (2018-08-21)
 (c) 2010-2018 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1725,7 +1748,7 @@ Usage:
 
   token-id: id of the previously imported token to attribute to the user
       user: name of the user (should be the account name)
-      algo: available algorithms are mOTP, HOTP and TOTP
+      algo: available algorithms are mOTP, HOTP, TOTP, YubicoOTP and without2FA
       seed: hexadecimal or base32 seed of the token
        pin: private pin code of the user
     digits: number of digits given by the token
@@ -1788,7 +1811,8 @@ Usage:
                ldap-base-dn: LDAP/AD base
                ldap-bind-dn: LDAP/AD bind 
          ldap-cn-identifier: LDAP/AD cn identifier (default is sAMAccountName)
-     ldap-default-algorithm: [totp|hotp|motp] default algorithm for new users
+     ldap-default-algorithm: [totp|hotp|motp|without2fa] default algorithm
+                             for new LDAP/AD users
     ldap-domain-controllers: LDAP/AD domain controller(s), comma separated
        ldap-group-attribute: LDAP/AD group attribute (default is memberOf)
    ldap-group-cn-identifier: LDAP/AD group cn identifier
@@ -1801,6 +1825,7 @@ Usage:
                    ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection
  ldap-synced-user-attribute: LDAP/AD attribute used as the account name
             ldap-time-limit: LDAP/AD number of sec. to wait for search results
+              ldap-users-dn: LDAP/AD users DN (optional, use base-dn if empty)
             ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS
                              server certificate checks (LDAPTLS_REQCERT)
                              'auto' means 'never' for Windows and '' for Linux
