@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2018 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.3.0.2 (2018-08-26)
+Current build: 5.3.0.3 (2018-08-26)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -287,7 +287,8 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
-2018-08-26 5.3.0.2 FIX: Restore configuration has been fixed in the command line edition
+2018-08-26 5.3.0.3 FIX: Better without2FA algorithm support
+                   FIX: Restore configuration has been fixed in the command line edition
                    ENH: Cache-level and cache-lifetime can be set separately for each user
                    ENH: In client/server mode, only unencrypted user attributes are sent back to a successful client request
                    ENH: Enhanced monitoring
@@ -1634,7 +1635,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.3.0.2 (2018-08-26)
+multiOTP 5.3.0.3 (2018-08-26)
 (c) 2010-2018 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -2096,8 +2097,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.3.0.2.zip 
-SHA256:66ae72007890f4c18f9e06aa7a87194a26db41adfa486b4bd2697357a005dfae 
-SHA1:708d088bafb9043e403a60c6bc67aa133dea17d5 
-MD5:dcd1fbe67957e7c298678399d0e0f523 
+Hash verification for multiotp_5.3.0.3.zip 
+SHA256:c5d4eddb8de45b18b753f72e6879dd7007b48c2d739db3471e4f3c8ac0d4697b 
+SHA1:905b804418aa4decd2e4357493aa867248223359 
+MD5:338f73d3987660b92fda63b52d45949a 
 ``` 
