@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.0
- * @date      2018-08-21
+ * @version   5.3.0.2
+ * @date      2018-08-26
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -76,9 +76,9 @@
  * Return codes
  *
  *   0 OK: Token accepted
-
+ *
  *  10 INFO: Access Challenge returned back to the client
-
+ *
  *  11 INFO: User successfully created or updated
  *  12 INFO: User successfully deleted
  *  13 INFO: User PIN code successfully changed
@@ -88,7 +88,8 @@
  *  17 INFO: UrlLink successfully created
  *  18 INFO: SMS code request received
  *  19 INFO: Requested operation successfully done
-
+ *
+ *  20 ERROR: User blacklisted
  *  21 ERROR: User doesn't exist
  *  22 ERROR: User already exists
  *  23 ERROR: Invalid algorithm
@@ -105,26 +106,43 @@
  *  33 ERROR: Encryption hash error, encryption key is not the same
  *  34 ERROR: Linked user doesn't exist
  *  35 ERROR: User not created
+ *  36 ERROR: Token doesn't exist
  *  37 ERROR: Token already attributed
  *  38 ERROR: User is deactivated
  *  39 ERROR: Requested operation aborted
  *
+ *  40 ERROR: SQL query error
  *  41 ERROR: SQL error
+ *  42 ERROR: They key is not in the table schema
+ *  43 ERROR: SQL entry cannot be updated
  *
  *  50 ERROR: QRcode not created
  *  51 ERROR: UrlLink not created (no provisionable client for this protocol)
+ *  58 ERROR: File is missing
+ *  59 ERROR: Bad restore configuration password
  *
  *  60 ERROR: No information on where to send SMS code
  *  61 ERROR: SMS code request received, but an error occured during transmission
  *  62 ERROR: SMS provider not supported
+ *  63 ERROR: This SMS code has expired
+ *  64 ERROR: Cannot resent an SMS code right now
+ *  69 ERROR: Failed to send email
  *
  *  70 ERROR: Server authentication error
  *  71 ERROR: Server request is not correctly formatted
  *  72 ERROR: Server answer is not correctly formatted
+ *  79 ERROR: AD/LDAP connection error
  *
  *  80 ERROR: Server cache error
  *  81 ERROR: Cache too old for this user, account autolocked
+ *  82 ERROR: User not allowed for this device
+ *  88 ERROR: Device is not defined as a HA slave
+ *  89 ERROR: Device is not defined as a HA master
  *
+ *  94 ERROR: API request error
+ *  95 ERROR: API authentication failed
+ *  96 ERROR: Authentication failed (CRC error)
+ *  97 ERROR: Authentication failed (wrong private id)
  *  98 ERROR: Authentication failed (wrong token length)
  *  99 ERROR: Authentication failed (and other possible unknown errors)
  *
@@ -175,12 +193,40 @@
  *
  * Users feedbacks and comments
  *
+ * 2018-08-25 Muzammel (PK)
+ *   Thanks for your questions about the client/server process,
+ *    which has been enhanced based on the exchange we had.
+ *
+ * 2018-07-31 Sergey, Kiev (UA)
+ *   Thanks for your questions regarding -restore-config in the command line version.
+ *   The restore function has been corrected
+ *
  * 2018-02-13 Jonathan Garber (via GitHub)
  *   Thanks for your feedback about various issues.
+ *
+ * 2017-11-22 vak255 (via GitHub)
+ *   Thanks for your feedback about a bad handled unicode issue.
+ *   All strtoXXX and strpos have been changed to the the multibyte version.
+ *
+ * 2017-06-11 Richard Green
+ *   Thanks for your proposal about specific LDAPTLS configuration values to be moved in the config parameters.
  *
  * 2017-04-19 Frank van der Aa, Vanboxtel BV (NL)
  *   Thanks a lot for your valuable implementation suggestion about PostgreSQL.
  *   The proposed code has been adapted and integrated in the project.
+ *
+ * 2017-02-14 Frank van der Aa, Vanboxtel BV (NL)
+ *   Thanks for your proposal about GetList() method sorted output.
+ *
+ * 2017-02-09 Frank van der Aa, Vanboxtel BV (NL)
+ *   Thanks for your debug about lockedlistarray[], the proposed
+ *   GetDelayedUsersList() method and the delayed users display on the web GUI.
+ *
+ * 2017-02-02 Stefan Kügler, SerNet GmbH (DE)
+ *   Thanks for your feedback on the last edition.
+ *
+ * 2017-01-24 Jean-François Perillo, Kudelski Security (CH)
+ *   As proposed by Jean-François, requested LDAP password for synchronized users can be overwritten.
  *
  * 2017-01-05 Stefan Kügler, SerNet GmbH (DE)
  *   Thanks for your feedbacks on the last beta edition.
@@ -392,6 +438,7 @@
  *
  * Change Log
  *
+ *   2018-08-26 5.3.0.2 SysCo/al FIX: Restore configuration has been fixed in the command line edition
  *   2018-08-21 5.3.0.0 SysCo/al ENH: help text enhanced, without2fa option added
  *   2018-07-16 5.2.0.2 SysCo/al ENH: new commande line option ldap-users-dn
  *   2018-03-16 5.1.1.1 SysCo/al FIX: command line -set error for ldap-pwd and prefix-pin
@@ -1326,14 +1373,19 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "restore-config":
-            if  ($param_count < 3) {
+            if  ($param_count < 2) {
                 $result = 30; // ERROR: At least one parameter is missing
             } else {
                 $backup_file = ('' != trim($all_args[2])) ? $all_args[2] : 'multiotp.cfg';
-                if (TRUE === ($multiotp->RestoreConfiguration(array('restore_file' => $backup_file, 'encryption_key' => $all_args[1])))) {
-                  $result = 19; // INFO: Requested operation successfully done
+                if (file_exists($backup_file)) {
+                    if (TRUE === ($multiotp->RestoreConfiguration(array('backup_file' => $backup_file,
+                                                                        'restore_key' => $all_args[1])))) {
+                      $result = 19; // INFO: Requested operation successfully done
+                    } else {
+                      $result = 99; // ERROR
+                    }
                 } else {
-                  $result = 99; // ERROR
+                  $result = 58; // ERROR: File is missing
                 }
             }
             break;
@@ -1711,6 +1763,14 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                     $actual_array = explode("=",$all_args[$params],2);
                     if (2 == count($actual_array)) {
                         switch ($actual_array[0]) {
+                            case 'cache-level':
+                                $multiotp->SetUserCacheLevel(intval($actual_array[1]));
+                                $write_user_data = true;
+                                break;
+                            case 'cache-lifetime':
+                                $multiotp->SetUserCacheLifetime(intval($actual_array[1]));
+                                $write_user_data = true;
+                                break;
                             case 'description':
                                 $multiotp->SetUserDescription($actual_array[1]);
                                 $write_user_data = true;
@@ -2459,7 +2519,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "     radius-reply-separator: [,|:|;|cr|crlf] returned attributes separator".$crlf;
                 echo "                             ('crlf' for TekRADIUS, ',' for FreeRADIUS)".$crlf;
                 echo "          self-registration: [1|0] enable/disable self-registration of tokens".$crlf;
-                echo "         server-cache-level: [0|1] enable/allow cache from server to client".$crlf;
+                echo "         server-cache-level: [1|0] enable/allow cache from server to client".$crlf;
                 echo "      server-cache-lifetime: lifetime in seconds of the cached information".$crlf;
                 echo "              server-secret: shared secret used for client/server operation".$crlf;
                 echo "             server-timeout: timeout value for the connection to the server".$crlf;
@@ -2493,6 +2553,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo " multiotp -set user option1=value1 option2=value2 ... optionN=valueN".$crlf;
                 echo "  options are  email: update the email of the user".$crlf;
+                echo "         cache-level: [1|0] enable/allow cache for this user on the client".$crlf;
+                echo "      cache-lifetime: set/update lifetime in seconds of cached information".$crlf;
                 echo "         description: set a description to the user, used for example during".$crlf;
                 echo "                      the QRcode generation as the description of the account".$crlf;
                 echo "               group: set/update the group of the user".$crlf;
@@ -2522,7 +2584,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo "Client/server inline parameters:".$crlf;
                 echo $crlf;
-                echo " -server-cache-level=[0|1] enable/allow cache from server to client".$crlf;
+                echo " -server-cache-level=[1|0] enable/allow cache from server to client".$crlf;
                 echo " -server-secret=shared secret used for client/server operation".$crlf;
                 echo " -server-timeout=timeout value for the connection to the server".$crlf;
                 echo " -server-url=full url of the server(s) for client/server mode".$crlf;
@@ -2540,8 +2602,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo "Backup/restore commands:".$crlf;
                 echo $crlf;
-                echo " multiotp -backup-config password [file-name]".$crlf;
-                echo " multiotp -restore-config password file-name".$crlf;
+                echo " multiotp -backup-config  password [file-name]".$crlf;
+                echo " multiotp -restore-config password [file-name]".$crlf;
                 echo "   By default, the file name is multiotp.cfg in the current folder.".$crlf;
                 echo $crlf;
                 echo $crlf;

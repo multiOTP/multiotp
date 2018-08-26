@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2018 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.3.0.0 (2018-08-21)
+Current build: 5.3.0.2 (2018-08-26)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -287,6 +287,11 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2018-08-26 5.3.0.2 FIX: Restore configuration has been fixed in the command line edition
+                   ENH: Cache-level and cache-lifetime can be set separately for each user
+                   ENH: In client/server mode, only unencrypted user attributes are sent back to a successful client request
+                   ENH: Enhanced monitoring
+2018-08-22 5.3.0.1 ENH: Monitoring fields added (create_host, create_time, last_update_host)
 2018-08-21 5.3.0.0 FIX: stream_timeout is no more pushed to 20 seconds in PostHttpDataXmlRequest if we are in Credential Provider mode
                    FIX: RemoveTokenFromUser() method corrected. Token administrative information corrected,
                         new software token created for the user
@@ -298,7 +303,7 @@ CHANGE LOG OF RELEASED VERSIONS
 2018-07-16 5.2.0.2 ENH: Active Directory nested groups support
                         (user1 in groupA, groupA in groupB, setting the OTP groups to "groupB" will add user1)
                    ENH: Enhanced AD/LDAP support for huge Microsoft Active Directory
-                   ENH: Base DN and Users DN are now two different parameters (Users DN optional)
+                   ENH: "Base DN" and "Users DN" are now two different parameters ("Users DN" optional)
 2018-03-20 5.1.1.2 FIX: typo in the source code of the command line option for ldap-pwd and prefix-pin
                    ENH: Dockerfile available
 2018-03-05 5.1.0.8 FIX: Enigma Virtual Box updated to version 8.10 (to create the special all-in-one-file)
@@ -1629,7 +1634,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.3.0.0 (2018-08-21)
+multiOTP 5.3.0.2 (2018-08-26)
 (c) 2010-2018 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1702,6 +1707,7 @@ Return codes:
 43 ERROR: SQL entry cannot be updated 
 50 ERROR: QRcode not created 
 51 ERROR: UrlLink not created (no provisionable client for this protocol) 
+58 ERROR: File is missing 
 59 ERROR: Bad restore configuration password 
 60 ERROR: No information on where to send SMS code 
 61 ERROR: SMS code request received, but an error occurred during transmission 
@@ -1840,7 +1846,7 @@ Usage:
      radius-reply-separator: [,|:|;|cr|crlf] returned attributes separator
                              ('crlf' for TekRADIUS, ',' for FreeRADIUS)
           self-registration: [1|0] enable/disable self-registration of tokens
-         server-cache-level: [0|1] enable/allow cache from server to client
+         server-cache-level: [1|0] enable/allow cache from server to client
       server-cache-lifetime: lifetime in seconds of the cached information
               server-secret: shared secret used for client/server operation
              server-timeout: timeout value for the connection to the server
@@ -1874,6 +1880,8 @@ Usage:
 
  multiotp -set user option1=value1 option2=value2 ... optionN=valueN
   options are  email: update the email of the user
+         cache-level: [1|0] enable/allow cache for this user on the client
+      cache-lifetime: set/update lifetime in seconds of cached information
          description: set a description to the user, used for example during
                       the QRcode generation as the description of the account
                group: set/update the group of the user
@@ -1903,7 +1911,7 @@ Authentication parameters:
 
 Client/server inline parameters:
 
- -server-cache-level=[0|1] enable/allow cache from server to client
+ -server-cache-level=[1|0] enable/allow cache from server to client
  -server-secret=shared secret used for client/server operation
  -server-timeout=timeout value for the connection to the server
  -server-url=full url of the server(s) for client/server mode
@@ -1921,8 +1929,8 @@ AD/LDAP integration:
 
 Backup/restore commands:
 
- multiotp -backup-config password [file-name]
- multiotp -restore-config password file-name
+ multiotp -backup-config  password [file-name]
+ multiotp -restore-config password [file-name]
    By default, the file name is multiotp.cfg in the current folder.
 
 
@@ -2088,8 +2096,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.3.0.0.zip 
-SHA256:6417b6cde5c53fb43dc89dc9880ca27e155bf68c10834d531baa589b2b031ed7 
-SHA1:b7f29e9191e0b91a00912f9cc2149931a024cc78 
-MD5:3cef7c63ec572d654a0d8f295a6c120f 
+Hash verification for multiotp_5.3.0.2.zip 
+SHA256:66ae72007890f4c18f9e06aa7a87194a26db41adfa486b4bd2697357a005dfae 
+SHA1:708d088bafb9043e403a60c6bc67aa133dea17d5 
+MD5:dcd1fbe67957e7c298678399d0e0f523 
 ``` 

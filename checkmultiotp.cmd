@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.3.0.0
-REM @date      2018-08-21
+REM @version   5.3.0.2
+REM @date      2018-08-26
 REM @since     2010-07-10
 REM @copyright (c) 2010-2018 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -62,6 +62,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2018-08-26 5.3.0.2 SysCo/al Tests adapted for user without 2FA token
 REM   2017-05-29 5.0.4.5 SysCo/al Tests adapted to the new services
 REM   2016-12-08 5.0.3.4 SysCo/al Tests improved (MS-CHAP was wrongly tested)
 REM   2016-10-28 5.0.2.6 SysCo/al Some tests improved
@@ -451,20 +452,57 @@ SET /A SUCCESSES=SUCCESSES+1
 :ErrorScratch
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
+ECHO.
+ECHO Create user test_user_no_2fa without 2FA token and without prefix
+%_multiotp% -log -create -no-prefix-pin test_user_no_2fa WITHOUT2FA
+IF NOT ERRORLEVEL 12 ECHO - OK! User test_user_no_2fa successfully created
+IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
+IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user_no_2fa
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
+
+ECHO.
+ECHO Authenticate test_user_no_2fa without 2FA token and without prefix
+%_multiotp% -keep-local -log test_user_no_2fa ""
+IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user_no_2fa successfully accepted
+IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user_no_2fa with the first token
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
+
+ECHO.
+ECHO Authenticate test_user_no_2fa without 2FA token and without prefix with a bad value
+%_multiotp% -keep-local -log test_user_no_2fa "badvalue"
+IF NOT ERRORLEVEL 1 ECHO - KO! Token of the user test_user test_user_no_2fa accepted with bad value
+IF NOT ERRORLEVEL 1 GOTO ErrorBadValue2FA
+IF ERRORLEVEL 1 ECHO - OK! Token of the user test_user_no_2fa successfully REJECTED (bad value)
+IF ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
+:ErrorBadValue2FA
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
+
+ECHO.
+ECHO And now, delete old users...
+REM Delete the test_user2 (if existing)
+ECHO  - test_user2
+%_multiotp% -log -delete test_user2
+IF NOT ERRORLEVEL 13 ECHO.
+IF NOT ERRORLEVEL 13 ECHO - User test_user2 successfully deleted
+
 REM GOTO DelTestUserSkip
 
 REM Delete the test_user
+ECHO  - test_user
 %_multiotp% -log -delete test_user
 IF NOT ERRORLEVEL 13 ECHO.
 IF NOT ERRORLEVEL 13 ECHO - User test_user successfully deleted
 
 REM Delete the test_user@one.domain
+ECHO  - test_user@one.domain
 %_multiotp% -log -delete test_user@one.domain
 IF NOT ERRORLEVEL 13 ECHO.
 IF NOT ERRORLEVEL 13 ECHO - User test_user@one.domain successfully deleted
 
-REM Delete the test_user2
-%_multiotp% -log -delete test_user2
+REM Delete the test_user_no_2fa
+ECHO  - test_user_no_2fa
+%_multiotp% -log -delete test_user_no_2fa
 IF NOT ERRORLEVEL 13 ECHO.
 IF NOT ERRORLEVEL 13 ECHO - User test_user2 successfully deleted
 
