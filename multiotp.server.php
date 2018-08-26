@@ -27,7 +27,7 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <developer@sysco.ch>
- * @version   5.3.0.2
+ * @version   5.3.0.3
  * @date      2018-08-26
  * @since     2013-08-06
  * @copyright (c) 2013-2018 SysCo systemes de communication sa

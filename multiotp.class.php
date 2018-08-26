@@ -70,7 +70,7 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.2
+ * @version   5.3.0.3
  * @date      2018-08-26
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
@@ -516,7 +516,8 @@
  *
  * Change Log
  *
- *   2018-08-26 5.3.0.2 SysCo/al FIX: Restore configuration has been fixed in the command line edition
+ *   2018-08-26 5.3.0.3 SysCo/al FIX: Better without2FA algorithm support
+ *                               FIX: Restore configuration has been fixed in the command line edition
  *                               ENH: Cache-level and cache-lifetime can be set separately for each user
  *                               ENH: In client/server mode, only unencrypted user attributes are sent back to a successful client request
  *                               ENH: Enhanced monitoring
@@ -832,7 +833,7 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.2
+ * @version   5.3.0.3
  * @date      2018-08-26
  * @since     2010-07-18
  */
@@ -924,7 +925,7 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.3.0.2
+   * @version   5.3.0.3
    * @date      2018-08-26
    * @since     2010-07-18
    */
@@ -944,7 +945,7 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.3.0.2'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.3.0.3'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
@@ -15225,7 +15226,7 @@ class Multiotp
       // We don't accept any input without at least 3 characters (like 'sms'), except for without2FA
       $input_is_empty = ('' == $input_to_check);
       if (strlen($input_to_check) < 3) {
-          $input_to_check.= "! <3 digits";
+          $input_to_check.= "! <3 digits !";
       }
       
       $server_result = -1;
@@ -15241,12 +15242,12 @@ class Multiotp
                       $input_to_check = trim(substr($input_to_check,$pos+1));
                       $input_is_empty = ('' == $input_to_check);
                       if (strlen($input_to_check) < 3) {
-                          $input_to_check.= "! <3 digits";
+                          $input_to_check.= "!! <3 digits !!";
                       }
                   }
               }
           }
-      
+
           if ('' != $this->GetChapPassword()) {
               if (32 < strlen($this->GetChapPassword())) {
                   $hex_id = substr($this->GetChapPassword(),0,2);
@@ -15256,7 +15257,8 @@ class Multiotp
       
               $server_result = $this->CheckUserTokenOnServer($real_user, $this->GetChapPassword(), 'CHAP', $hex_id, $this->GetChapChallenge());
           } else {
-              $server_result = $this->CheckUserTokenOnServer($real_user, $input_to_check);
+              // We authorize to check an empty OTP (possibly for without2FA)
+              $server_result = $this->CheckUserTokenOnServer($real_user, ($input_is_empty ? "" : $input_to_check));
           }
 
           if ($this->_xml_dump_in_log) {
@@ -15300,7 +15302,7 @@ class Multiotp
                   $input_to_check = trim(substr($input_to_check,$pos+1));
                   $input_is_empty = ('' == $input_to_check);
                   if (strlen($input_to_check) < 3) {
-                      $input_to_check.= "! <3 digits!";
+                      $input_to_check.= "!!! <3 digits !!!";
                   }
               }
       
@@ -16198,6 +16200,9 @@ class Multiotp
                   $result = 98;
                   $this->WriteLog("Error: authentication typed by the user is ".strlen($input_to_check)." chars long instead of ".strlen($calculated_token)." chars", FALSE, FALSE, $result, 'User');
               }
+              if ($this->IsDeveloperMode()) {
+                $this->WriteLog("Developer: *authentication typed by the user is $input_to_check", FALSE, FALSE, 8888, 'Debug', '');
+              }
           }
           
           if ($this->GetUserErrorCounter() >= $this->GetMaxBlockFailures()) {
@@ -16297,7 +16302,7 @@ class Multiotp
 
                   $input_is_empty = ('' == $input_to_check);
                   if (strlen($input_to_check) < 3) {
-                      $input_to_check.= "! <3 digits";
+                      $input_to_check.= "!!!! <3 digits !!!!";
                   }
 
                   $now_steps         = intval($now_epoch / $interval);
@@ -16537,6 +16542,9 @@ class Multiotp
                               $result = 98;
                               $this->WriteLog("Info: *(authentication typed by the user is ".strlen($input_to_check)." chars long instead of ".strlen($calculated_token)." chars", FALSE, FALSE, $result, 'User', $user);
                           }
+                      }
+                      if ($this->IsDeveloperMode()) {
+                        $this->WriteLog("Developer: *authentication typed by the user is $input_to_check", FALSE, FALSE, 8888, 'Debug', '');
                       }
                   }
                   

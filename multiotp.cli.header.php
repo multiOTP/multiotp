@@ -35,7 +35,7 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.2
+ * @version   5.3.0.3
  * @date      2018-08-26
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
@@ -438,7 +438,7 @@
  *
  * Change Log
  *
- *   2018-08-26 5.3.0.2 SysCo/al FIX: Restore configuration has been fixed in the command line edition
+ *   2018-08-26 5.3.0.3 SysCo/al FIX: Restore configuration has been fixed in the command line edition
  *   2018-08-21 5.3.0.0 SysCo/al ENH: help text enhanced, without2fa option added
  *   2018-07-16 5.2.0.2 SysCo/al ENH: new commande line option ldap-users-dn
  *   2018-03-16 5.1.1.1 SysCo/al FIX: command line -set error for ldap-pwd and prefix-pin
