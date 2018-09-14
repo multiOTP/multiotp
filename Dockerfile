@@ -15,8 +15,8 @@
 # Please check http://www.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <developer@sysco.ch>
-# @version   5.3.0.3
-# @date      2018-08-26
+# @version   5.4.0.1
+# @date      2018-09-14
 # @since     2013-11-29
 # @copyright (c) 2013-2018 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
@@ -39,7 +39,7 @@ MAINTAINER Andre Liechti <andre.liechti@multiotp.net>
 LABEL Description="multiOTP open source, running on Debian ${DEBIAN} with PHP${PHPVERSION}." \
       License="LGPLG-3.0" \
       Usage="docker run --mount source=[SOURCE PERSISTENT VOLUME],target=/etc/multiotp -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d multiotp-open-source" \
-      Version="5.3.0.3"
+      Version="5.4.0.1"
 
 ARG DEBIAN_FRONTEND=noninteractive
 

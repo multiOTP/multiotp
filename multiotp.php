@@ -37,8 +37,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.3
- * @date      2018-08-26
+ * @version   5.4.0.1
+ * @date      2018-09-14
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -646,8 +646,8 @@ if (!isset($multiotp)) {
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.3
- * @date      2018-08-26
+ * @version   5.4.0.1
+ * @date      2018-09-14
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -1092,6 +1092,12 @@ if (!isset($multiotp)) {
  *
  * Change Log
  *
+ *   2018-09-14 5.4.0.1 SysCo/al FIX: Values of SetUserCacheLevel(), GetUserCacheLevel(), SetUserCacheLifetime() and GetUserCacheLifetime()
+ *                                    are not correctly initialized
+ *                               ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
+ *                               ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
+ *                               ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
+ *                               ENH: PHP display error flag is now set to off by default in the webservice under Windows
  *   2018-08-26 5.3.0.3 SysCo/al FIX: Better without2FA algorithm support
  *                               FIX: Restore configuration has been fixed in the command line edition
  *                               ENH: Cache-level and cache-lifetime can be set separately for each user
@@ -1409,8 +1415,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.3
- * @date      2018-08-26
+ * @version   5.4.0.1
+ * @date      2018-09-14
  * @since     2010-07-18
  */
 {
@@ -1501,8 +1507,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.3.0.3
-   * @date      2018-08-26
+   * @version   5.4.0.1
+   * @date      2018-09-14
    * @since     2010-07-18
    */
   function __construct(
@@ -1521,11 +1527,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.3.0.3'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.4.0.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2018-08-26'; // You should update the date with the date of your changes
+        $temp_date = '@date      2018-09-14'; // You should update the date with the date of your changes
         $this->_date = trim(substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxOCBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -2260,26 +2266,26 @@ class Multiotp
   function SetUserCacheLevel(
       $value
   ) {
-      $this->_config_data['cache_level'] = intval($value);
+      $this->_user_data['cache_level'] = intval($value);
   }
 
 
   function GetUserCacheLevel()
   {
-      return intval($this->_config_data['cache_level']);
+      return intval($this->_user_data['cache_level']);
   }
 
 
   function SetUserCacheLifetime(
       $value
   ) {
-      $this->_config_data['cache_lifetime'] = intval($value);
+      $this->_user_data['cache_lifetime'] = intval($value);
   }
 
 
   function GetUserCacheLifetime()
   {
-      return intval($this->_config_data['cache_lifetime']);
+      return intval($this->_user_data['cache_lifetime']);
   }
 
 
@@ -25699,8 +25705,8 @@ class MultiotpYubikey
  * @brief     Class definition for Yubikey handling.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.1.0.6
- * @date      2018-02-26
+ * @version   5.4.0.0
+ * @date      2018-09-05
  * @since     2014-11-04
  *
  *
@@ -25712,6 +25718,7 @@ class MultiotpYubikey
  *
  * Change Log
  *
+ *   2018-09-05 5.4.0.0 SysCo/al FIX: infinity_dev Fix UTC issue
  *   2018-02-26 5.1.0.6 SysCo/al ENH: __construct instead of the name of the class
  *   2016-03-22 4.3.2.7 SysCo/al ENH: private id support for CheckYubicoOtp method
  *   2014-11-04 4.3.0.0 SysCo/al Initial implementation of MultiotpYubikey class
@@ -26014,7 +26021,14 @@ class MultiotpYubikey
                         sort($yubicloud_response_parameters);
                         
                         if (isset($response['t'])) {
-                            $response['t_utc'] = date_format(date_create(substr($response['t'], 0, -4)), "U");
+                            $posZ=strrpos($response['t'], 'Z');
+                            $responseTime = $response['t'];
+                            if ($posZ > 0)
+                                $responseTime = substr($response['t'], 0, $posZ);
+                            $tzbackup = date_default_timezone_get();
+                            date_default_timezone_set('UTC');
+                            $response['t_utc'] = date_format(date_create($responseTime), "U");
+                            date_default_timezone_set($tzbackup);
                         }
 
                         $parameters_for_hash = '';

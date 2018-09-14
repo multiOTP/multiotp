@@ -9,8 +9,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.3.0.3
-REM @date      2018-08-26
+REM @version   5.4.0.1
+REM @date      2018-09-14
 REM @since     2013-08-20
 REM @copyright (c) 2013-2018 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -47,6 +47,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2018-09-14 5.4.0.1 SysCo/al Compatibility mode to Windows 7 automatically added for radiusd.exe
 REM   2017-05-29 5.0.4.5 SysCo/al Unified script with some bug fixes
 REM                               Alternate authentication executable support
 REM   2016-11-04 5.0.2.7 SysCo/al Unified file header
@@ -138,6 +139,9 @@ REM Define the parameters of the service (launched by SRVANY)
 REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\%_service_tag%\Parameters" /f /v Application /t REG_SZ /d "%_radius_folder%radius\sbin\radiusd.exe" >NUL
 REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\%_service_tag%\Parameters" /f /v AppParameters /t REG_SZ /d "-X -d %_radius_folder%radius\etc\raddb" >NUL
 REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\%_service_tag%\Parameters" /f /v AppDirectory /t REG_SZ /d "%_radius_folder%radius\sbin" >NUL
+
+REM Define the compatibility mode to Windows 7 for radiusd
+REG ADD "HKLM\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" /f /v "%_radius_folder%radius\sbin\radiusd.exe" /t REG_SZ /d "WIN7RTM" >NUL
 
 REM Basic firewall rules for the service
 netsh firewall delete allowedprogram "%_radius_folder%radius\sbin\radiusd.exe" >NUL

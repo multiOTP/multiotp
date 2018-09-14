@@ -11,8 +11,8 @@ class MultiotpYubikey
  * @brief     Class definition for Yubikey handling.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.1.0.6
- * @date      2018-02-26
+ * @version   5.4.0.0
+ * @date      2018-09-05
  * @since     2014-11-04
  *
  *
@@ -24,6 +24,7 @@ class MultiotpYubikey
  *
  * Change Log
  *
+ *   2018-09-05 5.4.0.0 SysCo/al FIX: infinity_dev Fix UTC issue
  *   2018-02-26 5.1.0.6 SysCo/al ENH: __construct instead of the name of the class
  *   2016-03-22 4.3.2.7 SysCo/al ENH: private id support for CheckYubicoOtp method
  *   2014-11-04 4.3.0.0 SysCo/al Initial implementation of MultiotpYubikey class
@@ -326,7 +327,14 @@ class MultiotpYubikey
                         sort($yubicloud_response_parameters);
                         
                         if (isset($response['t'])) {
-                            $response['t_utc'] = date_format(date_create(substr($response['t'], 0, -4)), "U");
+                            $posZ=strrpos($response['t'], 'Z');
+                            $responseTime = $response['t'];
+                            if ($posZ > 0)
+                                $responseTime = substr($response['t'], 0, $posZ);
+                            $tzbackup = date_default_timezone_get();
+                            date_default_timezone_set('UTC');
+                            $response['t_utc'] = date_format(date_create($responseTime), "U");
+                            date_default_timezone_set($tzbackup);
                         }
 
                         $parameters_for_hash = '';

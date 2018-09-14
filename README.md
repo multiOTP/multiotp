@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2018 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.3.0.3 (2018-08-26)
+Current build: 5.4.0.1 (2018-09-14)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -287,6 +287,12 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2018-09-14 5.4.0.1 FIX: Values of SetUserCacheLevel(), GetUserCacheLevel(), SetUserCacheLifetime() and GetUserCacheLifetime()
+                        are not correctly initialized
+                   ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
+                   ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
+                   ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
+                   ENH: PHP display error flag is now set to off by default in the webservice under Windows
 2018-08-26 5.3.0.3 FIX: Better without2FA algorithm support
                    FIX: Restore configuration has been fixed in the command line edition
                    ENH: Cache-level and cache-lifetime can be set separately for each user
@@ -1635,7 +1641,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.3.0.3 (2018-08-26)
+multiOTP 5.4.0.1 (2018-09-14)
 (c) 2010-2018 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -2097,8 +2103,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.3.0.3.zip 
-SHA256:c5d4eddb8de45b18b753f72e6879dd7007b48c2d739db3471e4f3c8ac0d4697b 
-SHA1:905b804418aa4decd2e4357493aa867248223359 
-MD5:338f73d3987660b92fda63b52d45949a 
+Hash verification for multiotp_5.4.0.1.zip 
+SHA256:6fda7fe29953149cc5d8d47ee2fa40cdd339f36c117b063e704a56edb4766662 
+SHA1:ec866b1cdb66c719538dfe2ef9977d9c98f00aa1 
+MD5:1de9c65eba99c41c9de712e3e8b59d3c 
 ``` 
