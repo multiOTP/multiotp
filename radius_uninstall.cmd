@@ -9,10 +9,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.4.0.1
-REM @date      2018-09-14
+REM @version   5.4.1.6
+REM @date      2019-01-25
 REM @since     2013-08-20
-REM @copyright (c) 2013-2018 SysCo systemes de communication sa
+REM @copyright (c) 2013-2019 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -30,7 +30,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2013-2018 SysCo systemes de communication sa
+REM   Copyright (c) 2013-2019 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -40,6 +40,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2018-11-13 5.4.0.2 SysCo/al Detection to know if something must be stopped
 REM   2017-05-29 5.0.4.5 SysCo/al Unified script with some bug fixes
 REM   2016-11-04 5.0.2.7 SysCo/al Unified file header
 REM   2016-10-16 5.0.2.5 SysCo/al Version synchronisation
@@ -62,13 +63,17 @@ PAUSE
 
 SET _folder=%~d0%~p0
 SET _radius_folder=%~d0%~p0
-IF NOT EXIST %_radius_folder%radius SET _radius_folder=%~d0%~p0..\
+IF NOT EXIST %_radius_folder%radius SET _radius_folder=%~d0%~p0.			.\
 
 netsh firewall delete allowedprogram "%_radius_folder%radius\sbin\radiusd.exe" >NUL
 netsh advfirewall firewall delete rule name="multiOTP Radius server" >NUL
 
+SC queryex type= service state= all | FIND "%_service_tag%" >NUL
+IF ERRORLEVEL 1 GOTO NoService
+ECHO Stop and remove the service %_service_tag%
 SC stop %_service_tag% >NUL
 SC delete %_service_tag% >NUL
+:NoService
 
 SET _folder=
 SET _radius_folder=

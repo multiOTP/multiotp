@@ -40,7 +40,8 @@
  *  - mOTP (http://motp.sourceforge.net)
  *  - OATH/HOTP or OATH/TOTP, base32/hex/raw seed, QRcode provisioning
  *    (FreeOTP, Google Authenticator, ...)
- *  - SMS tokens (using aspsms, clickatell, intellisms, or even your own script)
+ *  - SMS tokens (using Afilnet, aspsms, Clickatell, eCall, IntelliSMS, Nexmo,
+ *      NowSMS, SMSEagle, Swisscom LA REST, any custom provider, your own script)
  *  - TAN (emergency scratch passwords)
  *
  * This class can be used as is in your own PHP project, but it can also be
@@ -70,17 +71,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.0.1
- * @date      2018-09-14
+ * @version   5.4.1.6
+ * @date      2019-01-25
  * @since     2010-06-08
- * @copyright (c) 2010-2018 SysCo systemes de communication sa
+ * @copyright (c) 2010-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2018 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2019 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch/)
  *   All rights reserved.
@@ -516,12 +517,22 @@
  *
  * Change Log
  *
- *   2018-09-14 5.4.0.1 SysCo/al FIX: Values of SetUserCacheLevel(), GetUserCacheLevel(), SetUserCacheLifetime() and GetUserCacheLifetime()
- *                                    are not correctly initialized
- *                               ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
- *                               ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
- *                               ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
- *                               ENH: PHP display error flag is now set to off by default in the webservice under Windows
+ *   2019-01-25 5.4.1.6 SysCo/al FIX: If any, clean specific NTP DHCP option at every reboot
+ *   2019-01-18 5.4.1.4 SysCo/al ENH: Modifications for Debian 9.x (stretch) binary images support
+ *   2019-01-07 5.4.1.1 SysCo/al ENH: Raspberry Pi 3B+ support
+ *   2018-11-13 5.4.0.2 SysCo/al ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
+ *                      SysCo/al ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
+ *                      SysCo/al ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
+ *                      SysCo/al ENH: PHP display error flag is now set to off by default in the webservice under Windows
+ *                      SysCo/al ENH: Import of PSKC definition files with binary decoding key file
+ *                      SysCo/al ENH: Added Swisscom LA REST, Afilnet, Clickatell2, eCall, Nexmo,
+ *                                    NowSMS, SMSEagle and custom SMS provider support
+ *   2018-09-14 5.4.0.1 SysCo/al FIX: Values of SetUserCacheLevel(), GetUserCacheLevel(), SetUserCacheLifetime()
+ *                                    and GetUserCacheLifetime() are not correctly initialized
+ *                      SysCo/al ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
+ *                      SysCo/al ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
+ *                      SysCo/al ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
+ *                      SysCo/al ENH: PHP display error flag is now set to off by default in the webservice under Windows
  *   2018-08-26 5.3.0.3 SysCo/al FIX: Better without2FA algorithm support
  *                               FIX: Restore configuration has been fixed in the command line edition
  *                               ENH: Cache-level and cache-lifetime can be set separately for each user
@@ -839,8 +850,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.0.1
- * @date      2018-09-14
+ * @version   5.4.1.6
+ * @date      2019-01-25
  * @since     2010-07-18
  */
 {
@@ -868,6 +879,7 @@ class Multiotp
   var $_ms_nt_key;                // NTLM NT key
   var $_errors_text;              // An array containing errors text description
   var $_config_data;              // An array with all the general config related info
+  var $_config_data_read;         // An array with the last config related info read
   var $_config_folder;            // Folder where the general config file is written
   var $_device;                   // Current device
   var $_device_data;              // An array with all the device related info
@@ -920,6 +932,7 @@ class Multiotp
   var $_ldap_sync_stop_file_name; // AD/LDAP synchronization stop file name
   var $_last_http_status;         // Last HTTP status
   var $_bad_syslog_server;        // The Syslog server is temporarly bad
+  var $_state;                    // State provided by the radius client  
 
   /**
    * @brief   Class constructor.
@@ -931,8 +944,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.4.0.1
-   * @date      2018-09-14
+   * @version   5.4.1.6
+   * @date      2019-01-25
    * @since     2010-07-18
    */
   function __construct(
@@ -951,14 +964,14 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.4.0.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.4.1.6'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2018-09-14'; // You should update the date with the date of your changes
+        $temp_date = '@date      2019-01-25'; // You should update the date with the date of your changes
         $this->_date = trim(substr($temp_date, 8));
       }
-      if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxOCBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
+      if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxOSBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
       if (!isset($this->_website)) { $this->_website = base64_decode('aHR0cDovL3d3dy5tdWx0aU9UUC5uZXQ='); }
       
       $this->_anonymous_stat_interval = 604800; // Stat interval: 7 * 24 * 60 * 60 = 604800 = 1 week
@@ -1074,7 +1087,7 @@ class Multiotp
           // No console authentication by default
           'console_authentication'      => "int(1) DEFAULT 0",
           // Debug mode (to enable it permanently)
-          'create_host'             => "varchar(255) DEFAULT ''",
+          'create_host'                 => "varchar(255) DEFAULT ''",
           'create_time'                 => "int(10) DEFAULT 0",
           'debug'                       => "int(1) DEFAULT 0",
           'default_algorithm'           => "varchar(255) DEFAULT 'totp'",
@@ -1161,14 +1174,25 @@ class Multiotp
           // Server URL can contain multiple servers, they must be separated by ;
           'server_url'                  => "varchar(255) DEFAULT ''",
           'sms_api_id'                  => "varchar(255) DEFAULT ''",
+          'sms_basic_auth'              => "int(1) DEFAULT 0",
+          'sms_content_encoding'        => "varchar(255) DEFAULT ''",
+          'sms_content_success'         => "varchar(255) DEFAULT ''",
+          'sms_digits'                  => "int(10) DEFAULT 6",
+          'sms_encoding'                => "varchar(255) DEFAULT ''",
+          'sms_ip'                      => "varchar(255) DEFAULT ''",
           'sms_message_prefix'          => "varchar(255) DEFAULT '%s is your SMS-Code'",
+          'sms_method'                  => "varchar(255) DEFAULT ''",
+          'sms_no_double_zero'          => "int(1) DEFAULT 0",
           'sms_originator'              => "varchar(255) DEFAULT 'multiOTP'",
           'sms_password'                => "varchar(255) DEFAULT ''",
+          'sms_port'                    => "varchar(255) DEFAULT ''",
           'sms_provider'                => "varchar(255) DEFAULT ''",
-          'sms_userkey'                 => "varchar(255) DEFAULT ''",
-          'sms_digits'                  => "int(10) DEFAULT 6",
+          'sms_send_template'           => "varchar(255) DEFAULT ''",
+          'sms_status_success'          => "varchar(255) DEFAULT ''",
           // SMS timeout before authenticating (in seconds)
           'sms_timeout'                 => "int(10) DEFAULT 180",
+          'sms_url'                     => "varchar(255) DEFAULT ''",
+          'sms_userkey'                 => "varchar(255) DEFAULT ''",
           'smtp_auth'                   => "int(1) DEFAULT 0",
           'smtp_password'               => "varchar(255) DEFAULT ''",
           'smtp_port'                   => "int(10) DEFAULT 25",
@@ -1209,7 +1233,7 @@ class Multiotp
           'cache_result_enabled'       => "int(1) DEFAULT 0",
           'cache_timeout'              => "int(10) DEFAULT 3600",
           'challenge_response_enabled' => "int(1) DEFAULT 0",
-          'create_host'             => "varchar(255) DEFAULT ''",
+          'create_host'                => "varchar(255) DEFAULT ''",
           'create_time'                => "int(10) DEFAULT 0",
           'description'                => "varchar(255) DEFAULT ''",
           'device_secret'              => "varchar(255) DEFAULT ''",
@@ -1452,6 +1476,9 @@ class Multiotp
       $this->_last_http_status = 0;
 
       $this->_bad_syslog_server = false;
+      
+      $this->_state = '';
+
 
       $this->ReadConfigData(true); // Read the configuration data, for the encryption information only
       if (("" == $encryption_key) || ('MuLtIoTpEnCrYpTiOn' == $encryption_key) || ('DefaultCliEncryptionKey' == $encryption_key)) {
@@ -1472,9 +1499,17 @@ class Multiotp
       
       $this->_xml_dump_in_log = false; // For debugging purpose only
       
-      $this->_sms_providers_array = array(array("aspsms", "aspsms", "http://www.aspsms.com/"),
-                                          array("clickatell", "Clickatell", "http://www.clickatell.com/"),
-                                          array("intellisms", "IntelliSMS", "http://www.intellisms.co.uk/")
+      $this->_sms_providers_array = array(array("afilnet", "Afilnet (HTTPS)", "https://www.afilnet.com/", "username,password"),
+                                          array("aspsms", "aspsms.com (XML)", "https://www.aspsms.com/", "username,password"),
+                                          array("clickatell", "Clickatell (legacy XML)", "https://archive.clickatell.com/developers/2015/10/08/xml/", "api_id,username,password"),
+                                          array("clickatell2", "Clickatell (HTTPS)", "https://www.clickatell.com/", "api_id"),
+                                          array("ecall", "eCall.ch (HTTPS)", "https://www.ecall.ch/", "username,password"),
+                                          array("intellisms", "IntelliSMS.co.uk (HTTPS)", "https://www.intellisms.co.uk/", "username,password"),
+                                          array("nexmo", "Nexmo (HTTPS)", "https://www.nexmo.com/", "api_id,password"),
+                                          array("nowsms", "NowSMS.com (on-premises gateway)", "https://www.nowsms.com/", "ip,port,username,password"),
+                                          array("smseagle", "SMSEagle (hardware gateway)", "https://www.smseagle.eu/", "ip,port,username,password"),
+                                          array("swisscom", "Swisscom LA (REST-JSON)", "https://messagingproxy.swisscom.ch:4300/rest/1.0.0/", "api_id,username,password"),
+                                          array("custom", "Custom provider", "")
                                          );
 
       // As various accounts are using the same files
@@ -1766,6 +1801,62 @@ class Multiotp
           $this->SetUser($user);
       }
       return $this->_user_data['dialin_ip_mask'];
+  }
+
+
+  function SetUserChallenge(
+      $first_param,
+      $second_param = "*-*"
+  ) {
+      $result = TRUE;
+      $value = "";
+      if ($second_param == "*-*") {
+          $value = $first_param;
+      } else {
+          $result = $this->SetUser($first_param);
+          $value = $second_param;
+      }
+      $this->_user_data['challenge'] = $value;
+
+      return $result;
+  }
+
+
+  function GetUserChallenge(
+      $user = ''
+  ) {
+      if($user != '') {
+          $this->SetUser($user);
+      }
+      return $this->_user_data['challenge'];
+  }
+
+  
+  function SetUserChallengeValidity(
+      $first_param,
+      $second_param = "*-*"
+  ) {
+      $result = TRUE;
+      $value = 0;
+      if ($second_param == "*-*") {
+          $value = $first_param;
+      } else {
+          $result = $this->SetUser($first_param);
+          $value = $second_param;
+      }
+      $this->_user_data['challenge_validity'] = intval($value);
+
+      return $result;
+  }
+
+
+  function GetUserChallengeValidity(
+      $user = ''
+  ) {
+      if($user != '') {
+          $this->SetUser($user);
+      }
+      return intval($this->_user_data['challenge_validity']);
   }
 
 
@@ -2066,6 +2157,7 @@ class Multiotp
   {
     $this->_errors_text[0] = "OK: Token accepted";
 
+    $this->_errors_text[9] = "INFO: Access Challenge returned back to the client";
     $this->_errors_text[10] = "INFO: Access Challenge returned back to the client";
 
     $this->_errors_text[11] = "INFO: User successfully created or updated";
@@ -2249,6 +2341,9 @@ class Multiotp
         $return_content     = isset($write_data_array['return_content'])?$write_data_array['return_content']:false;
         $flush_attributes   = isset($write_data_array['flush_attributes'])?$write_data_array['flush_attributes']:array();
         $encode_file_id     = isset($write_data_array['encode_file_id'])?$write_data_array['encode_file_id']:false;
+
+        $file_only          = isset($write_data_array['file_only'])?$write_data_array['file_only']:false;
+        $copy_file          = isset($write_data_array['copy_file'])?$write_data_array['copy_file']:'';
       } else {
         // Backward compatibility
         $item               = $write_data_array;
@@ -2271,6 +2366,8 @@ class Multiotp
         $flush_attributes   = array();
         $sync_process       = false;
         $automatic_host     = "";
+        $file_only          = false;
+        $copy_file          = '';
       }
       $backup_format = ('' != $backup_file);
       if ($backup_format) {
@@ -2482,6 +2579,11 @@ class Multiotp
                   // }
                   fwrite($file_handler, $line);
                   fclose($file_handler);
+                  if ('' != $copy_file) {
+                      if (@copy($folder.$filename, $copy_file)) {
+                          @chmod($copy_file, octdec($this->GetLinuxFileMode()));
+                      }
+                  }
                 }
                 $result = $return_content ? $line : true;
                 if ((!$update_last_change) && (!$file_created) && (!$backup_format)) {
@@ -2495,9 +2597,9 @@ class Multiotp
                 if ($file_created) {
                   $this->WriteLog("Info: *File created: ".$folder.$filename, FALSE, FALSE, 8888, 'System', '');
                 }
-              }                    
+              }
           }
-          if ((!$backup_format) && ('mysql' == $this->GetBackendType())) {
+          if ((!$backup_format) && ('mysql' == $this->GetBackendType()) && (!$file_only)) {
               $esc_id_value = escape_mysql_string($id_value);
               if ($this->OpenMysqlDatabase()) {
                   $result = TRUE;
@@ -2611,7 +2713,7 @@ class Multiotp
                       }
                   }
               }
-          } elseif ((!$backup_format) && ('pgsql' == $this->GetBackendType())) {
+          } elseif ((!$backup_format) && ('pgsql' == $this->GetBackendType()) && (!$file_only)) {
               $esc_id_value = pg_escape_string($id_value);
               if ($this->OpenPGSQLDatabase()) {
                   $result = TRUE;
@@ -4334,7 +4436,8 @@ class Multiotp
           }
       } else { // Linux
           $output = array();
-          exec("ifconfig eth0 | grep \"inet addr\" | grep -o -E '([[:xdigit:]]{1,3}\.){3}[[:xdigit:]]{1,3}'", $output);
+          // inet -> works for old (inet addr) and new (inet)
+          exec("ifconfig eth0 | grep \"inet \" | grep -o -E '([[:xdigit:]]{1,3}\.){3}[[:xdigit:]]{1,3}'", $output);
           $ip = (isset($output[0])?$output[0]:'');
       }
       return $ip;
@@ -4456,18 +4559,24 @@ class Multiotp
           }
       } else {
           // Linux
+          // eth -> works for old (eth0) and new (ether)
           $output = array();
           exec("grep -e \"^iface\seth0.*inet\s.*dhcp\" /etc/network/interfaces", $output);
           $mode = (false !== mb_strpos(mb_strtolower(isset($output[0])?$output[0]:''), "dhcp"))?"dhcp":"static";
           
           $output = array();
-          exec("ifconfig eth0 | grep eth0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'", $output);
+          exec("ifconfig eth0 | grep \"eth\" | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'", $output);
           $mac = mb_strtoupper(isset($output[0])?$output[0]:'');
-      
+          
           $output = array();
           exec("ifconfig eth0 | grep \"inet addr\" | grep -o -E '([[:xdigit:]]{1,3}\.){3}[[:xdigit:]]{1,3}'", $output);
           $ip = (isset($output[0])?$output[0]:'');
           $mask = (isset($output[2])?$output[2]:'');
+          if ('' == $ip) {
+              exec("ifconfig eth0 | grep \"inet \" | grep -o -E '([[:xdigit:]]{1,3}\.){3}[[:xdigit:]]{1,3}'", $output);
+              $ip = (isset($output[0])?$output[0]:'');
+              $mask = (isset($output[1])?$output[1]:'');
+          }
 
           $output = array();
           exec("ip route show default | awk '/default/ {print $3}'", $output);
@@ -5478,6 +5587,9 @@ class Multiotp
       if ((!isset($this->_config_data['server_secret'])) || ('' == $this->_config_data['server_secret'])) {
           $this->_config_data['server_secret'] = 'ClientServerSecret';
       }
+      
+      $this->_config_data_read = $this->_config_data;
+
       return $result;
   }
 
@@ -5493,6 +5605,17 @@ class Multiotp
           $class = isset($one_backtrace['class'])?$one_backtrace['class']."::":"";
           $function = isset($one_backtrace['function'])?$one_backtrace['function']:"";
           $this->WriteLog("Developer: *WriteConfigData $file:$line $class$function()", FALSE, FALSE, 8888, 'Debug', '');
+        }
+      }
+      
+      // foreach (array() as $key => $value) // this is not working well in PHP4
+      reset($this->_config_data_read);
+      while(list($key, $value) = each($this->_config_data_read)) {
+        $new_value = (isset($this->_config_data[$key]) ? $this->_config_data[$key] : "");
+        if ($value != $new_value) {
+          if ($this->GetVerboseFlag()) {
+            $this->WriteLog("Debug: New configuration value for $key: '$new_value' (was '$value' before)", FALSE, FALSE, 8888, 'Debug', '');
+          }
         }
       }
 
@@ -5916,6 +6039,26 @@ class Multiotp
   }
 
 
+  function SetState(
+      $value
+  ) {
+      if ((0 === mb_strpos($value, '0x')) && (0 == (strlen($value) % 2))) {
+          $value = hex2bin(substr($value, 2));
+      }
+      $this->_state = trim($value);
+  }
+
+
+  function GetState()
+  {
+    $value = $this->_state;
+      if ((0 === mb_strpos($value, '0x')) && (0 == (strlen($value) % 2))) {
+          $value = hex2bin(substr($value, 2));
+      }
+      return trim($value);
+  }
+
+
   function GetSmsProvidersArray()
   {
       return $this->_sms_providers_array;
@@ -5981,7 +6124,20 @@ class Multiotp
   }
 
 
+  function SetSmsUsername(
+      $value
+  ) {
+      $this->_config_data['sms_userkey'] = $value;
+  }
+
+
   function GetSmsUserkey()
+  {
+      return $this->_config_data['sms_userkey'];
+  }
+
+
+  function GetSmsUsername()
   {
       return $this->_config_data['sms_userkey'];
   }
@@ -6010,6 +6166,149 @@ class Multiotp
   function GetSmsApiId()
   {
       return $this->_config_data['sms_api_id'];
+  }
+
+
+  function SetSmsUrl(
+      $value
+  ) {
+      $this->_config_data['sms_url'] = $value;
+  }
+
+
+  function GetSmsUrl()
+  {
+      return $this->_config_data['sms_url'];
+  }
+
+
+  function SetSmsIp(
+      $value
+  ) {
+      $this->_config_data['sms_ip'] = $value;
+  }
+
+
+  function GetSmsIp()
+  {
+      return $this->_config_data['sms_ip'];
+  }
+
+
+  function SetSmsPort(
+      $value
+  ) {
+      $this->_config_data['sms_port'] = $value;
+  }
+
+
+  function GetSmsPort()
+  {
+      return $this->_config_data['sms_port'];
+  }
+
+
+  function SetSmsSendTemplate(
+      $value
+  ) {
+      $this->_config_data['sms_send_template'] = $value;
+  }
+
+
+  function GetSmsSendTemplate()
+  {
+      return $this->_config_data['sms_send_template'];
+  }
+
+
+  function SetSmsMethod(
+      $value
+  ) {
+      $this->_config_data['sms_method'] = $value;
+  }
+
+
+  function GetSmsMethod()
+  {
+      return $this->_config_data['sms_method'];
+  }
+
+
+  function SetSmsEncoding(
+      $value
+  ) {
+      $this->_config_data['sms_encoding'] = $value;
+  }
+
+
+  function GetSmsEncoding()
+  {
+      return $this->_config_data['sms_encoding'];
+  }
+
+
+  function SetSmsStatusSuccess(
+      $value
+  ) {
+      $this->_config_data['sms_status_success'] = $value;
+  }
+
+
+  function GetSmsStatusSuccess()
+  {
+      return $this->_config_data['sms_status_success'];
+  }
+
+
+  function SetSmsContentSuccess(
+      $value
+  ) {
+      $this->_config_data['sms_content_success'] = $value;
+  }
+
+
+  function GetSmsContentSuccess()
+  {
+      return $this->_config_data['sms_content_success'];
+  }
+
+
+  function SetSmsNoDoubleZero(
+      $value
+  ) {
+      $this->_config_data['sms_no_double_zero'] = ((intval($value) > 0)?1:0);
+  }
+
+
+  function GetSmsNoDoubleZero()
+  {
+      return (($this->_config_data['sms_no_double_zero'] > 0)?1:0);
+  }
+
+
+  function SetSmsBasicAuth(
+      $value
+  ) {
+      $this->_config_data['sms_basic_auth'] = ((intval($value) > 0)?1:0);
+  }
+
+
+  function GetSmsBasicAuth()
+  {
+      return (($this->_config_data['sms_basic_auth'] > 0)?1:0);
+  }
+
+
+  function SetSmsContentEncoding(
+      $value
+  ) {
+      $this->_config_data['sms_content_encoding'] = $value;
+  }
+
+
+  function GetSmsContentEncoding()
+  {
+      return $this->_config_data['sms_content_encoding'];
   }
 
 
@@ -14588,7 +14887,7 @@ class Multiotp
       $value
   ) {
       $this->_reply_array_for_radius = array();
-      $this->AddReplyArrayMessageForRadius($value);
+      $this->AddReplyArrayForRadius($value);
   }
 
 
@@ -14836,86 +15135,27 @@ class Multiotp
       $real_user = '',
       $originator = '',
       $provider = '',
-      $userkey = '',
+      $username = '',
       $password = '',
       $api_id = '',
       $write_log = TRUE,
       $source_tag = ''
   ) {
-      $sms_number = $this->CleanPhoneNumber($sms_recipient);
 
       $result = 62; // ERROR: SMS provider not supported
       
+      $sms_provider   = mb_strtolower((('' != $provider)?$provider:$this->GetSmsProvider()));
+      $sms_api_id     = (('' != $api_id)?$api_id:$this->GetSmsApiId());
+      $sms_username   = (('' != $username)?$username:$this->GetSmsUsername());
+      $sms_password   = (('' != $password)?$password:$this->GetSmsPassword());
       $sms_originator = (('' != $originator)?$originator:$this->GetSmsOriginator());
-      $sms_provider = mb_strtolower((('' != $provider)?$provider:$this->GetSmsProvider()));
-      $sms_userkey = (('' != $userkey)?$userkey:$this->GetSmsUserkey());
-      $sms_password = (('' != $password)?$password:$this->GetSmsPassword());
-      $sms_api_id = (('' != $api_id)?$api_id:$this->GetSmsApiId());
-     
-      if ("aspsms" == $sms_provider) {
-          $sms_message = new MultiotpAspSms($sms_userkey, $sms_password);
-          $sms_message->setOriginator($sms_originator);
-          $sms_message->setRecipient($sms_number);
-          $sms_message->setContent($sms_message_to_send); // Decoding to UTF8 if needed is done in the MultiotpAspSms class
-          $sms_result = intval($sms_message->sendSMS());
-          
-          if (1 != $sms_result) {
-              $result = 61; // ERROR: SMS code request received, but an error occurred during transmission
-              if ($write_log) {
-                  $this->WriteLog("Error: SMS code request received for ".$real_user.(("" != $source_tag)?" for $source_tag":"").", but the ".$sms_provider." error ".$sms_result." occurred during transmission to ".$sms_number, FALSE, FALSE, $result, 'SMS', $real_user);
-              }
-          } else {
-              $result = 18; // INFO: SMS code request received
-              if ($write_log) {
-                  $this->WriteLog("Info: SMS code request received for ".$real_user.(("" != $source_tag)?" for $source_tag":"")." and sent via ".$sms_provider." to ".$sms_number, FALSE, FALSE, $result, 'SMS', $real_user);
-              }
-          }
-      } elseif ("clickatell" == $sms_provider) {
-          $sms_message = new MultiotpClickatell($sms_userkey, $sms_password, $sms_api_id);
-          $sms_message->useRegularServer();
-          $sms_message->setOriginator($sms_originator);
-          $sms_message->setRecipient($sms_number);
-          $sms_message->setContent(encode_utf8_if_needed($sms_message_to_send));
-          $sms_result = intval($sms_message->sendSMS());
-          
-          if (1 != $sms_result) {
-              $result = 61; // ERROR: SMS code request received, but an error occurred during transmission
-              if ($write_log) {
-                  $this->WriteLog("Error: SMS code request received for ".$real_user.(("" != $source_tag)?" for $source_tag":"").", but the ".$sms_provider." error ".$sms_result." occurred during transmission to ".$sms_number, FALSE, FALSE, $result, 'SMS', $real_user);
-      if ($this->GetVerboseFlag()) {
-          $this->WriteLog("DEBUG: *Sent to server: ".encode_utf8_if_needed($sms_message_to_send));
-          $this->WriteLog("DEBUG: *Received from server: ".$sms_message->getReply());
-      }
-              }
-          } else {
-              $result = 18; // INFO: SMS code request received
-              if ($write_log) {
-                  $this->WriteLog("Info: SMS code request received for ".$real_user.(("" != $source_tag)?" for $source_tag":"")." and sent via ".$sms_provider." to ".$sms_number, FALSE, FALSE, $result, 'SMS', $real_user);
-              }
-          }
-      } elseif ("intellisms" == $sms_provider) {
-          $sms_message = new MultiotpIntelliSms($sms_userkey, $sms_password);
-          $sms_message->useRegularServer();
-          $sms_message->setOriginator($sms_originator);
-          $sms_message->setRecipient($sms_number);
-          $sms_message->setContent(encode_utf8_if_needed($sms_message_to_send));
-          $sms_result = $sms_message->sendSMS();
-          
-          if ("ID" != substr($sms_result,0,2)) {
-              $result = 61; // ERROR: SMS code request received, but an error occurred during transmission
-              if ($write_log) {
-                  $this->WriteLog("Error: SMS code request received for ".$real_user.(("" != $source_tag)?" for $source_tag":"").", but the ".$sms_provider." error ".$sms_result." occurred during transmission to ".$sms_number, FALSE, FALSE, $result, 'SMS', $real_user);
-              }
-          } else {
-              $result = 18; // INFO: SMS code request received
-              if ($write_log) {
-                  $this->WriteLog("Info: SMS code request received for ".$real_user.(("" != $source_tag)?" for $source_tag":"")." and sent via ".$sms_provider." to ".$sms_number, FALSE, FALSE, $result, 'SMS', $real_user);
-              }
-          }
-      } elseif ("exec" == $sms_provider) {
+
+      $sms_number     = $this->CleanPhoneNumber($sms_recipient);
+      
+      if ("exec" == $sms_provider) {
           $exec_cmd = $sms_api_id;
           $exec_cmd = str_replace('%from', $sms_originator, $exec_cmd);
-          $exec_cmd = str_replace('%to',  $sms_number,  $exec_cmd);
+          $exec_cmd = str_replace('%to',   $sms_number,  $exec_cmd);
           $exec_cmd = str_replace('%msg',  encode_utf8_if_needed($sms_message_to_send),  $exec_cmd);
           exec($exec_cmd, $output);
           $result = 18; // INFO: SMS code request received
@@ -14923,9 +15163,44 @@ class Multiotp
               $this->WriteLog("Info: SMS code request received for ".$real_user.(("" != $source_tag)?" for $source_tag":"")." and sent via ".$exec_cmd, FALSE, FALSE, $result, 'SMS', $real_user);
           }
       } else {
-          $result = 62; // ERROR: SMS provider not supported
-          if ($write_log) {
-              $this->WriteLog("Error: SMS provider ".$sms_provider." not supported".(("" != $source_tag)?" for $source_tag":""), FALSE, FALSE, $result, 'SMS', $real_user);
+          $sms_message = new MultiotpSms(array('provider'        => $sms_provider,
+                                               'api_id'          => $sms_api_id,
+                                               'username'        => $sms_username,
+                                               'password'        => $sms_password,
+                                               'from'            => $sms_originator,
+                                               'to'              => $sms_number,
+                                               'msg'             => $sms_message_to_send,
+                                               'ip'              => $this->GetSmsIp(),
+                                               'port'            => $this->GetSmsPort(),
+                                               'url'             => $this->GetSmsUrl(), // can be multiple URLs, separated by space
+                                               'send_template'   => $this->GetSmsSendTemplate(),
+                                               'method'          => $this->GetSmsMethod(), // GET|POST|POST-XML
+                                               'encoding'        => $this->GetSmsEncoding(), // UTF(UTF-8)|ISO(ISO-8859-1)
+                                               'status_success'  => $this->GetSmsStatusSuccess(), // 20|""|...
+                                               'content_success' => $this->GetSmsContentSuccess(), // OK|"command_status": 0|...
+                                               'no_double_zero'  => $this->GetSmsNoDoubleZero(),
+                                               'basic_auth'      => $this->GetSmsBasicAuth(),
+                                               'content_encoding'=> $this->GetSmsContentEncoding(),
+                                              ));
+
+          if ($sms_message->sendSMS()) {
+              $result = 18; // INFO: SMS code request received
+              if ($write_log) {
+                  $this->WriteLog("Info: SMS code request received for ".$real_user.(("" != $source_tag)?" for $source_tag":"")." and sent via ".$sms_provider." to ".$sms_number, FALSE, FALSE, $result, 'SMS', $real_user);
+              }
+              if ($this->GetVerboseFlag()) {
+                  $this->WriteLog("Debug: *Detailed Sent Info successful to $sms_provider: ".$sms_message->getLastSendInfo(), FALSE, FALSE, 8888, 'Debug', '');
+                  $this->WriteLog("Debug: *Detailed Sent Info successful returned from $sms_provider: ".$sms_message->getLastReplyInfo(), FALSE, FALSE, 8888, 'Debug', '');
+              }
+          } else {
+              $result = 61; // ERROR: SMS code request received, but an error occurred during transmission
+              if ($write_log) {
+                  $this->WriteLog("Error: SMS code request received for ".$real_user.(("" != $source_tag)?" for $source_tag":"").", but the ".$sms_provider." error ".$sms_message->getLastReplyInfo()." occurred during transmission to ".$sms_number, FALSE, FALSE, $result, 'SMS', $real_user);
+              }
+              if ($this->GetVerboseFlag()) {
+                  $this->WriteLog("Debug: *Detailed Sent Info error to $sms_provider: ".$sms_message->getLastSendInfo(), FALSE, FALSE, 8888, 'Debug', '');
+                  $this->WriteLog("Debug: *Detailed Sent Info error returned from $sms_provider: ".$sms_message->getLastReplyInfo(), FALSE, FALSE, 8888, 'Debug', '');
+              }
           }
       }
       return $result;
@@ -15185,6 +15460,10 @@ class Multiotp
           $self_register_serial = isset($input_array['self_register_serial'])?$input_array['self_register_serial']:'';
           $hardware_tokens_list = isset($input_array['hardware_tokens_list'])?$input_array['hardware_tokens_list']:'';
           $no_increment_error = isset($input_array['no_increment_error'])?$input_array['no_increment_error']:FALSE;
+          $challenge_response_enabled = intval(isset($input_array['challenge_response_enabled'])?$input_array['challenge_response_enabled']:0);
+          $sms_challenge_enabled = intval(isset($input_array['sms_challenge_enabled'])?$input_array['sms_challenge_enabled']:0);
+          $text_sms_challenge = isset($input_array['text_sms_challenge'])?$input_array['text_sms_challenge']:'';
+          $text_token_challenge = isset($input_array['text_token_challenge'])?$input_array['text_token_challenge']:'';
       } else {
           $input = $input_array; // backward compatibility
           $input_sync = $input_sync_param;
@@ -15196,8 +15475,17 @@ class Multiotp
           $hardware_tokens_list = $hardware_tokens_list_param;
           // New parameters, only available in the array
           $no_increment_error = FALSE;
+          $challenge_response_enabled = 0;
+          $sms_challenge_enabled = 0;
+          $text_sms_challenge = '';
+          $text_token_challenge = '';
       }
   
+      $state = trim($this->GetState());
+      if ('' == $state) {
+          $state = "multiOTP".substr(md5($this->GetEncryptionKey().time().mt_rand(100000,999999)),0,24);
+      }
+
       $cache_result_enabled = false;
       $disable_error_counter = false;
       $force_no_prefix_pin = false;
@@ -15417,6 +15705,100 @@ class Multiotp
               $input_to_check = $this->GetMsChap2Response();
           }
 
+          // Challenge/response stage 1 and 2
+          // Don't check prefix PIN if we are in the response stage of the challenge
+          if ((1 == $challenge_response_enabled) && (($state == $this->GetUserChallenge()) && ($this->GetUserChallengeValidity() >= $now_epoch))) {
+              // Challenge/response stage 2
+              if ($this->GetVerboseFlag()) {
+                  $this->WriteLog("Debug: *Challenge stage 2, state is ok, now checking OTP without prefix", FALSE, FALSE, 8888, 'Debug', '');
+              }
+              $force_no_prefix_pin = true;
+          } elseif ((1 == $challenge_response_enabled) && (($state != $this->GetUserChallenge()) || ($this->GetUserChallengeValidity() < $now_epoch))) {
+              // Challenge/response stage 1
+              if ('' != $input_to_check) {
+                  if ($this->GetVerboseFlag()) {
+                      $this->WriteLog("Debug: *Challenge stage 1, waiting prefix only", FALSE, FALSE, 8888, 'Debug', '');
+                  }
+                  if ($this->IsUserRequestLdapPasswordEnabled()) {
+                      $ldap_check_passed = FALSE;
+                      $ldap_to_check = $input_to_check;
+                      if ($this->GetVerboseFlag()) {
+                          $this->WriteLog("Debug: *Challenge stage 1, check LDAP prefix", FALSE, FALSE, 8888, 'Debug', '');
+                      }
+                      if ($this->CheckUserLdapPassword($this->GetUserSynchronizedDn(), $ldap_to_check)) {
+                          $ldap_check_passed = TRUE;
+                          if ($this->IsCacheLdapHash()) {
+                              // The LDAP password is stored in a cache
+                              $this->SetUserLdapHashCache(bin2hex($this->NtPasswordHashHash($this->NtPasswordHash($ldap_to_check))));
+                          }
+                      } elseif ($this->IsCacheLdapHash()) {
+                          if (!$this->IsLdapServerReachable()) {
+                              if ($this->GetVerboseFlag()) {
+                                  $this->WriteLog("Debug: *user LDAP hash password checked in the cache", FALSE, FALSE, 8888, 'Debug', '');
+                              }
+                              if ($this->GetUserLdapHashCache() === bin2hex($this->NtPasswordHashHash($this->NtPasswordHash($ldap_to_check)))) {
+                                  $ldap_check_passed = TRUE;
+                                  if ($this->GetVerboseFlag()) {
+                                      $this->WriteLog("Debug: *user LDAP hash password verified, based on cached hash password", FALSE, FALSE, 8888, 'Debug', '');
+                                  }
+                              } else {
+                                  if ($this->GetVerboseFlag()) {
+                                      $this->WriteLog("Debug: *user LDAP hash password verification failed", FALSE, FALSE, 8888, 'Debug', '');
+                                  }
+                              }
+                          } else {
+                              $ldap_check_passed = FALSE;
+                              $ldap_to_check = '!LDAP_FALSE!';
+                              $this->ResetUserLdapHashCache();
+                              $this->WriteLog("Error: User $real_user verification failed, unreachable LDAP/AD server(s)", FALSE, FALSE, 99, 'User');
+                          }
+                      }
+                  } else {
+                      // It is a real prefix pin, not an LDAP/AD prefix
+                      $code_to_check = $this->GetUserPin();
+                      if ($this->GetVerboseFlag()) {
+                          $this->WriteLog("Debug: *Challenge stage 1, check prefix PIN", FALSE, FALSE, 8888, 'Debug', '');
+                      }
+                      if ('' != $this->GetChapPassword()) {
+                          $code_to_check = $this->CalculateChapPassword($code_to_check);
+                      } elseif ('' != $this->GetMsChapResponse()) {
+                          $code_to_check = $this->CalculateMsChapResponse($code_to_check);
+                      } elseif ('' != $this->GetMsChap2Response()) {
+                          $code_to_check = $this->CalculateMsChap2Response($real_user, $code_to_check);
+                      }
+                  }
+                  if ($ldap_check_passed || ($input_to_check === $code_to_check)) {
+                      $result = 9; // INFO: Access Challenge returned back to the client
+                      $state = "multiOTP".substr(md5($this->GetEncryptionKey().time().mt_rand(100000,999999)),0,24);
+                      if ($this->GetVerboseFlag()) {
+                          $this->WriteLog("Debug: *Challenge sent to the client: $state", FALSE, FALSE, 8888, 'Debug', '');
+                      }
+                      $this->SetUserChallenge($state);
+                      $this->SetUserChallengeValidity($now_epoch + (5*60)); // The challenge state is valid for 5 minutes
+                      $this->SetReplyMessageForRadius('State = "'.$state.'"');
+
+                      if (1 == $sms_challenge_enabled) {
+                          if (18 == $this->GenerateSmsToken()) {
+                              $this->AddReplyArrayForRadius('Reply-Message'.$this->GetRadiusReplyAttributor().'"'.$text_sms_challenge.'"');
+                          } else {
+                              $this->AddReplyArrayForRadius('Reply-Message'.$this->GetRadiusReplyAttributor().'"'.$text_token_challenge.'"');
+                          }
+                      } else {
+                          $this->AddReplyArrayForRadius('Reply-Message'.$this->GetRadiusReplyAttributor().'"'.$text_token_challenge.'"');
+                      }
+                      
+                      if (!$this->WriteUserData()) {
+                          $result = 28; // ERROR: Unable to write the changes in the file
+                          $this->WriteLog("Error: Unable to write the challenge changes in the file for the user ".$real_user, FALSE, FALSE, $result, 'User');
+                      } else {
+                          $this->WriteLog("Info: waiting challenge response for user ".$real_user.", state $state.", FALSE, FALSE, $result, 'User', $real_user);
+                      }
+                      return $result;
+                  }
+              }
+          }
+
+
           // Check if we have to validate an SMS code
           if ($this->GetUserSmsValidity() > $now_epoch) {
               $ldap_check_passed = FALSE;
@@ -15457,7 +15839,7 @@ class Multiotp
                               $this->WriteLog("Error: User $real_user verification failed, unreachable LDAP/AD server(s)", FALSE, FALSE, 99, 'User');
                           }
                       }
-                  }
+                  } // ($code_to_check === $code_confirmed)
               } else {
                   // It is a real prefix pin, not an LDAP/AD prefix
                   $code_confirmed = (((1 == $this->GetUserPrefixPin()) && (!$force_no_prefix_pin))?$this->GetUserPin():'').$this->GetUserSmsOtp();
@@ -16216,6 +16598,10 @@ class Multiotp
           }
 
           if (0 == $result) {
+              // Remove the state to block the challenge
+              $this->SetUserChallenge('');
+              $this->SetUserChallengeValidity(0);
+
               if ($cache_result_enabled) {
                   if ($this->GetVerboseFlag()) {
                       $this->WriteLog("Debug: *checked code for future cache access: ".str_repeat('x', (strlen($input_to_check) >= 6)?strlen($input_to_check)-6:0).substr($input_to_check, -6), FALSE, FALSE, 8888, 'Debug', '');
@@ -18952,6 +19338,21 @@ class Multiotp
       // Is it potentially a Raspberry Pi 2 or a BeagleBone Black ?
       if (false !== mb_strpos(mb_strtolower($os_running), 'armv8')) {
           $type = 'RP3'; // Raspberry Pi 3 (BCM2709)
+          $hardware = '';
+          exec("cat /proc/cpuinfo | grep --color=never -i Hardware", $output);
+          foreach($output as $line) {
+            $line.= "  ";
+            if (preg_match("/^Hardware\s*:\s*(.*)/", $line)) {
+              preg_match_all("/^Hardware\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+              if (isset($result_array[0][1])) {
+                $hardware = mb_strtoupper(trim($result_array[0][1]));
+                break;
+              }
+            }
+          }
+          if (FALSE !== mb_strpos(mb_strtolower($hardware), 'bcm28')) {
+            $type = 'RP3+'; // Raspberry Pi 3B+
+          }
       } elseif (FALSE !== mb_strpos(mb_strtolower($os_running), 'armv7l')) {
         $hardware = '';
         exec("cat /proc/cpuinfo | grep --color=never -i Hardware", $output);
@@ -18984,6 +19385,8 @@ class Multiotp
                   } else {
                       $type = 'RP2'; // Raspberry Pi 2
                   }
+        } elseif (FALSE !== mb_strpos(mb_strtolower($hardware), 'bcm28')) {
+          $type = 'RP3+'; // Raspberry Pi 3B+
         } else {
           $type = 'BBB'; // Beaglebone Black (Generic AM33XX and others)
         }
@@ -19996,11 +20399,7 @@ EOL;
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-require_once('contrib/MultiotpAspSms.php'); // External contribution
-
-require_once('contrib/MultiotpClickatell.php'); // External contribution
-
-require_once('contrib/MultiotpIntelliSms.php'); // External contribution
+require_once('contrib/MultiotpSms.php'); // External contribution
 
 require_once('contrib/MultiotpTools.php'); // External contribution
 

@@ -9,10 +9,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.4.0.1
-REM @date      2018-09-14
+REM @version   5.4.1.6
+REM @date      2019-01-25
 REM @since     2013-08-09
-REM @copyright (c) 2013-2018 SysCo systemes de communication sa
+REM @copyright (c) 2013-2019 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -30,7 +30,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2013-2018 SysCo systemes de communication sa
+REM   Copyright (c) 2013-2019 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -40,6 +40,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2018-11-13 5.4.0.2 SysCo/al Detection to know if something must be stopped
 REM   2017-05-29 5.0.4.5 SysCo/al Unified script with some bug fixes
 REM   2017-01-10 5.0.3.4 SysCo/al The web server is now Nginx instead of Mongoose
 REM   2016-11-04 5.0.2.7 SysCo/al Unified file header
@@ -68,10 +69,15 @@ IF NOT EXIST %_web_folder%webservice SET _web_folder=%~d0%~p0..\
 netsh firewall delete allowedprogram "%_folder%webservice\nginx.exe" >NUL
 netsh advfirewall firewall delete rule name="%_service_tag%" >NUL
 
+SC queryex type= service state= all | FIND "%_service_tag%" >NUL
+IF ERRORLEVEL 1 GOTO NoService
+ECHO Stop and remove the service %_service_tag%
 "%_web_folder%webservice\nssm" stop "%_service_tag%" >NUL
 "%_web_folder%webservice\nssm" remove "%_service_tag%" confirm >NUL
+:NoService
 
-TASKKILL /F /IM php-cgi.exe >NUL
+TASKLIST | FIND "php-cgi.exe" >NUL
+IF NOT ERRORLEVEL 1 TASKKILL /F /IM php-cgi.exe >NUL
 
 SET _folder=
 SET _web_folder=

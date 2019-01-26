@@ -11,10 +11,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.4.0.1
-REM @date      2018-09-14
+REM @version   5.4.1.6
+REM @date      2019-01-25
 REM @since     2010-07-10
-REM @copyright (c) 2010-2018 SysCo systemes de communication sa
+REM @copyright (c) 2010-2019 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -38,7 +38,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2018 SysCo systemes de communication sa
+REM   Copyright (c) 2010-2019 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -62,6 +62,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2018-11-13 5.4.0.2 SysCo/al Calls to nircmd tool removed
 REM   2018-08-26 5.3.0.3 SysCo/al Tests adapted for user without 2FA token
 REM   2017-05-29 5.0.4.5 SysCo/al Tests adapted to the new services
 REM   2016-12-08 5.0.3.4 SysCo/al Tests improved (MS-CHAP was wrongly tested)
@@ -349,7 +350,7 @@ IF NOT EXIST %_radius_dir%bin GOTO NoRadiusCheck
 
 ECHO.
 ECHO - Install and start the RADIUS server (wait 5 seconds)
-%_tools_dir%nircmd elevate CMD /c CALL %_check_dir%radius_install.cmd %_check_r_auth_port% %_check_r_acct_port% multiOTPradiusTest multiOTPradiusTest
+CALL %_check_dir%radius_install.cmd %_check_r_auth_port% %_check_r_acct_port% multiOTPradiusTest multiOTPradiusTest
 PING 127.0.0.1 -n 5 >NUL
 
 ECHO.
@@ -368,14 +369,14 @@ DEL %TEMP%\radiustest.conf /Q
 
 ECHO.
 ECHO - Stop and uninstall the RADIUS server
-%_tools_dir%nircmd elevate CMD /c CALL %_check_dir%radius_uninstall.cmd multiOTPradiusTest
+CALL %_check_dir%radius_uninstall.cmd multiOTPradiusTest
 
 :NoRadiusCheck
 
 
 ECHO.
 ECHO - Install and start the multiOTP web service (wait 5 seconds)
-%_tools_dir%nircmd elevate CMD /c CALL %_check_dir%webservice_install.cmd %_check_web_port% %_check_ssl_port% multiOTPserverTest multiOTPserverTest
+CALL %_check_dir%webservice_install.cmd %_check_web_port% %_check_ssl_port% multiOTPserverTest multiOTPserverTest
 PING 127.0.0.1 -n 5 >NUL 
 
 ECHO.
@@ -563,7 +564,7 @@ SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
 ECHO - Stop and uninstall the multiOTP web service
-%_tools_dir%nircmd elevate CMD /c CALL %_check_dir%webservice_uninstall.cmd multiOTPserverTest
+CALL %_check_dir%webservice_uninstall.cmd multiOTPserverTest
 
 
 ECHO.

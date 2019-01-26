@@ -3,10 +3,10 @@ multiOTP open source
 multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
 multiOTP open source is OATH certified for HOTP/TOTP
 
-(c) 2010-2018 SysCo systemes de communication sa  
+(c) 2010-2019 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.4.0.1 (2018-09-14)
+Current build: 5.4.1.6 (2019-01-25)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -59,7 +59,8 @@ The multiOTP class supports currently the following algorithms and RFC's:
 - mOTP (http://motp.sourceforge.net)
 - OATH/HOTP or OATH/TOTP, base32/hex/raw seed, QRcode provisioning
   (FreeOTP, Google Authenticator, ...)
-- SMS tokens (using aspsms, clickatell, intellisms, or even your own script)
+- SMS tokens (using Afilnet, aspsms, Clickatell, eCall, IntelliSMS, Nexmo,
+  NowSMS, SMSEagle, Swisscom LA REST, any custom provider, your own script)
 - TAN (emergency scratch passwords)
 
 This package was initially published here : http://syscoal.users.phpclasses.org/package/6373.html
@@ -92,6 +93,7 @@ TABLE OF CONTENTS
  * How to install a local only strong authentication on a Windows machine ?
  * How to install a centralized strong authentication server
    for strong authentication on Windows desktops or RDP ?
+ * OpenSSL options for LDAPS
  * Compatible clients applications and devices
  * External packages used
  * multiOTP PHP class documentation
@@ -158,6 +160,12 @@ subfolders from windows to your current multiOTP folder
 
 WHAT'S NEW IN THE RELEASES
 ==========================
+# What's new in 5.4 releases
+- SMS providers added (Swisscom LA REST, Afilnet, Clickatell2, eCall, Nexmo, NowSMS, SMSEagle)
+- Generic SMS custom provider
+- Debian 9.x (stretch) binary images support
+- Raspberry Pi 3B+ support
+
 # What's new in 5.3 releases
 - Multiple semicolon separated "Users DN" supported for AD/LDAP synchronization
 - New windows executable build process, using PHP 7.2.8
@@ -287,8 +295,17 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
-2018-09-14 5.4.0.1 FIX: Values of SetUserCacheLevel(), GetUserCacheLevel(), SetUserCacheLifetime() and GetUserCacheLifetime()
-                        are not correctly initialized
+2019-01-25 5.4.1.6 FIX: If any, clean specific NTP DHCP option at every reboot
+2019-01-18 5.4.1.4 ENH: Modifications for Debian 9.x (stretch) binary images support
+2019-01-07 5.4.1.1 ENH: Raspberry Pi 3B+ support
+2018-11-13 5.4.0.2 ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
+                   ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
+                   ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
+                   ENH: PHP display error flag is now set to off by default in the webservice under Windows
+                   ENH: Import of PSKC definition files with binary decoding key file
+                   ENH: Added Swisscom LA REST, Afilnet, Clickatell2, eCall, Nexmo, NowSMS, SMSEagle and custom SMS provider support
+2018-09-14 5.4.0.1 FIX: Values of SetUserCacheLevel(), GetUserCacheLevel(), SetUserCacheLifetime()
+                        and GetUserCacheLifetime() are not correctly initialized
                    ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
                    ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
                    ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
@@ -732,15 +749,20 @@ The multiotp.php file is a copy of the multiotp.cli.header.php including
 the copy of all files that are included in the PHP code, which are
 multiotp.class.php and the whole contrib subfolder content.
 
-For the Raspberry Pi edition, the multiotp.php file is the copy of the
-multiotp.cli.proxy.php file.
+For the virtual appliance and the Raspberry Pi edition, the multiotp.php file
+is a copy of the multiotp.cli.proxy.php file.
 (the proxy version calls the multiotp.proxy.php using the web server,
 and the web server has a PHP cache to improve the speed of the whole process).
-Furthermore, the following line in the multiotp.class.php:
+
+For the virtual appliance and the Raspberry Pi edition, the multiotp.proxy.php file is
+a copy of the multiotp.cli.header.php including the copy of all files that are included
+in the PHP code, which are multiotp.class.php and the whole contrib subfolder content.
+
+For the virtual appliance and the Raspberry Pi edition, the following line in multiotp.class.php
 ```
 $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path);
 ```
-is replaced by:
+is replaced by
 ```
 $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path);
 if (false !== strpos(getcwd(), '/')) {
@@ -756,30 +778,7 @@ if (false !== strpos(getcwd(), '/')) {
 $multiotp->SetLinuxFileMode('0666');
 ```
 
-For the Raspberry Pi edition, the multiotp.proxy.php file is a copy of the
-multiotp.cli.header.php including the copy of all files that are included in
-the PHP code, which are multiotp.class.php and the whole contrib subfolder content.
-Furthermore, the following line in the multiotp.class.php:
-```
-$multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path);
-```
-is replaced by:
-```
-$multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path);
-if (false !== strpos(getcwd(), '/')) {
-  $multiotp->SetConfigFolder('/etc/multiotp/config/');
-  $multiotp->SetCacheFolder('/tmp/cache/');
-  $multiotp->SetDevicesFolder('/etc/multiotp/devices/');
-  $multiotp->SetGroupsFolder('/etc/multiotp/groups/');
-  $multiotp->SetTokensFolder('/etc/multiotp/tokens/');
-  $multiotp->SetUsersFolder('/etc/multiotp/users/');
-  $multiotp->SetLogFolder('/var/log/multiotp/');
-  $multiotp->ReadConfigData();
-}
-$multiotp->SetLinuxFileMode('0666');
-```
-
-The multiotp.exe is stub launcher running a PHP interpreter.
+The multiotp.exe is a stub launcher running a PHP interpreter.
 The necessary files of the PHP distribution are included in the php subfolder.  
 PHP download : http://php.net/downloads.php
 
@@ -1534,6 +1533,12 @@ HOW TO BUILD A RASPBERRY PI STRONG AUTHENTICATION SERVER ?
     To adapt the freeradius configuration, edit the file /etc/freeradius/clients.conf.
 
 
+OPENSSL OPTIONS FOR LDAPS
+=========================
+You can define how the certificate bundle is handled with the ldaptls_reqcert option.
+You can define a custom cipher suite with the ldaptls_cipher_suite option.
+
+
 COMPATIBLE CLIENTS APPLICATIONS AND DEVICES
 ===========================================
 Open source multiOTPCredentialProvider, based on MultiotpCPV2RDP and mOTP-CP
@@ -1559,11 +1564,11 @@ option). This is very useful to allow specific rules for some groups.
 
 EXTERNAL PACKAGES AND SOFTWARE USED
 ```
-    CryptoJS 3.1 (BSD New)
+    CryptoJS (BSD New)
     This product contains software provided by Jeff Mott
     https://code.google.com/p/crypto-js/
 
-    FreeRADIUS/WinRADIUS 2.2.6 for Windows (GPLv2)
+    FreeRADIUS / WinRADIUS for Windows (GPLv2)
     This product contains software provided by FreeRADIUS team and its contributors.
     http://freeradius.org/ - http://winradius.eu/
 
@@ -1576,38 +1581,38 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     SysCo / ArcadeJust / LastSquirrelIT 
     https://github.com/multiOTP/multiOTPCredentialProvider
 
-    Nginx 1.12.0 (BSD)
+    Nginx (BSD)
     This product contains software provided by Nginx, Inc. and its contributors.
     http://nginx.org/
     
-    nssm service helper 2.24 (public domain)
+    nssm service helper (public domain)
     http://nssm.cc/
 
-    NuSOAP - PHP Web Services Toolkit 1.123 (LGPLv2.1)
+    NuSOAP - PHP Web Services Toolkit (LGPLv2.1)
     NuSphere Corporation
     http://sourceforge.net/projects/nusoap/
 
-    PHP 7.2.2 (PHP License v3.01)
+    PHP (PHP License)
     Voluntary contributions made by many individuals on behalf of the PHP Group.    
     http://www.php.net/
     
-    phpseclib 1.0.6 (MIT License)
+    phpseclib (MIT License)
     MMVI Jim Wigginton
     http://phpseclib.sourceforge.net/
 
-    PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY 2.1 (LGPLv2.1)
+    PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY (LGPLv2.1)
     Scott Barnett - enhanced by SysCo
     http://adldap.sourceforge.net/
 
-    PHP radius class 1.2.2 (LGPLv3)
+    PHP radius class (LGPLv3)
     Andre Liechti
     http://developer.sysco.ch/php/
 
-    PHP Syslog class 1.1.2 (FREE "AS IS")
+    PHP Syslog class (FREE "AS IS")
     Andre Liechti
     http://developer.sysco.ch/php/
 
-    QRcode image PHP scripts 0.50j (FREE "AS IS")
+    QRcode image PHP scripts (FREE "AS IS")
     Y. Swetake
     http://www.swetake.com/qr/index-e.html
 
@@ -1615,15 +1620,15 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     dealnews.com, Inc.
     http://brian.moonspot.net/status_bar.php.txt or http://snipplr.com/view/29548/
 
-    TCPDF 6.2.13 (LGPLv3)
+    TCPDF (LGPLv3)
     Nicola Asuni
     http://www.tcpdf.org/
 
-    XML Parser Class 1.3.0 (LGPLv3)
+    XML Parser Class (LGPLv3)
     Adam A. Flynn - enhanced by SysCo
     http://www.criticaldevelopment.net/xml/
 
-    XPertMailer package 4.0.5 (LGPLv2.1)
+    XPertMailer package (LGPLv2.1)
     Tanase Laurentiu Iulian
     http://xpertmailer.sourceforge.net/
 
@@ -1641,8 +1646,8 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.4.0.1 (2018-09-14)
-(c) 2010-2018 SysCo systemes de communication sa
+multiOTP 5.4.1.6 (2019-01-25)
+(c) 2010-2019 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
 *Script folder: C:\data\projects\multiotp\core\
@@ -1652,8 +1657,9 @@ algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226)
 and OATH/TOTP (RFC 6238) are implemented). PSKC format supported (RFC 6030).
 Supported encryption methods are PAP and CHAP.
 Yubico OTP format supported (44 bytes long, with prefixed serial number).
-SMS-code are supported (current providers: aspsms,clickatell,intellisms).
-Customized SMS sender program supported by specifying exec as SMS provider.
+SMS-code are supported (current providers: aspsms,clickatell,clickatell2,
+                        intellisms,nexmo,nowsms,smseagle,swisscom,custom,exec).
+Specific SMS sender program supported by specifying exec as SMS provider.
 
 Google Authenticator base32_seed tokens must be of n*8 characters.
 Google Authenticator TOTP tokens must have a 30 seconds interval.
@@ -1678,6 +1684,7 @@ The check will return 0 for a correct token, and the other return code means:
 Return codes:
 
  0 OK: Token accepted 
+ 9 INFO: Access Challenge returned back to the client 
 10 INFO: Access Challenge returned back to the client 
 11 INFO: User successfully created or updated 
 12 INFO: User successfully deleted 
@@ -1768,10 +1775,12 @@ Usage:
        pos: for HOTP algorithm, position of the next awaited event
   interval: for mOTP and TOTP algorithms, token interval time in seconds
 
- multiotp -import tokens_definition_file [key|pass] (auto-detect format)
+ multiotp -import tokens_definition_file [key|pass|key_file]
+   (auto-detect format)
  multiotp -import-csv csv_tokens_file.csv (tokens definition in a file)
    (serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
- multiotp -import-pskc pskc_tokens_file.pskc [key|pass] (PSKC format, RFC 6030)
+ multiotp -import-pskc pskc_tokens_file.pskc [key|pass|key_file]
+   (PSKC format, RFC 6030)
  multiotp -import-yubikey yubikey_traditional_format_log.csv (YubiKey)
  multiotp -import-dat importAlpine.dat (SafeWord/Aladdin/SafeNet tokens)
  multiotp -import-alpine-xml alpineXml.xml (SafeWord/Aladdin/SafeNet)
@@ -1839,6 +1848,7 @@ Usage:
  ldap-synced-user-attribute: LDAP/AD attribute used as the account name
             ldap-time-limit: LDAP/AD number of sec. to wait for search results
               ldap-users-dn: LDAP/AD users DN (optional, use base-dn if empty)
+                             (you can put several DN separated by semicolons)
             ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS
                              server certificate checks (LDAPTLS_REQCERT)
                              'auto' means 'never' for Windows and '' for Linux
@@ -1861,14 +1871,38 @@ Usage:
                              (only xml server type is able to do caching)
                  server-url: full url of the server(s) for client/server mode
                              (server_url_1;server_url_2 is accepted)
-                 sms-api-id: SMS API id (clickatell only, give your XML API id)
+                 sms-api-id: SMS API id (if any, give your REST/XML API id)
                              with exec as provider, define the script to call
-                             (available variables: %from, %to, %msg)
+                               (available variables: %from, %to, %msg)
+                     sms-ip: IP address of the SMS server (for inhouse server)
                 sms-message: SMS message to display before the OTP
              sms-originator: SMS sender (if authorized by provider)
                sms-password: SMS account password
-               sms-provider: SMS provider (aspsms,clickatell,intellisms,exec)
+                   sms-port: Port of the SMS server (for inhouse server)
+               sms-provider: SMS provider (aspsms,clickatell,clickatell2,
+                             intellisms,nexmo,nowsms,smseagle,swisscom,custom,
+                             exec)
                 sms-userkey: SMS account username or userkey
+
+Custom SMS provider only
+                    sms-url: URL(s) of the custom SMS provider
+                               (multiple URLs can be separated by [space],
+                                supported variables : %api_id,%username,
+                                %password,%from,%to,%msg,%ip,%url)
+          sms-send-template: POST template content for custom SMS provider
+                               (supported variables : %api_id,%username,
+                                %password,%from,%to,%msg)
+                 sms-method: [GET|POST|POST-JSON|POST-XML] send method
+               sms-encoding: [ISO|UTF] characters encoding
+         sms-status-success: status result if successful (partial supported)
+                               (example: 20, for any 20x result)
+        sms-content-success: content result if successful (partial supported)
+                               (example: "status": "0")
+       sms-content-encoding: [''|'HTML'|'URL'|'QUOTES'] Special content encoding
+         sms-no-double-zero: [0|1] Remove double zero for international numbers
+             sms-basic-auth: [0|1] Enable basic HTTP authentication
+                               (sms-userkey:sms-password)
+
                  sql-server: SQL server (FQDN or IP)
                sql-username: SQL username
                sql-password: SQL password
@@ -1913,6 +1947,7 @@ Authentication parameters:
  -ms-chap-response=0x... MS-CHAP-Response
  -ms-chap2-response=0x... MS-CHAP2-Response
  -src=Packet-Src-IP-Address
+ -state=State
  -tag=Client-Shortname
 
 
@@ -2103,8 +2138,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.4.0.1.zip 
-SHA256:6fda7fe29953149cc5d8d47ee2fa40cdd339f36c117b063e704a56edb4766662 
-SHA1:ec866b1cdb66c719538dfe2ef9977d9c98f00aa1 
-MD5:1de9c65eba99c41c9de712e3e8b59d3c 
+Hash verification for multiotp_5.4.1.6.zip 
+SHA256:5775693d16a525213b310dd6a570a897d9af7a073a0e995e8baeed34b589e8e9 
+SHA1:04a6dccb6b0026dfae31237e6ccdfb7ae87e75ba 
+MD5:a8210015c46029755c3fdfd603a03432 
 ``` 

@@ -35,17 +35,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.0.1
- * @date      2018-09-14
+ * @version   5.4.1.6
+ * @date      2019-01-25
  * @since     2010-06-08
- * @copyright (c) 2010-2018 SysCo systemes de communication sa
+ * @copyright (c) 2010-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2018 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2019 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -438,6 +438,10 @@
  *
  * Change Log
  *
+ *   2019-01-24 5.4.1.5 SysCo/al FIX: If any, clean specific NTP DHCP option at every reboot
+ *   2019-01-07 5.4.1.1 SysCo/al ENH: Raspberry Pi 3B+ support
+ *   2018-11-13 5.4.0.2 SysCo/al ENH: Import of PSKC definition files with binary decoding key file
+ *                               ENH: added new sms providers (clickatell2, nexmo, nowsms, smseagle, swisscom, custom)
  *   2018-08-26 5.3.0.3 SysCo/al FIX: Restore configuration has been fixed in the command line edition
  *   2018-08-21 5.3.0.0 SysCo/al ENH: help text enhanced, without2fa option added
  *   2018-07-16 5.2.0.2 SysCo/al ENH: new commande line option ldap-users-dn
@@ -522,7 +526,7 @@
  *                               The method DefineMySqlConnection IS DEPRECATED
  *                               Full MySQL support, including tables creation (see example and SetSqlXXXX methods)
  *                               Added email, sms and seed_password to users attributes
- *                               Added sms support (aspsms, clickatell, intellisms, exec)
+ *                               Added sms support (aspsms, clickatell, intellisms, custom, exec)
  *                               Added prefix support for debug mode (in order to send Reply-Message := to Radius)
  *                               Added a lot of new methods to handle easier the users and the tokens
  *                               General speedup by using available native functions for hash_hmac and others
@@ -735,6 +739,7 @@ $server_cache_level  = '';
 $server_secret       = '';
 $server_timeout      = '';
 $server_url          = '';
+$state               = '';
 $write_config_data   = false;
 $write_param_data    = false;
 
@@ -1008,6 +1013,11 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
             if (2 == count($src_array)) {
                 $server_timeout = clean_quotes($src_array[1]);
             }
+        } elseif ("-state=" == substr(mb_strtolower($current_arg),0,7)) {
+            $src_array = explode("=",$current_arg,2);
+            if (2 == count($src_array)) {
+                $state = clean_quotes($src_array[1]);
+            }
         } elseif ("-cp" == mb_strtolower($current_arg)) {
             $cp_mode = true;
         } elseif ("-debug" == mb_strtolower($current_arg)) {
@@ -1234,6 +1244,7 @@ $multiotp->SetChapPassword($chap_password);
 $multiotp->SetMsChapChallenge($ms_chap_challenge);
 $multiotp->SetMsChapResponse($ms_chap_response);
 $multiotp->SetMsChap2Response($ms_chap2_response);
+$multiotp->SetState($state);
 
 if (($multiotp->IsDeveloperMode())) {
   $loop_start = 1;
@@ -2014,7 +2025,52 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 $write_config_data = true;
                                 break;
                             case 'sms-userkey':
-                                $multiotp->SetSmsUserkey($actual_array[1]);
+                            case 'sms-username':
+                                $multiotp->SetSmsUsername($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-url':
+                                $multiotp->SetSmsUrl($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-ip':
+                                $multiotp->SetSmsIp($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-port':
+                                $multiotp->SetSmsPort($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-send-template':
+                                $multiotp->SetSmsSendTemplate($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-method':
+                                $multiotp->SetSmsMethod($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-encoding':
+                                $multiotp->SetSmsEncoding($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-status-success':
+                                $multiotp->SetSmsStatusSuccess($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-content-success':
+                                $multiotp->SetSmsContentSuccess($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-no-double-zero':
+                                $multiotp->SetSmsNoDoubleZero($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-basic-auth':
+                                $multiotp->SetSmsBasicAuth($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-content-encoding':
+                                $multiotp->SetSmsContentEncoding($actual_array[1]);
                                 $write_config_data = true;
                                 break;
                             case 'sql-server':
@@ -2082,7 +2138,11 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
-                if ($multiotp->ImportTokensFile($all_args[1], $all_args[1], $all_args[2])) {
+                $import_password = $all_args[2];
+                if (('' != $import_password) && (@file_exists($import_password))) {
+                    $import_password = @file_get_contents($import_password);
+                }
+                if ($multiotp->ImportTokensFile($all_args[1], $all_args[1], $import_password)) {
                     $result = 15; // INFO: Tokens definition file successfully imported
                 } else {
                     $result = 32; // ERROR: Tokens definition file not successfully imported.
@@ -2104,7 +2164,11 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             if (!@file_exists($all_args[1])) {
                 $result = 31; // ERROR: Tokens definition file doesn't exist.
             } else {
-                if ($multiotp->ImportTokensFromPskc($all_args[1], $all_args[2])) {
+                $import_password = $all_args[2];
+                if (('' != $import_password) && (@file_exists($import_password))) {
+                    $import_password = @file_get_contents($import_password);
+                }
+                if ($multiotp->ImportTokensFromPskc($all_args[1], $import_password)) {
                     $result = 15; // INFO: Tokens definition file successfully imported
                 } else {
                     $result = 32; // ERROR: Tokens definition file not successfully imported.
@@ -2368,8 +2432,9 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "and OATH/TOTP (RFC 6238) are implemented). PSKC format supported (RFC 6030).".$crlf;
                 echo "Supported encryption methods are PAP and CHAP.".$crlf;
                 echo "Yubico OTP format supported (44 bytes long, with prefixed serial number).".$crlf;
-                echo "SMS-code are supported (current providers: aspsms,clickatell,intellisms).".$crlf;
-                echo "Customized SMS sender program supported by specifying exec as SMS provider.".$crlf;
+                echo "SMS-code are supported (current providers: aspsms,clickatell,clickatell2,".$crlf;
+                echo "                        intellisms,nexmo,nowsms,smseagle,swisscom,custom,exec).".$crlf;
+                echo "Specific SMS sender program supported by specifying exec as SMS provider.".$crlf;
                 echo $crlf;
                 echo "Google Authenticator base32_seed tokens must be of n*8 characters.".$crlf;
                 echo "Google Authenticator TOTP tokens must have a 30 seconds interval.".$crlf;
@@ -2433,10 +2498,12 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "       pos: for HOTP algorithm, position of the next awaited event".$crlf;
                 echo "  interval: for mOTP and TOTP algorithms, token interval time in seconds".$crlf;
                 echo $crlf;
-                echo " multiotp -import tokens_definition_file [key|pass] (auto-detect format)".$crlf;
+                echo " multiotp -import tokens_definition_file [key|pass|key_file]".$crlf;
+                echo "   (auto-detect format)".$crlf;
                 echo " multiotp -import-csv csv_tokens_file.csv (tokens definition in a file)".$crlf;
                 echo "   (serial_number;manufacturer;algorithm;seed;digits;interval_or_event)".$crlf;
-                echo " multiotp -import-pskc pskc_tokens_file.pskc [key|pass] (PSKC format, RFC 6030)".$crlf;
+                echo " multiotp -import-pskc pskc_tokens_file.pskc [key|pass|key_file]".$crlf;
+                echo "   (PSKC format, RFC 6030)".$crlf;
                 echo " multiotp -import-yubikey yubikey_traditional_format_log.csv (YubiKey)".$crlf;
                 echo " multiotp -import-dat importAlpine.dat (SafeWord/Aladdin/SafeNet tokens)".$crlf;
                 echo " multiotp -import-alpine-xml alpineXml.xml (SafeWord/Aladdin/SafeNet)".$crlf;
@@ -2505,6 +2572,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo " ldap-synced-user-attribute: LDAP/AD attribute used as the account name".$crlf;
                 echo "            ldap-time-limit: LDAP/AD number of sec. to wait for search results".$crlf;
                 echo "              ldap-users-dn: LDAP/AD users DN (optional, use base-dn if empty)".$crlf;
+                echo "                             (you can put several DN separated by semicolons)".$crlf;
                 echo "            ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS".$crlf;
                 echo "                             server certificate checks (LDAPTLS_REQCERT)".$crlf;
                 echo "                             'auto' means 'never' for Windows and '' for Linux".$crlf;
@@ -2527,14 +2595,38 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                             (only xml server type is able to do caching)".$crlf;
                 echo "                 server-url: full url of the server(s) for client/server mode".$crlf;
                 echo "                             (server_url_1;server_url_2 is accepted)".$crlf;
-                echo "                 sms-api-id: SMS API id (clickatell only, give your XML API id)".$crlf;
+                echo "                 sms-api-id: SMS API id (if any, give your REST/XML API id)".$crlf;
                 echo "                             with exec as provider, define the script to call".$crlf;
-                echo "                             (available variables: %from, %to, %msg)".$crlf;
+                echo "                               (available variables: %from, %to, %msg)".$crlf;
+                echo "                     sms-ip: IP address of the SMS server (for inhouse server)".$crlf;
                 echo "                sms-message: SMS message to display before the OTP".$crlf;
                 echo "             sms-originator: SMS sender (if authorized by provider)".$crlf;
                 echo "               sms-password: SMS account password".$crlf;
-                echo "               sms-provider: SMS provider (aspsms,clickatell,intellisms,exec)".$crlf;
+                echo "                   sms-port: Port of the SMS server (for inhouse server)".$crlf;
+                echo "               sms-provider: SMS provider (aspsms,clickatell,clickatell2,".$crlf;
+                echo "                             intellisms,nexmo,nowsms,smseagle,swisscom,custom,".$crlf;
+                echo "                             exec)".$crlf;
                 echo "                sms-userkey: SMS account username or userkey".$crlf;
+                echo $crlf;
+                echo "Custom SMS provider only".$crlf;
+                echo "                    sms-url: URL(s) of the custom SMS provider".$crlf;
+                echo "                               (multiple URLs can be separated by [space],".$crlf;
+                echo "                                supported variables : %api_id,%username,".$crlf;
+                echo "                                %password,%from,%to,%msg,%ip,%url)".$crlf;
+                echo "          sms-send-template: POST template content for custom SMS provider".$crlf;
+                echo "                               (supported variables : %api_id,%username,".$crlf;
+                echo "                                %password,%from,%to,%msg)".$crlf;
+                echo "                 sms-method: [GET|POST|POST-JSON|POST-XML] send method".$crlf;
+                echo "               sms-encoding: [ISO|UTF] characters encoding".$crlf;
+                echo "         sms-status-success: status result if successful (partial supported)".$crlf;
+                echo "                               (example: 20, for any 20x result)".$crlf;
+                echo "        sms-content-success: content result if successful (partial supported)".$crlf;
+                echo "                               (example: \"status\": \"0\")".$crlf;
+                echo "       sms-content-encoding: [''|'HTML'|'URL'|'QUOTES'] Special content encoding".$crlf;
+                echo "         sms-no-double-zero: [0|1] Remove double zero for international numbers".$crlf;
+                echo "             sms-basic-auth: [0|1] Enable basic HTTP authentication".$crlf;
+                echo "                               (sms-userkey:sms-password)".$crlf;
+                echo $crlf;
                 echo "                 sql-server: SQL server (FQDN or IP)".$crlf;
                 echo "               sql-username: SQL username".$crlf;
                 echo "               sql-password: SQL password".$crlf;
@@ -2579,6 +2671,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo " -ms-chap-response=0x... MS-CHAP-Response".$crlf;
                 echo " -ms-chap2-response=0x... MS-CHAP2-Response".$crlf;
                 echo " -src=Packet-Src-IP-Address".$crlf;
+                echo " -state=State".$crlf;
                 echo " -tag=Client-Shortname".$crlf;
                 echo $crlf;
                 echo $crlf;

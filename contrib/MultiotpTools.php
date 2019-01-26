@@ -71,6 +71,36 @@ function pcre_fnmatch($pattern, $string, $flags = 0) {
 
 
 /***********************************************************************
+ * Name: bcmod
+ * Short description: description: Patch for bcmod
+ *
+ * Creation 2018-11-15
+ * Update   2018-11-15
+ * @version 1.0.0
+ * @author  Adapted from http://php.net/manual/en/function.bcmod.php#38474
+ *
+ * @param   string  $dividend  dividend
+ *          string  $divisor   divisor
+ * @return  string             modulus as a string
+ ***********************************************************************/
+if (!function_exists('bcmod')) {
+    function bcmod($dividend, $divisor) {
+        // how many numbers to take at once? carefull not to exceed (int)
+        $take = 5;    
+        $mod = '';
+        $div = $dividend;
+        do {
+            $a = (int)$mod.substr( $div, 0, $take );
+            $div = substr( $div, $take );
+            $mod = $a % $divisor;   
+        } while ( strlen($div) );
+
+        return (int)$mod;
+    }
+}
+
+
+/***********************************************************************
  * Name: is_valid_ipv4
  * Short description: Check if the string is a valid IP address
  *

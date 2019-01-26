@@ -22,17 +22,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.0.1
- * @date      2018-09-14
+ * @version   5.4.1.6
+ * @date      2019-01-25
  * @since     2013-07-10
- * @copyright (c) 2013-2018 SysCo systemes de communication sa
+ * @copyright (c) 2013-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2013-2018 SysCo systemes de communication sa
+ *   Copyright (c) 2013-2019 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch/)
  *   All rights reserved.
@@ -1513,6 +1513,25 @@ foreach ($backend_array as $backend) {
         $successes++;
     } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Group test_group doesn't exists".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Set an ldap_in_group with special chars
+    $tests++;
+    echo_full($b_on."Set an ldap_in_group with special chars".$b_off.$crlf);
+    $my_groups = "\"My-group\"";
+    $multiotp->SetLdapInGroup($my_groups);
+    $multiotp->WriteConfigData();
+    $multiotp->ReadConfigData();
+    $in_group = $multiotp->GetLdapInGroup();
+
+    if ($in_group == $my_groups) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." The ldap-in-group is set correctly (<b>".htmlentities($in_group)."</b>)".$crlf);
+        $successes++;
+    } else {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." The ldap-in-group is not set correctly (<b>".htmlentities($in_group)."</b>)".$crlf);
     }
     echo_full($crlf);
 
