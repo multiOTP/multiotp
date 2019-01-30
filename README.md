@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2019 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.4.1.6 (2019-01-25)
+Current build: 5.4.1.7 (2019-01-30)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -164,7 +164,7 @@ WHAT'S NEW IN THE RELEASES
 - SMS providers added (Swisscom LA REST, Afilnet, Clickatell2, eCall, Nexmo, NowSMS, SMSEagle)
 - Generic SMS custom provider
 - Debian 9.x (stretch) binary images support
-- Raspberry Pi 3B+ support
+- New Raspberry images support for Raspberry Pi 1B/1B+/2B/3B/3B+
 
 # What's new in 5.3 releases
 - Multiple semicolon separated "Users DN" supported for AD/LDAP synchronization
@@ -295,14 +295,12 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2019-01-27 5.4.1.7 ENH: New QRcode library used (without external files dependency)
+                   ENH: New Raspberry images support for Raspberry Pi 1B/1B+/2B/3B/3B+
 2019-01-25 5.4.1.6 FIX: If any, clean specific NTP DHCP option at every reboot
 2019-01-18 5.4.1.4 ENH: Modifications for Debian 9.x (stretch) binary images support
 2019-01-07 5.4.1.1 ENH: Raspberry Pi 3B+ support
-2018-11-13 5.4.0.2 ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
-                   ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
-                   ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
-                   ENH: PHP display error flag is now set to off by default in the webservice under Windows
-                   ENH: Import of PSKC definition files with binary decoding key file
+2018-11-13 5.4.0.2 ENH: Import of PSKC definition files with binary decoding key file
                    ENH: Added Swisscom LA REST, Afilnet, Clickatell2, eCall, Nexmo, NowSMS, SMSEagle and custom SMS provider support
 2018-09-14 5.4.0.1 FIX: Values of SetUserCacheLevel(), GetUserCacheLevel(), SetUserCacheLifetime()
                         and GetUserCacheLifetime() are not correctly initialized
@@ -644,7 +642,6 @@ In the linux folder:
 - md5.js                   : encryption JS library used by multiotp.server.php
 - test-tokens.csv          : provisioning file of test tokens
 + oath subfolder           : contains provisioning files for oath test tokens
-+ qrcode subfolder         : all necessary files to be able to generate QRcode
 + templates folder         : all templates files needed to generate the provisioning pages from the web GUI
 ```
 *******************************************************************************
@@ -697,7 +694,6 @@ In the windows folder:
 + legacy subfolder         : contains a windows command line version with all needed files
                              (not embedded in a mini VM). This version is used by the multiOTP web service.
 + oath subfolder           : contains provisioning files for oath test tokens
-+ qrcode subfolder         : all necessary files to be able to generate QRcode
 + radius subfolder         : all necessary files to be able to install a Windows radius server already
                              configured with multiOTP support (using FreeRADIUS implementation for Windows)
 + templates subfolder      : all templates files needed to generate the provisioning pages from the web GUI
@@ -720,26 +716,18 @@ A typical installation has the following tree organization:
 **Software files**
 ```
 /usr/local/bin/
-????????? multiotp
-???   ????????? multiotp.php
-????????? qrcode
-???   ????????? data
-???   ????????? image
-????????? templates
+/usr/local/bin/multiotp (contains multiotp.php)
+/usr/local/bin/multiotp/templates
 ```
 
 **Data files**
 ```
 /etc/multiotp/
-????????? config
-???     ????????? multiotp.ini
-????????? devices
-????????? groups
-????????? tokens
-????????? users
-    ????????? my_user1.db
-    ????????? my_user2.db
-    ????????? ...
+/etc/multiotp/config (contains multiotp.ini)
+/etc/multiotp/devices
+/etc/multiotp/groups
+/etc/multiotp/tokens
+/etc/multiotp/users (contains my_user1.db, my_user2.db, ...)
 ```
 
 
@@ -1564,6 +1552,10 @@ option). This is very useful to allow specific rules for some groups.
 
 EXTERNAL PACKAGES AND SOFTWARE USED
 ```
+    barcode (MIT License)
+    Kreative Software
+    https://github.com/kreativekorp/barcode
+
     CryptoJS (BSD New)
     This product contains software provided by Jeff Mott
     https://code.google.com/p/crypto-js/
@@ -1612,10 +1604,6 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     Andre Liechti
     http://developer.sysco.ch/php/
 
-    QRcode image PHP scripts (FREE "AS IS")
-    Y. Swetake
-    http://www.swetake.com/qr/index-e.html
-
     status_bar.php (2010) (FREE "AS IS")
     dealnews.com, Inc.
     http://brian.moonspot.net/status_bar.php.txt or http://snipplr.com/view/29548/
@@ -1646,11 +1634,9 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.4.1.6 (2019-01-25)
+multiOTP 5.4.1.7 (2019-01-30)
 (c) 2010-2019 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
-
-*Script folder: C:\data\projects\multiotp\core\
 
 multiotp will check if the token of a user is correct, based on a specified
 algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226) 
@@ -2138,8 +2124,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.4.1.6.zip 
-SHA256:5775693d16a525213b310dd6a570a897d9af7a073a0e995e8baeed34b589e8e9 
-SHA1:04a6dccb6b0026dfae31237e6ccdfb7ae87e75ba 
-MD5:a8210015c46029755c3fdfd603a03432 
+Hash verification for multiotp_5.4.1.7.zip 
+SHA256:6c1af553b64a0dc82936d01f6fbd6b6a5cc35f914cdc9be38040f0a897a77833 
+SHA1:2f4fc4e17f43053f10b7b0e4e24edfb6d163b645 
+MD5:17cc73a2e5dcc11c40f8615218f77348 
 ``` 

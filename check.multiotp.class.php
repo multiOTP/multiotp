@@ -22,8 +22,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.1.6
- * @date      2019-01-25
+ * @version   5.4.1.7
+ * @date      2019-01-30
  * @since     2013-07-10
  * @copyright (c) 2013-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -1037,7 +1037,7 @@ foreach ($backend_array as $backend) {
     // TEST: Creating a QRcode provisioning file for the HOTP RFC test token
     $tests++;
     echo_full($b_on."Creating a QRcode provisioning file for the HOTP RFC test token".$b_off.$crlf);
-    $size_result = $multiotp->qrcode('otpauth://hotp/multiOTP hotp test?counter=0&digits=6&secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')).'&issuer=multiOTP test', $multiotp->GetScriptFolder().'qrcode/qrHOTP.png');
+    $size_result = $multiotp->qrcode('otpauth://hotp/multiOTP hotp test?counter=0&digits=6&secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')).'&issuer=multiOTP test', $multiotp->GetLogFolder().'qrHOTP.png');
     if (0 < $size_result)
     {
         echo_full("- ".$ok_on.'OK!'.$ok_off." HOTP QRcode successfully created".$crlf);
@@ -1054,7 +1054,7 @@ foreach ($backend_array as $backend) {
     // TEST: Creating a QRcode provisioning file for the TOTP RFC test token
     $tests++;
     echo_full($b_on."Creating a QRcode provisioning file for the TOTP RFC test token".$b_off.$crlf);
-    $size_result = $multiotp->qrcode('otpauth://totp/multiOTP totp test?period=30&digits=6&secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')).'&issuer=multiOTP test', $multiotp->GetScriptFolder().'qrcode/qrTOTP.png');
+    $size_result = $multiotp->qrcode('otpauth://totp/multiOTP totp test?period=30&digits=6&secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')).'&issuer=multiOTP test', $multiotp->GetLogFolder().'qrTOTP.png');
     if (0 < $size_result)
     {
         echo_full("- ".$ok_on.'OK!'.$ok_off." TOTP QRcode successfully created".$crlf);

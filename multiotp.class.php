@@ -71,8 +71,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.1.6
- * @date      2019-01-25
+ * @version   5.4.1.7
+ * @date      2019-01-30
  * @since     2010-06-08
  * @copyright (c) 2010-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -194,43 +194,43 @@
  *
  * External packages used
  *
- *   NuSOAP - PHP Web Services Toolkit 1.123 (LGPLv2.1)
+ *   barcode (MIT License)
+ *   Kreative Software
+ *   https://github.com/kreativekorp/barcode
+ *
+ *   NuSOAP - PHP Web Services Toolkit (LGPLv2.1)
  *   NuSphere Corporation
  *   http://sourceforge.net/projects/nusoap/
  *
- *   phpseclib 1.0.6 (MIT License)
+ *   phpseclib (MIT License)
  *   MMVI Jim Wigginton
  *   http://phpseclib.sourceforge.net/
  *
- *   PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY 2.1 (LGPLv2.1)
+ *   PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY (LGPLv2.1)
  *   Scott Barnett
  *   http://adldap.sourceforge.net/
  *
- *   PHP radius class 1.2.2 (LGPLv3)
+ *   PHP radius class (LGPLv3)
  *   André Liechti
  *   http://developer.sysco.ch/php/
  *
- *   PHP Syslog class 1.1.2 (FREE "AS IS")
+ *   PHP Syslog class (FREE "AS IS")
  *   André Liechti
  *   http://developer.sysco.ch/php/
- *
- *   QRcode image PHP scripts 0.50j (FREE "AS IS")
- *   Y. Swetake
- *   http://www.swetake.com/qr/index-e.html
  *
  *   status_bar.php (2010) (FREE "AS IS")
  *   dealnews.com, Inc.
  *   http://brian.moonspot.net/status_bar.php.txt
  *
- *   TCPDF 6.2.13 (LGPLv3)
+ *   TCPDF (LGPLv3)
  *   Nicola Asuni
  *   http://www.tcpdf.org/
  *
- *   XML Parser Class 1.3.0 (LGPLv3)
+ *   XML Parser Class (LGPLv3)
  *   Adam A. Flynn
  *   http://www.criticaldevelopment.net/xml/
  *
- *   XPertMailer package 4.0.5 (LGPLv2.1)
+ *   XPertMailer package (LGPLv2.1)
  *   Tanase Laurentiu Iulian
  *   http://xpertmailer.sourceforge.net/
  *
@@ -517,6 +517,7 @@
  *
  * Change Log
  *
+ *   2019-01-30 5.4.1.7 SysCo/al ENH: New QRcode library used (without external files dependency)
  *   2019-01-25 5.4.1.6 SysCo/al FIX: If any, clean specific NTP DHCP option at every reboot
  *   2019-01-18 5.4.1.4 SysCo/al ENH: Modifications for Debian 9.x (stretch) binary images support
  *   2019-01-07 5.4.1.1 SysCo/al ENH: Raspberry Pi 3B+ support
@@ -850,8 +851,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.1.6
- * @date      2019-01-25
+ * @version   5.4.1.7
+ * @date      2019-01-30
  * @since     2010-07-18
  */
 {
@@ -889,7 +890,6 @@ class Multiotp
   var $_user_data;                // An array with all the user related info
   var $_user_data_read_flag;      // Indicate if the user data has been read from the database file
   var $_users_folder;             // Folder where users definition files are stored
-  var $_qrcode_folder;            // Folder where qrcode files are stored
   var $_templates_folder;         // Folder where template files are stored
   var $_devices_folder;           // Folder where devices definition files are stored
   var $_groups_folder;            // Folder where groups definition files are stored
@@ -944,8 +944,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.4.1.6
-   * @date      2019-01-25
+   * @version   5.4.1.7
+   * @date      2019-01-30
    * @since     2010-07-18
    */
   function __construct(
@@ -964,11 +964,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.4.1.6'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.4.1.7'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2019-01-25'; // You should update the date with the date of your changes
+        $temp_date = '@date      2019-01-30'; // You should update the date with the date of your changes
         $this->_date = trim(substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxOSBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -4606,6 +4606,17 @@ class Multiotp
       $write_config = true,
       $if_down_up = true
   ) {
+
+      if ($write_config) {
+          $this->SetNetworkIp     ($ip);
+          $this->SetNetworkMask   ($mask);
+          $this->SetNetworkGateway($gateway);
+          $this->SetNetworkDns1   ($dns1);
+          $this->SetNetworkDns2   ($dns2);
+
+          $this->WriteConfigData();
+      }
+
       $result = false;
       if ('' != $ip) {
           $resolv_file = "/etc/resolv.conf";
@@ -8573,6 +8584,7 @@ class Multiotp
       $html = str_replace('{MultiotpUserTokenTimeInterval}', $this->GetUserTokenTimeInterval(), $html);
       $html = str_replace('{MultiotpUserTokenNextEvent}', 1+$this->GetUserTokenLastEvent(), $html);
       $html = str_replace('{MultiotpUserTokenSerial}', $token_serial, $html);
+      $html = str_replace('{MultiotpVersion}', $this->GetVersion(), $html);
 
       $regex_url='/\surl=(.*?)[\}\s}]/';
       $regex_format='/\sformat=\"?([^\"\}]*)\"?.*\}/';
@@ -15050,24 +15062,13 @@ class Multiotp
   function SetQrCodeFolder(
       $folder
   ) {
-      $new_folder = $this->ConvertToUnixPath($folder);
-      if (substr($new_folder,-1) != "/") {
-          $new_folder.="/";
-      }
-      if ("/" == $new_folder) {
-        $new_folder = "./";
-      }
-      $new_folder = $this->ConvertToWindowsPathIfNeeded($new_folder);
-      $this->_qrcode_folder = $new_folder;
+    return false; // Not used anymore
   }
 
 
   function GetQrCodeFolder()
   {
-      if ('' == $this->_qrcode_folder) {
-          $this->SetQrCodeFolder($this->GetScriptFolder()."qrcode/");
-      }
-      return $this->ConvertToWindowsPathIfNeeded($this->_qrcode_folder);
+    return false; // Not used anymore
   }
 
 
@@ -19394,7 +19395,7 @@ class Multiotp
       } elseif (FALSE !== mb_strpos(mb_strtolower($os_running), 'armv6l')) {
           $type = 'RPI';
       // Is it potentially a Windows development platform ?
-  } elseif (mb_strtolower(substr(PHP_OS, 0, 3)) === 'win') {
+      } elseif (mb_strtolower(substr(PHP_OS, 0, 3)) === 'win') {
           $type = "DVP";
       // Is it a virtual appliance and/or a Linux Debian edition
       } elseif (FALSE !== mb_strpos(mb_strtolower($os_running), 'debian')) {
@@ -20348,44 +20349,96 @@ EOL;
   }
 
 
-  // This method is a stub that calls the MultiotpQrcode with the good pathes
+  // This method is a stub that calls the QRcode library with the good pathes
+  // If $file_name = "binary", send binary content without header
+  
   function qrcode(
-      $data = '',
-      $file_name = '',
-      $image_type = "P",
-      $ecc_level = "Q",
-      $module_size = 4,
-      $version = 0,
-      $structure_m = 0,
-      $structure_n = 0,
-      $parity = 0,
-      $original_data = ''
+    $qrcode_array = '',
+    $file_name = '',
+    $image_type = "P",
+    $ecc_level = "Q",
+    $module_size = 4,
+    $version = 0,
+    $structure_m = 0,
+    $structure_n = 0,
+    $parity = 0,
+    $original_data = ''
   ) {
-      $result = '';
+    if (is_array($qrcode_array)) {
+      $data = isset($qrcode_array['data'])?$qrcode_array['data']:'';
+      $file_name = isset($qrcode_array['file_name'])?$qrcode_array['file_name']:'';
+      $format = isset($qrcode_array['format'])?$qrcode_array['format']:'png';
+      $symbology = isset($qrcode_array['symbology'])?$qrcode_array['symbology']:'qr-q';
+      $options = isset($qrcode_array['options'])?$qrcode_array['options']:array();
+    } else {
+      // Backward compatibility
+      $data = $qrcode_array;
+      $format = ('P' == strtoupper(substr($image_type.' ', 0, 1))) ? 'png' : 'jpeg';
+      $symbology = 'qr-'.strtolower($ecc_level);
+      $options = array();
+    }
+    
+    $return_binary = ('binary' == strtolower(trim($file_name)));
 
-      $qrcode_folder = $this->GetQrCodeFolder();
-
-      $path = $qrcode_folder.'data';
-      $image_path = $qrcode_folder.'image';
-      
-      if (!(file_exists($path) && file_exists($image_path))) {
-          $this->WriteLog("Error: QRcode files or folders are not available", FALSE, FALSE, 39, 'System', '', 3);
+    $generator = new barcode_generator();
+    
+    if ($file_name == '') {
+      $generator->output_image($format, $symbology, $data, $options);
+      $result = 100;
+    } else {
+      if ('svg' == strtolower(preg_replace('/[^A-Za-z0-9]/', '', $format))) {
+        $result = $generator->render_svg($symbology, $data, $options);
+        if (!$return_binary) {
+          file_put_contents($file_name, $result);
+          $result = 100;
+        }
       } else {
-          $result = MultiotpQrcode($data, $file_name, $image_type, $ecc_level, $module_size, $version, $structure_m, $structure_n, $parity, $original_data, $path, $image_path);
-
-          $output_name = NULL;
+        if ($return_binary) {
           ob_start();
-          
-          if (('' != trim($file_name)) && ('binary' != trim($file_name)) && ('' != $this->GetLinuxFileMode())) {
-              if (file_exists($file_name)) {
-                  @chmod($file_name, octdec($this->GetLinuxFileMode()));
-              }
-          }
+          $file_name = null;
+        }
+        switch (strtolower(preg_replace('/[^A-Za-z0-9]/', '', $format))) {
+          case 'png':
+            $image = $generator->render_image($symbology, $data, $options);
+            imagepng($image, $file_name);
+            $result = imagesx($image);
+            imagedestroy($image);
+            break;
+          case 'jpg': case 'jpe': case 'jpeg':
+            $image = $generator->render_image($symbology, $data, $options);
+            imagejpeg($image, $file_name);
+            $result = imagesx($image);
+            imagedestroy($image);
+            break;
+          case 'gif':
+            $image = $generator->render_image($symbology, $data, $options);
+            imagegif($image, $file_name);
+            $result = imagesx($image);
+            imagedestroy($image);
+            break;
+          default:
+            $generator = null;
+            return false;
+        }
+        if ($return_binary) {
+          $result = ob_get_clean();          
+        }
       }
-      return $result;
-  }
-}
+    }
+    
+    $generator = null;
 
+    ob_start();
+    
+    if (('' != trim($file_name)) && (!$return_binary) && ('' != $this->GetLinuxFileMode())) {
+      if (file_exists($file_name)) {
+        @chmod($file_name, octdec($this->GetLinuxFileMode()));
+      }
+    }
+    return $result;
+  }
+
+}
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -20411,11 +20464,12 @@ require_once('contrib/MultiotpTools.php'); // External contribution
 require_once('contrib/MultiotpAdLdap.php'); // External contribution
 
 /*************************************************
- * QRcode image PHP scripts 0.50j (FREE "AS IS") *
- * Y. Swetake                                    *
- * http://www.swetake.com/qr/index-e.html        *
+ * barcode.php (MIT License)                     *
+ * Generate barcodes from a single PHP file      *
+ * Copyright (c) 2016-2018 Kreative Software     *
+ * https://github.com/kreativekorp/barcode       *
  *************************************************/
-require_once('contrib/MultiotpQrcode.php'); // External contribution
+require_once('contrib/barcode.php'); // External contribution
 
 /************************************************
  * status_bar.php (2010) (FREE "AS IS")         *
