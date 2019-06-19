@@ -13730,12 +13730,13 @@ class Multiotp
     $result = FALSE;
     foreach ($this->_servers_temp_bad_list as $badserver => $timestamp) {
       if ($badserver == $server) {
-        if (($timestamp + (1 * 60)) <= time()) {
+        if (($timestamp + (1 * 60)) >= time()) {
           $result = TRUE;
         }
         break;
       }
     }
+    return $result;
   }
 
 
