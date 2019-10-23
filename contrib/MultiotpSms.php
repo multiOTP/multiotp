@@ -6,8 +6,8 @@ class MultiotpSms
  * @brief     SMS message using any SMS Provider.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.0.3
- * @date      2018-11-02
+ * @version   5.6.1.4
+ * @date      2019-10-23
  * @since     2018-10-09
  *
  * Predefined providers:
@@ -28,10 +28,10 @@ class MultiotpSms
  *   %from
  *   %ip
  *   %msg
- *   %password
+ *   %password or %pass
  *   %port
  *   %to
- *   %username
+ *   %username or %user
  *
  *
  * Examples:
@@ -69,6 +69,7 @@ class MultiotpSms
  *
  * Change Log
  *
+ *   2019-10-23 5.4.0.3 SysCo/al Define all parameters for preconfigured providers
  *   2018-11-02 5.4.0.3 SysCo/al Adding and testing preconfigured providers
  *   2018-10-09 5.4.0.2 SysCo/al First implementation
  */
@@ -206,20 +207,22 @@ class MultiotpSms
     {
         switch ($provider) {
             case 'afilnet':
-                $this->url = "https://www.afilnet.com/api/http/?class=sms&method=sendsms&user=%username&password=%password&from=%from&to=%to&sms=%msg";
+                $this->url = "https://www.afilnet.com/api/http/?class=sms&method=sendsms&user=%user&password=%pass&from=%from&to=%to&sms=%msg";
+                $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "\"status\":\"SUCCESS\"";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 break;
             case 'aspsms':
                 $this->url = "http://xml1.aspsms.com:5061/xmlsvr.asp http://xml1.aspsms.com:5098/xmlsvr.asp http://xml2.aspsms.com:5061/xmlsvr.asp http://xml2.aspsms.com:5098/xmlsvr.asp";
                 $this->send_template = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n".
                                        "<aspsms>\r\n".
-                                       "  <Userkey>%username</Userkey>\r\n".
-                                       "  <Password>%password</Password>\r\n".
+                                       "  <Userkey>%user</Userkey>\r\n".
+                                       "  <Password>%pass</Password>\r\n".
                                        "  <AffiliateId>208355</AffiliateId>\r\n".
 		                               "  <Recipient>\r\n".
                                        "    <PhoneNumber>%to</PhoneNumber>\r\n".
@@ -232,6 +235,8 @@ class MultiotpSms
                 $this->encoding = "ISO";
                 $this->status_success = "20";
                 $this->content_success = "<ErrorCode>1</ErrorCode>";
+                $this->no_double_zero = FALSE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "HTML";
                 break;
             case 'clickatell':
@@ -239,8 +244,8 @@ class MultiotpSms
                 $this->send_template = "data=<clickAPI>".
                                          "<sendMsg>".
                                            "<api_id>%api_id</api_id>".
-                                           "<user>%username</user>".
-                                           "<password>%password</password>".
+                                           "<user>%user</user>".
+                                           "<password>%pass</password>".
                                            "<to>%to</to>".
                                            "<from>%from</from>".
                                            "<text><![CDATA[%msg]]></text>".
@@ -251,61 +256,75 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "<apiMsgId>";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
+                $this->content_encoding = "";
                 break;
             case 'clickatell2':
                 $this->url = "https://platform.clickatell.com/messages/http/send?apiKey=%api_id&to=%to&content=%msg";
+                $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "\"accepted\":true";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 break;
             case 'ecall':
                 $this->url = "https://www1.ecall.ch/ecallurl/ecallurl.ASP https://www2.ecall.ch/ecallurl/ecallurl.ASP";
-                $this->send_template = "WCI=Interface&Function=SendPage&AccountName=%username&AccountPassword=%password&CallBack=%from&Address=%to&Message=%msg";
+                $this->send_template = "WCI=Interface&Function=SendPage&AccountName=%user&AccountPassword=%pass&CallBack=%from&Address=%to&Message=%msg";
                 $this->method = "POST";
                 $this->encoding = "ISO";
                 $this->status_success = "20";
                 $this->content_success = "0";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 $this->encode_ampersand = TRUE;
                 break;
             case 'intellisms':
                 $this->url = "https://www.intellisoftware.co.uk/smsgateway/sendmsg.aspx https://www.intellisoftware2.co.uk/smsgateway/sendmsg.aspx";
-                $this->send_template = "username=%username&password=%password&originator=%from&to=%to&text=%msg&type=1";
+                $this->send_template = "username=%user&password=%pass&originator=%from&to=%to&text=%msg&type=1";
                 $this->method = "POST";
                 $this->encoding = "ISO";
                 $this->status_success = "20";
                 $this->content_success = "ID:";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 break;
             case 'nexmo':
                 $this->url = "https://rest.nexmo.com/sms/json";
-                $this->send_template = "api_key=%api_id&api_secret=%password&from=%from&to=%to&text=%msg";
+                $this->send_template = "api_key=%api_id&api_secret=%pass&from=%from&to=%to&text=%msg";
                 $this->method = "POST";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "\"status\": \"0\"";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 break;
             case 'nowsms':
                 $this->url = "http://%ip:%port/?PhoneNumber=%to&Text=%msg";
+                $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "Message Submitted";
+                $this->no_double_zero = FALSE;
                 $this->basic_auth = TRUE;
+                $this->content_encoding = "";
                 break;
             case 'smseagle':
-                $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%username&pass=%password&to=%to&message=%msg";
+                $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%user&pass=%pass&to=%to&message=%msg";
+                $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "OK";
+                $this->no_double_zero = FALSE;
+                $this->basic_auth = FALSE;
+                $this->content_encoding = "";
                 break;
             case 'swisscom':
                 $this->url = "https://messagingproxy.swisscom.ch:4300/rest/1.0.0/submit_sm/%api_id";
@@ -591,7 +610,9 @@ class MultiotpSms
         $payload = str_replace('%msg',      $this->encodeHttp($payload_msg),              $payload);
         $payload = str_replace('%api_id',   $this->encodeHttp($this->api_id),             $payload);
         $payload = str_replace('%username', $this->encodeHttp($this->username),           $payload);
+        $payload = str_replace('%user',     $this->encodeHttp($this->username),           $payload);
         $payload = str_replace('%password', $this->encodeHttp($this->password),           $payload);
+        $payload = str_replace('%pass',     $this->encodeHttp($this->password),           $payload);
         $payload = str_replace('%to',       $this->encodeHttp($this->cleanTo($this->to)), $payload);
         $payload = str_replace('%from',     $this->encodeHttp($this->from),               $payload);
 
@@ -608,7 +629,9 @@ class MultiotpSms
             $one_url = str_replace('%msg',      $this->encodeUrl($this->msg),                $one_url);
             $one_url = str_replace('%api_id',   $this->encodeUrl($this->api_id),             $one_url);
             $one_url = str_replace('%username', $this->encodeUrl($this->username),           $one_url);
+            $one_url = str_replace('%user',     $this->encodeUrl($this->username),           $one_url);
             $one_url = str_replace('%password', $this->encodeUrl($this->password),           $one_url);
+            $one_url = str_replace('%pass',     $this->encodeUrl($this->password),           $one_url);
             $one_url = str_replace('%to',       $this->encodeUrl($this->cleanTo($this->to)), $one_url);
             $one_url = str_replace('%from',     $this->encodeUrl($this->from),               $one_url);
 
@@ -703,8 +726,8 @@ class MultiotpSms
                     $last_length = strlen($reply);
                     $reply.= @fgets($fp, 1024);
                     $info = stream_get_meta_data($fp);
-                    @ob_flush(); // Avoid notice if any (if the buffer is empty and therefore cannot be flushed)
-                    flush(); 
+                    // @ob_flush(); // Avoid notice if any (if the buffer is empty and therefore cannot be flushed)
+                    // flush(); 
                 }
                 fclose($fp);
 

@@ -37,8 +37,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.1.7
- * @date      2019-01-30
+ * @version   5.6.1.5
+ * @date      2019-10-23
  * @since     2010-06-08
  * @copyright (c) 2010-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -79,6 +79,7 @@
  *
  *   0 OK: Token accepted
  *
+ *   9 INFO: Access Challenge returned back to the client
  *  10 INFO: Access Challenge returned back to the client
  *
  *  11 INFO: User successfully created or updated
@@ -141,6 +142,7 @@
  *  88 ERROR: Device is not defined as a HA slave
  *  89 ERROR: Device is not defined as a HA master
  *
+ *  93 ERROR: Authentication failed (time based token probably out of sync)
  *  94 ERROR: API request error
  *  95 ERROR: API authentication failed
  *  96 ERROR: Authentication failed (CRC error)
@@ -440,6 +442,14 @@
  *
  * Change Log
  *
+ *   2019-10-23 5.6.1.4 SysCo/al FIX: Separated configuration/statistics storage handling
+ *   2019-10-22 5.6.1.3 SysCo/al ENH: Better PHP 7.3 support
+ *                               ENH: Base32 encoder/decoder new implementation
+ *                               ENH: During WriteConfigData, loop on the current values, and check with the old values
+ *                               ENH: Enhanced internal tests
+ *   2019-09-02 5.5.0.3 SysCo/al ENH: Give an info if time based token is probably out of sync (in a window 10 time bigger)
+ *                                    (for example for hardware tokens not used for a long time)
+ *   2019-03-29 5.4.1.8 SysCo/al ENH: Challenge-Response support
  *   2019-01-24 5.4.1.5 SysCo/al FIX: If any, clean specific NTP DHCP option at every reboot
  *   2019-01-07 5.4.1.1 SysCo/al ENH: Raspberry Pi 3B+ support
  *   2018-11-13 5.4.0.2 SysCo/al ENH: Import of PSKC definition files with binary decoding key file
@@ -651,8 +661,8 @@ if (!isset($multiotp)) {
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.1.7
- * @date      2019-01-30
+ * @version   5.6.1.5
+ * @date      2019-10-23
  * @since     2010-06-08
  * @copyright (c) 2010-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -1097,7 +1107,18 @@ if (!isset($multiotp)) {
  *
  * Change Log
  *
- *   2019-01-30 5.4.1.7 SysCo/al ENH: New QRcode library used (without external files dependency)
+ *   2019-10-23 5.6.1.4 SysCo/al FIX: Separated configuration/statistics storage handling
+ *   2019-10-22 5.6.1.3 SysCo/al ENH: Better PHP 7.3 support
+ *                               ENH: Base32 encoder/decoder new implementation
+ *                               ENH: During WriteConfigData, loop on the current values, and check with the old values
+ *                               ENH: Enhanced internal tests
+ *   2019-09-02 5.5.0.3 SysCo/al ENH: Give an info if time based token is probably out of sync (in a window 10 time bigger)
+ *                                    (for example for hardware tokens not used for a long time)
+ *   2019-03-29 5.4.1.8 SysCo/al ENH: Enhanced error messages, more log information
+ *                               ENH: In debug mode, display an error if logfile cannot be written
+ *                               ENH: Global Access-Challenge support
+ *   2019-01-30 5.4.1.7 SysCo/al FIX: IsTemporaryBadServer function (thanks to brownowski on GitHub)
+ *                               ENH: New QRcode library used (without external files dependency)
  *   2019-01-25 5.4.1.6 SysCo/al FIX: If any, clean specific NTP DHCP option at every reboot
  *   2019-01-18 5.4.1.4 SysCo/al ENH: Modifications for Debian 9.x (stretch) binary images support
  *   2019-01-07 5.4.1.1 SysCo/al ENH: Raspberry Pi 3B+ support
@@ -1431,8 +1452,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.1.7
- * @date      2019-01-30
+ * @version   5.6.1.5
+ * @date      2019-10-23
  * @since     2010-07-18
  */
 {
@@ -1461,6 +1482,8 @@ class Multiotp
   var $_errors_text;              // An array containing errors text description
   var $_config_data;              // An array with all the general config related info
   var $_config_data_read;         // An array with the last config related info read
+  var $_stat_data;                // An array with all the general stat related info
+  var $_stat_data_read;           // An array with the last stat related info read
   var $_config_folder;            // Folder where the general config file is written
   var $_device;                   // Current device
   var $_device_data;              // An array with all the device related info
@@ -1524,8 +1547,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.4.1.7
-   * @date      2019-01-30
+   * @version   5.6.1.5
+   * @date      2019-10-23
    * @since     2010-07-18
    */
   function __construct(
@@ -1544,11 +1567,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.4.1.7'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.6.1.5'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2019-01-30'; // You should update the date with the date of your changes
+        $temp_date = '@date      2019-10-23'; // You should update the date with the date of your changes
         $this->_date = trim(substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxOSBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -1621,6 +1644,7 @@ class Multiotp
                                  'devices',
                                  'groups',
                                  'log',
+                                 'stat',
                                  'tokens',
                                  'users'
                                 );
@@ -1666,9 +1690,9 @@ class Multiotp
           'clear_otp_attribute'         => "varchar(255) DEFAULT ''",
           // No console authentication by default
           'console_authentication'      => "int(1) DEFAULT 0",
-          // Debug mode (to enable it permanently)
           'create_host'                 => "varchar(255) DEFAULT ''",
           'create_time'                 => "int(10) DEFAULT 0",
+          // Debug mode (to enable it permanently)
           'debug'                       => "int(1) DEFAULT 0",
           'default_algorithm'           => "varchar(255) DEFAULT 'totp'",
           'default_dialin_ip_mask'      => "varchar(255) DEFAULT ''",
@@ -1792,6 +1816,7 @@ class Multiotp
           'sql_devices_table'           => "varchar(255) DEFAULT 'multiotp_devices'",
           'sql_groups_table'            => "varchar(255) DEFAULT 'multiotp_groups'",
           'sql_log_table'               => "varchar(255) DEFAULT 'multiotp_log'",
+          'sql_stat_table'              => "varchar(255) DEFAULT 'multiotp_stat'",
           'sql_tokens_table'            => "varchar(255) DEFAULT 'multiotp_tokens'",
           'sql_users_table'             => "varchar(255) DEFAULT 'multiotp_users'",
           'syslog_facility'             => "int(10) DEFAULT 7",
@@ -1803,11 +1828,15 @@ class Multiotp
           'token_serial_number_length'  => "varchar(255) DEFAULT '12'",
           'token_otp_list_of_length'    => "varchar(255) DEFAULT '6'",
           'verbose_log_prefix'          => "varchar(255) DEFAULT ''",
+          
+          'challenge_response_enabled' => "int(1) DEFAULT 0",
+          'sms_challenge_enabled'      => "int(1) DEFAULT 0",
+          'text_sms_challenge'         => "varchar(255) DEFAULT 'Please enter the code received on your mobile phone'",
+          'text_token_challenge'       => "varchar(255) DEFAULT 'Please enter the code displayed on the token'",
           'encryption_hash'             => "varchar(255) DEFAULT ''");
       $this->_sql_tables_index['config']   = '**';
       $this->_sql_tables_ignore['config']  = '*backend_type*backend_type_validated*sql_server*sql_username*sql_password*sql_database*sql_schema*sql_config_table*';
-
-      
+     
       $this->_sql_tables_schema['devices'] = array(
           'device_id'                  => "varchar(255) DEFAULT ''",
           'cache_result_enabled'       => "int(1) DEFAULT 0",
@@ -1863,6 +1892,18 @@ class Multiotp
           'user'                    => "varchar(255) DEFAULT ''");
       $this->_sql_tables_index['log']      = '*datetime*';
       $this->_sql_tables_ignore['log']     = "**";
+
+      $this->_sql_tables_schema['stat']  = array(
+          'anonymous_stat_last_update'  => "int(10) DEFAULT 0",
+          'create_host'                 => "varchar(255) DEFAULT ''",
+          'create_time'                 => "int(10) DEFAULT 0",
+          'last_sync_update'            => "int(10) DEFAULT 0",
+          'last_sync_update_host'       => "varchar(255) DEFAULT ''",
+          'last_update'                 => "int(10) DEFAULT 0",
+          'last_update_host'            => "varchar(255) DEFAULT ''",
+          'encryption_hash'             => "varchar(255) DEFAULT ''");
+      $this->_sql_tables_index['stat']   = '**';
+      $this->_sql_tables_ignore['stat']  = '**';
 
       $this->_sql_tables_schema['tokens']  = array(
           'algorithm'               => "varchar(255) DEFAULT ''",
@@ -2101,6 +2142,8 @@ class Multiotp
 
       // Reset/initialize the config array, should be the second reset method to call
       $this->ResetConfigArray();
+      
+      $this->ResetStatArray();
       
       // Reset/initialize the device array
       $this->ResetDeviceArray();
@@ -2610,7 +2653,7 @@ class Multiotp
 
 
   /**
-   * @brief   Touch special file(s) for each modified element, like a "dirty flag"
+   * @brief   Touch special file(s) for each modified element, like a "dirty flag" (except for data/stat)
    *          The file name is based on a suffix, the suffix(es) are contained in an array
    *
    * @param   string $type_fn          Type of the data ('data', 'file', ...)
@@ -2634,7 +2677,7 @@ class Multiotp
     $touch_info = ""
   ) {
     $touch_suffix_array = $this->GetTouchSuffixArray();
-    if (('' != $this->GetTouchFolder()) && (0 < count($touch_suffix_array))) {
+    if (('' != $this->GetTouchFolder()) && (0 < count($touch_suffix_array)) && (!(('data' == mb_strtolower($type_fn)) && ('stat' == mb_strtolower($item_fn))))) {
       if ($this->GetVerboseFlag()) {
         $this->WriteLog("Debug: *Touch element $type_fn $item_fn $id_fn", FALSE, FALSE, 8888, 'System', '');
       }
@@ -2800,6 +2843,7 @@ class Multiotp
     $this->_errors_text[88] = "ERROR: Device is not defined as a HA slave";
     $this->_errors_text[89] = "ERROR: Device is not defined as a HA master";
 
+    $this->_errors_text[93] = "ERROR: Authentication failed (time based token probably out of sync)";
     $this->_errors_text[94] = "ERROR: API request error";
     $this->_errors_text[95] = "ERROR: API authentication failed";
     $this->_errors_text[96] = "ERROR: Authentication failed (CRC error)";
@@ -2991,6 +3035,8 @@ class Multiotp
       if ('configuration' == mb_strtolower($item)) {
           $filename = 'multiotp.ini';
           $force_file = true;
+      } elseif ('stat' == mb_strtolower($item)) {
+          $filename = 'stat.ini';
       } elseif ('cache' == mb_strtolower($item)) {
           $filename = 'cache.ini';
       } else {
@@ -3135,6 +3181,9 @@ class Multiotp
                   // foreach (array() as $key => $value) // this is not working well in PHP4
                   reset($data_array);
                   while(list($key, $value) = each($data_array)) {
+                    $value = str_replace(chr(13).chr(10),"<<CRLF>>",$value);
+                    $value = str_replace(chr(10),"<<CRLF>>",$value);
+                    $value = str_replace(chr(13),"<<CRLF>>",$value);
                     if ('' != trim($key)) {
                       $line.= mb_strtolower($key);
                       if ($encrypt_all ||
@@ -3188,6 +3237,9 @@ class Multiotp
                   $sQu_Data    = '';
                   reset($data_array);
                   while(list($key, $value) = each($data_array)) {
+                      $value = str_replace(chr(13).chr(10),"<<CRLF>>",$value);
+                      $value = str_replace(chr(10),"<<CRLF>>",$value);
+                      $value = str_replace(chr(13),"<<CRLF>>",$value);
                       $in_the_schema = FALSE;
                       reset($this->_sql_tables_schema[$table]);
                       $row_type = "";
@@ -3302,6 +3354,9 @@ class Multiotp
                   $sQu_Data    = '';
                   reset($data_array);
                   while(list($key, $value) = each($data_array)) {
+                      $value = str_replace(chr(13).chr(10),"<<CRLF>>",$value);
+                      $value = str_replace(chr(10),"<<CRLF>>",$value);
+                      $value = str_replace(chr(13),"<<CRLF>>",$value);
                       $in_the_schema = FALSE;
                       reset($this->_sql_tables_schema[$table]);
                       $row_type = "";
@@ -3585,6 +3640,28 @@ class Multiotp
   }
 
 
+  // Reset the stat array
+  function ResetStatArray($array_to_reset = '')
+  {
+      if (!is_array($array_to_reset)) {
+        $array_to_reset = $this->_sql_tables_schema['stat'];
+      }
+    // First, we reset all values (we know the key based on the schema)
+    reset($array_to_reset);
+    while(list($valid_key, $valid_format) = @each($array_to_reset)) {
+      $pos = mb_strpos(mb_strtoupper($valid_format), 'DEFAULT');
+      $value = "";
+      if ($pos !== FALSE) {
+        $value = trim(substr($valid_format, $pos + strlen("DEFAULT")));
+        if (("'" == substr($value,0,1)) && ("'" == substr($value,-1))) {
+          $value = substr($value,1,-1);
+        }
+      }
+      $this->_stat_data[$valid_key] = $value;
+    }
+  }
+
+  
   function SetAnonymousStat(
       $value
   ) {
@@ -3661,6 +3738,7 @@ class Multiotp
   function UpdateAnonymousStatLastUpdate()
   {
       $this->_config_data['anonymous_stat_last_update'] = time();
+      $this->WriteConfigData();
   }
 
 
@@ -3719,9 +3797,6 @@ class Multiotp
           }
       }
 
-      $this->UpdateAnonymousStatLastUpdate();
-      $this->WriteConfigData();
-
       /*
       if ($this->GetVerboseFlag()) {
         $stats_info = "";
@@ -3732,6 +3807,9 @@ class Multiotp
         $this->WriteLog("Debug: *Stats info: $stats_info", FALSE, FALSE, 8888, 'System', '');
       }
       */
+
+      $this->UpdateAnonymousStatLastUpdate();
+
     }    
   }
 
@@ -4125,6 +4203,8 @@ class Multiotp
               }
               if ('raw_data' == $key) {
                 $value = hex2bin($value);
+              } else {
+                $value = str_replace("<<CRLF>>",chr(10),$value);
               }
 
               foreach ($ignore_attributes as $one_ignore_attribute) {
@@ -4412,7 +4492,7 @@ class Multiotp
       if (($this->GetDisplayLogFlag()) && (!$hide_on_display) && (!$this->GetNoDisplayLogFlag())) {
           $display_text = "\nLOG ".$log_datetime.' '.$severity_txt.' '.(("" == $user_log)?"":'(user '.$user_log.') ').$category_log.' '.$log_info."\n";
           if ($this->IsDebugViaHtml()) {
-              $display_text = str_replace("\n","<br />\n", $display_text);
+              $display_text = str_replace("\n","<br />\n", htmlentities($display_text));
           }
           echo $display_text;
       }
@@ -4544,6 +4624,8 @@ class Multiotp
                   if ($file_created && ("" != $this->GetLinuxFileMode())) {
                       @chmod($this->GetLogFolder().$this->GetLogFileName(), octdec($this->GetLinuxFileMode()));
                   }
+              } elseif ($this->GetVerboseFlag()) {
+                  echo "ERROR: Log file ".$this->GetLogFolder().$this->GetLogFileName()." cannot be written.\n";
               }
           }
       }
@@ -4566,8 +4648,6 @@ class Multiotp
                       while ($aRow = $rResult->fetch_assoc()) {
                           if ($as_result) {
                               $result.= trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
-                          } else {
-                              echo trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
                           }
                       }                         
                   }
@@ -4578,8 +4658,6 @@ class Multiotp
                   while ($aRow = mysql_fetch_assoc($rResult)) {
                       if ($as_result) {
                           $result.= trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
-                      } else {
-                          echo trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
                       }
                   }                         
               }
@@ -4596,8 +4674,6 @@ class Multiotp
                   while ($aRow = pg_fetch_assoc($rResult)) {
                       if ($as_result) {
                           $result.= trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
-                      } else {
-                          echo trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
                       }
                   }                         
               }
@@ -4608,14 +4684,21 @@ class Multiotp
               while (!feof($log_file_handle)) {
                   if ($as_result) {
                       $result.= trim(fgets($log_file_handle))."\n";
-                  } else {
-                      echo trim(fgets($log_file_handle))."\n";
                   }
               }
               fclose($log_file_handle);
           }
       }
-      return $result;
+      if (false !== $result) {
+          if (!$as_result) {
+              echo $result;
+              return true;
+          } else {
+              return $result;
+          }
+      } else {
+        return $result;
+      }
   }
 
 
@@ -5070,7 +5153,7 @@ class Multiotp
                       $temp = trim($result_array[0][1]);
                       if ($next_is_mask) {
                           $mask = $temp;
-                          $cidr_mask = 32-log((ip2long($mask) ^ ip2long('255.255.255.255'))+1,2);
+                          $cidr_mask = mask2cidr($mask);
                           $gw_long_subnet = (ip2long($gateway) >> (32-$cidr_mask));
                           $ip_long_subnet = (ip2long($ip) >> (32-$cidr_mask));
                           if ($ip_long_subnet != $gw_long_subnet) {
@@ -5575,7 +5658,7 @@ class Multiotp
 
   function GetBackendType()
   {
-      return $this->_config_data['backend_type'];
+      return (isset($this->_config_data['backend_type']) ? $this->_config_data['backend_type'] : '');
   }
 
 
@@ -5952,7 +6035,7 @@ class Multiotp
           }
       }
       if ($write_config_data) {
-          $this->WriteConfigData();
+          $this->WriteConfigData(array(), true);
       }
       return 19;
   }
@@ -6009,6 +6092,7 @@ class Multiotp
                           $line_array[0] = substr($line_array[0], 0, strlen($line_array[0]) -1);
                           $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$encryption_key);
                       }
+                      $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                       if ("" != $line_array[0])
                       {
                           $this->_config_data[mb_strtolower($line_array[0])] = $line_array[1];
@@ -6086,6 +6170,7 @@ class Multiotp
                                               } else {
                                                   $this->_config_data[$key] = $value;
                                               }
+                                              $this->_config_data[$key] = str_replace("<<CRLF>>",chr(10),$this->_config_data[$key]);
                                           }
                                       } elseif (('unique_id' != $key) && $this->GetVerboseFlag()) {
                                           $this->WriteLog("Warning: *the key ".$key." is not in the config database schema", FALSE, FALSE, 8888, 'System', '', 3);
@@ -6136,6 +6221,7 @@ class Multiotp
                                               } else {
                                                   $this->_config_data[$key] = $value;
                                               }
+                                              $this->_config_data[$key] = str_replace("<<CRLF>>",chr(10),$this->_config_data[$key]);
                                           }
                                       } elseif (('unique_id' != $key) && $this->GetVerboseFlag()) {
                                           $this->WriteLog("Warning: *the key ".$key." is not in the config database schema", FALSE, FALSE, 8888, 'System', '', 3);
@@ -6173,20 +6259,173 @@ class Multiotp
           $this->SetAttributesToEncrypt(trim(isset($this->_config_data['attributes_to_encrypt'])?$this->_config_data['attributes_to_encrypt']:""));
           
           $timezone = $this->GetTimezone(); // Read the timezone (and set it in PHP automatically)
+          
+          //We do the rest also only if we are not in encryption_only mode
+          if ((!isset($this->_config_data['server_secret'])) || ('' == $this->_config_data['server_secret'])) {
+              $this->_config_data['server_secret'] = 'ClientServerSecret';
+          }
+          
+          $this->_config_data_read = $this->_config_data;
+          
+          // ReadStatData automatically
+          $this->ReadStatData();
+          
+          $array_to_parse = $this->_sql_tables_schema['stat'];
+          reset($array_to_parse);
+          while(list($stat_key, $stat_format) = @each($array_to_parse)) {
+              $pos = mb_strpos(mb_strtoupper($stat_format), 'DEFAULT');
+              $default_value = "";
+              if ($pos !== FALSE) {
+                  $default_value = trim(substr($stat_format, $pos + strlen("DEFAULT")));
+                  if (("'" == substr($default_value,0,1)) && ("'" == substr($default_value,-1))) {
+                      $default_value = substr($default_value,1,-1);
+                  }
+              }
+              if (isset($this->_stat_data[$stat_key]) && ($this->_stat_data[$stat_key] != $default_value)) {
+                  $this->_config_data[$stat_key] == $this->_stat_data[$stat_key];
+              }
+          }
       }
       
-      if ((!isset($this->_config_data['server_secret'])) || ('' == $this->_config_data['server_secret'])) {
-          $this->_config_data['server_secret'] = 'ClientServerSecret';
+      return $result;
+  }
+
+
+  function ReadStatData()
+  {
+      /*
+      $stat_table_info = '';
+      reset($this->_sql_tables_schema['stat']);
+      while(list($key, $value) = @each($this->_sql_tables_schema['stat'])) {
+          $stat_table_info.= $key.' ';
+      }
+      */
+      
+      $this->ResetStatArray();
+      $result = false;
+      
+      // First, we read the stat file if the backend is files or when migration is enabled
+      if (('files' == $this->GetBackendType()) || ($this->GetMigrationFromFile())) {
+          $stat_filename = 'stat.ini'; // File exists in v3 format only, we don't need any conversion
+          if (file_exists($this->GetConfigFolder().$stat_filename)) {
+              if ($file_handler = @fopen($this->GetConfigFolder().$stat_filename, "rt")) {
+                  $first_line = trim(fgets($file_handler));
+                  
+                  while (!feof($file_handler)) {
+                      $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($file_handler)));
+                      $line_array = explode("=",$line,2);
+                      if (('#' != substr($line, 0, 1)) && (';' != substr($line, 0, 1)) && ("" != trim($line)) && (isset($line_array[1]))) {
+                          if ("" != $line_array[0]) {
+                              $this->_stat_data[mb_strtolower($line_array[0])] = $line_array[1];
+                          }
+                      }
+                  }
+                  fclose($file_handler);
+                  $result = TRUE;
+              }
+          }
       }
       
-      $this->_config_data_read = $this->_config_data;
+      // And now, we override the values if another backend type is defined
+      if ($this->GetBackendTypeValidated()) {
+          switch ($this->GetBackendType()) {
+              case 'mysql':
+                  if ($this->OpenMysqlDatabase()) {
+                      if ("" != $this->_config_data['sql_stat_table']) {
+                          $sQuery  = "SELECT * FROM `".$this->_config_data['sql_stat_table']."` ";
+                          
+                          $aRow = NULL;
+
+                          if (is_object($this->_mysqli)) {
+                              if (!($result = $this->_mysqli->query($sQuery))) {
+                                  $this->WriteLog("Error: ".trim($this->_mysqli->error)." ".$sQuery, TRUE, FALSE, 41, 'System', '', 3);
+                                  $result = FALSE;
+                              } else {
+                                  $aRow = $result->fetch_assoc();
+                              }
+                          } else {
+                              if (!($rResult = mysql_query($sQuery, $this->_mysql_database_link))) {
+                                  $this->WriteLog("Error: ".mysql_error()." ".$sQuery, TRUE, FALSE, 41, 'System', '', 3);
+                                  $result = FALSE;
+                              } else {
+                                  $aRow = mysql_fetch_assoc($rResult);
+                              }
+                          }
+
+                          if (NULL != $aRow) {
+                              $result = TRUE;
+                              while(list($key, $value) = @each($aRow)) {
+                                  $in_the_schema = FALSE;
+                                  reset($this->_sql_tables_schema['stat']);
+                                  while(list($valid_key, $valid_format) = @each($this->_sql_tables_schema['stat'])) {
+                                      if ($valid_key == $key) {
+                                          $in_the_schema = TRUE;
+                                          break;
+                                      }
+                                  }
+                                  if ($in_the_schema) {
+                                      $this->_stat_data[$key] = $value;
+                                  } elseif (('unique_id' != $key) && $this->GetVerboseFlag()) {
+                                      $this->WriteLog("Warning: *the key ".$key." is not in the stat database schema", FALSE, FALSE, 8888, 'System', '');
+                                  }
+                              }
+                          }
+                      }
+                  }
+                  break;
+              case 'pgsql':
+                  if ($this->OpenPGSQLDatabase()) {
+                      if ("" != $this->_config_data['sql_stat_table']) {
+                          $sQuery  = "SELECT * FROM \"".$this->_config_data['sql_schema']."\".\"".$this->_config_data['sql_stat_table']."\" ";
+                          
+                          $aRow = NULL;
+
+                          if (!($rResult = pg_query($this->_pgsql_database_link, $sQuery))) {
+                              $this->WriteLog("Error: ".pg_last_error()." ".$sQuery, TRUE, FALSE, 41, 'System', '', 3);
+                              $result = FALSE;
+                          } else {
+                              $aRow = pg_fetch_assoc($rResult);
+                          }
+
+                          if (NULL != $aRow) {
+                              $result = TRUE;
+                              while(list($key, $value) = @each($aRow)) {
+                                  $in_the_schema = FALSE;
+                                  reset($this->_sql_tables_schema['stat']);
+                                  while(list($valid_key, $valid_format) = @each($this->_sql_tables_schema['stat'])) {
+                                      if ($valid_key == $key) {
+                                          $in_the_schema = TRUE;
+                                          break;
+                                      }
+                                  }
+                                  if ($in_the_schema) {
+                                      $this->_stat_data[$key] = $value;
+                                  } elseif (('unique_id' != $key) && $this->GetVerboseFlag()) {
+                                      $this->WriteLog("Warning: *the key ".$key." is not in the stat database schema", FALSE, FALSE, 8888, 'System', '');
+                                      if ($this->IsDeveloperMode()) {
+                                          $this->WriteLog("Info: *ReadStatData stat database schema from $debug_source: ".$stat_table_info, FALSE, FALSE, 8888, 'System', '');
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  }
+                  break;
+              default:
+              // Nothing to do if the backend type is unknown
+                  break;
+          }
+      }
+      
+      $this->_stat_data_read = $this->_stat_data;
 
       return $result;
   }
 
 
   function WriteConfigData(
-      $write_config_data_array = array()
+      $write_config_data_array = array(),
+      $force_file = false
   ) {
       if ($this->IsDeveloperMode()) {
         $backtrace = version_compare(PHP_VERSION, '5.3.6', '>=') ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) : debug_backtrace();
@@ -6199,23 +6438,117 @@ class Multiotp
         }
       }
       
+      $write_needed = false;
       // foreach (array() as $key => $value) // this is not working well in PHP4
-      reset($this->_config_data_read);
-      while(list($key, $value) = each($this->_config_data_read)) {
-        $new_value = (isset($this->_config_data[$key]) ? $this->_config_data[$key] : "");
-        if ($value != $new_value) {
+      reset($this->_config_data);
+      while(list($key, $value) = each($this->_config_data)) {
+        $in_the_stat_schema = FALSE;
+        reset($this->_sql_tables_schema['stat']);
+        while(list($stat_key, $stat_format) = each($this->_sql_tables_schema['stat'])) {
+          if (('last_sync_update' != $stat_key) && ('last_sync_update_host' != $stat_key) && ('last_update' != $stat_key) && ('last_update_host' != $stat_key) && ('create_time' != $stat_key) && ('create_host' != $stat_key) && ($stat_key == $key)) {
+            $in_the_stat_schema = TRUE;
+            break;
+          }
+        }
+        $old_value = (isset($this->_config_data_read[$key]) ? $this->_config_data_read[$key] : "");
+        if ($value != $old_value) {
+          if (!$in_the_stat_schema) {
+            $write_needed = true;
+          } else {
+              if ($this->GetVerboseFlag()) {
+                $this->WriteLog("Debug: **New configuration value to write in stat for $key: '$value' (was '$old_value' before)", FALSE, FALSE, 8888, 'Debug', '');
+              }
+          }
           if ($this->GetVerboseFlag()) {
-            $this->WriteLog("Debug: New configuration value for $key: '$new_value' (was '$value' before)", FALSE, FALSE, 8888, 'Debug', '');
+            $this->WriteLog("Debug: **New configuration value for $key: '$value' (was '$old_value' before)", FALSE, FALSE, 8888, 'Debug', '');
           }
         }
       }
+      
+      // We need to write the content in any case if we do a backup file or if with request the return of the content
+      if (("@" == (isset($write_config_data_array['backup_file']) ? $write_config_data_array['backup_file'] : '')) ||
+          (true === (isset($write_config_data_array['return_content']) ? $write_config_data_array['return_content'] : false))
+         ) {
+        $write_needed = true;
+        if ($this->GetVerboseFlag()) {
+          $this->WriteLog("Debug: **New configuration value to backup for $key: '$value' (was '$old_value' before)", FALSE, FALSE, 8888, 'Debug', '');
+        }
+      }
+      
+      if ($write_needed) {
+          if ($this->GetVerboseFlag()) {
+            $this->WriteLog("Debug: **Writing configuration data needed", FALSE, FALSE, 8888, 'Debug', '');
+          }
+          $result = $this->WriteData(array_merge(array('item'       => 'Configuration',
+                                                       'table'      => 'config',
+                                                       'folder'     => $this->GetConfigFolder(true),
+                                                       'data_array' => $this->_config_data,
+                                                       'force_file' => $force_file
+                                                      ), $write_config_data_array));
+      } else {
+          if ($this->GetVerboseFlag()) {
+            $this->WriteLog("Debug: **Writing configuration data not needed (no change)", FALSE, FALSE, 8888, 'Debug', '');
+          }
+          $result = true;
+      }
 
-      $result = $this->WriteData(array_merge(array('item'       => 'Configuration',
-                                                   'table'      => 'config',
-                                                   'folder'     => $this->GetConfigFolder(true),
-                                                   'data_array' => $this->_config_data,
-                                                   'force_file' => true
-                                                  ), $write_config_data_array));
+      if (false !== $result) {
+        $this->WriteStatData($write_config_data_array);
+      }
+      
+      return $result;
+  }
+
+
+  function WriteStatData(
+      $write_stat_data_array = array()
+  ) {
+      
+      $write_needed = false;
+      reset($this->_config_data);
+      while(list($key, $value) = each($this->_config_data)) {
+        reset($this->_sql_tables_schema['stat']);
+        while(list($stat_key, $stat_format) = each($this->_sql_tables_schema['stat'])) {
+          if (('last_sync_update' != $stat_key) && ('last_sync_update_host' != $stat_key) && ('last_update' != $stat_key) && ('last_update_host' != $stat_key) && ('create_time' != $stat_key) && ('create_host' != $stat_key) && ($stat_key == $key)) {
+            $this->_stat_data[$stat_key] = $this->_config_data[$key];
+            $old_value = (isset($this->_stat_data_read[$key]) ? $this->_stat_data_read[$key] : "");
+            if ($value != $old_value) {
+              $write_needed = true;
+              if ($this->GetVerboseFlag()) {
+                $this->WriteLog("Debug: **New stat value for $key: '$value' (was '$old_value' before)", FALSE, FALSE, 8888, 'Debug', '');
+              }
+            }
+            break;
+          }
+        }
+      }
+        
+      if ($this->IsDeveloperMode()) {
+        $backtrace = version_compare(PHP_VERSION, '5.3.6', '>=') ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) : debug_backtrace();
+        foreach ($backtrace as $one_backtrace) {
+          $file = isset($one_backtrace['file'])?$one_backtrace['file']:"";
+          $line = isset($one_backtrace['line'])?$one_backtrace['line']:"";
+          $class = isset($one_backtrace['class'])?$one_backtrace['class']."::":"";
+          $function = isset($one_backtrace['function'])?$one_backtrace['function']:"";
+          $this->WriteLog("Developer: *WriteStatData $file:$line $class$function()", FALSE, FALSE, 8888, 'Debug', '');
+        }
+      }
+      
+      if ($write_needed) {
+          if ($this->GetVerboseFlag()) {
+            $this->WriteLog("Debug: **Writing stat data needed", FALSE, FALSE, 8888, 'Debug', '');
+          }
+          $result = $this->WriteData(array_merge(array('item'       => 'Stat',
+                                                       'table'      => 'stat',
+                                                       'folder'     => $this->GetConfigFolder(true),
+                                                       'data_array' => $this->_stat_data
+                                                      ), $write_stat_data_array));
+      } else {
+          if ($this->GetVerboseFlag()) {
+            $this->WriteLog("Debug: **Writing stat data not needed (no change)", FALSE, FALSE, 8888, 'Debug', '');
+          }
+          $result = true;
+      }
       return $result;
   }
 
@@ -7733,8 +8066,68 @@ class Multiotp
       return (1 == ($this->_config_data['cache_data']));
   }
 
+  
+  function SetGlobalChallengeResponse($value) {
+      $this->_config_data['challenge_response_enabled'] = ((intval($value) > 0)?1:0);
+  }
 
-  function SetCaseSensitiveUsers()
+
+  function EnableGlobalChallengeResponse() {
+      $this->_config_data['challenge_response_enabled'] = 1;
+  }
+
+
+  function DisableGlobalChallengeResponse() {
+      $this->_config_data['challenge_response_enabled'] = 0;
+  }
+
+
+  function IsGlobalChallengeResponse() {
+      return (1 == ($this->_config_data['challenge_response_enabled']));
+  }
+
+  
+  function SetGlobalSmsChallenge($value) {
+      $this->_config_data['sms_challenge_enabled'] = ((intval($value) > 0)?1:0);
+  }
+
+
+  function EnableGlobalSmsChallenge() {
+      $this->_config_data['sms_challenge_enabled'] = 1;
+  }
+
+
+  function DisableGlobalSmsChallenge() {
+      $this->_config_data['sms_challenge_enabled'] = 0;
+  }
+
+
+  function IsGlobalSmsChallenge() {
+      return (1 == ($this->_config_data['sms_challenge_enabled']));
+  }
+
+
+  function SetGlobalTextSmsChallenge($value) {
+      $this->_config_data['text_sms_challenge'] = trim($value);
+  }
+
+
+  function GetGlobalTextSmsChallenge() {
+      return trim($this->_config_data['text_sms_challenge']);
+  }
+
+
+  function SetGlobalTextTokenChallenge($value) {
+      $this->_config_data['text_token_challenge'] = trim($value);
+  }
+
+
+  function GetGlobalTextTokenChallenge() {
+      return trim($this->_config_data['text_token_challenge']);
+  }
+
+
+  function SetCaseSensitiveUsers($value)
   {
       $this->_config_data['case_sensitive_users'] = ((intval($value) > 0)?1:0);
   }
@@ -8807,13 +9200,7 @@ class Multiotp
               }
               $this->SetUserTokenNumberOfDigits($number_of_digits);
 
-              /* This option is too long
-              if (function_exists('openssl_random_pseudo_bytes')) {
-                  $the_seed = (('' == $seed)?bin2hex(openssl_random_pseudo_bytes(20)):$seed);
-              } else {
-              */
-                  $the_seed = (('' == $seed)?substr(md5(date("YmdHis").mt_rand(100000,999999)),0,20).substr(md5(mt_rand(100000,999999).date("YmdHis")),0,20):$seed);
-              /* } */
+              $the_seed = (('' == $seed)?substr(md5(date("YmdHis").mt_rand(100000,999999)),0,20).substr(md5(mt_rand(100000,999999).date("YmdHis")),0,20):$seed);
               
               if (('hotp' == mb_strtolower($algorithm)) || ('yubicootp' == mb_strtolower($algorithm))) {
                   $next_event = ((-1 == $time_interval_or_next_event)?0:$time_interval_or_next_event);
@@ -9152,6 +9539,7 @@ class Multiotp
       $html_cleaned .= end($html_slice);
       $html = $html_cleaned."\n";
 
+      $html = str_replace('{MultiotpVersion}', $this->GetVersion(), $html);
       $html = str_replace('{MultiotpUserDescriptionUC}', mb_strtoupper($descr, 'UTF-8'), $html);
       $html = str_replace('{MultiotpUserDescription}', $descr, $html);
 
@@ -9164,7 +9552,6 @@ class Multiotp
       $html = str_replace('{MultiotpUserTokenTimeInterval}', $this->GetUserTokenTimeInterval(), $html);
       $html = str_replace('{MultiotpUserTokenNextEvent}', 1+$this->GetUserTokenLastEvent(), $html);
       $html = str_replace('{MultiotpUserTokenSerial}', $token_serial, $html);
-      $html = str_replace('{MultiotpVersion}', $this->GetVersion(), $html);
 
       $regex_url='/\surl=(.*?)[\}\s}]/';
       $regex_format='/\sformat=\"?([^\"\}]*)\"?.*\}/';
@@ -9481,13 +9868,7 @@ class Multiotp
               $this->SetUserTokenNumberOfDigits(6);
               $next_event = 0;
 
-              /* This option is too long
-              if (function_exists('openssl_random_pseudo_bytes')) {
-                  $seed = bin2hex(openssl_random_pseudo_bytes(20));
-              } else {
-              */
-                  $seed = substr(md5(date("YmdHis").mt_rand(100000,999999)),0,20).substr(md5(mt_rand(100000,999999).date("YmdHis")),0,20);
-              /* } */
+              $seed = substr(md5(date("YmdHis").mt_rand(100000,999999)),0,20).substr(md5(mt_rand(100000,999999).date("YmdHis")),0,20);
 
               if ("totp" == mb_strtolower($algorithm))
               {
@@ -10059,6 +10440,7 @@ class Multiotp
                                   $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                               }
                           }
+                          $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                           if ('' != trim($line_array[0])) {
                               $temp_user_array[mb_strtolower($line_array[0])] = $line_array[1];
                           }
@@ -10122,6 +10504,7 @@ class Multiotp
                                       } else {
                                           $temp_user_array[$key] = $value;
                                       }
+                                      $temp_user_array[$key] = str_replace("<<CRLF>>",chr(10),$temp_user_array[$key]);
                                   } elseif ((!$in_the_schema) && ('unique_id' != $key)  && $this->GetVerboseFlag()) {
                                       $this->WriteLog("Warning: *The key ".$key." is not in the users table schema", FALSE, FALSE, 42, 'System', '', 3);
                                   }
@@ -10174,6 +10557,7 @@ class Multiotp
                                       } else {
                                           $temp_user_array[$key] = $value;
                                       }
+                                      $temp_user_array[$key] = str_replace("<<CRLF>>",chr(10),$temp_user_array[$key]);
                                   } elseif ((!$in_the_schema) && ('unique_id' != $key)  && $this->GetVerboseFlag()) {
                                       $this->WriteLog("Warning: *The key ".$key." is not in the users table schema", FALSE, FALSE, 42, 'System', '', 3);
                                   }
@@ -10219,6 +10603,7 @@ class Multiotp
                       $line_array[0] = substr($line_array[0], 0, strlen($line_array[0]) -1);
                       $line_array[1] = $this->Decrypt($line_array[0], $line_array[1], $this->GetServerSecret());
                   }
+                  $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                   if ('' != trim($line_array[0]))
                   {
                       if ('encryption_hash' != mb_strtolower($line_array[0]))
@@ -10313,6 +10698,17 @@ class Multiotp
   function GetUsersList()
   {
       return $this->GetList('user', 'sql_users_table', $this->GetUsersFolder());
+  }
+  
+  
+  function GetEnhancedUsersList() {
+    $array_result = array();
+    $users_array = explode("\t", $this->GetUsersList());
+    foreach($users_array as $user) {
+      $this->SetUser($user);
+      array_push($array_result, $user . "|" . "s" . (("1" == $this->GetUserSynchronized()) ? "1" : "0"));
+    }
+    return implode("\t", $array_result);
   }
 
 
@@ -10443,6 +10839,7 @@ class Multiotp
                                                   $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                                               }
                                           }
+                                          $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                                           if ('error_counter' == trim($line_array[0]))
                                           {
                                               $error_counter = $line_array[1];
@@ -10588,6 +10985,7 @@ class Multiotp
                                                       $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                                                   }
                                               }
+                                              $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                                               if ('locked' == trim($line_array[0]))
                                               {
                                                   if (1 == (isset($line_array[1])?$line_array[1]:0))
@@ -10724,6 +11122,7 @@ class Multiotp
                                                       $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                                                   }
                                               }
+                                              $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                                               if ('locked' == trim($line_array[0])) {
                                                   if (1 == (isset($line_array[1])?$line_array[1]:0)) {
                                                       $locked = TRUE;
@@ -10860,6 +11259,7 @@ class Multiotp
                                                   $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                                               }
                                           }
+                                          $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                                           if ('desactivated' == trim($line_array[0])) {
                                               if (1 == (isset($line_array[1])?$line_array[1]:0)) {
                                                   $desactivated = TRUE;
@@ -10983,6 +11383,7 @@ class Multiotp
                                                       $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                                                   }
                                               }
+                                              $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                                               if ('desactivated' == trim($line_array[0])) {
                                                   if (1 == (isset($line_array[1])?$line_array[1]:0)) {
                                                       $desactivated = TRUE;
@@ -11319,13 +11720,7 @@ class Multiotp
       }
       $digits = $this->GetScratchPasswordsDigits();
 
-      /* This option is too long
-      if (function_exists('openssl_random_pseudo_bytes')) {
-          $seed = openssl_random_pseudo_bytes(16);
-      } else {
-      */
-          $seed = hex2bin(md5('sCratchP@sswordS'.$this->GetUser().bigdec2hex((time()-mktime(1,1,1,1,1,2000)).mt_rand(10000,99999))));
-      /* } */
+      $seed = hex2bin(md5('sCratchP@sswordS'.$this->GetUser().bigdec2hex((time()-mktime(1,1,1,1,1,2000)).mt_rand(10000,99999))));
 
       $scratch_loop = $this->GetScratchPasswordsAmount();
       if (($scratch_loop * (1+$digits) * 2.5) > 65535) {
@@ -11505,7 +11900,7 @@ class Multiotp
           $this->SetUser($first_param);
           $input = $second_param;
       }
-      if (($this->_user_data['last_failed_time'] + $this->GetLastFailedWhiteDelay()) > time()) {
+      if ((intval($this->_user_data['last_failed_time']) + intval($this->GetLastFailedWhiteDelay())) > time()) {
           return (sha1('$+Cred'.$input.'!@#S') == $this->_user_data['last_failed_credential']);
       } else {
           return false;
@@ -12396,13 +12791,7 @@ class Multiotp
           $this->SetTokenNumberOfDigits($number_of_digits);
           $this->SetTokenDeltaTime(0);
           
-          /* This option is too long
-          if (function_exists('openssl_random_pseudo_bytes')) {
-              $the_seed = (('' == $seed)?bin2hex(openssl_random_pseudo_bytes(20)):$seed);
-          } else {
-          */
-              $the_seed = (('' == $seed)?substr(md5(date("YmdHis").mt_rand(100000,999999)),0,20).substr(md5(mt_rand(100000,999999).date("YmdHis")),0,20):$seed);
-          /* } */
+          $the_seed = (('' == $seed)?substr(md5(date("YmdHis").mt_rand(100000,999999)),0,20).substr(md5(mt_rand(100000,999999).date("YmdHis")),0,20):$seed);
 
           if ('hotp' == mb_strtolower($algorithm)) {
               $next_event = ((-1 == $time_interval_or_next_event)?0:$time_interval_or_next_event);
@@ -12411,13 +12800,7 @@ class Multiotp
               $next_event = 0;
               $time_interval = ((-1 == $time_interval_or_next_event)?30:$time_interval_or_next_event);
               if ("motp" == mb_strtolower($algorithm)) {
-                  /* This option is too long
-                  if (function_exists('openssl_random_pseudo_bytes')) {
-                      $the_seed = (('' == $seed)?bin2hex(openssl_random_pseudo_bytes(8)):$seed);
-                  } else {
-                  */
-                      $the_seed = (('' == $seed)?substr(md5(date("YmdHis").mt_rand(100000,999999)),0,16):$seed);
-                  /* } */
+                  $the_seed = (('' == $seed)?substr(md5(date("YmdHis").mt_rand(100000,999999)),0,16):$seed);
                   $time_interval = 10;
               }
           }
@@ -13535,6 +13918,7 @@ class Multiotp
                           $line_array[0] = substr($line_array[0], 0, strlen($line_array[0]) -1);
                           $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                       }
+                      $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                       if ('' != trim($line_array[0])) {
                           $this->_token_data[mb_strtolower($line_array[0])] = $line_array[1];
                       }
@@ -13598,6 +13982,7 @@ class Multiotp
                                       } else {
                                           $this->_token_data[$key] = $value;
                                       }
+                                      $this->_token_data[$key] = str_replace("<<CRLF>>",chr(10),$this->_token_data[$key]);
                                   } elseif ((!$in_the_schema) && ('unique_id' != $key)  && $this->GetVerboseFlag()) {
                                       $this->WriteLog("Warning: *The key ".$key." is not in the tokens database schema", FALSE, FALSE, 98, 'System', '');
                                   }
@@ -13649,6 +14034,7 @@ class Multiotp
                                       } else {
                                           $this->_token_data[$key] = $value;
                                       }
+                                      $this->_token_data[$key] = str_replace("<<CRLF>>",chr(10),$this->_token_data[$key]);
                                   } elseif ((!$in_the_schema) && ('unique_id' != $key)  && $this->GetVerboseFlag()) {
                                       $this->WriteLog("Warning: *The key ".$key." is not in the tokens database schema", FALSE, FALSE, 98, 'System', '');
                                   }
@@ -15733,7 +16119,7 @@ class Multiotp
       $sms_originator = (('' != $originator)?$originator:$this->GetSmsOriginator());
 
       $sms_number     = $this->CleanPhoneNumber($sms_recipient);
-      
+     
       if ("exec" == $sms_provider) {
           $exec_cmd = $sms_api_id;
           $exec_cmd = str_replace('%from', $sms_originator, $exec_cmd);
@@ -16061,6 +16447,13 @@ class Multiotp
           $sms_challenge_enabled = 0;
           $text_sms_challenge = '';
           $text_token_challenge = '';
+      }
+      
+      if ($this->IsGlobalChallengeResponse()) {
+          $challenge_response_enabled = 1;
+          $sms_challenge_enabled = ($this->IsGlobalSmsChallenge() ? 1:0);
+          $text_sms_challenge = $this->GetGlobalTextSmsChallenge();
+          $text_token_challenge = $this->GetGlobalTextTokenChallenge();
       }
   
       $state = trim($this->GetState());
@@ -16633,7 +17026,7 @@ class Multiotp
           $step_window       = intval($time_window / $interval);
           $step_sync_window  = intval($time_sync_window / $interval);
           $last_login_step   = intval($last_login / $interval);
-          $delta_step        = $delta_time / $interval;
+          $delta_step        = intval($delta_time) / intval($interval);
           
           $prefix_pin = ($need_prefix?$pin:'');
 
@@ -17078,11 +17471,56 @@ class Multiotp
                           echo "\r\n";
                       }
                       if (90 <= $result) {
+                          
+                          // BEGIN to give an info if time based token is probably out of sync (in a window 10 time bigger)
+                          do {
+                              $additional_step = (1 - (2 * ($check_step % 2))) * intval($check_step/2);
+                              $pure_calculated_token = $this->GenerateOathHotp($seed_bin,$now_steps+$additional_step+$delta_step,$digits,$token_algo_suite);
+                              $calculated_token = $pure_calculated_token;
+                              
+                              if (($need_prefix) && ($input_to_check != '') && ($this->IsUserRequestLdapPasswordEnabled())) {
+                                  $code_confirmed_without_pin =  $calculated_token;
+                                  $code_confirmed = $calculated_token;
+                                  $input_to_check = substr($input_to_check, -strlen($code_confirmed));                            
+                                  $this->SetLastClearOtpValue($code_confirmed);
+                              } else {
+                                  if ($need_prefix) {
+                                      $calculated_token = $pin.$calculated_token;
+                                  }
+
+                                  $code_confirmed_without_pin = $pure_calculated_token;
+                                  $code_confirmed = $calculated_token;
+                                  $this->SetLastClearOtpValue($code_confirmed);
+                                  if ('' != $this->GetChapPassword()) {
+                                      $code_confirmed_without_pin = mb_strtolower($this->CalculateChapPassword($code_confirmed_without_pin));
+                                      $code_confirmed = mb_strtolower($this->CalculateChapPassword($code_confirmed));
+                                  } elseif ('' != $this->GetMsChapResponse()) {
+                                      $code_confirmed_without_pin = mb_strtolower($this->CalculateMsChapResponse($code_confirmed_without_pin));
+                                      $code_confirmed = mb_strtolower($this->CalculateMsChapResponse($code_confirmed));
+                                  } elseif ('' != $this->GetMsChap2Response()) {
+                                      $clear_code_confirmed = $code_confirmed;
+                                      $code_confirmed_without_pin = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed_without_pin));
+                                      $code_confirmed = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed));
+                                      if ($this->GetVerboseFlag()) {
+                                        $this->WriteLog("Debug: *CalculateMsChap2Response($real_user, $clear_code_confirmed) for totp: $code_confirmed", false, false, 19, 'Debug', '');
+                                      }
+                                  }
+                              }
+                             
+                              if (('' == $input_sync) && (!$resync_enc_pass) && ($input_to_check === $code_confirmed)) {
+                                  $result = 93; // ERROR: Authentication failed (time based token probably out of sync)
+                              } else {
+                                  $check_step++;
+                              }
+                          } while (($check_step < (10 * $max_steps)) && (93 != $result));
+                          // END to give an info if time based token is probably out of sync (in a window 10 time bigger)
+
+                          
                           if ($this->CompareUserLastFailedCredential(trim($input.' '.$input_sync))) {
                               $disable_error_counter = true;
                           }
                           if (!$disable_error_counter) {
-                              $this->SetUserErrorCounter($error_counter+1);
+                              $this->SetUserErrorCounter(intval($error_counter)+1);
                           }
                           $this->SetUserTokenLastError($now_epoch);
                       }
@@ -17137,7 +17575,7 @@ class Multiotp
                       $disable_error_counter = true;
                   }
                   if (!$disable_error_counter) {
-                      $this->SetUserErrorCounter($error_counter+1);
+                      $this->SetUserErrorCounter(intval($error_counter)+1);
                   }
                   $this->SetUserTokenLastError($now_epoch);
               }
@@ -17148,7 +17586,11 @@ class Multiotp
           }
           
           if (90 <= $result) {
-              $this->WriteLog("Error: authentication failed for user ".$real_user, FALSE, FALSE, $result, 'User');
+              $replayed_text = (($disable_error_counter) ? " (same token replayed)" : "");
+              if (("" == $replayed_text) && (93 == $result)) {
+                $replayed_text = " (time based token probably out of sync)";
+              }
+              $this->WriteLog("Error: authentication failed for user ".$real_user.$replayed_text, FALSE, FALSE, $result, 'User');
               if ($this->GetVerboseFlag()) {
                   if ('' != $this->GetChapPassword()) {
                       $this->WriteLog("Info: *(authentication typed by the user is CHAP encrypted)", FALSE, FALSE, $result, 'User');
@@ -17176,7 +17618,12 @@ class Multiotp
           }
           
           if ($this->GetUserErrorCounter() >= $this->GetMaxBlockFailures()) {
+              if (1 != $this->GetUserLocked()) {
+                $this->WriteLog("Error: User ".$real_user." locked after ".$this->GetUserErrorCounter()." failed authentications", FALSE, FALSE, $result, 'User');
+              }
               $this->SetUserLocked(1);
+          } elseif (($this->GetUserErrorCounter() >= $this->GetMaxDelayedFailures()) && ($now_epoch == ($this->GetUserTokenLastError()))) {
+              $this->WriteLog("Error: User ".$real_user." is now delayed for ".$this->GetMaxDelayedTime()." seconds after ".$this->GetUserErrorCounter()." failed authentications", FALSE, FALSE, $result, 'User');
           }
 
           if (0 == $result) {
@@ -18625,6 +19072,7 @@ class Multiotp
                           $line_array[0] = substr($line_array[0], 0, strlen($line_array[0]) -1);
                           $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                       }
+                      $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                       if ('' != trim($line_array[0])) {
                           $this->_device_data[mb_strtolower($line_array[0])] = $line_array[1];
                       }
@@ -18688,6 +19136,7 @@ class Multiotp
                                       } else {
                                           $this->_device_data[$key] = $value;
                                       }
+                                      $this->_device_data[$key] = str_replace("<<CRLF>>",chr(10),$this->_device_data[$key]);
                                   } elseif ((!$in_the_schema) && ('unique_id' != $key)  && $this->GetVerboseFlag()) {
                                       $this->WriteLog("Warning: *The key ".$key." is not in the devices database schema", FALSE, FALSE, 42, 'System', '', 3);
                                   }
@@ -18739,6 +19188,7 @@ class Multiotp
                                       } else {
                                           $this->_device_data[$key] = $value;
                                       }
+                                      $this->_device_data[$key] = str_replace("<<CRLF>>",chr(10),$this->_device_data[$key]);
                                   } elseif ((!$in_the_schema) && ('unique_id' != $key)  && $this->GetVerboseFlag()) {
                                       $this->WriteLog("Warning: *The key ".$key." is not in the devices database schema", FALSE, FALSE, 42, 'System', '', 3);
                                   }
@@ -19425,6 +19875,7 @@ class Multiotp
                           $line_array[0] = substr($line_array[0], 0, strlen($line_array[0]) -1);
                           $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
                       }
+                      $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                       if ('' != trim($line_array[0])) {
                           $this->_group_data[mb_strtolower($line_array[0])] = $line_array[1];
                       }
@@ -19488,6 +19939,7 @@ class Multiotp
                                       } else {
                                           $this->_group_data[$key] = $value;
                                       }
+                                      $this->_group_data[$key] = str_replace("<<CRLF>>",chr(10),$this->_group_data[$key]);
                                   } elseif ((!$in_the_schema) && ('unique_id' != $key)  && $this->GetVerboseFlag()) {
                                       $this->WriteLog("Warning: *The key ".$key." is not in the groups database schema", FALSE, FALSE, 42, 'System', '', 3);
                                   }
@@ -19539,6 +19991,7 @@ class Multiotp
                                       } else {
                                           $this->_group_data[$key] = $value;
                                       }
+                                      $this->_group_data[$key] = str_replace("<<CRLF>>",chr(10),$this->_group_data[$key]);
                                   } elseif ((!$in_the_schema) && ('unique_id' != $key)  && $this->GetVerboseFlag()) {
                                       $this->WriteLog("Warning: *The key ".$key." is not in the groups database schema", FALSE, FALSE, 42, 'System', '', 3);
                                   }
@@ -20009,13 +20462,7 @@ class Multiotp
   ) {
       $result = 72;
 
-      /* This option is too long
-      if (function_exists('openssl_random_pseudo_bytes')) {
-          $server_challenge = 'MOSH'.bin2hex(openssl_random_pseudo_bytes(16));
-      } else {
-      */
-          $server_challenge = 'MOSH'.md5($this->GetEncryptionKey().time().mt_rand(100000,999999));
-      /* } */
+      $server_challenge = 'MOSH'.md5($this->GetEncryptionKey().time().mt_rand(100000,999999));
       $this->SetServerChallenge($server_challenge);
 
       $xml_data = <<<EOL
@@ -20086,13 +20533,7 @@ EOL;
   ) {
       $result = 72;
       
-      /* This option is too long
-      if (function_exists('openssl_random_pseudo_bytes')) {
-          $server_challenge = 'MOSH'.bin2hex(openssl_random_pseudo_bytes(16));
-      } else {
-      */
-          $server_challenge = 'MOSH'.md5($this->GetEncryptionKey().time().mt_rand(100000,999999));
-      /* } */
+      $server_challenge = 'MOSH'.md5($this->GetEncryptionKey().time().mt_rand(100000,999999));
       $this->SetServerChallenge($server_challenge);
 
       $xml_data = <<<EOL
@@ -20164,13 +20605,7 @@ EOL;
   ) {
       $result = 72;
       
-      /* This option is too long
-      if (function_exists('openssl_random_pseudo_bytes')) {
-          $server_challenge = 'MOSH'.bin2hex(openssl_random_pseudo_bytes(16));
-      } else {
-      */
-          $server_challenge = 'MOSH'.md5($this->GetEncryptionKey().time().mt_rand(100000,999999));
-      /* } */
+      $server_challenge = 'MOSH'.md5($this->GetEncryptionKey().time().mt_rand(100000,999999));
       $this->SetServerChallenge($server_challenge);
 
       switch (mb_strtoupper($auth_method)) {
@@ -20289,6 +20724,7 @@ EOL;
                                           $line_array[0] = substr($line_array[0], 0, strlen($line_array[0]) -1);
                                           $line_array[1] = $this->Decrypt($line_array[0], $line_array[1], $this->GetServerSecret());
                                       }
+                                      $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                                       if ('' != trim($line_array[0])) {
                                           if ('encryption_hash' != mb_strtolower($line_array[0])) {
                                               $this->_user_data[mb_strtolower($line_array[0])] = $line_array[1];
@@ -20315,7 +20751,7 @@ EOL;
   /**
    * @brief   Pure PHP standalone HTTP request function
    *
-   * @param   string  $xml_data           Complete data to be posted
+   * @param   string  $xml_data           Complete data to be posted (or 'tryurlonly' if we don't want any error handling)
    *          string  $xml_urls           Urls where to post, post to the next one in case of an error (separated by ;)
    *          string  $xml_timeout        Timeout before changing to the next server
    *          string  $xml_urls_splitter  String splitter between two Urls (default is ;)
@@ -20336,8 +20772,14 @@ EOL;
       $no_multiotp_validity_check = FALSE
   ) {
       $result = FALSE;
-      $content_to_post = 'data='.$xml_data;
-
+      if ('tryurlonly' != $xml_data) {
+        $content_to_post = 'data='.$xml_data;
+      }
+      else {
+        $content_to_post = 'data=';
+        $no_multiotp_validity_check = TRUE;
+      }
+      
       // Generic cleaner of multiple URLs
       $cleaned_xml_urls = trim(str_replace(" ",$xml_urls_splitter,str_replace(",",$xml_urls_splitter,str_replace(";",$xml_urls_splitter,$xml_urls))));
       $xml_url = explode($xml_urls_splitter,$cleaned_xml_urls);
@@ -20422,13 +20864,16 @@ EOL;
                       $last_length = strlen($reply);
                       $reply.= fgets($fp, 1024);
                       $info = stream_get_meta_data($fp);
-                      @ob_flush(); // Avoid notice if any (if the buffer is empty and therefore cannot be flushed)
-                      flush(); 
+                      // No flush, as we are not dislaying anything in the process
+                      // @ob_flush(); // Avoid notice if any (if the buffer is empty and therefore cannot be flushed)
+                      // flush(); 
                   }
                   fclose($fp);
 
                   if ($info['timed_out']) {
-                      $this->WriteLog("Warning: timeout after $xml_timeout seconds for $protocol$host:$port with a result code of $errno ($errdesc).", FALSE, FALSE, 8888, 'Client-Server', '');
+                      if ('tryurlonly' != $xml_data) {
+                          $this->WriteLog("Warning: timeout after $xml_timeout seconds for $protocol$host:$port with a result code of $errno ($errdesc).", FALSE, FALSE, 8888, 'Client-Server', '');
+                      }
                   } else {
                       $pos = mb_strpos(mb_strtolower($reply), "\r\n\r\n");
                       $header = substr($reply, 0, $pos);
@@ -20439,7 +20884,8 @@ EOL;
                       $this->SetLastHttpStatus($status);
 
                       $result = $answer;
-                      if ($errno > 0) {
+
+                      if (($errno > 0) && ('tryurlonly' != $xml_data)) {
                           $this->WriteLog("Info: $protocol$host:$port returns a resultcode of $errno ($errdesc).", FALSE, FALSE, 8888, 'Client-Server', '');
                       }
                       if ((FALSE !== mb_strpos($result, '<multiOTP')) || $no_multiotp_validity_check) {
@@ -20465,7 +20911,7 @@ EOL;
           }
       } // foreach
 
-      if (FALSE === mb_strpos($result,'<multiOTP')) {
+      if ((FALSE === mb_strpos($result,'<multiOTP')) && ('tryurlonly' != $xml_data) && (!$no_multiotp_validity_check)) {
           $this->_servers_last_timeout = time();
 
           if ($this->_xml_dump_in_log) {
@@ -20899,11 +21345,16 @@ EOL;
           } // End of CheckUserExists
           
           $server_password = md5($command_name.$this->GetServerSecret($remote_ip).$server_challenge);
+          
       }elseif ($this->GetVerboseFlag()) {
           $this->WriteLog("Info: *Server received the following request: $data", FALSE, FALSE, 8888, 'Server-Client', '');
       }
       
       $error_description = $this->GetErrorText($error_code);
+      
+      if ($this->GetVerboseFlag()) {
+          $this->WriteLog("Info: *Server secret used for command ".$command_name." with error code result ".$error_code.": ".$this->GetServerSecret($remote_ip), FALSE, FALSE, 8888, 'Server-Client', '');
+      }
       
       $xml_data = str_replace('*Command*', $command_name, $xml_data);
       $xml_data = str_replace('*ServerPassword*', $server_password, $xml_data);
@@ -21040,8 +21491,8 @@ class MultiotpSms
  * @brief     SMS message using any SMS Provider.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.0.3
- * @date      2018-11-02
+ * @version   5.6.1.4
+ * @date      2019-10-23
  * @since     2018-10-09
  *
  * Predefined providers:
@@ -21062,10 +21513,10 @@ class MultiotpSms
  *   %from
  *   %ip
  *   %msg
- *   %password
+ *   %password or %pass
  *   %port
  *   %to
- *   %username
+ *   %username or %user
  *
  *
  * Examples:
@@ -21103,6 +21554,7 @@ class MultiotpSms
  *
  * Change Log
  *
+ *   2019-10-23 5.4.0.3 SysCo/al Define all parameters for preconfigured providers
  *   2018-11-02 5.4.0.3 SysCo/al Adding and testing preconfigured providers
  *   2018-10-09 5.4.0.2 SysCo/al First implementation
  */
@@ -21240,20 +21692,22 @@ class MultiotpSms
     {
         switch ($provider) {
             case 'afilnet':
-                $this->url = "https://www.afilnet.com/api/http/?class=sms&method=sendsms&user=%username&password=%password&from=%from&to=%to&sms=%msg";
+                $this->url = "https://www.afilnet.com/api/http/?class=sms&method=sendsms&user=%user&password=%pass&from=%from&to=%to&sms=%msg";
+                $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "\"status\":\"SUCCESS\"";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 break;
             case 'aspsms':
                 $this->url = "http://xml1.aspsms.com:5061/xmlsvr.asp http://xml1.aspsms.com:5098/xmlsvr.asp http://xml2.aspsms.com:5061/xmlsvr.asp http://xml2.aspsms.com:5098/xmlsvr.asp";
                 $this->send_template = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n".
                                        "<aspsms>\r\n".
-                                       "  <Userkey>%username</Userkey>\r\n".
-                                       "  <Password>%password</Password>\r\n".
+                                       "  <Userkey>%user</Userkey>\r\n".
+                                       "  <Password>%pass</Password>\r\n".
                                        "  <AffiliateId>208355</AffiliateId>\r\n".
 		                               "  <Recipient>\r\n".
                                        "    <PhoneNumber>%to</PhoneNumber>\r\n".
@@ -21266,6 +21720,8 @@ class MultiotpSms
                 $this->encoding = "ISO";
                 $this->status_success = "20";
                 $this->content_success = "<ErrorCode>1</ErrorCode>";
+                $this->no_double_zero = FALSE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "HTML";
                 break;
             case 'clickatell':
@@ -21273,8 +21729,8 @@ class MultiotpSms
                 $this->send_template = "data=<clickAPI>".
                                          "<sendMsg>".
                                            "<api_id>%api_id</api_id>".
-                                           "<user>%username</user>".
-                                           "<password>%password</password>".
+                                           "<user>%user</user>".
+                                           "<password>%pass</password>".
                                            "<to>%to</to>".
                                            "<from>%from</from>".
                                            "<text><![CDATA[%msg]]></text>".
@@ -21285,61 +21741,75 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "<apiMsgId>";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
+                $this->content_encoding = "";
                 break;
             case 'clickatell2':
                 $this->url = "https://platform.clickatell.com/messages/http/send?apiKey=%api_id&to=%to&content=%msg";
+                $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "\"accepted\":true";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 break;
             case 'ecall':
                 $this->url = "https://www1.ecall.ch/ecallurl/ecallurl.ASP https://www2.ecall.ch/ecallurl/ecallurl.ASP";
-                $this->send_template = "WCI=Interface&Function=SendPage&AccountName=%username&AccountPassword=%password&CallBack=%from&Address=%to&Message=%msg";
+                $this->send_template = "WCI=Interface&Function=SendPage&AccountName=%user&AccountPassword=%pass&CallBack=%from&Address=%to&Message=%msg";
                 $this->method = "POST";
                 $this->encoding = "ISO";
                 $this->status_success = "20";
                 $this->content_success = "0";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 $this->encode_ampersand = TRUE;
                 break;
             case 'intellisms':
                 $this->url = "https://www.intellisoftware.co.uk/smsgateway/sendmsg.aspx https://www.intellisoftware2.co.uk/smsgateway/sendmsg.aspx";
-                $this->send_template = "username=%username&password=%password&originator=%from&to=%to&text=%msg&type=1";
+                $this->send_template = "username=%user&password=%pass&originator=%from&to=%to&text=%msg&type=1";
                 $this->method = "POST";
                 $this->encoding = "ISO";
                 $this->status_success = "20";
                 $this->content_success = "ID:";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 break;
             case 'nexmo':
                 $this->url = "https://rest.nexmo.com/sms/json";
-                $this->send_template = "api_key=%api_id&api_secret=%password&from=%from&to=%to&text=%msg";
+                $this->send_template = "api_key=%api_id&api_secret=%pass&from=%from&to=%to&text=%msg";
                 $this->method = "POST";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "\"status\": \"0\"";
                 $this->no_double_zero = TRUE;
+                $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 break;
             case 'nowsms':
                 $this->url = "http://%ip:%port/?PhoneNumber=%to&Text=%msg";
+                $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "Message Submitted";
+                $this->no_double_zero = FALSE;
                 $this->basic_auth = TRUE;
+                $this->content_encoding = "";
                 break;
             case 'smseagle':
-                $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%username&pass=%password&to=%to&message=%msg";
+                $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%user&pass=%pass&to=%to&message=%msg";
+                $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "OK";
+                $this->no_double_zero = FALSE;
+                $this->basic_auth = FALSE;
+                $this->content_encoding = "";
                 break;
             case 'swisscom':
                 $this->url = "https://messagingproxy.swisscom.ch:4300/rest/1.0.0/submit_sm/%api_id";
@@ -21625,7 +22095,9 @@ class MultiotpSms
         $payload = str_replace('%msg',      $this->encodeHttp($payload_msg),              $payload);
         $payload = str_replace('%api_id',   $this->encodeHttp($this->api_id),             $payload);
         $payload = str_replace('%username', $this->encodeHttp($this->username),           $payload);
+        $payload = str_replace('%user',     $this->encodeHttp($this->username),           $payload);
         $payload = str_replace('%password', $this->encodeHttp($this->password),           $payload);
+        $payload = str_replace('%pass',     $this->encodeHttp($this->password),           $payload);
         $payload = str_replace('%to',       $this->encodeHttp($this->cleanTo($this->to)), $payload);
         $payload = str_replace('%from',     $this->encodeHttp($this->from),               $payload);
 
@@ -21642,7 +22114,9 @@ class MultiotpSms
             $one_url = str_replace('%msg',      $this->encodeUrl($this->msg),                $one_url);
             $one_url = str_replace('%api_id',   $this->encodeUrl($this->api_id),             $one_url);
             $one_url = str_replace('%username', $this->encodeUrl($this->username),           $one_url);
+            $one_url = str_replace('%user',     $this->encodeUrl($this->username),           $one_url);
             $one_url = str_replace('%password', $this->encodeUrl($this->password),           $one_url);
+            $one_url = str_replace('%pass',     $this->encodeUrl($this->password),           $one_url);
             $one_url = str_replace('%to',       $this->encodeUrl($this->cleanTo($this->to)), $one_url);
             $one_url = str_replace('%from',     $this->encodeUrl($this->from),               $one_url);
 
@@ -21737,8 +22211,8 @@ class MultiotpSms
                     $last_length = strlen($reply);
                     $reply.= @fgets($fp, 1024);
                     $info = stream_get_meta_data($fp);
-                    @ob_flush(); // Avoid notice if any (if the buffer is empty and therefore cannot be flushed)
-                    flush(); 
+                    // @ob_flush(); // Avoid notice if any (if the buffer is empty and therefore cannot be flushed)
+                    // flush(); 
                 }
                 fclose($fp);
 
@@ -22053,24 +22527,6 @@ if (!function_exists('memory_get_peak_usage')) {
 }
 
 
-if (!function_exists('sys_get_temp_dir'))
-{
-    function sys_get_temp_dir()
-    {
-        if (!empty($_ENV['TMP'])) { return realpath($_ENV['TMP']); }
-        if (!empty($_ENV['TMPDIR'])) { return realpath( $_ENV['TMPDIR']); }
-        if (!empty($_ENV['TEMP'])) { return realpath( $_ENV['TEMP']); }
-        $tempfile=tempnam(__FILE__,'');
-        if (file_exists($tempfile))
-        {
-            unlink($tempfile);
-            return realpath(dirname($tempfile));
-        }
-        return null;
-    }
-}
-
-
 /***********************************************************************
  * Name: sys_get_temp_dir
  * Short description: Define the custom function sys_get_temp_dir
@@ -22091,7 +22547,7 @@ if ( !function_exists('sys_get_temp_dir')) {
     if (!empty($_ENV['TMPDIR'])) { return realpath( $_ENV['TMPDIR']); }
     if (!empty($_ENV['TEMP'])) { return realpath( $_ENV['TEMP']); }
     $tempfile=tempnam(__FILE__,'');
-    if (file_exists($tempfile)) {
+    if (file_exists(dirname($tempfile))) {
       unlink($tempfile);
       return realpath(dirname($tempfile));
     }
@@ -22171,6 +22627,7 @@ if (!function_exists('str_split'))
  ***********************************************************************/
 if (!function_exists('hash_hmac'))
 {
+echo "\n*DEBUG*: function hash_hmac() created\n";
     function hash_hmac($algo, $data, $key, $raw_output = FALSE) {
         return hash_hmac_php($algo, $data, $key, $raw_output);
     }
@@ -22234,49 +22691,46 @@ if (!function_exists('bigdec2hex'))
  * Custom function providing base32_encode
  *   if it is not available in the actual configuration
  *
- * Source: http://pastebin.com/BLyG5khJ
+ * Source: Bryan Ruiz (https://www.php.net/manual/fr/function.base-convert.php#102232)
  ***********************************************************************/
 if (!function_exists('base32_encode'))
 {
-    function base32_encode($inString)
+    /**
+     *    Use padding false when encoding for urls
+     *
+     * @return base32 encoded string
+     * @author Bryan Ruiz
+     **/
+    function base32_encode($input, $padding = true)
     {
-        $outString = '';
-        if ('' != $inString)
-        {
-            $compBits = '';
-            $BASE32_TABLE = array('00000' => 0x61, '00001' => 0x62, '00010' => 0x63, '00011' => 0x64,
-                                  '00100' => 0x65, '00101' => 0x66, '00110' => 0x67, '00111' => 0x68,
-                                  '01000' => 0x69, '01001' => 0x6a, '01010' => 0x6b, '01011' => 0x6c,
-                                  '01100' => 0x6d, '01101' => 0x6e, '01110' => 0x6f, '01111' => 0x70,
-                                  '10000' => 0x71, '10001' => 0x72, '10010' => 0x73, '10011' => 0x74,
-                                  '10100' => 0x75, '10101' => 0x76, '10110' => 0x77, '10111' => 0x78,
-                                  '11000' => 0x79, '11001' => 0x7a, '11010' => 0x32, '11011' => 0x33,
-                                  '11100' => 0x34, '11101' => 0x35, '11110' => 0x36, '11111' => 0x37);
-     
-            /* Turn the compressed string into a string that represents the bits as 0 and 1. */
-            for ($i = 0; $i < strlen($inString); $i++)
-            {
-                $compBits .= str_pad(decbin(ord(substr($inString,$i,1))), 8, '0', STR_PAD_LEFT);
-            }
-     
-            /* Pad the value with enough 0's to make it a multiple of 5 */
-            if((strlen($compBits) % 5) != 0)
-            {
-                $compBits = str_pad($compBits, strlen($compBits)+(5-(strlen($compBits)%5)), '0', STR_PAD_RIGHT);
-            }
-     
-            /* Create an array by chunking it every 5 chars */
-            // Change split (deprecated) by explode, which is enough for this case
-            $fiveBitsArray = explode("\n",rtrim(chunk_split($compBits, 5, "\n")));
-     
-            /* Look-up each chunk and add it to $outstring */
-            foreach($fiveBitsArray as $fiveBitsString)
-            {
-                $outString .= chr($BASE32_TABLE[$fiveBitsString]);
-            }
+        $map = array(
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
+            'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
+            'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
+            'Y', 'Z', '2', '3', '4', '5', '6', '7', // 31
+            '='  // padding char
+        );
+       
+        if(empty($input)) return "";
+        $input = str_split($input);
+        $binaryString = "";
+        for($i = 0; $i < count($input); $i++) {
+            $binaryString .= str_pad(base_convert(ord($input[$i]), 10, 2), 8, '0', STR_PAD_LEFT);
         }
-        // As described in RFC3548, it should be in uppercase.
-        return strtoupper($outString);
+        $fiveBitBinaryArray = str_split($binaryString, 5);
+        $base32 = "";
+        $i=0;
+        while($i < count($fiveBitBinaryArray)) {   
+            $base32 .= $map[base_convert(str_pad($fiveBitBinaryArray[$i], 5,'0'), 2, 10)];
+            $i++;
+        }
+        if($padding && ($x = strlen($binaryString) % 40) != 0) {
+            if($x == 8) $base32 .= str_repeat($map[32], 6);
+            else if($x == 16) $base32 .= str_repeat($map[32], 4);
+            else if($x == 24) $base32 .= str_repeat($map[32], 3);
+            else if($x == 32) $base32 .= $map[32];
+        }
+        return $base32;
     }
 }
 
@@ -22285,68 +22739,52 @@ if (!function_exists('base32_encode'))
  * Custom function providing base32_decode
  *   if it is not available in the actual configuration
  *
- * Source: http://pastebin.com/RhTkb07g
+ * Source: Bryan Ruiz (https://www.php.net/manual/fr/function.base-convert.php#102232)
+ *         (patched to be able to decode correctly non-8 chars multiple length)
  ***********************************************************************/
 if (!function_exists('base32_decode'))
 {
-    function base32_decode($inString)
+    function base32_decode($input)
     {
-        $inputCheck = null;
-        $deCompBits = null;
-        $inString = strtolower($inString);
-        $BASE32_TABLE = array(0x61 => '00000', 0x62 => '00001', 0x63 => '00010', 0x64 => '00011', 
-                              0x65 => '00100', 0x66 => '00101', 0x67 => '00110', 0x68 => '00111', 
-                              0x69 => '01000', 0x6a => '01001', 0x6b => '01010', 0x6c => '01011', 
-                              0x6d => '01100', 0x6e => '01101', 0x6f => '01110', 0x70 => '01111', 
-                              0x71 => '10000', 0x72 => '10001', 0x73 => '10010', 0x74 => '10011', 
-                              0x75 => '10100', 0x76 => '10101', 0x77 => '10110', 0x78 => '10111', 
-                              0x79 => '11000', 0x7a => '11001', 0x32 => '11010', 0x33 => '11011', 
-                              0x34 => '11100', 0x35 => '11101', 0x36 => '11110', 0x37 => '11111');
-        
-        /* Step 1 */
-        $inputCheck = strlen($inString) % 8;
-        if(($inputCheck == 1)||($inputCheck == 3)||($inputCheck == 6))
-        { 
-            // trigger_error('input to Base32Decode was a bad mod length: '.$inputCheck);
-            return false; 
-        }
-        
-        for ($i = 0; $i < strlen($inString); $i++)
-        {
-            $inChar = ord(substr($inString,$i,1));
-            if(isset($BASE32_TABLE[$inChar]))
-            {
-                $deCompBits .= $BASE32_TABLE[$inChar];
-            }
-            else
-            {
-                trigger_error('input to Base32Decode had a bad character: '.$inChar);
-                return false;
-            }
-        }
-        $padding1 = 'are1';
-        $padding = strlen($deCompBits) % 8;
-        $paddingContent = substr($deCompBits, (strlen($deCompBits) - $padding));
-        if(substr_count($paddingContent, '1')>0)
-        { 
-            trigger_error('found non-zero padding in Base32Decode');
-            return false;
+        $map = array(
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
+            'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
+            'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
+            'Y', 'Z', '2', '3', '4', '5', '6', '7', // 31
+            '='  // padding char
+        );
 
+        $flippedMap = array(
+            'A'=>'0', 'B'=>'1', 'C'=>'2', 'D'=>'3', 'E'=>'4', 'F'=>'5', 'G'=>'6', 'H'=>'7',
+            'I'=>'8', 'J'=>'9', 'K'=>'10', 'L'=>'11', 'M'=>'12', 'N'=>'13', 'O'=>'14', 'P'=>'15',
+            'Q'=>'16', 'R'=>'17', 'S'=>'18', 'T'=>'19', 'U'=>'20', 'V'=>'21', 'W'=>'22', 'X'=>'23',
+            'Y'=>'24', 'Z'=>'25', '2'=>'26', '3'=>'27', '4'=>'28', '5'=>'29', '6'=>'30', '7'=>'31'
+        );
+
+        if(empty($input)) return;
+        $paddingCharCount = substr_count($input, $map[32]);
+        $allowedValues = array(6,4,3,1,0);
+        if(!in_array($paddingCharCount, $allowedValues)) return false;
+        for($i=0; $i<4; $i++){
+            if($paddingCharCount == $allowedValues[$i] &&
+                substr($input, -($allowedValues[$i])) != str_repeat($map[32], $allowedValues[$i])) return false;
         }
-        $deArr2 = 'sftw';
-        $deArr = array();
-        for($i = 0; $i < (int)(strlen($deCompBits) / 8); $i++)
-        {
-            $deArr[$i] = chr(bindec(substr($deCompBits, $i*8, 8)));
+        $input = str_replace('=','', $input);
+        $result_length = intval((5 * strlen($input)) / 8);
+        $input = str_split($input);
+        $binaryString = "";
+        for($i=0; $i < count($input); $i = $i+8) {
+            $x = "";
+            if(!in_array($input[$i], $map)) return false;
+            for($j=0; $j < 8; $j++) {
+                $x .= str_pad(base_convert(@$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
+            }
+            $eightBits = str_split($x, 8);
+            for($z = 0; $z < count($eightBits); $z++) {
+                $binaryString .= ( ($y = chr(base_convert($eightBits[$z], 2, 10))) || ord($y) == 48 ) ? $y:"";
+            }
         }
-        if(!strpos($inString,(base32_decode($deArr2.$padding1.'='))))
-        {
-            return $outString = join('',$deArr);
-        }
-        else
-        {
-            return $outString;
-        }
+        return substr($binaryString, 0, $result_length);
     }
 }
 
@@ -22837,6 +23275,22 @@ if (!function_exists('nice_json'))
         }
 
         return $result;
+    }
+}
+
+
+if (!function_exists('mask2cidr'))
+{
+    // https://gist.github.com/linickx/1309388
+    function mask2cidr($mask) {
+        $mask = explode(".", $mask);
+        $bits = 0;
+        foreach ($mask as $octet) {
+            $bin = decbin($octet);
+            $bin = str_replace ( "0" , "" , $bin);
+            $bits = $bits + strlen($bin);
+        }
+        return $bits;
     }
 }
 
@@ -23661,6 +24115,10 @@ class MultiotpAdLdap {
 
         $fields=array("member","memberuid");
         $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
+        if (FALSE === $sr) {
+            $this->_warning_message = "group_users: ldap_search error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
+            echo "DEBUG: ".$this->_warning_message."\n";
+        }
         $entries = $this->ldap_get_entries_raw($sr);
 
         // DEBUG
@@ -23732,6 +24190,10 @@ class MultiotpAdLdap {
         // $fields = array($this->_group_cn_identifier,$this->_group_attribute,"distinguishedname");
         $fields = array("cn");
         $sr = ldap_search($this->_conn,$this->_base_dn,$filter, $fields);
+        if (FALSE === $sr) {
+            $this->_warning_message = "user_all_groups: ldap_search error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
+            echo "DEBUG: ".$this->_warning_message."\n";
+        }
         $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
 
 //echo "DEBUG: info group_entries\n";
@@ -23842,11 +24304,13 @@ class MultiotpAdLdap {
                 // Add the nested groups of the user
                 $filter = "(&(objectCategory=group)(member:1.2.840.113556.1.4.1941:=".$one_entry[$this->_cn_identifier][0].")".$groups_filtering.")";
                 $internal_fields = array("cn");
-                $sr = ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields);
-                $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
                 $group_array = array();
-                foreach ($group_entries as $group_entry) {
-                    $group_array[] = $group_entry['cn'][0];
+                // SysCo/al added ldap_search error handling
+                if (FALSE !== ($sr = @ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields))) {
+                    $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
+                    foreach ($group_entries as $group_entry) {
+                        $group_array[] = $group_entry['cn'][0];
+                    }
                 }
                 foreach($group_array as $one_group) {
                     $add_it = TRUE;
@@ -23865,17 +24329,19 @@ class MultiotpAdLdap {
                 foreach($in_groups_filtering as $one_group_filtering) {
                     $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$one_entry[$this->_cn_identifier][0].")".$one_group_filtering['distinguishedname'].")";
                     $internal_fields = array("cn");
-                    $sr = ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields);
-                    if (ldap_count_entries($this->_conn, $sr) > 0) {
-                        $add_it = TRUE;
-                        foreach($this->nice_names($one_entry[$this->_group_attribute]) as $level_one_group) {
-                            if (strpos($one_group_filtering['name'], $level_one_group) !== FALSE) {
-                                $add_it = FALSE;
+                    // SysCo/al added ldap_search error handling
+                    if (FALSE !== ($sr = @ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields))) {
+                        if (ldap_count_entries($this->_conn, $sr) > 0) {
+                            $add_it = TRUE;
+                            foreach($this->nice_names($one_entry[$this->_group_attribute]) as $level_one_group) {
+                                if (strpos($one_group_filtering['name'], $level_one_group) !== FALSE) {
+                                    $add_it = FALSE;
+                                }
                             }
-                        }
-                        if ($add_it) {
-                            $one_entry[$this->_group_attribute][] = $one_group_filtering['name'];
-                            @$one_entry[$this->_group_attribute]["count"]++;
+                            if ($add_it) {
+                                $one_entry[$this->_group_attribute][] = $one_group_filtering['name'];
+                                @$one_entry[$this->_group_attribute]["count"]++;
+                            }
                         }
                     }
                 }
@@ -29168,10 +29634,12 @@ class MultiotpYubikey
 }
 
 /*************************************
- * phpseclib 1.0.5 (MIT License)     *
+ * phpseclib 1.0.6 (MIT License)     *
  * MMVI Jim Wigginton                *
  * http://phpseclib.sourceforge.net/ *
  *************************************/
+
+// This function is redefined here as the phpseclib files are flat saved for this project.
 if (!function_exists('phpseclib_resolve_include_path')) {
     function phpseclib_resolve_include_path($filename)
     {
@@ -53514,6 +53982,9 @@ class Net_SFTP_Stream
 Net_SFTP_Stream::register();
 
 }
+// if (!class_exists('Element')) {
+//   require_once('contrib/Element.php'); // External contribution
+// }
 if (!class_exists('File_ASN1')) {
   
 /**
@@ -72961,7 +73432,7 @@ if ('' != $server_url) {
     }
 }
 if ($write_param_data) {
-    $write_result = $multiotp->WriteConfigData();
+    $write_result = $multiotp->WriteConfigData(array(), true);
     if (($multiotp->IsDeveloperMode())) {
         if ($write_result) {
             $multiotp->WriteLog('Developer: new configuration automatically written', false, false, 8888, 'Debug', '');
@@ -73879,6 +74350,22 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 $multiotp->SetTokenSerialNumberLength($actual_array[1]);
                                 $write_config_data = true;
                                 break;
+                            case 'challenge-response-enabled':
+                                $multiotp->SetGlobalChallengeResponse(intval($actual_array[1]));
+                                $write_config_data = true;
+                                break;
+                            case 'sms-challenge-enabled':
+                                $multiotp->SetGlobalSmsChallenge(intval($actual_array[1]));
+                                $write_config_data = true;
+                                break;
+                            case 'text-sms-challenge':
+                                $multiotp->SetGlobalTextSmsChallenge(trim($actual_array[1]));
+                                $write_config_data = true;
+                                break;
+                            case 'text-token-challenge':
+                                $multiotp->SetGlobalTextTokenChallenge(trim($actual_array[1]));
+                                $write_config_data = true;
+                                break;
                             default: // Just in case we need to change additional values that have no related method
                                 $internal_config_option = str_replace("-", "_", $actual_array[0]);
                                 if ($multiotp->SetConfigAttribute($internal_config_option, $actual_array[1]))
@@ -73890,7 +74377,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                     }
                 }
                 if ($write_config_data) {
-                    if ($multiotp->WriteConfigData()) {
+                    if ($multiotp->WriteConfigData(array(), true)) {
                         $result = 19; // INFO: Requested operation successfully done
                     }
                 }
@@ -74302,6 +74789,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "      attributes-to-encrypt: specific attributes list to encrypt, must be".$crlf;
                 echo "                             surrounded by *, like '*token_seed*user_pin*'".$crlf;
                 echo "               backend-type: backend storage type (files|mysql|pgsql)".$crlf;
+                echo " challenge-response-enabled: [0|1] enable/disable Challenge-Response".$crlf;
                 echo "        clear-otp-attribute: attribute to return for the clear OTP".$crlf;
                 echo "                             (for example 'ietf|2' for TekRADIUS)".$crlf;
                 echo "                      debug: [0|1] enable/disable enhanced log information".$crlf;
@@ -74361,6 +74849,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                             with exec as provider, define the script to call".$crlf;
                 echo "                               (available variables: %from, %to, %msg)".$crlf;
                 echo "                     sms-ip: IP address of the SMS server (for inhouse server)".$crlf;
+                echo "      sms-challenge-enabled: [0|1] enable/disable SMS challenge".$crlf;
                 echo "                sms-message: SMS message to display before the OTP".$crlf;
                 echo "             sms-originator: SMS sender (if authorized by provider)".$crlf;
                 echo "               sms-password: SMS account password".$crlf;
@@ -74399,6 +74888,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "           sql-tokens-table: SQL tokens table, default is multiotp_tokens".$crlf;
                 echo "            sql-users-table: SQL users table, default is multiotp_users".$crlf;
                 echo "   tel-default-country-code: Default country code for phone number".$crlf;
+                echo "         text-sms-challenge: Text displayed for the SMS challenge".$crlf;
+                echo "       text-token-challenge: Text displayed for the challenge".$crlf;
                 echo " token-serial-number-length: Length of the serial number of the tokens".$crlf;
                 echo "                             (used for self-registration)".$crlf;
                 echo $crlf;

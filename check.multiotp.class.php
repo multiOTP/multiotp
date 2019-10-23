@@ -22,8 +22,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.1.7
- * @date      2019-01-30
+ * @version   5.6.1.5
+ * @date      2019-10-23
  * @since     2013-07-10
  * @copyright (c) 2013-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -71,6 +71,7 @@
  *
  * Change Log
  *
+ *   2019-10-23 5.6.1.4 SysCo/al Additional tests included
  *   2017-06-02 5.0.4.6 SysCo/al Enhanced tests display
  *   2017-05-29 5.0.4.5 SysCo/al Additional PostgreSQL backend included
  *                               Parameters adapted (set the $check_mysql_xxx and/or the $check_pgsql_xxx parameters below)
@@ -122,6 +123,14 @@ $first_time = time();
 
 if (!isset($GLOBALS['minima'])) {
     $GLOBALS['minima'] = isset($_GET['minima']);
+}
+
+if (!isset($GLOBALS['keeplog'])) {
+    $GLOBALS['keeplog'] = isset($_GET['keeplog']);
+}
+
+if (!isset($GLOBALS['noresume'])) {
+    $GLOBALS['noresume'] = isset($_GET['noresume']);
 }
 
 if (!function_exists('echo_full')) {
@@ -189,6 +198,10 @@ if (!isset($multiotp))
 }
 $multiotp->SetMaxEventResyncWindow(500); // 500 is enough and quicker for the check
 $multiotp->EnableVerboseLog(); // Could be helpful at the beginning
+
+if ($html_mode) {
+    $multiotp->EnableDebugViaHtml();
+}
 
 // $multiotp->_config_data['attributes_to_encrypt'] = '**';  // For test purposes only
 
@@ -359,20 +372,22 @@ foreach ($backend_array as $backend) {
     echo_full($crlf);
 
 
-    //====================================================================
-    // TEST: Clear the log
-    $tests++;
-    echo_full($b_on."Clear the log".$b_off.$crlf);
-    if ($multiotp->ClearLog())
-    {
-        echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfully cleared".$crlf);
-        $successes++;
+    if (!isset($GLOBALS['keeplog'])) {
+        //====================================================================
+        // TEST: Clear the log
+        $tests++;
+        echo_full($b_on."Clear the log".$b_off.$crlf);
+        if ($multiotp->ClearLog())
+        {
+            echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfully cleared".$crlf);
+            $successes++;
+        }
+        else
+        {
+            echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to clear the log".$crlf);
+        }
+        echo_full($crlf);
     }
-    else
-    {
-        echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to clear the log".$crlf);
-    }
-    echo_full($crlf);
 
 
     //====================================================================
@@ -514,6 +529,23 @@ foreach ($backend_array as $backend) {
     echo_full($crlf);
 
 
+   //====================================================================
+    // Delete the user test_totp if it exists
+    echo_full($i_on);
+    echo_full("Deleting the test_totp".$crlf);
+    if (!$multiotp->DeleteUser('test_totp', TRUE))
+    {
+        echo_full("- INFO: User test_totp doesn't exist yet".$crlf);
+    }
+    else
+    {
+        echo_full("- INFO: User test_totp successfully deleted".$crlf);
+    }
+    echo_full($i_off);
+    echo_full($crlf);
+
+
+   //====================================================================
     //====================================================================
     // Delete the token test_token if it exists
     echo_full($i_on);
@@ -525,6 +557,23 @@ foreach ($backend_array as $backend) {
     else
     {
         echo_full("- INFO: Token test_token successfully deleted".$crlf);
+    }
+    echo_full($i_off);
+    echo_full($crlf);
+
+
+   //====================================================================
+    //====================================================================
+    // Delete the token test_token_totp if it exists
+    echo_full($i_on);
+    echo_full("Deleting the test_token_totp".$crlf);
+    if (!$multiotp->DeleteToken('test_token_totp'))
+    {
+        echo_full("- INFO: Token test_token_totp doesn't exist yet".$crlf);
+    }
+    else
+    {
+        echo_full("- INFO: Token test_token_totp successfully deleted".$crlf);
     }
     echo_full($i_off);
     echo_full($crlf);
@@ -542,6 +591,22 @@ foreach ($backend_array as $backend) {
     else
     {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Creation of test_token token failed".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Creating token test_token_totp with the RFC test values HOTP token
+    $tests++;
+    echo_full($b_on."Creating token test_token_totp with the RFC test token".$b_off.$crlf);
+    if ($multiotp->CreateToken('test_token_totp', 'TOTP', '3132333435363738393031323334353637383930', 6, -1))
+    {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Token test_token_totp successfully created".$crlf);
+        $successes++;
+    }
+    else
+    {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Creation of test_token_totp token failed".$crlf);
     }
     echo_full($crlf);
 
@@ -566,6 +631,25 @@ foreach ($backend_array as $backend) {
 
     
     //====================================================================
+    // TEST: Creating user test_totp with the HOTP RFC test token test_token_totp created before
+    $tests++;
+    echo_full($b_on."Creating user test_totp with the HOTP RFC test token test_token_totp created before".$b_off.$crlf);
+    if (!$multiotp->CreateUserFromToken('test_totp', 'test_token_totp'))
+    {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Token test_token_totp doesn't exist".$crlf);
+    }
+    else
+    {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User test_totp successfully created with token test_token_totp".$crlf);
+        $successes++;
+    }
+    $multiotp->SetUser('test_totp');
+    $multiotp->SetUserPrefixPin(0);
+    $multiotp->WriteUserData();
+    echo_full($crlf);
+
+    
+    //====================================================================
     // TEST: Authenticating test_user with the first token of the RFC test values
     $tests++;
     echo_full($b_on."Authenticating test_user with the first token of the RFC test values".$b_off.$crlf);
@@ -578,6 +662,42 @@ foreach ($backend_array as $backend) {
     else
     {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Error authenticating the user test_user with the first token".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Authenticating test_totp with too old TOTP token of the RFC test token
+    $tests++;
+    echo_full($b_on."Authenticating test_totp with too old TOTP token of the RFC test token".$b_off.$crlf);
+    $multiotp->SetUser('test_totp');
+    $otp_value = $multiotp->GenerateOathHotp(hex2bin('3132333435363738393031323334353637383930'),intval((time()-(2*$multiotp->GetMaxTimeWindow()))/30), 6,'TOTP');
+    if (93 == ($error = $multiotp->CheckToken($otp_value)))
+    {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Too old token of the user test_totp refused and detected out of sync ($error)".$crlf);
+        $successes++;
+    }
+    else
+    {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Error authenticating the user test_totp with an out-of-sync token ($error)".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Authenticating test_totp with the actual TOTP token of the RFC test token
+    $tests++;
+    echo_full($b_on."Authenticating test_totp with the actual TOTP token of the RFC test token".$b_off.$crlf);
+    $multiotp->SetUser('test_totp');
+    $otp_value = $multiotp->GenerateOathHotp(hex2bin('3132333435363738393031323334353637383930'),intval(time()/30), 6,'TOTP');
+    if (0 == ($error = $multiotp->CheckToken($otp_value)))
+    {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Token of the user test_totp successfully accepted".$crlf);
+        $successes++;
+    }
+    else
+    {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Error authenticating the user test_totp with the RFC test token".$crlf);
     }
     echo_full($crlf);
 
@@ -1093,16 +1213,49 @@ foreach ($backend_array as $backend) {
     //====================================================================
     // TEST: Check Base32 functions
     $tests++;
-    echo_full($b_on."Check Base32 functions".$b_off." (should return 3132333435363738393031323334353637383930)".$crlf);
+    $base32_vector = '3132333435363738393031323334353637383930';
+    $base32_encoded_vector = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+    echo_full($b_on."Check Base32 encode/decode functions".$b_off." (should return $base32_vector)".$crlf);
 
-    if ('3132333435363738393031323334353637383930' == bin2hex(base32_decode(base32_encode(hex2bin('3132333435363738393031323334353637383930')))))
-    {
+    $base32_encoded_result = base32_encode(hex2bin($base32_vector));
+    $base32_result = bin2hex(base32_decode($base32_encoded_result));
+    if ($base32_vector == $base32_result) {
         echo_full("- ".$ok_on.'OK!'.$ok_off." Base32 functions successfully checked".$crlf);
         $successes++;
+    } else {
+        if ($base32_encoded_vector != $base32_encoded_result) {
+            echo_full("- ".$ko_on.'KO!'.$ko_off." Base32 encoding function failed ($base32_encoded_result)".$crlf);
+        }
+        if ($base32_vector != $base32_result) {
+            echo_full("- ".$ko_on.'KO!'.$ko_off." Base32 decoding function failed ($base32_result)".$crlf);
+        }
     }
-    else
-    {
-        echo_full("- ".$ko_on.'KO!'.$ko_off." Base32 function failed".$crlf);
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Check Base32 functions (random long string)
+    $tests++;
+    $length = 100001;
+    $base32_vector = '';
+    for ($i = 0; $i < $length; $i++) {
+        $base32_vector .= chr(rand(0,255));
+    }
+    
+    echo_full($b_on."Check Base32 functions (random long string of ".strlen($base32_vector)." chars)".$b_off.$crlf);
+
+    $base32_encoded_result = base32_encode($base32_vector);
+    $base32_result = base32_decode($base32_encoded_result);
+    if ($base32_vector == $base32_result) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Base32 functions with long string successfully checked".$crlf);
+        $successes++;
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Base32 functions with long string failed".$crlf);
+        echo bin2hex($base32_vector).$crlf;
+        echo ($base32_vector).$crlf;
+        echo ($base32_encoded_result).$crlf;
+        echo bin2hex($base32_result).$crlf;
+        echo ($base32_result).$crlf;
     }
     echo_full($crlf);
 
@@ -1569,7 +1722,7 @@ foreach ($backend_array as $backend) {
     $tests++;
     echo_full($b_on."Show the log".$b_off.$crlf);
     if (FALSE !== ($log = $multiotp->ShowLog(TRUE))) {
-        echo_full(str_replace("\n",$crlf, $log));
+        echo_full(str_replace("\n",$crlf, htmlentities($log)));
         echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfuly displayed".$crlf);
         $successes++;
     } else {
@@ -1592,10 +1745,12 @@ if ($html_mode) {
     echo_full('<div id="test_result">');
 }
 echo_full($b_on);
-if ($successes == $tests) {
-    echo($ok_on."OK! ALL $tests TESTS HAVE PASSED SUCCESSFULLY !".$ok_off.$crlf);
-} else {
-    echo($ko_on."KO! ONLY $successes/$tests TESTS HAVE PASSED SUCCESSFULLY !".$ko_off.$crlf);
+if (!$GLOBALS['noresume']) {
+    if ($successes == $tests) {
+        echo($ok_on."OK! ALL $tests TESTS HAVE PASSED SUCCESSFULLY !".$ok_off.$crlf);
+    } else {
+        echo($ko_on."KO! ONLY $successes/$tests TESTS HAVE PASSED SUCCESSFULLY !".$ko_off.$crlf);
+    }
 }
 echo_full($b_off);
 if ($html_mode) {

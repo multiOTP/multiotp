@@ -815,6 +815,10 @@ class MultiotpAdLdap {
 
         $fields=array("member","memberuid");
         $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
+        if (FALSE === $sr) {
+            $this->_warning_message = "group_users: ldap_search error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
+            echo "DEBUG: ".$this->_warning_message."\n";
+        }
         $entries = $this->ldap_get_entries_raw($sr);
 
         // DEBUG
@@ -886,6 +890,10 @@ class MultiotpAdLdap {
         // $fields = array($this->_group_cn_identifier,$this->_group_attribute,"distinguishedname");
         $fields = array("cn");
         $sr = ldap_search($this->_conn,$this->_base_dn,$filter, $fields);
+        if (FALSE === $sr) {
+            $this->_warning_message = "user_all_groups: ldap_search error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
+            echo "DEBUG: ".$this->_warning_message."\n";
+        }
         $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
 
 //echo "DEBUG: info group_entries\n";
@@ -996,11 +1004,13 @@ class MultiotpAdLdap {
                 // Add the nested groups of the user
                 $filter = "(&(objectCategory=group)(member:1.2.840.113556.1.4.1941:=".$one_entry[$this->_cn_identifier][0].")".$groups_filtering.")";
                 $internal_fields = array("cn");
-                $sr = ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields);
-                $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
                 $group_array = array();
-                foreach ($group_entries as $group_entry) {
-                    $group_array[] = $group_entry['cn'][0];
+                // SysCo/al added ldap_search error handling
+                if (FALSE !== ($sr = @ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields))) {
+                    $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
+                    foreach ($group_entries as $group_entry) {
+                        $group_array[] = $group_entry['cn'][0];
+                    }
                 }
                 foreach($group_array as $one_group) {
                     $add_it = TRUE;
@@ -1019,17 +1029,19 @@ class MultiotpAdLdap {
                 foreach($in_groups_filtering as $one_group_filtering) {
                     $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$one_entry[$this->_cn_identifier][0].")".$one_group_filtering['distinguishedname'].")";
                     $internal_fields = array("cn");
-                    $sr = ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields);
-                    if (ldap_count_entries($this->_conn, $sr) > 0) {
-                        $add_it = TRUE;
-                        foreach($this->nice_names($one_entry[$this->_group_attribute]) as $level_one_group) {
-                            if (strpos($one_group_filtering['name'], $level_one_group) !== FALSE) {
-                                $add_it = FALSE;
+                    // SysCo/al added ldap_search error handling
+                    if (FALSE !== ($sr = @ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields))) {
+                        if (ldap_count_entries($this->_conn, $sr) > 0) {
+                            $add_it = TRUE;
+                            foreach($this->nice_names($one_entry[$this->_group_attribute]) as $level_one_group) {
+                                if (strpos($one_group_filtering['name'], $level_one_group) !== FALSE) {
+                                    $add_it = FALSE;
+                                }
                             }
-                        }
-                        if ($add_it) {
-                            $one_entry[$this->_group_attribute][] = $one_group_filtering['name'];
-                            @$one_entry[$this->_group_attribute]["count"]++;
+                            if ($add_it) {
+                                $one_entry[$this->_group_attribute][] = $one_group_filtering['name'];
+                                @$one_entry[$this->_group_attribute]["count"]++;
+                            }
                         }
                     }
                 }

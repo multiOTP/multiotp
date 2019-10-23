@@ -250,24 +250,6 @@ if (!function_exists('memory_get_peak_usage')) {
 }
 
 
-if (!function_exists('sys_get_temp_dir'))
-{
-    function sys_get_temp_dir()
-    {
-        if (!empty($_ENV['TMP'])) { return realpath($_ENV['TMP']); }
-        if (!empty($_ENV['TMPDIR'])) { return realpath( $_ENV['TMPDIR']); }
-        if (!empty($_ENV['TEMP'])) { return realpath( $_ENV['TEMP']); }
-        $tempfile=tempnam(__FILE__,'');
-        if (file_exists($tempfile))
-        {
-            unlink($tempfile);
-            return realpath(dirname($tempfile));
-        }
-        return null;
-    }
-}
-
-
 /***********************************************************************
  * Name: sys_get_temp_dir
  * Short description: Define the custom function sys_get_temp_dir
@@ -288,7 +270,7 @@ if ( !function_exists('sys_get_temp_dir')) {
     if (!empty($_ENV['TMPDIR'])) { return realpath( $_ENV['TMPDIR']); }
     if (!empty($_ENV['TEMP'])) { return realpath( $_ENV['TEMP']); }
     $tempfile=tempnam(__FILE__,'');
-    if (file_exists($tempfile)) {
+    if (file_exists(dirname($tempfile))) {
       unlink($tempfile);
       return realpath(dirname($tempfile));
     }
@@ -368,6 +350,7 @@ if (!function_exists('str_split'))
  ***********************************************************************/
 if (!function_exists('hash_hmac'))
 {
+echo "\n*DEBUG*: function hash_hmac() created\n";
     function hash_hmac($algo, $data, $key, $raw_output = FALSE) {
         return hash_hmac_php($algo, $data, $key, $raw_output);
     }
@@ -431,49 +414,46 @@ if (!function_exists('bigdec2hex'))
  * Custom function providing base32_encode
  *   if it is not available in the actual configuration
  *
- * Source: http://pastebin.com/BLyG5khJ
+ * Source: Bryan Ruiz (https://www.php.net/manual/fr/function.base-convert.php#102232)
  ***********************************************************************/
 if (!function_exists('base32_encode'))
 {
-    function base32_encode($inString)
+    /**
+     *    Use padding false when encoding for urls
+     *
+     * @return base32 encoded string
+     * @author Bryan Ruiz
+     **/
+    function base32_encode($input, $padding = true)
     {
-        $outString = '';
-        if ('' != $inString)
-        {
-            $compBits = '';
-            $BASE32_TABLE = array('00000' => 0x61, '00001' => 0x62, '00010' => 0x63, '00011' => 0x64,
-                                  '00100' => 0x65, '00101' => 0x66, '00110' => 0x67, '00111' => 0x68,
-                                  '01000' => 0x69, '01001' => 0x6a, '01010' => 0x6b, '01011' => 0x6c,
-                                  '01100' => 0x6d, '01101' => 0x6e, '01110' => 0x6f, '01111' => 0x70,
-                                  '10000' => 0x71, '10001' => 0x72, '10010' => 0x73, '10011' => 0x74,
-                                  '10100' => 0x75, '10101' => 0x76, '10110' => 0x77, '10111' => 0x78,
-                                  '11000' => 0x79, '11001' => 0x7a, '11010' => 0x32, '11011' => 0x33,
-                                  '11100' => 0x34, '11101' => 0x35, '11110' => 0x36, '11111' => 0x37);
-     
-            /* Turn the compressed string into a string that represents the bits as 0 and 1. */
-            for ($i = 0; $i < strlen($inString); $i++)
-            {
-                $compBits .= str_pad(decbin(ord(substr($inString,$i,1))), 8, '0', STR_PAD_LEFT);
-            }
-     
-            /* Pad the value with enough 0's to make it a multiple of 5 */
-            if((strlen($compBits) % 5) != 0)
-            {
-                $compBits = str_pad($compBits, strlen($compBits)+(5-(strlen($compBits)%5)), '0', STR_PAD_RIGHT);
-            }
-     
-            /* Create an array by chunking it every 5 chars */
-            // Change split (deprecated) by explode, which is enough for this case
-            $fiveBitsArray = explode("\n",rtrim(chunk_split($compBits, 5, "\n")));
-     
-            /* Look-up each chunk and add it to $outstring */
-            foreach($fiveBitsArray as $fiveBitsString)
-            {
-                $outString .= chr($BASE32_TABLE[$fiveBitsString]);
-            }
+        $map = array(
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
+            'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
+            'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
+            'Y', 'Z', '2', '3', '4', '5', '6', '7', // 31
+            '='  // padding char
+        );
+       
+        if(empty($input)) return "";
+        $input = str_split($input);
+        $binaryString = "";
+        for($i = 0; $i < count($input); $i++) {
+            $binaryString .= str_pad(base_convert(ord($input[$i]), 10, 2), 8, '0', STR_PAD_LEFT);
         }
-        // As described in RFC3548, it should be in uppercase.
-        return strtoupper($outString);
+        $fiveBitBinaryArray = str_split($binaryString, 5);
+        $base32 = "";
+        $i=0;
+        while($i < count($fiveBitBinaryArray)) {   
+            $base32 .= $map[base_convert(str_pad($fiveBitBinaryArray[$i], 5,'0'), 2, 10)];
+            $i++;
+        }
+        if($padding && ($x = strlen($binaryString) % 40) != 0) {
+            if($x == 8) $base32 .= str_repeat($map[32], 6);
+            else if($x == 16) $base32 .= str_repeat($map[32], 4);
+            else if($x == 24) $base32 .= str_repeat($map[32], 3);
+            else if($x == 32) $base32 .= $map[32];
+        }
+        return $base32;
     }
 }
 
@@ -482,68 +462,52 @@ if (!function_exists('base32_encode'))
  * Custom function providing base32_decode
  *   if it is not available in the actual configuration
  *
- * Source: http://pastebin.com/RhTkb07g
+ * Source: Bryan Ruiz (https://www.php.net/manual/fr/function.base-convert.php#102232)
+ *         (patched to be able to decode correctly non-8 chars multiple length)
  ***********************************************************************/
 if (!function_exists('base32_decode'))
 {
-    function base32_decode($inString)
+    function base32_decode($input)
     {
-        $inputCheck = null;
-        $deCompBits = null;
-        $inString = strtolower($inString);
-        $BASE32_TABLE = array(0x61 => '00000', 0x62 => '00001', 0x63 => '00010', 0x64 => '00011', 
-                              0x65 => '00100', 0x66 => '00101', 0x67 => '00110', 0x68 => '00111', 
-                              0x69 => '01000', 0x6a => '01001', 0x6b => '01010', 0x6c => '01011', 
-                              0x6d => '01100', 0x6e => '01101', 0x6f => '01110', 0x70 => '01111', 
-                              0x71 => '10000', 0x72 => '10001', 0x73 => '10010', 0x74 => '10011', 
-                              0x75 => '10100', 0x76 => '10101', 0x77 => '10110', 0x78 => '10111', 
-                              0x79 => '11000', 0x7a => '11001', 0x32 => '11010', 0x33 => '11011', 
-                              0x34 => '11100', 0x35 => '11101', 0x36 => '11110', 0x37 => '11111');
-        
-        /* Step 1 */
-        $inputCheck = strlen($inString) % 8;
-        if(($inputCheck == 1)||($inputCheck == 3)||($inputCheck == 6))
-        { 
-            // trigger_error('input to Base32Decode was a bad mod length: '.$inputCheck);
-            return false; 
-        }
-        
-        for ($i = 0; $i < strlen($inString); $i++)
-        {
-            $inChar = ord(substr($inString,$i,1));
-            if(isset($BASE32_TABLE[$inChar]))
-            {
-                $deCompBits .= $BASE32_TABLE[$inChar];
-            }
-            else
-            {
-                trigger_error('input to Base32Decode had a bad character: '.$inChar);
-                return false;
-            }
-        }
-        $padding1 = 'are1';
-        $padding = strlen($deCompBits) % 8;
-        $paddingContent = substr($deCompBits, (strlen($deCompBits) - $padding));
-        if(substr_count($paddingContent, '1')>0)
-        { 
-            trigger_error('found non-zero padding in Base32Decode');
-            return false;
+        $map = array(
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
+            'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
+            'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
+            'Y', 'Z', '2', '3', '4', '5', '6', '7', // 31
+            '='  // padding char
+        );
 
+        $flippedMap = array(
+            'A'=>'0', 'B'=>'1', 'C'=>'2', 'D'=>'3', 'E'=>'4', 'F'=>'5', 'G'=>'6', 'H'=>'7',
+            'I'=>'8', 'J'=>'9', 'K'=>'10', 'L'=>'11', 'M'=>'12', 'N'=>'13', 'O'=>'14', 'P'=>'15',
+            'Q'=>'16', 'R'=>'17', 'S'=>'18', 'T'=>'19', 'U'=>'20', 'V'=>'21', 'W'=>'22', 'X'=>'23',
+            'Y'=>'24', 'Z'=>'25', '2'=>'26', '3'=>'27', '4'=>'28', '5'=>'29', '6'=>'30', '7'=>'31'
+        );
+
+        if(empty($input)) return;
+        $paddingCharCount = substr_count($input, $map[32]);
+        $allowedValues = array(6,4,3,1,0);
+        if(!in_array($paddingCharCount, $allowedValues)) return false;
+        for($i=0; $i<4; $i++){
+            if($paddingCharCount == $allowedValues[$i] &&
+                substr($input, -($allowedValues[$i])) != str_repeat($map[32], $allowedValues[$i])) return false;
         }
-        $deArr2 = 'sftw';
-        $deArr = array();
-        for($i = 0; $i < (int)(strlen($deCompBits) / 8); $i++)
-        {
-            $deArr[$i] = chr(bindec(substr($deCompBits, $i*8, 8)));
+        $input = str_replace('=','', $input);
+        $result_length = intval((5 * strlen($input)) / 8);
+        $input = str_split($input);
+        $binaryString = "";
+        for($i=0; $i < count($input); $i = $i+8) {
+            $x = "";
+            if(!in_array($input[$i], $map)) return false;
+            for($j=0; $j < 8; $j++) {
+                $x .= str_pad(base_convert(@$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
+            }
+            $eightBits = str_split($x, 8);
+            for($z = 0; $z < count($eightBits); $z++) {
+                $binaryString .= ( ($y = chr(base_convert($eightBits[$z], 2, 10))) || ord($y) == 48 ) ? $y:"";
+            }
         }
-        if(!strpos($inString,(base32_decode($deArr2.$padding1.'='))))
-        {
-            return $outString = join('',$deArr);
-        }
-        else
-        {
-            return $outString;
-        }
+        return substr($binaryString, 0, $result_length);
     }
 }
 
@@ -1034,6 +998,22 @@ if (!function_exists('nice_json'))
         }
 
         return $result;
+    }
+}
+
+
+if (!function_exists('mask2cidr'))
+{
+    // https://gist.github.com/linickx/1309388
+    function mask2cidr($mask) {
+        $mask = explode(".", $mask);
+        $bits = 0;
+        foreach ($mask as $octet) {
+            $bin = decbin($octet);
+            $bin = str_replace ( "0" , "" , $bin);
+            $bits = $bits + strlen($bin);
+        }
+        return $bits;
     }
 }
 ?>

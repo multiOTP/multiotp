@@ -27,8 +27,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.1.7
- * @date      2019-01-30
+ * @version   5.6.1.5
+ * @date      2019-10-23
  * @since     2013-08-06
  * @copyright (c) 2013-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -1029,20 +1029,20 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
                 // Users
                 var counter = 0;
 
-                var remotecall = eval(RemoteCall('GetUsersList'));
-                var userslist = typeof remotecall !== 'undefined' ? remotecall.trim() : '';
- 
+                var remotecall = eval(RemoteCall('GetEnhancedUsersList'));
+                var enhanceduserslist = typeof remotecall !== 'undefined' ? remotecall.trim() : '';
+
                 var remotecall = eval(RemoteCall('GetLockedUsersList'));
                 var lockedlist = typeof remotecall !== 'undefined' ? remotecall.trim() : '';
  
                 var remotecall = eval(RemoteCall('GetDelayedUsersList'));
                 var delayedlist = typeof remotecall !== 'undefined' ? remotecall.trim() : '';
-
-                if ('' != userslist)
+                
+                if ('' != enhanceduserslist)
                 {
-                    var usersarray = userslist.split("\t");
+                    var enhancedusersarray = enhanceduserslist.split("\t");
 
-                    if ('false' == userslist)
+                    if ('false' == enhanceduserslist)
                     {
                         userslist = 'not authorized';
                     }
@@ -1052,17 +1052,25 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
                         var delayedlistarray = delayedlist.split("\t");
                         
                         userslist = '';
-                        for (var i = 0; i < usersarray.length; i++)
+                        for (var i = 0; i < enhancedusersarray.length; i++)
                         {
-                            userslist = userslist + '<button type="button" onclick="DeleteUser(\''+usersarray[i]+'\');">Delete</button>';
-                            userslist = userslist + '<button type="button" onclick="PrintQrCode(\''+usersarray[i]+'\');">Print</button>';
-                            userslist = userslist + '<button type="button" onclick="ResyncUser(\''+usersarray[i]+'\');">Resync</button>';
+                            var usersinfo = enhancedusersarray[i].split('|');
+                            // usersinfo[0] = username
+                            // usersinfo[1] = s1|s0 (AD/LDAP synchronized or not)
+
+                            userslist = userslist + '<button type="button" onclick="DeleteUser(\''+usersinfo[0]+'\');">Delete</button>';
+                            userslist = userslist + '<button type="button" onclick="PrintQrCode(\''+usersinfo[0]+'\');">Print</button>';
+                            userslist = userslist + '<button type="button" onclick="ResyncUser(\''+usersinfo[0]+'\');">Resync</button>';
                             
-                            userslist = userslist + ' ' + usersarray[i];
+                            userslist = userslist + ' ' + usersinfo[0];
                             
+                            if ("s1" == usersinfo[1]) {
+                              userslist = userslist + ' ' + '<i>[auto]</i>';
+                            }
+
                             for (var j = 0; j < lockedlistarray.length; j++) {
-                                if (usersarray[i] == lockedlistarray[j]) {
-                                    userslist = userslist + ' (<a href="#" onclick="UnlockUser(\''+usersarray[i]+'\');">unlock</a>)';
+                                if (usersinfo[0] == lockedlistarray[j]) {
+                                    userslist = userslist + ' (<a href="#" onclick="UnlockUser(\''+usersinfo[0]+'\');">unlock</a>)';
                                     break;
                                 }
                             }
@@ -1070,9 +1078,9 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
                             for (var j = 0; j < delayedlistarray.length; j++) {
                                 var delayinfo = delayedlistarray[j].split('|');
 
-                                if (usersarray[i] == delayinfo[0]) {
+                                if (usersinfo[0] == delayinfo[0]) {
                                     var delay_end = new Date( delayinfo[1] * 1000 );
-                                    userslist = userslist + ' (delayed until ' + delay_end.toLocaleDateString() + ' ' + delay_end.toLocaleTimeString() + ', <a href="#" onclick="UnlockUser(\''+usersarray[i]+'\');">unlock</a>)';
+                                    userslist = userslist + ' (delayed until ' + delay_end.toLocaleDateString() + ' ' + delay_end.toLocaleTimeString() + ', <a href="#" onclick="UnlockUser(\''+usersinfo[0]+'\');">unlock</a>)';
                                     break;
                                 }
                             }
@@ -1559,6 +1567,9 @@ EOI;
                             break;
                         case mb_strtoupper("GetLockedUsersList"):
                             $ajax_result = $multiotp->GetLockedUsersList();
+                            break;
+                        case mb_strtoupper("GetEnhancedUsersList"):
+                            $ajax_result = $multiotp->GetEnhancedUsersList();
                             break;
                         case mb_strtoupper("PrintQrCode"):
                             echo $multiotp->GenerateHtmlQrCode($options_array[0]);

@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.4.1.7
-REM @date      2019-01-30
+REM @version   5.6.1.5
+REM @date      2019-10-23
 REM @since     2010-07-10
 REM @copyright (c) 2010-2019 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -167,7 +167,6 @@ REM List of attributes to encrypt is set to none during the tests
 
 REM Define server-secret to default value
 %_multiotp% -config server-secret=""
-
 
 :BackendLoop
 
@@ -376,6 +375,7 @@ CALL %_check_dir%radius_uninstall.cmd multiOTPradiusTest
 
 ECHO.
 ECHO - Install and start the multiOTP web service (wait 5 seconds)
+%_multiotp% -config server-secret=""
 CALL %_check_dir%webservice_install.cmd %_check_web_port% %_check_ssl_port% multiOTPserverTest multiOTPserverTest
 PING 127.0.0.1 -n 5 >NUL 
 
@@ -410,6 +410,7 @@ SET _chap_id=34
 SET _chap_challenge=4af06915f7cbdfd018f5c60047dc8a2f
 SET _chap_password=936660d3d0bef545c63e73fa7ee30bd1
 ECHO data=^<?xml version="1.0" encoding="UTF-8"?^>^<multiOTP version="4.0" xmlns="http://www.sysco.ch/namespaces/multiotp"^>^<ServerChallenge^>%_server_challenge%^</ServerChallenge^>^<CheckUserToken^>^<UserId^>test_user2^</UserId^>^<Chap^>^<ChapId^>%_chap_id%^</ChapId^>^<ChapChallenge^>%_chap_challenge%^</ChapChallenge^>^<ChapPassword^>%_chap_password%^</ChapPassword^>^</Chap^>^<CacheLevel^>1^</CacheLevel^>^</CheckUserToken^>^</multiOTP^> >%TEMP%\multiOTPwebservice.post
+TYPE %TEMP%\multiOTPwebservice.post
 %_tools_dir%wget --post-file %TEMP%\multiOTPwebservice.post http://127.0.0.1:%_check_web_port% --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=300 --tries=2
 FIND /C "OK: Token accepted" %TEMP%\multiOTPwebservice.check >NUL
 IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
@@ -541,7 +542,7 @@ ECHO.
 
 ECHO.
 ECHO Check the PHP multiOTP class using the %_multiotp_class_check% file.
-%_tools_dir%wget http://127.0.0.1:%_check_web_port%/check/?minima=1 --quiet --output-document=%TEMP%\check.multiOTP.class.check --timeout=300 --tries=2
+%_tools_dir%wget http://127.0.0.1:%_check_web_port%/check/?minima=1^&keeplog=1 --quiet --output-document=%TEMP%\check.multiOTP.class.check --timeout=300 --tries=2
 FIND /C "KO!" %TEMP%\check.multiOTP.class.check >NUL
 TYPE %TEMP%\check.multiOTP.class.check
 IF ERRORLEVEL 1 GOTO CheckClassError

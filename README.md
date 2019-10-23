@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2019 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.4.1.7 (2019-01-30)
+Current build: 5.6.1.5 (2019-10-23)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -160,6 +160,13 @@ subfolders from windows to your current multiOTP folder
 
 WHAT'S NEW IN THE RELEASES
 ==========================
+# What's new in 5.6 releases
+- Better PHP 7.3 support
+
+# What's new in 5.5 releases
+- Debian 10.x (buster) binary images support (64 bits)
+- Out of sync detection with specific error message (for example hardware tokens not used for a long time)
+
 # What's new in 5.4 releases
 - SMS providers added (Swisscom LA REST, Afilnet, Clickatell2, eCall, Nexmo, NowSMS, SMSEagle)
 - Generic SMS custom provider
@@ -295,7 +302,19 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
-2019-01-27 5.4.1.7 ENH: New QRcode library used (without external files dependency)
+2019-10-23 5.6.1.5 FIX: Separated configuration/statistics storage handling
+2019-10-22 5.6.1.3 ENH: Better PHP 7.3 support
+                   ENH: Base32 encoder/decoder new implementation
+                   ENH: During WriteConfigData, loop on the current values, and check with the old values
+                   ENH: Enhanced internal tests
+2019-09-02 5.5.0.3 ENH: Give an info if time based token is probably out of sync (in a window 10 time bigger)
+                        (for example for hardware tokens not used for a long time)
+                   ENH: Modifications for Debian 10.x (buster) binary images support (64 bits)
+2019-03-29 5.4.1.8 ENH: Enhanced error messages, more log information
+                   ENH: In debug mode, display an error if logfile cannot be written
+                   ENH: Global Access-Challenge support
+2019-01-30 5.4.1.7 FIX: IsTemporaryBadServer function (thanks to brownowski on GitHub)
+                   ENH: New QRcode library used (without external files dependency)
                    ENH: New Raspberry images support for Raspberry Pi 1B/1B+/2B/3B/3B+
 2019-01-25 5.4.1.6 FIX: If any, clean specific NTP DHCP option at every reboot
 2019-01-18 5.4.1.4 ENH: Modifications for Debian 9.x (stretch) binary images support
@@ -1634,7 +1653,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.4.1.7 (2019-01-30)
+multiOTP 5.6.1.5 (2019-10-23)
 (c) 2010-2019 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1724,6 +1743,7 @@ Return codes:
 82 ERROR: User not allowed for this device 
 88 ERROR: Device is not defined as a HA slave 
 89 ERROR: Device is not defined as a HA master 
+93 ERROR: Authentication failed (time based token probably out of sync) 
 94 ERROR: API request error 
 95 ERROR: API authentication failed 
 96 ERROR: Authentication failed (CRC error) 
@@ -1802,6 +1822,7 @@ Usage:
       attributes-to-encrypt: specific attributes list to encrypt, must be
                              surrounded by *, like '*token_seed*user_pin*'
                backend-type: backend storage type (files|mysql|pgsql)
+ challenge-response-enabled: [0|1] enable/disable Challenge-Response
         clear-otp-attribute: attribute to return for the clear OTP
                              (for example 'ietf|2' for TekRADIUS)
                       debug: [0|1] enable/disable enhanced log information
@@ -1861,6 +1882,7 @@ Usage:
                              with exec as provider, define the script to call
                                (available variables: %from, %to, %msg)
                      sms-ip: IP address of the SMS server (for inhouse server)
+      sms-challenge-enabled: [0|1] enable/disable SMS challenge
                 sms-message: SMS message to display before the OTP
              sms-originator: SMS sender (if authorized by provider)
                sms-password: SMS account password
@@ -1899,6 +1921,8 @@ Custom SMS provider only
            sql-tokens-table: SQL tokens table, default is multiotp_tokens
             sql-users-table: SQL users table, default is multiotp_users
    tel-default-country-code: Default country code for phone number
+         text-sms-challenge: Text displayed for the SMS challenge
+       text-token-challenge: Text displayed for the challenge
  token-serial-number-length: Length of the serial number of the tokens
                              (used for self-registration)
 
@@ -2124,8 +2148,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.4.1.7.zip 
-SHA256:6c1af553b64a0dc82936d01f6fbd6b6a5cc35f914cdc9be38040f0a897a77833 
-SHA1:2f4fc4e17f43053f10b7b0e4e24edfb6d163b645 
-MD5:17cc73a2e5dcc11c40f8615218f77348 
+Hash verification for multiotp_5.6.1.5.zip 
+SHA256:9087aab3ac87a8eb31abea435b23108aaa436022e6329011d10a11c2659f8971 
+SHA1:6993c5c93bf39e73b9ae529c43fb6b3156c300ec 
+MD5:cf9e48e8ff30844a220f8c258440e404 
 ``` 

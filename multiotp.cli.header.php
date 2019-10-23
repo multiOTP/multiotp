@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.1.7
- * @date      2019-01-30
+ * @version   5.6.1.5
+ * @date      2019-10-23
  * @since     2010-06-08
  * @copyright (c) 2010-2019 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -77,6 +77,7 @@
  *
  *   0 OK: Token accepted
  *
+ *   9 INFO: Access Challenge returned back to the client
  *  10 INFO: Access Challenge returned back to the client
  *
  *  11 INFO: User successfully created or updated
@@ -139,6 +140,7 @@
  *  88 ERROR: Device is not defined as a HA slave
  *  89 ERROR: Device is not defined as a HA master
  *
+ *  93 ERROR: Authentication failed (time based token probably out of sync)
  *  94 ERROR: API request error
  *  95 ERROR: API authentication failed
  *  96 ERROR: Authentication failed (CRC error)
@@ -438,6 +440,14 @@
  *
  * Change Log
  *
+ *   2019-10-23 5.6.1.4 SysCo/al FIX: Separated configuration/statistics storage handling
+ *   2019-10-22 5.6.1.3 SysCo/al ENH: Better PHP 7.3 support
+ *                               ENH: Base32 encoder/decoder new implementation
+ *                               ENH: During WriteConfigData, loop on the current values, and check with the old values
+ *                               ENH: Enhanced internal tests
+ *   2019-09-02 5.5.0.3 SysCo/al ENH: Give an info if time based token is probably out of sync (in a window 10 time bigger)
+ *                                    (for example for hardware tokens not used for a long time)
+ *   2019-03-29 5.4.1.8 SysCo/al ENH: Challenge-Response support
  *   2019-01-24 5.4.1.5 SysCo/al FIX: If any, clean specific NTP DHCP option at every reboot
  *   2019-01-07 5.4.1.1 SysCo/al ENH: Raspberry Pi 3B+ support
  *   2018-11-13 5.4.0.2 SysCo/al ENH: Import of PSKC definition files with binary decoding key file
@@ -1199,7 +1209,7 @@ if ('' != $server_url) {
     }
 }
 if ($write_param_data) {
-    $write_result = $multiotp->WriteConfigData();
+    $write_result = $multiotp->WriteConfigData(array(), true);
     if (($multiotp->IsDeveloperMode())) {
         if ($write_result) {
             $multiotp->WriteLog('Developer: new configuration automatically written', false, false, 8888, 'Debug', '');
@@ -2117,6 +2127,22 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 $multiotp->SetTokenSerialNumberLength($actual_array[1]);
                                 $write_config_data = true;
                                 break;
+                            case 'challenge-response-enabled':
+                                $multiotp->SetGlobalChallengeResponse(intval($actual_array[1]));
+                                $write_config_data = true;
+                                break;
+                            case 'sms-challenge-enabled':
+                                $multiotp->SetGlobalSmsChallenge(intval($actual_array[1]));
+                                $write_config_data = true;
+                                break;
+                            case 'text-sms-challenge':
+                                $multiotp->SetGlobalTextSmsChallenge(trim($actual_array[1]));
+                                $write_config_data = true;
+                                break;
+                            case 'text-token-challenge':
+                                $multiotp->SetGlobalTextTokenChallenge(trim($actual_array[1]));
+                                $write_config_data = true;
+                                break;
                             default: // Just in case we need to change additional values that have no related method
                                 $internal_config_option = str_replace("-", "_", $actual_array[0]);
                                 if ($multiotp->SetConfigAttribute($internal_config_option, $actual_array[1]))
@@ -2128,7 +2154,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                     }
                 }
                 if ($write_config_data) {
-                    if ($multiotp->WriteConfigData()) {
+                    if ($multiotp->WriteConfigData(array(), true)) {
                         $result = 19; // INFO: Requested operation successfully done
                     }
                 }
@@ -2540,6 +2566,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "      attributes-to-encrypt: specific attributes list to encrypt, must be".$crlf;
                 echo "                             surrounded by *, like '*token_seed*user_pin*'".$crlf;
                 echo "               backend-type: backend storage type (files|mysql|pgsql)".$crlf;
+                echo " challenge-response-enabled: [0|1] enable/disable Challenge-Response".$crlf;
                 echo "        clear-otp-attribute: attribute to return for the clear OTP".$crlf;
                 echo "                             (for example 'ietf|2' for TekRADIUS)".$crlf;
                 echo "                      debug: [0|1] enable/disable enhanced log information".$crlf;
@@ -2599,6 +2626,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                             with exec as provider, define the script to call".$crlf;
                 echo "                               (available variables: %from, %to, %msg)".$crlf;
                 echo "                     sms-ip: IP address of the SMS server (for inhouse server)".$crlf;
+                echo "      sms-challenge-enabled: [0|1] enable/disable SMS challenge".$crlf;
                 echo "                sms-message: SMS message to display before the OTP".$crlf;
                 echo "             sms-originator: SMS sender (if authorized by provider)".$crlf;
                 echo "               sms-password: SMS account password".$crlf;
@@ -2637,6 +2665,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "           sql-tokens-table: SQL tokens table, default is multiotp_tokens".$crlf;
                 echo "            sql-users-table: SQL users table, default is multiotp_users".$crlf;
                 echo "   tel-default-country-code: Default country code for phone number".$crlf;
+                echo "         text-sms-challenge: Text displayed for the SMS challenge".$crlf;
+                echo "       text-token-challenge: Text displayed for the challenge".$crlf;
                 echo " token-serial-number-length: Length of the serial number of the tokens".$crlf;
                 echo "                             (used for self-registration)".$crlf;
                 echo $crlf;
