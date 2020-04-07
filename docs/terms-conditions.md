@@ -36,15 +36,15 @@ Customers who purchase a multiOTP Pro License get the right to use perpetually t
 
 To upgrade to a new major version, Customers must upgrade their licenses, which will costs 20% of the current price of the installed multiOTP Pro Licenses.
 
-### 1.8. Open source Edition and Free license
+### 1.8. multiOTP open source edition and Free license
 SysCo provides some products free of charge with full or limited functionality. 
 
-Open source Edition provide limited functionalities, but is not limited to a specific number of active user accounts.
+multiOTP open source edition provides limited functionalities, but is not limited to a specific number of active user accounts.
 Built-in free license for one user account is provided with every commercial appliance.
-
 
 ### 1.9. multiOTP appliance
 multiOTP appliance means a virtual machine image made available by SysCo in which the Software is pre-installed. 
+
 
 ## 2. multiOTP License Keys
 
@@ -54,10 +54,9 @@ multiOTP License Key contains specific licensing terms.
 
 ### 2.1. License Start Date
 The License expiration date and License support expiration date are calculated from the License/Contract start date which is the date when the End User activates the first License in the Software.
-
-When purchasing additional active user accounts, the updated number of active user accounts and expiration date are updated on the status page of the Software.
-When purchasing a multiOTP Enterprise  maintenance renewal, the expiration date is updated on the status page of the Software.
-When purchasing a multiOTP Pro version upgrade, the updated version is updated on the status page of the Software.
+- When purchasing additional active user accounts, the updated number of active user accounts and expiration date are updated on the status page of the Software.
+- When purchasing a multiOTP Enterprise  maintenance renewal, the expiration date is updated on the status page of the Software.
+- When purchasing a multiOTP Pro version upgrade, the updated version is updated on the status page of the Software.
 
 ### 2.2. License Key Merge
 
@@ -65,6 +64,7 @@ When several License Keys are installed on the same appliance, they are merged t
 
 ### 2.3. Promotional License Key
 When SysCo gives a free production license or adds licenses/features at no cost for a limited time, the duration of the offer is defined by the promotion’s specific terms and conditions or by the License Key parameters. Promotional licenses do not change any pre-existing licensing agreement for paid products.
+
 
 ## 3. Support and Maintenance
 
