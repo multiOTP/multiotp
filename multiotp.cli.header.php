@@ -2497,7 +2497,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo "Usage:".$crlf;
                 echo $crlf;
-                echo " PLEASE NOT THAT BY DEFAULT, A PREFIX PIN IS REQUIRED.".$crlf;
+                echo " PLEASE NOTE THAT BY DEFAULT, A PREFIX PIN IS REQUIRED.".$crlf;
                 echo $crlf;
                 echo " multiotp user [prefix PIN]OTP (check the OTP (with prefix PIN) of the user)".$crlf;
                 echo " multiotp -checkpam (to check with pam-script, using PAM_USER and PAM_AUTHTOK)".$crlf;
