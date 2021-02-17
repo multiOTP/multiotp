@@ -15,10 +15,10 @@
 # Please check http://www.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    SysCo/yj, SysCo/al, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.6.1.5
-# @date      2019-10-23
+# @version   5.8.1.0
+# @date      2021-02-12
 # @since     2014-08-14
-# @copyright (c) 2014-2018 by SysCo systemes de communication sa
+# @copyright (c) 2014-2021 SysCo systemes de communication sa
 # @copyright (c) 2002 by Boian Jordanov <bjordanov@orbitel.bg>
 # @copyright (c) 2002 by The FreeRADIUS server project
 # @copyright GNU Lesser General Public License
@@ -43,6 +43,7 @@
 #
 #
 # Change Log
+#   2020-08-31 5.8.0.0 SysCo/al Multiple values support for the same attribute
 #   2019-01-24 5.4.1.5 SysCo/al All parameters are now between ''
 #   2019-01-07 5.4.1.1 SysCo/al FreeRADIUS 3 support
 #   2016-10-16 5.0.2.5 SysCo/al Unified version number
@@ -90,7 +91,7 @@ SysCo systemes de communication sa (info@multiotp.net)
 
 =head1 COPYRIGHT
 
-Copyright 2014-2018
+Copyright 2014-2020
 
 This library is free software; you can redistribute it 
 under the GPLv2.
@@ -151,7 +152,9 @@ sub authenticate {
 
         # Split the output with ; multiOTP echoes a string of the form : option1=value;option2=value
         my @multiotpReturnedValues = split(',', $output);
-	 
+
+        my %values;
+ 
         foreach my $val (@multiotpReturnedValues) {
           # Split the option and the value in a maximum of two parts
           my @params = split('=', $val,2);
@@ -171,8 +174,16 @@ sub authenticate {
             $params[1] =~ s/^"+|\"$//g;
             # Clean the \r and \n (param1)
             $params[1] =~ s/\r$|\n$//ig;
-            $RAD_REPLY{$params[0]} = $params[1];
+            $values{$params[0]}{$params[1]} = $params[1];
           }
+        }
+
+        foreach my $attribute (sort keys %values) {
+                my @data = ();
+                foreach my $value (keys %{ $values{$attribute} }) {
+                        push(@data, $value);
+                }
+                $RAD_REPLY{$attribute} = \@data;
         }
 
         if ($exit_val == 0)

@@ -9,10 +9,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.6.1.5
-REM @date      2019-10-23
+REM @version   5.8.1.0
+REM @date      2021-02-12
 REM @since     2014-04-22
-REM @copyright (c) 2014-2019 SysCo systemes de communication sa
+REM @copyright (c) 2014-2021 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -31,7 +31,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2014-2019 SysCo systemes de communication sa
+REM   Copyright (c) 2014-2021 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -44,10 +44,24 @@ REM
 REM
 REM Change Log
 REM
+REM   2020-12-11 5.8.0.6 SysCo/al Do an automatic "Run as administrator" if needed
 REM   2016-11-04 5.0.2.7 SysCo/al Unified file header
 REM   2014-04-22 4.2.4.3 SysCo/al Initial release
 REM
 REM ************************************************************
+
+NET SESSION >NUL 2>&1
+IF NOT %ERRORLEVEL% == 0 (
+    ECHO WARNING! Please run this script as an administrator, otherwise it will fail.
+    ECHO Elevating privileges...
+    REM PING 127.0.0.1 > NUL 2>&1
+    CD /d %~dp0
+    MSHTA "javascript: var shell = new ActiveXObject('shell.application'); shell.ShellExecute('%~nx0', '', '', 'runas', 1);close();"
+    EXIT
+    REM PAUSE
+    REM EXIT /B 1
+)
+:NoWarning
 
 SET _radius_secret=multiotpsecret
 

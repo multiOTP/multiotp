@@ -59,7 +59,7 @@ class MAIL4 {
 	var $_mime;
 	var $_smtp;
 
-	function MAIL4() {
+	function __construct() {
 		$this->_mime = new MIME4;
 		$this->_smtp = new SMTP4;
 		$this->_result(array(0 => 'initialize class'));

@@ -3,10 +3,10 @@ multiOTP open source
 multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
 multiOTP open source is OATH certified for HOTP/TOTP
 
-(c) 2010-2019 SysCo systemes de communication sa  
+(c) 2010-2021 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.6.1.5 (2019-10-23)
+Current build: 5.8.1.0 (2021-02-12)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -120,14 +120,12 @@ SKB Kontur (RU)
 
 WISHLIST FOR FUTURE RELEASES
 ============================
-- RADIUS challenge/response support
+- Email account recovery
 - Multiple hardware tokens support for one account
-- Generic web based SMS provider support
+- VueJS frontend
 - Radius gateway support
 - YubiCloud support
 - FIDO support (SOAP service)
-- Bootstrap/VueJS frontend
-- SMS-revolution SMS provider support
 - Doxygen documentation format
 - Users CSV import
   (username;pin;prefix_pin_needed;email;sms;serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
@@ -160,7 +158,18 @@ subfolders from windows to your current multiOTP folder
 
 WHAT'S NEW IN THE RELEASES
 ==========================
+# What's new in 5.8 releases
+ - Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
+ - New sync-delete-retention-days= option in order to purge inexistent AD/LDAP users
+ - Enhanced windows command line scripts (automatic administrator level)
+ - Debian Buster 10.5 support (PHP 7.3, FreeRADIUS 3.0.17)
+ - Raspberry Pi 4B support
+ - Database optimization, TEXT fields instead of varchar(255)
+ - Better mysqli support for alternate connection port
+ - Better unicode handling
+
 # What's new in 5.6 releases
+- Generic web based SMS provider support
 - Better PHP 7.3 support
 
 # What's new in 5.5 releases
@@ -302,7 +311,23 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-02-12 5.8.1.0 ENH: Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
+2020-12-11 5.8.0.7 ENH: -sync-delete-retention-days= option is set by default to 30 days
+2020-12-11 5.8.0.6 ENH: VM version 010 support  (Debian Buster 10.5, PHP 7.3, FreeRADIUS 3.0.17)
+                   ENH: MySQL optimization
+                   ENH: Enhanced windows command line scripts (automatic administrator level)
+2020-09-20 5.8.0.2 ENH: New -sync-delete-retention-days= option in order to purge inexistent AD/LDAP users
+                        (SetSyncDeleteRetentionDays and GetSyncDeleteRetentionDays method)
+2020-08-31 5.8.0.0 FIX: Too many ReadConfigData loop during initialization
+                   FIX: Better unicode handling, multibyte fonctions also for mb_substr()
+                   FIX: A device file was searched with the name of the FreeRADIUS Client-Shortname
+                   ENH: Raspberry Pi 4B support
+                   ENH: New unified distribution
+                   ENH: Debian Buster 10.5 support
+                   ENH: Enhanced PHP 7.3 support
+                   ENH: Better mysqli support for alternate connection port
 2019-10-23 5.6.1.5 FIX: Separated configuration/statistics storage handling
+                   ENH: Generic web based SMS provider support
 2019-10-22 5.6.1.3 ENH: Better PHP 7.3 support
                    ENH: Base32 encoder/decoder new implementation
                    ENH: During WriteConfigData, loop on the current values, and check with the old values
@@ -1653,8 +1678,8 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.6.1.5 (2019-10-23)
-(c) 2010-2019 SysCo systemes de communication sa
+multiOTP 5.8.1.0 (2021-02-12)
+(c) 2010-2021 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
 multiotp will check if the token of a user is correct, based on a specified
@@ -1754,7 +1779,7 @@ Return codes:
 
 Usage:
 
- PLEASE NOT THAT BY DEFAULT, A PREFIX PIN IS REQUIRED.
+ PLEASE NOTE THAT BY DEFAULT, A PREFIX PIN IS REQUIRED.
 
  multiotp user [prefix PIN]OTP (check the OTP (with prefix PIN) of the user)
  multiotp -checkpam (to check with pam-script, using PAM_USER and PAM_AUTHTOK)
@@ -1920,6 +1945,8 @@ Custom SMS provider only
               sql-log-table: SQL log table, default is multiotp_log
            sql-tokens-table: SQL tokens table, default is multiotp_tokens
             sql-users-table: SQL users table, default is multiotp_users
+ sync-delete-retention-days: days of retention before deleting a no more
+                             existing AD/LDAP user (0=disable only, no delete)
    tel-default-country-code: Default country code for phone number
          text-sms-challenge: Text displayed for the SMS challenge
        text-token-challenge: Text displayed for the challenge
@@ -1977,6 +2004,9 @@ AD/LDAP integration:
  multiotp -ldap-users-list     : print the list of selected the AD/LDAP users
  multiotp -ldap-users-sync     : launch the AD/LDAP synchronization
                                  (will check first if a lock file is present)
+ multiotp -sync-delete-retention-days=days of retention before deleting a no
+                                      more existing AD/LDAP user
+                                      (0=disable only the user, do not delete)
 
 
 Backup/restore commands:
@@ -2148,8 +2178,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.6.1.5.zip 
-SHA256:9087aab3ac87a8eb31abea435b23108aaa436022e6329011d10a11c2659f8971 
-SHA1:6993c5c93bf39e73b9ae529c43fb6b3156c300ec 
-MD5:cf9e48e8ff30844a220f8c258440e404 
+Hash verification for multiotp_5.8.1.0.zip 
+SHA256:5dae5af747d3cbe277f8de82eb24d2a1b506ea8959d755558cc515a5a1b1adfc 
+SHA1:668efe435de0a205f27f387a75b28a6859a291e6 
+MD5:67f045efa7bab63f09afd0d71e69037d 
 ``` 

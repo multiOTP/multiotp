@@ -129,6 +129,24 @@ if (!function_exists('is_valid_ipv4')) {
 
 
 /***********************************************************************
+ * Name: is_public_ip
+ * Short description: Check if the string is a public IP address
+ *
+ * Creation 2020-05-20
+ * Update   2020-05-20
+ * @version 1.0.0
+ *
+ * @param   string  $ip  String to check
+ * @return  boolean      TRUE if it is a valid public IP address
+ ***********************************************************************/
+if (!function_exists('is_public_ip')) {
+    function is_public_ip($ip) {
+        return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE |  FILTER_FLAG_NO_RES_RANGE);
+    }
+}
+
+
+/***********************************************************************
  * Name: ip2long32bit
  * Short description: Patch for ip2long
  * @author  Adapted from php.net

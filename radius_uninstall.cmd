@@ -9,10 +9,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.6.1.5
-REM @date      2019-10-23
+REM @version   5.8.1.0
+REM @date      2021-02-12
 REM @since     2013-08-20
-REM @copyright (c) 2013-2019 SysCo systemes de communication sa
+REM @copyright (c) 2013-2021 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -30,7 +30,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2013-2019 SysCo systemes de communication sa
+REM   Copyright (c) 2013-2021 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -40,6 +40,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2020-12-11 5.8.0.6 SysCo/al Do an automatic "Run as administrator" if needed
 REM   2018-11-13 5.4.0.2 SysCo/al Detection to know if something must be stopped
 REM   2017-05-29 5.0.4.5 SysCo/al Unified script with some bug fixes
 REM   2016-11-04 5.0.2.7 SysCo/al Unified file header
@@ -52,14 +53,22 @@ REM   2013-08-20 4.0.4   SysCo/al Initial release
 REM
 REM ************************************************************
 
+NET SESSION >NUL 2>&1
+IF NOT %ERRORLEVEL% == 0 (
+    ECHO WARNING! Please run this script as an administrator, otherwise it will fail.
+    ECHO Elevating privileges...
+    REM PING 127.0.0.1 > NUL 2>&1
+    CD /d %~dp0
+    MSHTA "javascript: var shell = new ActiveXObject('shell.application'); shell.ShellExecute('%~nx0', '', '', 'runas', 1);close();"
+    EXIT
+    REM PAUSE
+    REM EXIT /B 1
+)
+:NoWarning
+
 SET _service_tag=multiOTPradius
 
 IF NOT "%1"=="" SET _service_tag=%1
-
-IF "%_service_tag%"=="multiOTPradiusTest" GOTO NoWarning
-ECHO WARNING! Please run this script as an administrator, otherwise it will fail.
-PAUSE
-:NoWarning
 
 SET _folder=%~d0%~p0
 SET _radius_folder=%~d0%~p0

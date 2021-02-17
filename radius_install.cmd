@@ -9,10 +9,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.6.1.5
-REM @date      2019-10-23
+REM @version   5.8.1.0
+REM @date      2021-02-12
 REM @since     2013-08-20
-REM @copyright (c) 2013-2019 SysCo systemes de communication sa
+REM @copyright (c) 2013-2021 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -31,7 +31,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2013-2019 SysCo systemes de communication sa
+REM   Copyright (c) 2013-2021 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -47,6 +47,8 @@ REM
 REM
 REM Change Log
 REM
+REM   2020-12-11 5.8.0.6 SysCo/al Do an automatic "Run as administrator" if needed
+REM                               Don't delete the _radius_multiotp_folder_alternate environment variable
 REM   2018-09-14 5.4.0.1 SysCo/al Compatibility mode to Windows 7 automatically added for radiusd.exe
 REM   2017-05-29 5.0.4.5 SysCo/al Unified script with some bug fixes
 REM                               Alternate authentication executable support
@@ -62,6 +64,19 @@ REM                               Ports can be set in the command line
 REM   2013-08-20 4.0.4   SysCo/al Initial release
 REM
 REM ************************************************************
+
+NET SESSION >NUL 2>&1
+IF NOT %ERRORLEVEL% == 0 (
+    ECHO WARNING! Please run this script as an administrator, otherwise it will fail.
+    ECHO Elevating privileges...
+    REM PING 127.0.0.1 > NUL 2>&1
+    CD /d %~dp0
+    MSHTA "javascript: var shell = new ActiveXObject('shell.application'); shell.ShellExecute('%~nx0', '', '', 'runas', 1);close();"
+    EXIT
+    REM PAUSE
+    REM EXIT /B 1
+)
+:NoWarning
 
 SET _radius_secret=multiotpsecret
 
@@ -88,13 +103,9 @@ IF NOT "%7"=="" SET _service_name=%_service_name% %7
 IF NOT "%8"=="" SET _service_name=%_service_name% %8
 IF NOT "%9"=="" SET _service_name=%_service_name% %9
 
-IF "%_service_tag%"=="multiOTPradiusTest" GOTO NoWarning
-ECHO WARNING! Please run this script as an administrator, otherwise it will fail.
-PAUSE
-:NoWarning
-
 REM Define the current folder
-SET _folder=%~d0%~p0
+SET _radius_multiotp_folder=%~d0%~p0
+IF NOT "%_radius_multiotp_folder_alternate%"=="" SET _radius_multiotp_folder=%_radius_multiotp_folder_alternate%
 SET _radius_folder=%~d0%~p0
 SET _tools_folder=%~d0%~p0tools\
 IF NOT EXIST %_radius_folder%radius SET _radius_folder=%~d0%~p0..\
@@ -110,7 +121,7 @@ ECHO exec multiotp {>>%_radius_folder%radius\etc\raddb\modules\multiotp
 ECHO         wait = yes>>%_radius_folder%radius\etc\raddb\modules\multiotp
 ECHO         input_pairs = request>>%_radius_folder%radius\etc\raddb\modules\multiotp
 ECHO         output_pairs = reply>>%_radius_folder%radius\etc\raddb\modules\multiotp
-ECHO         program = "%_radius_multiotp% -base-dir=%_folder% -keep-local -log -debug **"%%{User-Name}**" **"%%{User-Password}**" -src=%%{Packet-Src-IP-Address} -chap-challenge=%%{CHAP-Challenge} -chap-password=%%{CHAP-Password} -ms-chap-challenge=%%{MS-CHAP-Challenge} -ms-chap-response=%%{MS-CHAP-Response} -ms-chap2-response=%%{MS-CHAP2-Response}">>%_radius_folder%radius\etc\raddb\modules\multiotp
+ECHO         program = "%_radius_multiotp% -base-dir=%_radius_multiotp_folder% -keep-local -log -debug **"%%{User-Name}**" **"%%{User-Password}**" -src=%%{Packet-Src-IP-Address} -chap-challenge=%%{CHAP-Challenge} -chap-password=%%{CHAP-Password} -ms-chap-challenge=%%{MS-CHAP-Challenge} -ms-chap-response=%%{MS-CHAP-Response} -ms-chap2-response=%%{MS-CHAP2-Response}">>%_radius_folder%radius\etc\raddb\modules\multiotp
 ECHO         shell_escape = yes>>%_radius_folder%radius\etc\raddb\modules\multiotp
 ECHO }>>%_radius_folder%radius\etc\raddb\modules\multiotp
 
@@ -157,9 +168,8 @@ SC start %_service_tag% >NUL
 REM Clean the environment variables
 SET _account_port=
 SET _auth_port=
-SET _folder=
+SET _radius_multiotp_folder=
 SET _radius_multiotp=
-SET _radius_multiotp_alternate=
 SET _radius_folder=
 SET _radius_secret=
 SET _service_name=

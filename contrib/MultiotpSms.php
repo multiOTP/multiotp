@@ -187,16 +187,16 @@ class MultiotpSms
 
     function setEncoding($encoding)
     {
-        $this->encoding = mb_strtoupper(mb_substr($encoding, 0, 3));
+        $this->encoding = mb_strtoupper(mb_substr($encoding, 0, 3),'UTF-8');
     }
 
 
     function getEncoding()
     {
         $encoding = "UTF-8";
-        if ('UTF' == mb_strtoupper(mb_substr($this->encoding, 0, 3))) {
+        if ('UTF' == mb_strtoupper(mb_substr($this->encoding, 0, 3),'UTF-8')) {
             $encoding = "UTF-8";
-        } elseif ('ISO' == mb_strtoupper(mb_substr($this->encoding, 0, 3))) {
+        } elseif ('ISO' == mb_strtoupper(mb_substr($this->encoding, 0, 3),'UTF-8')) {
             $encoding = "ISO-8859-1";
         }
         return $encoding;
@@ -641,7 +641,7 @@ class MultiotpSms
             if (FALSE === $pos) {
                 $protocol = '';
             } else {
-                switch (mb_strtolower(substr($one_url,0,$pos))) {
+                switch (mb_strtolower(substr($one_url,0,$pos),'UTF-8')) {
                     case 'https':
                     case 'ssl':
                         $protocol = 'ssl://';
@@ -736,7 +736,7 @@ class MultiotpSms
                     $this->reply_status = "408";
                     $this->reply_content = "Timeout after $stream_timeout seconds for $protocol$host:$server_port with a result code of $errno ($errdesc)";
                 } else {
-                    $pos = mb_strpos(mb_strtolower($reply), "\r\n\r\n");
+                    $pos = mb_strpos(mb_strtolower($reply,'UTF-8'), "\r\n\r\n");
                     $header = substr($reply, 0, $pos);
                     $answer = substr($reply, $pos + 4);
                     $header_array = explode(" ", $header."   ");

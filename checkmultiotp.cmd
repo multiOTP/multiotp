@@ -8,13 +8,13 @@ REM http://www.multiotp.net
 REM 
 REM The Readme file contains additional information.
 REM
-REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
+REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.6.1.5
-REM @date      2019-10-23
+REM @version   5.8.1.0
+REM @date      2021-02-12
 REM @since     2010-07-10
-REM @copyright (c) 2010-2019 SysCo systemes de communication sa
+REM @copyright (c) 2010-2021 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -38,7 +38,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2019 SysCo systemes de communication sa
+REM   Copyright (c) 2010-2021 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -62,6 +62,8 @@ REM
 REM
 REM Change Log
 REM
+REM   2020-12-11 5.8.0.6 SysCo/al Do an automatic "Run as administrator" if needed
+REM                               Tests added for PostGreSQL backend (set the _check_pgsql_xxx parameters below)
 REM   2018-11-13 5.4.0.2 SysCo/al Calls to nircmd tool removed
 REM   2018-08-26 5.3.0.3 SysCo/al Tests adapted for user without 2FA token
 REM   2017-05-29 5.0.4.5 SysCo/al Tests adapted to the new services
@@ -97,18 +99,36 @@ REM These are the various ports used for the tests.
 REM They are different from the default production ports.
 
 IF "%_multiotp_ni%"=="1" GOTO NoWarning
-ECHO WARNING! Please run this script as an administrator, otherwise it could fail.
-PAUSE
+NET SESSION >NUL 2>&1
+IF NOT %ERRORLEVEL% == 0 (
+    ECHO WARNING! Please run this script as an administrator, otherwise it will fail.
+    ECHO Elevating privileges...
+    REM PING 127.0.0.1 > NUL 2>&1
+    CD /d %~dp0
+    MSHTA "javascript: var shell = new ActiveXObject('shell.application'); shell.ShellExecute('%~nx0', '', '', 'runas', 1);close();"
+    EXIT
+    REM PAUSE
+    REM EXIT /B 1
+)
 :NoWarning
+
+IF EXIST "%TEMP%\multiotp_error.log" DEL "%TEMP%\multiotp_error.log" /Q
 
 REM No web display of the webservice installation
 SET _no_web_display=1
 
-REM SQL server test parameters
+REM MySQL server test parameters
 IF "%_check_sql_server%"==""   SET _check_sql_server=
 IF "%_check_sql_username%"=="" SET _check_sql_username=
 IF "%_check_sql_password%"=="" SET _check_sql_password=
 IF "%_check_sql_database%"=="" SET _check_sql_database=
+
+REM PostGreSQL server test parameters
+IF "%_check_pgsql_server%"==""   SET _check_pgsql_server=
+IF "%_check_pgsql_username%"=="" SET _check_pgsql_username=
+IF "%_check_pgsql_password%"=="" SET _check_pgsql_password=
+IF "%_check_pgsql_database%"=="" SET _check_pgsql_database=
+IF "%_check_pgsql_schema%"==""   SET _check_pgsql_schema=
 
 REM Radius server test ports
 IF "%_check_r_auth_port%"=="" SET _check_r_auth_port=41812
@@ -150,6 +170,10 @@ REM Initializing the test counters
 SET SUCCESSES=0
 SET TOTAL_TESTS=0
 
+REM SET initial backend to files
+%_multiotp% -config backend-type=files
+
+
 ECHO multiotp functionalities and HOTP implementation check
 ECHO (RFC 4226, http://www.ietf.org/rfc/rfc4226.txt)
 ECHO ------------------------------------------------------
@@ -175,6 +199,7 @@ ECHO.
 ECHO Backend is set to %_backend%
 %_multiotp% -config backend-type=%_backend%
 IF "mysql"=="%_backend%" %_multiotp% -display-log -initialize-backend
+IF "pgsql"=="%_backend%" %_multiotp% -display-log -initialize-backend
 
 
 REM Delete the test_user (if existing)
@@ -188,12 +213,14 @@ ECHO Create user test_user with the RFC test values HOTP token and a big alpha P
 IF NOT ERRORLEVEL 12 ECHO - OK! User test_user successfully created
 IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user
+IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
 ECHO Authenticate test_user with the first token of the RFC test values, no prefix
 %_multiotp% -keep-local -log test_user 755224
 IF NOT ERRORLEVEL 1 ECHO - KO! Token of the user test_user successfully accepted without prefix
+IF NOT ERRORLEVEL 1 ECHO - KO! Token of the user test_user successfully accepted without prefix (%_backend%) >>"%TEMP%\multiotp_error.log"
 IF NOT ERRORLEVEL 1 GOTO ErrorNoPrefix
 IF ERRORLEVEL 1 ECHO - OK! Token of the user test_user successfully REJECTED (no prefix)
 IF ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
@@ -204,6 +231,7 @@ ECHO.
 ECHO Authenticate test_user with the first token of the RFC test values, bad prefix
 %_multiotp% -keep-local -log test_user "ThisIsNotMyLongPinCode755224"
 IF NOT ERRORLEVEL 1 ECHO - KO! Token of the user test_user successfully accepted with a bad prefix
+IF NOT ERRORLEVEL 1 ECHO - KO! Token of the user test_user successfully accepted with a bad prefix (%_backend%) >>"%TEMP%\multiotp_error.log"
 IF NOT ERRORLEVEL 1 GOTO ErrorFalsePrefix
 IF ERRORLEVEL 1 ECHO - OK! Token of the user test_user successfully REJECTED (bad prefix)
 IF ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
@@ -216,12 +244,14 @@ ECHO Authenticate test_user with the first token of the RFC test values, with pr
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user successfully accepted
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user with the first token
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user with the first token (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
 ECHO Test replay rejection for user test_user
 %_multiotp% -keep-local -log test_user "ThisIsALongNonDigitPinCode!755224"
 IF NOT ERRORLEVEL 1 ECHO - KO! Replayed token *WRONGLY* accepted
+IF NOT ERRORLEVEL 1 ECHO - KO! Replayed token *WRONGLY* accepted (%_backend%) >>"%TEMP%\multiotp_error.log"
 IF NOT ERRORLEVEL 1 GOTO ErrorReplay
 ECHO - OK! Token of the user test_user successfully REJECTED (replay)
 SET /A SUCCESSES=SUCCESSES+1
@@ -234,6 +264,7 @@ ECHO Resynchronize the key for user test_user (with prefix)
 IF NOT ERRORLEVEL 15 ECHO - OK! Token of the user test_user successfully resynchronized
 IF NOT ERRORLEVEL 15 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 15 ECHO - KO! Token of the user test_user NOT resynchronized
+IF ERRORLEVEL 15 ECHO - KO! Token of the user test_user NOT resynchronized (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
@@ -242,6 +273,7 @@ ECHO Resynchronize the key for user test_user (without prefix, even if needed)
 IF NOT ERRORLEVEL 15 ECHO - OK! Token of the user test_user successfully resynchronized
 IF NOT ERRORLEVEL 15 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 15 ECHO - KO! Token of the user test_user NOT resynchronized
+IF ERRORLEVEL 15 ECHO - KO! Token of the user test_user NOT resynchronized (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
@@ -250,12 +282,14 @@ ECHO Check the automatic cleaning of a user name with a @my.domain suffix
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the cleaned user test_user@my.domain.test successfully accepted
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the cleaned user test_user
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the cleaned user test_user (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
 ECHO Test false resynchronisation (in the past, may take some time)
 %_multiotp% -keep-local -log -resync -status test_user 287082 359152
 IF NOT ERRORLEVEL 20 ECHO - KO! Token of user test_user *WRONGLY* resynchronized
+IF NOT ERRORLEVEL 20 ECHO - KO! Token of user test_user *WRONGLY* resynchronized (%_backend%) >>"%TEMP%\multiotp_error.log"
 IF NOT ERRORLEVEL 20 GOTO ErrorSynchro
 IF ERRORLEVEL 20 ECHO - OK! Token of test_user successfully NOT resynchronized (in the past)
 IF ERRORLEVEL 20 SET /A SUCCESSES=SUCCESSES+1
@@ -269,6 +303,7 @@ REM user test_user and password "ThisIsALongNonDigitPinCode!162583"
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user successfully accepted using MS-CHAPv2
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user using MS-CHAPv2
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user using MS-CHAPv2 (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
@@ -276,6 +311,7 @@ ECHO Authenticate test_user with replayed token 162583 with prefix using MS-CHAP
 REM user test_user and password "ThisIsALongNonDigitPinCode!162583"
 %_multiotp% -keep-local -log test_user -ms-chap-challenge=0xc5356d83125a36b655c59a05b2245d68 -ms-chap2-response=0x00006cea45ad4f3e3a6af414cc09619aeb1e00000000000000004dd32ee9f3b898cf4fcd665ba167a303ce2c1266e7a26f10
 IF NOT ERRORLEVEL 1 ECHO - KO! Replayed token of the user test_user wrongly accepted
+IF NOT ERRORLEVEL 1 ECHO - KO! Replayed token of the user test_user wrongly accepted (%_backend%) >>"%TEMP%\multiotp_error.log"
 IF NOT ERRORLEVEL 1 GOTO ErrorReplayedMsChapV2
 IF ERRORLEVEL 1 ECHO - OK! Replayed Token of the test_user successfully REJECTED
 IF ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
@@ -290,6 +326,7 @@ REM user test_user and password 1234399871
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user successfully accepted using MS-CHAP
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user using MS-CHAP
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user using MS-CHAP (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
@@ -299,6 +336,7 @@ REM user test_user and password 1234520489
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user successfully accepted using CHAP
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user using CHAP
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user using CHAP (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 REM Delete the user test_user@one.domain (if existing)
@@ -312,6 +350,7 @@ ECHO Create user test_user@one.domain with the RFC test values HOTP token
 IF NOT ERRORLEVEL 12 ECHO - OK! User test_user@one.domain successfully created
 IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user@one.domain
+IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user@one.domain (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
@@ -320,6 +359,7 @@ ECHO Authenticate test_user@one.domain with the first token of the RFC test valu
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user@one.domain successfully accepted
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user@one.domain with the first token
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user@one.domain with the first token (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 REM Delete the test_user2 (if existing)
@@ -334,6 +374,7 @@ ECHO (like Authenex / ZyXEL / Billion is doing for their OTP solution)
 IF NOT ERRORLEVEL 12 ECHO - OK! User test_user2 successfully created
 IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user2
+IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user2 (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
@@ -342,6 +383,7 @@ ECHO Authenticate test_user2 with the first token of the RFC test value with big
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user2 (with prefix PIN) successfully accepted
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user2 with the first token and PIN prefix
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user2 with the first token and PIN prefix (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 
@@ -354,17 +396,18 @@ PING 127.0.0.1 -n 5 >NUL
 
 ECHO.
 ECHO Authenticate test_user2 with the second token through the RADIUS server
-ECHO User-Name = "test_user2">%TEMP%\radiustest.conf
-ECHO User-Password = "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space287082">>%TEMP%\radiustest.conf
-ECHO NAS-IP-Address = 127.0.0.1>>%TEMP%\radiustest.conf
-ECHO NAS-Port = %_check_r_auth_port%>>%TEMP%\radiustest.conf
+ECHO User-Name = "test_user2">"%TEMP%\radiustest.conf"
+ECHO User-Password = "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space287082">>"%TEMP%\radiustest.conf"
+ECHO NAS-IP-Address = 127.0.0.1>>"%TEMP%\radiustest.conf"
+ECHO NAS-Port = %_check_r_auth_port%>>"%TEMP%\radiustest.conf"
 
-%_radius_dir%bin\radclient.exe -c 1 -d %_radius_dir%etc\raddb -f %TEMP%\radiustest.conf -q -r 1 -t 5 127.0.0.1:%_check_r_auth_port% auth multiotpsecret
+%_radius_dir%bin\radclient.exe -c 1 -d %_radius_dir%etc\raddb -f "%TEMP%\radiustest.conf" -r 1 -t 5 127.0.0.1:%_check_r_auth_port% auth multiotpsecret
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user2 successfully accepted by RADIUS server
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user2 with by the RADIUS server
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user2 with by the RADIUS server (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
-DEL %TEMP%\radiustest.conf /Q
+DEL "%TEMP%\radiustest.conf" /Q
 
 ECHO.
 ECHO - Stop and uninstall the RADIUS server
@@ -375,31 +418,39 @@ CALL %_check_dir%radius_uninstall.cmd multiOTPradiusTest
 
 ECHO.
 ECHO - Install and start the multiOTP web service (wait 5 seconds)
+%_tools_dir%wget http://127.0.0.1:%_check_web_port% --quiet --output-document="%TEMP%\multiOTPwebservice.check" --timeout=300 --tries=2
+FIND /C "Web service is ready" "%TEMP%\multiOTPwebservice.check" >NUL
+IF NOT ERRORLEVEL 1 GOTO WebServiceAlreadyHere
 %_multiotp% -config server-secret=""
 CALL %_check_dir%webservice_install.cmd %_check_web_port% %_check_ssl_port% multiOTPserverTest multiOTPserverTest
 PING 127.0.0.1 -n 5 >NUL 
+:WebServiceAlreadyHere
 
 ECHO.
 ECHO Check the default multiOTP web service page
-%_tools_dir%wget http://127.0.0.1:%_check_web_port% --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=300 --tries=2
-FIND /C "Web service is ready" %TEMP%\multiOTPwebservice.check >NUL
+%_tools_dir%wget http://127.0.0.1:%_check_web_port% --quiet --output-document="%TEMP%\multiOTPwebservice.check" --timeout=300 --tries=2
+FIND /C "Web service is ready" "%TEMP%\multiOTPwebservice.check" >NUL
 IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on http://127.0.0.1:%_check_web_port%
-IF ERRORLEVEL 1 TYPE %TEMP%\multiOTPwebservice.check
+IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on http://127.0.0.1:%_check_web_port% (%_backend%) >>"%TEMP%\multiotp_error.log"
+IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check"
+IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check" (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
-DEL %TEMP%\multiOTPwebservice.check /Q
+DEL "%TEMP%\multiOTPwebservice.check" /Q
 
 ECHO.
 ECHO Check the https default multiOTP web service page
-%_tools_dir%wget https://127.0.0.1:%_check_ssl_port% --no-check-certificate --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=300 --tries=2
-FIND /C "Web service is ready" %TEMP%\multiOTPwebservice.check >NUL
+%_tools_dir%wget https://127.0.0.1:%_check_ssl_port% --no-check-certificate --quiet --output-document="%TEMP%\multiOTPwebservice.check" --timeout=300 --tries=2
+FIND /C "Web service is ready" "%TEMP%\multiOTPwebservice.check" >NUL
 IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on https://127.0.0.1:%_check_ssl_port%
-IF ERRORLEVEL 1 TYPE %TEMP%\multiOTPwebservice.check
+IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on https://127.0.0.1:%_check_ssl_port% (%_backend%) >>"%TEMP%\multiotp_error.log"
+IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check"
+IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check" (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
-DEL %TEMP%\multiOTPwebservice.check /Q
+DEL "%TEMP%\multiOTPwebservice.check" /Q
 
 ECHO.
 ECHO Authenticate test_user2 through web service using default secret
@@ -409,17 +460,19 @@ SET _server_challenge=XUZIW25kIz53KDB1BTAwF2U/V2x9FzB0Xjp1IDEiNmMgZjI/
 SET _chap_id=34
 SET _chap_challenge=4af06915f7cbdfd018f5c60047dc8a2f
 SET _chap_password=936660d3d0bef545c63e73fa7ee30bd1
-ECHO data=^<?xml version="1.0" encoding="UTF-8"?^>^<multiOTP version="4.0" xmlns="http://www.sysco.ch/namespaces/multiotp"^>^<ServerChallenge^>%_server_challenge%^</ServerChallenge^>^<CheckUserToken^>^<UserId^>test_user2^</UserId^>^<Chap^>^<ChapId^>%_chap_id%^</ChapId^>^<ChapChallenge^>%_chap_challenge%^</ChapChallenge^>^<ChapPassword^>%_chap_password%^</ChapPassword^>^</Chap^>^<CacheLevel^>1^</CacheLevel^>^</CheckUserToken^>^</multiOTP^> >%TEMP%\multiOTPwebservice.post
-TYPE %TEMP%\multiOTPwebservice.post
-%_tools_dir%wget --post-file %TEMP%\multiOTPwebservice.post http://127.0.0.1:%_check_web_port% --quiet --output-document=%TEMP%\multiOTPwebservice.check --timeout=300 --tries=2
-FIND /C "OK: Token accepted" %TEMP%\multiOTPwebservice.check >NUL
+ECHO data=^<?xml version="1.0" encoding="UTF-8"?^>^<multiOTP version="4.0" xmlns="http://www.sysco.ch/namespaces/multiotp"^>^<ServerChallenge^>%_server_challenge%^</ServerChallenge^>^<CheckUserToken^>^<UserId^>test_user2^</UserId^>^<Chap^>^<ChapId^>%_chap_id%^</ChapId^>^<ChapChallenge^>%_chap_challenge%^</ChapChallenge^>^<ChapPassword^>%_chap_password%^</ChapPassword^>^</Chap^>^<CacheLevel^>1^</CacheLevel^>^</CheckUserToken^>^</multiOTP^> >"%TEMP%\multiOTPwebservice.post"
+TYPE "%TEMP%\multiOTPwebservice.post"
+%_tools_dir%wget --post-file "%TEMP%\multiOTPwebservice.post" http://127.0.0.1:%_check_web_port% --quiet --output-document="%TEMP%\multiOTPwebservice.check" --timeout=300 --tries=2
+FIND /C "OK: Token accepted" "%TEMP%\multiOTPwebservice.check" >NUL
 IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on http://127.0.0.1:%_check_web_port%
-IF ERRORLEVEL 1 TYPE %TEMP%\multiOTPwebservice.check
+IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on http://127.0.0.1:%_check_web_port% (%_backend%) >>"%TEMP%\multiotp_error.log"
+IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check"
+IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check" (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
-DEL %TEMP%\multiOTPwebservice.post /Q
-DEL %TEMP%\multiOTPwebservice.check /Q
+DEL "%TEMP%\multiOTPwebservice.post" /Q
+DEL "%TEMP%\multiOTPwebservice.check" /Q
 SET _server_challenge=
 SET _chap_id=
 SET _chap_challenge=
@@ -434,6 +487,7 @@ ECHO %%a
 IF NOT ERRORLEVEL 20 ECHO - OK! Scratch list for test_user2 successfully created
 IF NOT ERRORLEVEL 20 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 20 ECHO - KO! Scratch list for test_user2 NOT successfully created
+IF ERRORLEVEL 20 ECHO - KO! Scratch list for test_user2 NOT successfully created (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
@@ -442,12 +496,14 @@ ECHO Test the last scratch password (%_password%) for test_user2 with prefix
 IF NOT ERRORLEVEL 1 ECHO - OK! Scratch password accepted for test_user2
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Scratch password NOT accepted for test_user2
+IF ERRORLEVEL 1 ECHO - KO! Scratch password NOT accepted for test_user2 (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
 ECHO Test again the last scratch password (%_password%) for test_user2 with prefix
 %_multiotp% -keep-local -log test_user2 1234%_password%
 IF NOT ERRORLEVEL 1 ECHO - KO! Scratch password IS WRONGLY accepted a second time for test_user2
+IF NOT ERRORLEVEL 1 ECHO - KO! Scratch password IS WRONGLY accepted a second time for test_user2 (%_backend%) >>"%TEMP%\multiotp_error.log"
 IF NOT ERRORLEVEL 1 GOTO ErrorScratch
 ECHO - OK! Scratch password is not accepted a second time for test_user2
 SET /A SUCCESSES=SUCCESSES+1
@@ -460,6 +516,7 @@ ECHO Create user test_user_no_2fa without 2FA token and without prefix
 IF NOT ERRORLEVEL 12 ECHO - OK! User test_user_no_2fa successfully created
 IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user_no_2fa
+IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user_no_2fa (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
@@ -468,12 +525,14 @@ ECHO Authenticate test_user_no_2fa without 2FA token and without prefix
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user_no_2fa successfully accepted
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user_no_2fa with the first token
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user_no_2fa with the first token (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
 ECHO Authenticate test_user_no_2fa without 2FA token and without prefix with a bad value
 %_multiotp% -keep-local -log test_user_no_2fa "badvalue"
 IF NOT ERRORLEVEL 1 ECHO - KO! Token of the user test_user test_user_no_2fa accepted with bad value
+IF NOT ERRORLEVEL 1 ECHO - KO! Token of the user test_user test_user_no_2fa accepted with bad value (%_backend%) >>"%TEMP%\multiotp_error.log"
 IF NOT ERRORLEVEL 1 GOTO ErrorBadValue2FA
 IF ERRORLEVEL 1 ECHO - OK! Token of the user test_user_no_2fa successfully REJECTED (bad value)
 IF ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
@@ -511,18 +570,41 @@ IF NOT ERRORLEVEL 13 ECHO - User test_user2 successfully deleted
 REM Show Log
 REM %_multiotp% -showlog
 
+
+IF "mysql"=="%_backend%" GOTO EndMySqlLoop
+IF "pgsql"=="%_backend%" GOTO EndPgSqlLoop
+
+
 REM Do all the tests a second time for the MySQL server backend if all parameters are there
-IF ""=="%_check_sql_server%" GOTO EndBackendLoop
-IF ""=="%_check_sql_username%" GOTO EndBackendLoop
-IF ""=="%_check_sql_password%" GOTO EndBackendLoop
-IF ""=="%_check_sql_database%" GOTO EndBackendLoop
-IF "mysql"=="%_backend%" GOTO EndBackendLoop
+:MySqlLoop
+IF ""=="%_check_sql_server%" GOTO EndMySqlLoop
+IF ""=="%_check_sql_username%" GOTO EndMySqlLoop
+IF ""=="%_check_sql_password%" GOTO EndMySqlLoop
+IF ""=="%_check_sql_database%" GOTO EndMySqlLoop
 SET _backend=mysql
+ECHO.
+ECHO Set the backend parameters for %_backend%
+%_multiotp% -config backend-type=files
 %_multiotp% -config sql-server=%_check_sql_server% sql-username=%_check_sql_username% sql-password=%_check_sql_password% sql-database=%_check_sql_database%
 GOTO BackendLoop
+:EndMySqlLoop
 
 
-:EndBackendLoop
+REM Do all the tests a third time for the PostgreSQL server backend if all parameters are there
+:PgSqlLoop
+IF ""=="%_check_pgsql_server%" GOTO EndPgSqlLoop
+IF ""=="%_check_pgsql_username%" GOTO EndPgSqlLoop
+IF ""=="%_check_pgsql_password%" GOTO EndPgSqlLoop
+IF ""=="%_check_pgsql_database%" GOTO EndPgSqlLoop
+IF ""=="%_check_pgsql_schema%" GOTO EndPgSqlLoop
+SET _backend=pgsql
+ECHO.
+ECHO Set the backend parameters for %_backend%
+%_multiotp% -config backend-type=files
+%_multiotp% -config sql-server=%_check_pgsql_server% sql-username=%_check_pgsql_username% sql-password=%_check_pgsql_password% sql-database=%_check_pgsql_database% sql-schema=%_check_pgsql_schema%
+GOTO BackendLoop
+:EndPgSqlLoop
+
 
 SET _backend=files
 %_multiotp% -config backend-type=%_backend%
@@ -542,9 +624,9 @@ ECHO.
 
 ECHO.
 ECHO Check the PHP multiOTP class using the %_multiotp_class_check% file.
-%_tools_dir%wget http://127.0.0.1:%_check_web_port%/check/?minima=1^&keeplog=1 --quiet --output-document=%TEMP%\check.multiOTP.class.check --timeout=300 --tries=2
-FIND /C "KO!" %TEMP%\check.multiOTP.class.check >NUL
-TYPE %TEMP%\check.multiOTP.class.check
+%_tools_dir%wget http://127.0.0.1:%_check_web_port%/check/?minima=1^&keeplog=1 --quiet --output-document="%TEMP%\check.multiOTP.class.check" --timeout=300 --tries=2
+FIND /C "KO!" "%TEMP%\check.multiOTP.class.check" >NUL
+TYPE "%TEMP%\check.multiOTP.class.check"
 IF ERRORLEVEL 1 GOTO CheckClassError
 
 :CheckClassOk
@@ -554,13 +636,14 @@ GOTO CheckClassEnd
 
 :CheckClassError
 ECHO - KO! multiOTP class tests failed (http://127.0.0.1:%_check_web_port%/check/?minima=1)
+ECHO - KO! multiOTP class tests failed (http://127.0.0.1:%_check_web_port%/check/?minima=1) (%_backend%) >>"%TEMP%\multiotp_error.log"
 CHOICE /T 5 /C ny /D n /M "Type [y] in the next 5 seconds to pause the process"
 ECHO.
 IF ERRORLEVEL 2 PAUSE
 ECHO.
 
 :CheckClassEnd
-DEL %TEMP%\check.multiOTP.class.check /Q
+DEL "%TEMP%\check.multiOTP.class.check" /Q
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
@@ -574,6 +657,7 @@ ECHO.
 IF "%_multiotp_ni%"=="1" GOTO NoResultSummary
 IF %SUCCESSES% EQU %TOTAL_TESTS% ECHO OK! ALL %SUCCESSES% TESTS HAVE PASSED SUCCESSFULLY !
 IF %SUCCESSES% NEQ %TOTAL_TESTS% ECHO KO! ONLY %SUCCESSES%/%TOTAL_TESTS% TESTS HAVE PASSED SUCCESSFULLY !
+IF %SUCCESSES% NEQ %TOTAL_TESTS% TYPE "%TEMP%\multiotp_error.log"
 :NoResultSummary
 
 ECHO.

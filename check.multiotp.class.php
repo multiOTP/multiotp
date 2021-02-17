@@ -22,17 +22,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.6.1.5
- * @date      2019-10-23
+ * @version   5.8.1.0
+ * @date      2021-02-12
  * @since     2013-07-10
- * @copyright (c) 2013-2019 SysCo systemes de communication sa
+ * @copyright (c) 2013-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2013-2019 SysCo systemes de communication sa
+ *   Copyright (c) 2013-2021 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch/)
  *   All rights reserved.
@@ -71,6 +71,7 @@
  *
  * Change Log
  *
+ *   2020-08-31 5.8.0.0 SysCo/al By default, clean log before test
  *   2019-10-23 5.6.1.4 SysCo/al Additional tests included
  *   2017-06-02 5.0.4.6 SysCo/al Enhanced tests display
  *   2017-05-29 5.0.4.5 SysCo/al Additional PostgreSQL backend included
@@ -121,16 +122,16 @@ set_time_limit(3600);
 
 $first_time = time();
 
-if (!isset($GLOBALS['minima'])) {
-    $GLOBALS['minima'] = isset($_GET['minima']);
+if ((!isset($GLOBALS['minima'])) && isset($_GET['minima'])) {
+    $GLOBALS['minima'] = $_GET['minima'];
 }
 
-if (!isset($GLOBALS['keeplog'])) {
-    $GLOBALS['keeplog'] = isset($_GET['keeplog']);
+if ((!isset($GLOBALS['keeplog'])) && isset($_GET['keeplog'])) {
+    $GLOBALS['keeplog'] = $_GET['keeplog'];
 }
 
-if (!isset($GLOBALS['noresume'])) {
-    $GLOBALS['noresume'] = isset($_GET['noresume']);
+if ((!isset($GLOBALS['noresume'])) && isset($_GET['noresume'])) {
+    $GLOBALS['noresume'] = $_GET['noresume'];
 }
 
 if (!function_exists('echo_full')) {
@@ -374,12 +375,12 @@ foreach ($backend_array as $backend) {
 
     if (!isset($GLOBALS['keeplog'])) {
         //====================================================================
-        // TEST: Clear the log
+        // TEST: Clear the log (keep last 2 days)
         $tests++;
         echo_full($b_on."Clear the log".$b_off.$crlf);
-        if ($multiotp->ClearLog())
+        if ($multiotp->ClearLog(2))
         {
-            echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfully cleared".$crlf);
+            echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfully cleared (keep the last 2 days)".$crlf);
             $successes++;
         }
         else
@@ -1157,7 +1158,8 @@ foreach ($backend_array as $backend) {
     // TEST: Creating a QRcode provisioning file for the HOTP RFC test token
     $tests++;
     echo_full($b_on."Creating a QRcode provisioning file for the HOTP RFC test token".$b_off.$crlf);
-    $size_result = $multiotp->qrcode('otpauth://hotp/multiOTP hotp test?counter=0&digits=6&secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')).'&issuer=multiOTP test', $multiotp->GetLogFolder().'qrHOTP.png');
+    $size_result = $multiotp->qrcode('otpauth://hotp/multiOTP%20test:multiOTP%20hotp%20test?counter=0&digits=6&secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')), $multiotp->GetLogFolder().'qrHOTP.png');
+    
     if (0 < $size_result)
     {
         echo_full("- ".$ok_on.'OK!'.$ok_off." HOTP QRcode successfully created".$crlf);
@@ -1174,7 +1176,7 @@ foreach ($backend_array as $backend) {
     // TEST: Creating a QRcode provisioning file for the TOTP RFC test token
     $tests++;
     echo_full($b_on."Creating a QRcode provisioning file for the TOTP RFC test token".$b_off.$crlf);
-    $size_result = $multiotp->qrcode('otpauth://totp/multiOTP totp test?period=30&digits=6&secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')).'&issuer=multiOTP test', $multiotp->GetLogFolder().'qrTOTP.png');
+    $size_result = $multiotp->qrcode('otpauth://totp/multiOTP%20test:multiOTP%20totp%20test?period=30&digits=6&secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')), $multiotp->GetLogFolder().'qrTOTP.png');
     if (0 < $size_result)
     {
         echo_full("- ".$ok_on.'OK!'.$ok_off." TOTP QRcode successfully created".$crlf);
@@ -1196,7 +1198,7 @@ foreach ($backend_array as $backend) {
         echo_full($crlf);
 
         echo_full("Displaying inline image for TOTP QRCode Google Auhtenticator token".$crlf);
-        $binary_result = $multiotp->qrcode('otpauth://totp/multiOTP totp test?secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')).'&digits=6&period=30&issuer=multiOTP test', "binary");
+        $binary_result = $multiotp->qrcode('otpauth://totp/multiOTP%20test:multiOTP%20totp%20test?secret='.base32_encode(hex2bin('3132333435363738393031323334353637383930')).'&digits=6&period=30', "binary");
         
         echo_full("<img src=\"data:image/png;base64,".base64_encode($binary_result)."\" alt=\"multiOTP TOTP test token\">".$crlf);
         echo_full($crlf);

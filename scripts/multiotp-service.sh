@@ -16,8 +16,8 @@
 # Please check http://www.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.6.1.5
-# @date      2019-10-23
+# @version   5.8.1.0
+# @date      2021-02-12
 # @since     2013-11-29
 # @copyright (c) 2013-2019 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
@@ -26,9 +26,19 @@
 
 
 # Hardware detection
+
+is_running_in_container() {
+  awk -F: '$3 ~ /^\/$/{ c=1 } END { exit c }' /proc/self/cgroup
+}
+
 FAMILY=""
 UNAME=$(uname -a)
-if [[ "${UNAME}" == *armv8* ]]; then
+MODEL=$(cat /proc/cpuinfo | grep "Model" | awk -F': ' '{print $2}')
+if [[ "${MODEL}" == *"Raspberry Pi 4 Model B"* ]]; then
+    # Raspberry Pi 4
+    FAMILY="RPI"
+    TYPE="RP4"
+elif [[ "${UNAME}" == *armv8* ]]; then
     HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
     if [[ "${HARDWARE}" == *BCM27* ]]; then
         # Raspberry Pi 3 B
@@ -47,7 +57,11 @@ elif [[ "${UNAME}" == *armv7l* ]]; then
     HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
     if [[ "${HARDWARE}" == *BCM27* ]]; then
         LSCPU=$(/usr/bin/lscpu | grep "CPU max MHz" | awk -F': ' '{print $2}')
-        if [[ "${LSCPU}" == *1200* ]]; then
+        if [[ "${LSCPU}" == *1500* ]]; then
+            # Raspberry Pi 4
+            FAMILY="RPI"
+            TYPE="RP4"
+        elif [[ "${LSCPU}" == *1200* ]]; then
             # Raspberry Pi 3
             FAMILY="RPI"
             TYPE="RP3"
@@ -75,6 +89,12 @@ elif [[ "${UNAME}" == *armv6l* ]]; then
     TYPE="RPI"
 elif [[ "${UNAME}" == *docker* ]]; then
     # Docker
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif is_running_in_container; then
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif [ -f /.dockerenv ]; then
     FAMILY="VAP"
     TYPE="DOCKER"
 else

@@ -15,17 +15,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.6.1.5
- * @date      2019-10-23
+ * @version   5.8.1.0
+ * @date      2021-02-12
  * @since     2010-06-08
- * @copyright (c) 2010-2019 SysCo systemes de communication sa
+ * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2014-2019 SysCo systemes de communication sa
+ *   Copyright (c) 2014-2021 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -87,7 +87,7 @@ if (!function_exists('clean_quotes')) {
     $cleaned = false;
     $var = $value;
     if ((('"' == substr($var,0,1)) || ("'" == substr($var,0,1))) && (('"' == substr($var,-1)) || ("'" == substr($var,-1)))) {
-      $var = substr($var, 1, strlen($var)-2);
+      $var = substr($var, 1, mb_strlen($var)-2);
       $cleaned = true;
     }
     if ($cleaned) {
@@ -126,7 +126,7 @@ $pos = mb_strpos($post_url, '://');
 if (FALSE === $pos) {
   $protocol = '';
 } else {
-  switch (mb_strtolower(substr($post_url,0,$pos))) {
+  switch (mb_strtolower(substr($post_url,0,$pos),'UTF-8')) {
     case 'https':
     case 'ssl':
         $protocol = 'ssl://';
@@ -165,7 +165,7 @@ if (FALSE !== $fp) {
   $info['timed_out'] = FALSE;
   fputs($fp, "POST ".$url." HTTP/1.0\r\n");
   fputs($fp, "Content-Type: application/x-www-form-urlencoded\r\n");
-  fputs($fp, "Content-Length: ".strlen($content_to_post)."\r\n");
+  fputs($fp, "Content-Length: ".mb_strlen($content_to_post)."\r\n");
   fputs($fp, "User-Agent: multiOTP proxy\r\n");
   fputs($fp, "Host: ".$host."\r\n");
   fputs($fp, "\r\n");
@@ -178,8 +178,8 @@ if (FALSE !== $fp) {
 
   $reply = '';
   $last_length = 0;
-  while ((!feof($fp)) && ((!$info['timed_out']) || ($last_length != strlen($reply)))) {
-    $last_length = strlen($reply);
+  while ((!feof($fp)) && ((!$info['timed_out']) || ($last_length != mb_strlen($reply)))) {
+    $last_length = mb_strlen($reply);
     $reply.= fgets($fp, 1024);
     $info = stream_get_meta_data($fp);
     @ob_flush(); // Avoid notice if any (if the buffer is empty and therefore cannot be flushed)
@@ -191,7 +191,7 @@ if (FALSE !== $fp) {
     // error_log("Warning: timeout after $timeout seconds for $protocol$host:$port$url with a result code of $errno ($errdesc)");
   } else {
     // error_log("CLI ok");
-    $pos = mb_strpos(mb_strtolower($reply), "\r\n\r\n");
+    $pos = mb_strpos(mb_strtolower($reply,'UTF-8'), "\r\n\r\n");
     $header = substr($reply, 0, $pos);
     
     $header_array = explode("\r\n", $header);
