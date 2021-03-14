@@ -72,8 +72,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.0
- * @date      2021-02-12
+ * @version   5.8.1.1
+ * @date      2021-03-14
  * @since     2010-06-08
  * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -513,6 +513,7 @@
  *
  * Change Log
  *
+ *   2021-03-14 5.8.1.1 SysCo/al FIX: In some cases, the HOTP/TOTP was not well computed
  *   2021-02-12 5.8.1.0 SysCo/al ENH: Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
  *   2020-12-11 5.8.0.7 SysCo/al ENH: -sync-delete-retention-days= option is set by default to 30 days
  *   2020-12-11 5.8.0.6 SysCo/al ENH: VM version 010 support  (Debian Buster 10.5, PHP 7.3, FreeRADIUS 3.0.17)
@@ -873,8 +874,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.0
- * @date      2021-02-12
+ * @version   5.8.1.1
+ * @date      2021-03-14
  * @since     2010-07-18
  */
 {
@@ -968,8 +969,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.8.1.0
-   * @date      2021-02-12
+   * @version   5.8.1.1
+   * @date      2021-03-14
    * @since     2010-07-18
    */
   function __construct(
@@ -993,11 +994,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.8.1.0'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.8.1.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2021-02-12'; // You should update the date with the date of your changes
+        $temp_date = '@date      2021-03-14'; // You should update the date with the date of your changes
         $this->_date = trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMSBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -8090,7 +8091,7 @@ class Multiotp
       $timestep,
       $token_size
   ) {
-      return mb_strtolower(mb_substr(md5($timestep.$seed_and_pin),0,$token_size),'UTF-8');
+      return strtolower(substr(md5($timestep.$seed_and_pin),0,$token_size));
   }
 
 
@@ -8127,7 +8128,7 @@ class Multiotp
    * Short description: Compute the OATH defined hash
    *
    * Creation 2010-06-07
-   * Update 2010-07-19
+   * Update 2021-03-14
    * @package multiotp
    * @version 3.0.0
    * @author SysCo/al
@@ -8152,25 +8153,25 @@ class Multiotp
       }
       $bin_counter = implode($cur_counter);
       // Pad to 8 chars
-      if (mb_strlen ($bin_counter) < 8)
+      if (strlen ($bin_counter) < 8)
       {
-          $bin_counter = str_repeat(chr(0), 8 - mb_strlen($bin_counter)) . $bin_counter;
+          $bin_counter = str_repeat(chr(0), 8 - strlen($bin_counter)) . $bin_counter;
       }
 
       // HMAC hash
-      if ('HMAC-SHA512' == mb_strtoupper($hash_algo,'UTF-8'))
+      if ('HMAC-SHA512' == strtoupper($hash_algo))
       {
           $hash = hash_hmac('sha512', $bin_counter, $key);
       }
-      elseif ('HMAC-SHA256' == mb_strtoupper($hash_algo,'UTF-8'))
+      elseif ('HMAC-SHA256' == strtoupper($hash_algo))
       {
           $hash = hash_hmac('sha256', $bin_counter, $key);
       }
-      elseif ('HMAC-MD5' == mb_strtoupper($hash_algo,'UTF-8'))
+      elseif ('HMAC-MD5' == strtoupper($hash_algo))
       {
           $hash = hash_hmac('md5', $bin_counter, $key);
       }
-      else // if ('HMAC-SHA1' == mb_strtoupper($hash_algo,'UTF-8'))
+      else // if ('HMAC-SHA1' == strtoupper($hash_algo))
       {
           $hash = hash_hmac('sha1', $bin_counter, $key);
       }

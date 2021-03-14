@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2021 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.8.1.0 (2021-02-12)
+Current build: 5.8.1.1 (2021-03-14)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -311,6 +311,7 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-03-14 5.8.1.1 FIX: In some cases, the HOTP/TOTP was not well computed
 2021-02-12 5.8.1.0 ENH: Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
 2020-12-11 5.8.0.7 ENH: -sync-delete-retention-days= option is set by default to 30 days
 2020-12-11 5.8.0.6 ENH: VM version 010 support  (Debian Buster 10.5, PHP 7.3, FreeRADIUS 3.0.17)
@@ -1678,7 +1679,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.8.1.0 (2021-02-12)
+multiOTP 5.8.1.1 (2021-03-14)
 (c) 2010-2021 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -2178,8 +2179,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.8.1.0.zip 
-SHA256:5dae5af747d3cbe277f8de82eb24d2a1b506ea8959d755558cc515a5a1b1adfc 
-SHA1:668efe435de0a205f27f387a75b28a6859a291e6 
-MD5:67f045efa7bab63f09afd0d71e69037d 
+Hash verification for multiotp_5.8.1.1.zip 
+SHA256:9cd03e212323964cd8c9fc2a132a01792d9cc5186c02125d0f06aef957801711 
+SHA1:f45b31f5cd7fe596ff7ff8090316b1fbbd611016 
+MD5:5d0b90c902edc5f21df5e528001835b3 
 ``` 
