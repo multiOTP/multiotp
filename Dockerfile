@@ -15,8 +15,8 @@
 # Please check http://www.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.1.1
-# @date      2021-03-14
+# @version   5.8.1.2 (apt-offline removed)
+# @date      2021-03-24
 # @since     2013-11-29
 # @copyright (c) 2013-2018 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
@@ -55,7 +55,6 @@ RUN echo slapd slapd/internal/adminpw password rtzewrpiZRT753 | debconf-set-sele
 RUN apt-get update && \
     apt-get install -y \
     apache2-utils \
-    apt-offline \
     apt-utils \
     build-essential \
     bzip2 \
