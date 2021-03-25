@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.1
- * @date      2021-03-14
+ * @version   5.8.1.9
+ * @date      2021-03-25
  * @since     2010-06-08
  * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -808,6 +808,8 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "check-ldap-password";
     } elseif ("-checkpam" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "checkpam";
+    } elseif ("-clearlog" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "clearlog";
     } elseif ("-config" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "config";
     } elseif ("-create" == mb_strtolower($current_arg,'UTF-8')) {
@@ -899,8 +901,6 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "seed";
     } elseif ("-set" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "set";
-    } elseif ("-showlog" == mb_strtolower($current_arg,'UTF-8')) {
-        $command = "showlog";
     } elseif ("-showlog" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "showlog";
     } elseif ("-unlock" == mb_strtolower($current_arg,'UTF-8')) {
@@ -1087,6 +1087,7 @@ if (($param_count < 1) &&
     ($command != "backup-config") &&
     ($command != "call-method") &&
     ($command != "checkpam") &&
+    ($command != "clearlog") &&
     ($command != "custominfo") &&
     ($command != "network-info") &&
     ($command != "help") &&
@@ -2370,6 +2371,10 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             $multiotp->ShowLog();
             $result = 19;
             break;
+        case "clearlog":
+            $multiotp->ClearLog();
+            $result = 19;
+            break;
         case "ldap-check":
             $result = (($multiotp->CheckLdapAuthentication()) ? 19 : 99);
             break;
@@ -2759,7 +2764,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "Other information commands:".$crlf;
                 echo $crlf;
                 echo " multiotp -phpinfo         : print the current PHP version".$crlf;
-                echo " multiotp -showlog         : print the log file".$crlf;
+                echo " multiotp -showlog         : print the log entries".$crlf;
+                echo " multiotp -clearlog        : clear the log entries".$crlf;
                 echo " multiotp -tokenslist      : print the list of the tokens".$crlf;
                 echo " multiotp -userslist       : print the list of the users".$crlf;
                 echo " multiotp -lockeduserslist : print the list of the locked users".$crlf;

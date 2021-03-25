@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.8.1.1
-REM @date      2021-03-14
+REM @version   5.8.1.9
+REM @date      2021-03-25
 REM @since     2010-07-10
 REM @copyright (c) 2010-2021 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -250,9 +250,9 @@ SET /A TOTAL_TESTS=TOTAL_TESTS+1
 ECHO.
 ECHO Test replay rejection for user test_user
 %_multiotp% -keep-local -log test_user "ThisIsALongNonDigitPinCode!755224"
-IF NOT ERRORLEVEL 1 ECHO - KO! Replayed token *WRONGLY* accepted
-IF NOT ERRORLEVEL 1 ECHO - KO! Replayed token *WRONGLY* accepted (%_backend%) >>"%TEMP%\multiotp_error.log"
-IF NOT ERRORLEVEL 1 GOTO ErrorReplay
+IF NOT ERRORLEVEL 26 ECHO - KO! Replayed token *WRONGLY* accepted
+IF NOT ERRORLEVEL 26 ECHO - KO! Replayed token *WRONGLY* accepted (%_backend%) >>"%TEMP%\multiotp_error.log"
+IF NOT ERRORLEVEL 26 GOTO ErrorReplay
 ECHO - OK! Token of the user test_user successfully REJECTED (replay)
 SET /A SUCCESSES=SUCCESSES+1
 :ErrorReplay
@@ -310,11 +310,11 @@ ECHO.
 ECHO Authenticate test_user with replayed token 162583 with prefix using MS-CHAPv2
 REM user test_user and password "ThisIsALongNonDigitPinCode!162583"
 %_multiotp% -keep-local -log test_user -ms-chap-challenge=0xc5356d83125a36b655c59a05b2245d68 -ms-chap2-response=0x00006cea45ad4f3e3a6af414cc09619aeb1e00000000000000004dd32ee9f3b898cf4fcd665ba167a303ce2c1266e7a26f10
-IF NOT ERRORLEVEL 1 ECHO - KO! Replayed token of the user test_user wrongly accepted
-IF NOT ERRORLEVEL 1 ECHO - KO! Replayed token of the user test_user wrongly accepted (%_backend%) >>"%TEMP%\multiotp_error.log"
-IF NOT ERRORLEVEL 1 GOTO ErrorReplayedMsChapV2
-IF ERRORLEVEL 1 ECHO - OK! Replayed Token of the test_user successfully REJECTED
-IF ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
+IF NOT ERRORLEVEL 26 ECHO - KO! Replayed token of the user test_user wrongly accepted
+IF NOT ERRORLEVEL 26 ECHO - KO! Replayed token of the user test_user wrongly accepted (%_backend%) >>"%TEMP%\multiotp_error.log"
+IF NOT ERRORLEVEL 26 GOTO ErrorReplayedMsChapV2
+IF ERRORLEVEL 26 ECHO - OK! Replayed Token of the test_user successfully REJECTED
+IF ERRORLEVEL 26 SET /A SUCCESSES=SUCCESSES+1
 :ErrorReplayedMsChapV2
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 

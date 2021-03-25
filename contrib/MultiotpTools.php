@@ -71,6 +71,26 @@ function pcre_fnmatch($pattern, $string, $flags = 0) {
 
 
 /***********************************************************************
+ * Name: bytes_nice_format
+ * Short description: nice format for a size in bytes
+ *
+ * Creation 2021-03-14
+ * Update   2021-03-14
+ * @version 1.0.0
+ * @author  Adapted from https://www.php.net/manual/en/function.disk-free-space.php#103382
+ *
+ * @param   int     $bytes   size in bytes
+ * @return  string           nice size in a string
+ ***********************************************************************/
+function bytes_nice_format($bytes) {
+    $size_prefix = array( 'B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB' );
+    $base = 1024;
+    $class = min((int)log($bytes , $base) , count($size_prefix) - 1);
+    return sprintf('%1.2f' , $bytes / pow($base,$class)) . ' ' . $size_prefix[$class];
+}
+
+
+/***********************************************************************
  * Name: bcmod
  * Short description: description: Patch for bcmod
  *
@@ -845,12 +865,17 @@ if (!function_exists('rmrf')) {
 }
 
 
-/**
- * Based on http://snipplr.com/view/57982/convert-html-to-text/
- *   by kendsnyder (2011-08-18)
+/***********************************************************************
+ * Name: html2text
+ * Short description: Convert html to text
+ *   Based on http://snipplr.com/view/57982/convert-html-to-text/
  *
- * Enhanced by SysCo/al
- */
+ * Creation 2011-08-18 kendsnyder
+ * Update   2021-03-23
+ * @version 2.0.0
+ * @author  SysCo/al
+ ***********************************************************************/
+
 if (!function_exists('html2text'))
 {
     function html2text($value)
@@ -878,8 +903,7 @@ if (!function_exists('html2text'))
                         '@&(cent|#162);@i',               //   Cent
                         '@&(pound|#163);@i',              //   Pound
                         '@&(copy|#169);@i',               //   Copyright
-                        '@&(reg|#174);@i',                //   Registered
-                        '@&#(d+);@e');                    // Evaluate as php
+                        '@&(reg|#174);@i');               //   Registered
         $Replace = array ('',  // Strip out javascript
                           '',  // Strip out style
                           '',  // Strip out title
@@ -895,9 +919,11 @@ if (!function_exists('html2text'))
                           chr(162), // Cent
                           chr(163), // Pound
                           chr(169), // Copyright
-                          chr(174), // Registered
-                          'chr()'); // Evaluate as php
+                          chr(174)); // Registered
         $Document = preg_replace($Rules, $Replace, $Document);
+        
+        $Document = preg_replace_callback('@&#(d+);@i', function ($match) { return (((intval($match) >= 1) && (intval($match) <= 255)) ? chr(intval($match)) : ''); }, $Document);
+
         $Document = preg_replace('@[\r\n]@', '', $Document);
         $Document = str_replace('*CRLF*',chr(13).chr(10),$Document);
         $Document = preg_replace('@[\r\n][ ]+@', chr(13).chr(10), $Document);

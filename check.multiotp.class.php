@@ -22,8 +22,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.1
- * @date      2021-03-14
+ * @version   5.8.1.9
+ * @date      2021-03-25
  * @since     2013-07-10
  * @copyright (c) 2013-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -133,6 +133,8 @@ if ((!isset($GLOBALS['keeplog'])) && isset($_GET['keeplog'])) {
 if ((!isset($GLOBALS['noresume'])) && isset($_GET['noresume'])) {
     $GLOBALS['noresume'] = $_GET['noresume'];
 }
+
+$test_mail = isset($GLOBALS['test_mail'])?$GLOBALS['test_mail']:'';
 
 if (!function_exists('echo_full')) {
     function echo_full($to_display) {
@@ -498,7 +500,7 @@ foreach ($backend_array as $backend) {
     echo_full($crlf);
 
 
-   //====================================================================
+    //====================================================================
     // Delete the user test_user if it exists
     echo_full($i_on);
     echo_full("Deleting the test_user".$crlf);
@@ -514,7 +516,7 @@ foreach ($backend_array as $backend) {
     echo_full($crlf);
 
 
-   //====================================================================
+    //====================================================================
     // Delete the user test_user twice if it exists
     echo_full($i_on);
     echo_full("Deleting the test_user (twice)".$crlf);
@@ -530,7 +532,7 @@ foreach ($backend_array as $backend) {
     echo_full($crlf);
 
 
-   //====================================================================
+    //====================================================================
     // Delete the user test_totp if it exists
     echo_full($i_on);
     echo_full("Deleting the test_totp".$crlf);
@@ -546,7 +548,7 @@ foreach ($backend_array as $backend) {
     echo_full($crlf);
 
 
-   //====================================================================
+    //====================================================================
     //====================================================================
     // Delete the token test_token if it exists
     echo_full($i_on);
@@ -563,7 +565,7 @@ foreach ($backend_array as $backend) {
     echo_full($crlf);
 
 
-   //====================================================================
+    //====================================================================
     //====================================================================
     // Delete the token test_token_totp if it exists
     echo_full($i_on);
@@ -771,6 +773,26 @@ foreach ($backend_array as $backend) {
         echo_full("- ".$ko_on.'KO!'.$ko_off." User information not returned".$crlf);
     }
     echo_full($crlf);
+
+
+    //================================================
+    // TEST: Generate Email token for the current user
+    if ('' != $test_mail) {
+        $tests++;
+        echo_full($b_on."Generate Email token for user test_user".$b_off.$crlf);
+        $multiotp->SetUser('test_user');
+        $multiotp->SetEmailCodeAllowed(1);
+        $multiotp->SetUserEmail($test_mail);
+        $multiotp->WriteUserData();
+        $token_result = $multiotp->GenerateEmailToken();
+        if (18 == $token_result) {
+            echo_full("- ".$ok_on.'OK!'.$ok_off." Email token successfully generated".$crlf);
+            $successes++;
+        } else {
+            echo_full("- ".$ko_on.'KO!'.$ko_off." Email token generation failed, error $token_result.".$crlf);
+        }
+        echo_full($crlf);
+    }
 
 
     //====================================================================

@@ -15,15 +15,16 @@
 # Please check http://www.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.1.2 (apt-offline removed)
-# @date      2021-03-24
+# @version   5.8.1.9
+# @date      2021-03-25
 # @since     2013-11-29
-# @copyright (c) 2013-2018 by SysCo systemes de communication sa
+# @copyright (c) 2013-2021 SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
 # docker build .
 # docker run --mount source=multiotp-data,target=/etc/multiotp -p 80:80 -p 443:443 -p 1812:1812/udp -p 1813:1813/udp -d xxxxxxxxxxxx
 #
+# 2021-03-25 5.8.1.9 SysCo/al Remove apt-offline, which is not used
 # 2020-08-31 5.8.0.0 SysCo/al Debian Buster 10.5 support
 # 2019-10-22 5.6.1.3 SysCo/al Debian 10 support
 # 2019-01-07 5.4.1.1 SysCo/al Debian 9 support
@@ -40,7 +41,7 @@ MAINTAINER Andre Liechti <andre.liechti@multiotp.net>
 LABEL Description="multiOTP open source, running on Debian ${DEBIAN} with PHP${PHPVERSION}." \
       License="LGPL-3.0" \
       Usage="docker run --mount source=[SOURCE PERSISTENT VOLUME],target=/etc/multiotp -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d multiotp-open-source" \
-      Version="5.8.1.1"
+      Version="5.8.1.9"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -101,7 +102,7 @@ COPY raspberry/boot-part/multiotp-tree /boot/multiotp-tree/
 # (if you want to build an image with the latest
 #  available version instead of the local one)
 #
-# RUN wget -q http://download.multiotp.net/multiotp.zip -O /tmp/multiotp.zip && \
+# RUN wget -q https://download.multiotp.net/multiotp.zip -O /tmp/multiotp.zip && \
 #     unzip -q -o /tmp/multiotp.zip -d /tmp/multiotp
 # 
 # RUN mv /tmp/multiotp/raspberry/boot-part/* /boot && \

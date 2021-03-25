@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2021 SysCo systemes de communication sa  
 http://www.multiOTP.net/
 
-Current build: 5.8.1.1 (2021-03-14)
+Current build: 5.8.1.9 (2021-03-25)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -311,6 +311,15 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-03-25 5.8.1.9 FIX: Cookie privacy (httponly and secure) backported to previous virtual appliances
+                   ENH: Cookie privacy (httponly and secure) are now handled in the application directly
+                   ENH: Weak SSL ciphers disabled
+                   ENH: Better Docker support
+                   ENH: Better log handling
+2021-03-21 5.8.1.2 ENH: Test (1 == GetUserPrefixPin()) replaced by IsUserPrefixPin()
+2021-03-14 5.8.1.1 FIX: In some cases, the HOTP/TOTP was not well computed
+2021-03-21 5.8.1.2 FIX: Dockerfile corrected, apt-offline removed
+                   ENH: Enhanced log file handling
 2021-03-14 5.8.1.1 FIX: In some cases, the HOTP/TOTP was not well computed
 2021-02-12 5.8.1.0 ENH: Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
 2020-12-11 5.8.0.7 ENH: -sync-delete-retention-days= option is set by default to 30 days
@@ -1679,7 +1688,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.8.1.1 (2021-03-14)
+multiOTP 5.8.1.9 (2021-03-25)
 (c) 2010-2021 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1724,7 +1733,7 @@ Return codes:
 15 INFO: Tokens definition file successfully imported 
 16 INFO: QRcode successfully created 
 17 INFO: UrlLink successfully created 
-18 INFO: SMS code request received 
+18 INFO: Static code request received 
 19 INFO: Requested operation successfully done 
 20 ERROR: User blacklisted 
 21 ERROR: User doesn't exist 
@@ -1759,10 +1768,15 @@ Return codes:
 62 ERROR: SMS provider not supported 
 63 ERROR: This SMS code has expired 
 64 ERROR: Cannot resent an SMS code right now 
+65 ERROR: SMS code request not allowed 
+66 ERROR: Email code request not allowed 
+67 ERROR: No information on where to send Email code 
+68 ERROR: Email code request received, but an error occurred during transmission 
 69 ERROR: Failed to send email 
 70 ERROR: Server authentication error 
 71 ERROR: Server request is not correctly formatted 
 72 ERROR: Server answer is not correctly formatted 
+73 ERROR: Email SMTP server not defined 
 79 ERROR: AD/LDAP connection error 
 80 ERROR: Server cache error 
 81 ERROR: Cache too old for this user, account autolocked 
@@ -2020,7 +2034,8 @@ Backup/restore commands:
 Other information commands:
 
  multiotp -phpinfo         : print the current PHP version
- multiotp -showlog         : print the log file
+ multiotp -showlog         : print the log entries
+ multiotp -clearlog        : clear the log entries
  multiotp -tokenslist      : print the list of the tokens
  multiotp -userslist       : print the list of the users
  multiotp -lockeduserslist : print the list of the locked users
@@ -2179,8 +2194,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.8.1.1.zip 
-SHA256:9cd03e212323964cd8c9fc2a132a01792d9cc5186c02125d0f06aef957801711 
-SHA1:f45b31f5cd7fe596ff7ff8090316b1fbbd611016 
-MD5:5d0b90c902edc5f21df5e528001835b3 
+Hash verification for multiotp_5.8.1.9.zip 
+SHA256:f07fdc9420a2700f5f3627a4f6e8e50fca64ae485214a2fa25ba7a5e738b2fd1 
+SHA1:87159d78fb582b20f8d796bd7549e1ba78232fbf 
+MD5:3b7d16b66ceb83be0c5800c74ac2a7bc 
 ``` 

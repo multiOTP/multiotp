@@ -27,8 +27,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.1
- * @date      2021-03-14
+ * @version   5.8.1.9
+ * @date      2021-03-25
  * @since     2013-08-06
  * @copyright (c) 2013-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -84,6 +84,8 @@
  *
  * Change Log
  *
+ *   2021-03-25 5.8.1.9 SysCo/al Cookie privacy (httponly and secure) are now handled in the application directly
+ *                               Weak SSL ciphers disabled
  *   2021-02-12 5.8.1.0 SysCo/al WebGUI update
  *   2019-01-24 5.4.1.5 SysCo/al If any, clean specific NTP DHCP option at every reboot
  *   2019-01-07 5.4.1.1 SysCo/al Raspberry Pi 3B+ support
@@ -307,6 +309,14 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
     $soap_server->service($postdata);
     exit();
 } else {
+    // Secure and httponly cookie parameters forced in the application
+    $params = session_get_cookie_params();
+    $cookie_secure = (!$multiotp->IsDebugOption()) && (!$multiotp->IsDeveloperMode());
+    $cookie_httponly = true;
+    session_set_cookie_params($params["lifetime"],
+              $params["path"], $params["domain"],
+              $cookie_secure, $cookie_httponly
+             );
     session_start();
     $multiotp->SetHashSalt('AjaxH@shS@lt'); // Shared secret
     $hash_salt = $multiotp->GetHashSalt();
