@@ -1,0 +1,70 @@
+How to build a Raspberry Pi RADIUS strong two factors authentication server in some easy steps ?
+================================================================================================
+Last update: 2020-08-31, for Raspberry Pi 1B/1B+/2B/3B/3B+/4B
+
+0) If you want to download a multiOTP Raspberry Pi image ready to use, follow this URL:
+   http://download.multiotp.net/raspberry/
+   
+   Nano-computer name: multiotp
+   IP address: 192.168.1.44 (netmask: 255.255.255.0, default gateway: 192.168.1.1)
+   Username: pi
+   Password: raspberry
+   
+   You can now flash the SD Card (check point 3) and 4) if needed), put the SD Card
+   into the Raspberry Pi and boot it. You can go directly to point 15)
+   
+1) If you want to use a battery backed up Real Time Clock, install it now in your
+   Raspberry Pi, the drivers for these models are included in the package:
+     http://afterthoughtsoftware.com/products/rasclock
+     http://www.cjemicros.co.uk/micros/products/rpirtc.shtml
+     http://www.robotshop.com/ca/en/mini-real-time-clock-rtc-module.html
+     http://nicegear.co.nz/raspberry-pi/high-precision-real-time-clock-for-raspberry-pi/
+   
+2) Download the last image of Raspbian Lite to be flashed
+   https://downloads.raspberrypi.org/raspios_lite_armhf_latest (currently 2020-08-20-raspios-buster-armhf-lite.zip)
+
+3) Format your SD Card using the SD Card Association’s formatting tool
+   https://www.sdcard.org/downloads/formatter_4/
+
+4) Flash the raw image using the universal Windows/macOS/Linux Etcher from Balena: https://www.balena.io/etcher/
+   or Win32DiskImager for Windows: https://sourceforge.net/projects/win32diskimager/files/latest/download
+   or the dd UNIX tool
+   This should take about 10 minutes.
+
+5) Copy all files from multiotp/raspberry/boot-part to the root of the SD Card
+   (it could overwrite some files like config.txt, were we have already enabled the I2C)
+
+6) When copy is done, eject the SD Card
+
+7) Connect the Raspberry Pi to the local network
+
+8) Put the SD card into the Raspberry Pi and boot it
+
+9) Login directly on your Raspberry Pi, or using SSH, with the default username "pi" and the password "raspberry"
+
+10) Launch the initial configuration by typing sudo raspi-config
+
+11) Choose the following options
+    1) Change User Password
+    2) Network options
+       N1) N1 Hostname (change the hostname to your favorite name, for example "multiotp")
+    4) Localization Options (if needed)
+    7) Advanced Options
+       A1) Expand Filesystem
+
+12) Select Finish and answer "<Yes>" to reboot, or type "sudo reboot"
+
+13) Login again directly (after about 30 seconds) on your Raspberry Pi, or using SSH, with the default username "pi" and your new password
+
+14) Type "sudo /boot/install.sh"
+    Everything is done automatically (it will take about 35 minutes) and the Raspberry Pi will reboot automatically at the end
+
+15) The fixed IP address is set to 192.168.1.44, with a default gateway at 192.168.1.1
+    To adapt the network configuration, edit the file /etc/network/interfaces
+
+16) Congratulations! You have now an open source and fully OATH compliant
+    strong two factors authentication server!
+    Surf on http(s)://192.168.1.44 to use the basic interface (admin / 1234)
+
+17) The default radius secret is set to myfirstpass for the subnet 192.168.0.0/16.
+    To adapt the freeradius configuration, edit the file /etc/freeradius/clients.conf.
