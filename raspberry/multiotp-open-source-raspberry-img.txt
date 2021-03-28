@@ -1,0 +1,58 @@
+multiOTP open source Raspberry Pi image ready to use
+====================================================
+multiOTP open source is a strong two-factor authentication device
+
+(c) 2010-2019 SysCo systemes de communication sa
+http://www.multiOTP.net/
+
+Current build: 5.8.0.0 (2020-08-31)
+
+Check the readme file of the multiOTP open source edition for more information.
+
+
+Raspberry Pi configuration
+==========================
+Supported Raspberry Pi hardware: 1B/1B+/2B/3B/3B+/4B
+Nano-computer name: multiotp
+IP address: 192.168.1.44 (netmask: 255.255.255.0, default gateway: 192.168.1.1)
+Username: root
+Password: raspberry
+
+
+Flashing the binary image of multiOTP open source Raspberry Pi edition
+======================================================================
+To flash the binary image, you need a microSD card with a capacity of at least 4GB.
+You can use Etcher to flash the image: https://www.balena.io/etcher/ (Windows / MacOS / Linux)
+
+
+multiOTP open source Raspberry Pi edition configuration
+=======================================================
+Admin URL: http://192.168.1.44 (netmask: 255.255.255.0, default gateway: 192.168.1.1)
+Username: admin
+Password: 1234
+Radius password: myfirstpass (for subnet 192.168.0.0/16)
+
+This package is the result of a *bunch* of work. If you are happy using this
+package, [Donation] are always welcome to support this project.
+Please check http://www.multiOTP.net/ and you will find the magic button ;-)
+
+
+Real-time clock
+===============
+If you want to install a battery backed up Real Time Clock in your
+Raspberry Pi, the drivers for these models are included in the package:
+  http://afterthoughtsoftware.com/products/rasclock
+  http://www.cjemicros.co.uk/micros/products/rpirtc.shtml
+  http://www.robotshop.com/ca/en/mini-real-time-clock-rtc-module.html
+  http://nicegear.co.nz/raspberry-pi/high-precision-real-time-clock-for-raspberry-pi/
+
+
+Disclaimer
+==========
+The Raspberry Pi image of multiOTP open source is provided "as is", without
+warranty of any kind, express or implied, including but not limited to the
+warranties of merchantability, fitness for a particular purpose and non
+infringement. in no event shall the authors or copyright holders be liable for
+any claim, damages or other liability, whether in an action of contract, tort
+or otherwise, arising from, out of or in connection with the software or the
+use or other dealings in the software.

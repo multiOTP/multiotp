@@ -1,0 +1,1216 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pskc:KeyContainer xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:pskc="urn:ietf:params:xml:ns:keyprov:pskc" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" xmlns:xenc11="http://www.w3.org/2009/xmlenc11#" xmlns:pkcs5="http://www.rsasecurity.com/rsalabs/pkcs/schemas/pkcs-5v2-0#" Id="ExampleID" Version="1.0">
+    <pskc:EncryptionKey>
+        <ds:KeyName>Pre-shared-key</ds:KeyName>
+    </pskc:EncryptionKey>
+    <pskc:MACMethod Algorithm="http://www.w3.org/2000/09/xmldsig#hmac-sha1">
+        <pskc:MACKey>
+            <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+            <xenc:CipherData>
+                <xenc:CipherValue>U+4mSH23ab4JKjBqJ35favjKfKY3hf9sWKp/P7L/TAqpcxUYGSUeK/RMfL0Fv9hy</xenc:CipherValue>
+            </xenc:CipherData>
+        </pskc:MACKey>
+    </pskc:MACMethod>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000001</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000001">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:QN08</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>lrdvTkSeq9hj9QimjKE9hcH/OkmWpmxsmJ3fP57AqHygLTrUs88MVW8KB+h5yb9r</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>we9aOQ8+UUsWIZAd2I/eqnlJ1Cc=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000002</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000002">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:QA08</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>aYojAzVasgEkxJhbOrBCfIikgi686p4u3TILah2QT2m30SgiT/wCSzTpLXUQBuoirzKfkjbd3Bpco3tHyzc+2A==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>X4R8LvhswobqWv45doqicRNEtzM=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000003</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000003">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-6:QA06-PSHA1</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>8bxb34b2HoBWaVPbBwdLy5HI+/i036YdZz0h0MyuvIKEvGnHI9GmuGJGUXebfgCY</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>cWN0g8q6Fb3HJNcXla0CSoOMe3A=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+            <pskc:Policy>
+                <pskc:PINPolicy PINEncoding="BINARY" MaxLength="20" MinLength="20" PINUsageMode="Algorithmic" PINKeyId="ZZ9900000003"/>
+            </pskc:Policy>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9900000003</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:pin" Id="ZZ9900000003">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>3piq9NJAzfkcZ7z1Iu7IpLB1CjdzY4gNQyiOVnW+kcdhBW4NTTqmHx6o8mmSuE68</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>4pQgbgcE1B2lBRhRmqv5HRYcbN0=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000004</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000004">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-6:C-QA06</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>STKpyutR8Nb3BbjNmG8kf7NoTO66yccq5C9MDCZF2AXMUSDEdUhqMwqjfhg92Qu5</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>3T1/FGP1wIAVOB9ViVXs6kBQs/g=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Counter>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>xasM5vP1vlZBimdMLWoqJWuZNJMY1iEKDnw9MgB0F9I=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>xw+qx3/xyXDYosr3n7PU3barLSU=</pskc:ValueMAC>
+                </pskc:Counter>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000005</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000005">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:C-QN08</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>ZCAx2z7qNDvmPRPyXpvQsZkoZjiaSlNnMaz1bh5ZWAdWtYMuvSgMkPtDN0xE8KgZ</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>2loMyhUVMcJFUmMEfdriuPZNgLA=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Counter>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>aVN/any99YJCpczoTns7H5JwyPUR8OQwNI2lLf4imhQ=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>AXc+jkG1uZOHcCXyMcqIdm7QCpA=</pskc:ValueMAC>
+                </pskc:Counter>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000006</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000006">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:C-QA08</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>BZzl+whnM71kkdW1uoY1mjM5mvNWZFxn3f5yGaZ+kuODAqgPrvqq531ipEvke6JkARSwOWddvYyOm34Zm+LtZQ==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>Ko/kWZbKecJ9S8W+yE86UUcy/Ko=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Counter>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>ByzvSK/7/5kXCsu2vfwl5sOIIbiD9pON5TSXFEkuwUE=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>xqmZLntYdIwYdYmNzB3ZMB3+058=</pskc:ValueMAC>
+                </pskc:Counter>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000007</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000007">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:C-QA08-PSHA256</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>b8LoriGzVqbmb9MFSr6Y/Ryj+ltGY12xWoaBuyD44ZwmwKttlyuMu1+mbSVO1jnC/vKPIy5aiDK3IeFV7/BKFA==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>k5uW1xUA2FzmmeWPnjazgHJuJEU=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Counter>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>tYYVbxkQ4meKaMRNRilYbHw2p3rodjakQT34MTgp9ik=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>Wh0MFLFLdNYrF1wdz5qQC0bXCAY=</pskc:ValueMAC>
+                </pskc:Counter>
+            </pskc:Data>
+            <pskc:Policy>
+                <pskc:PINPolicy PINEncoding="BINARY" MaxLength="32" MinLength="32" PINUsageMode="Algorithmic" PINKeyId="ZZ9900000007"/>
+            </pskc:Policy>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9900000007</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:pin" Id="ZZ9900000007">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>WKU7EnTKQqtMTG28HxAbAiZdM8YSnmJPNubxIu/aPU92aN+Mun8CDfJeNMQHcQIz3Etq8VvTn+rZoi9cP13CLw==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>p3bXVz9GTL+davWpoHLe1wnECLk=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000008</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000008">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-6:QA06-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>0H0ol1Cz2cwNLyWM6tm+4qcyZElq6Pax/FgFd/8SVyio5yeyaxCjVe38uA0bqyCm</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>H6ZOVXjnoPCGww/3ol0Sh1Y1sOQ=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>QLbQdbGX+w0QSRVmBSoxtEdYr2gdzVf8YdlDA1qZ4EM=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>NZ46EI9Ht/sgJFREVWMFcaDA6M0=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>Q4mCcvb1/2TAm464+MeCyoZLAZxo20D6QLWYfew71y8=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>kYnUTH85koj3pVJjYKP6HnCd0Ow=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000009</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000009">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:QN08-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>2G50v7BqR/c7qYl3ya4dhStvrcMzkM+CMpwT0D3DuTMkI/m43wHM0Ujmbwjxm+6X</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>X6513x4mOmjlU4BedoX1Zha2npQ=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>m42G5E/Wv102ESFI5u+OGLiMsXW1/ZgH33NTOOH1WCw=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>8DeEbx1p8Mdbg0eocOHeXFXWCUE=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>Ay4C6M0IqRKZYpRp9Au+aswdDDorRlalmwicbNF/P94=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>1C8jh1+FEQsAQvv39iW95broEkU=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000010</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000010">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-6:QA06-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>bRVzcE4zXD1bbi4ZBXEMLDxhboBPi4rRvZIvMGfe9it+99OrFumVj0B66VZkP32vLtx4w6hagxZoVm8Gynck6Q==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>A7mJ6qIw+1TiUm5Prsel3RcrFtI=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>poGDc45s8KwViudS065t+InpbSLam13d0ivLGmdELSA=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>lOrmfIiH3Uun4kz+/eTO4OFs3Ww=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>02GUkSl7MPZKVJcBL0OA6zsA3/ztQknHgaSGNpE6kUI=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>0Y0n7RthG4WeewJOL9unWxRHW20=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000011</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000011">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:QA08-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>Vkrhf45HuiXuZyxXQ9O+PZI/uj674QzB8O8z6w3M7o+kGjI+jCCXXpeizcHmQMpqY9R6CyP66efXmMlNYbv1Jg==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>6oKfnDGLVAHCSyikMHr/KMPDxIQ=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>Wxbolq2j5VjQe5vYVMgcSwMyD7qp2/7eMCesJrWUM/E=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>ux785A8C7k+JZOUKuUtUspOEBBo=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>nr9bxUFwrD3dmOCAyjC8J/NzHDkvCap7qqNkyTQBjAY=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>fWzAHMMua1p1MJ1GDL37SL1KeFU=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000012</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000012">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:QN08-PSHA1-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>DkhESbLkTy5DwNg45IDIveBsoxvDAk3MDdneVNlDhZOaI0w1QVwSLwJpSsnISD8x</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>93VEBONW7G4UETgF24EPHcvBvMc=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>oRjGEzmzMgt7hlTc1+pzulebdNovZRRYq8vyfl82M74=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>3u17msMz3fL4F5cRqHzVla2SExQ=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>dsyLJivZLCS3F0AznNakR49t5NyQiD1dhHGJGFw5nWY=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>VevPslQOu3j8iqgMe9djGxOLD1w=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+            <pskc:Policy>
+                <pskc:PINPolicy PINEncoding="BINARY" PINUsageMode="Algorithmic" PINKeyId="ZZ9900000012"/>
+            </pskc:Policy>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9900000012</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:pin" Id="ZZ9900000012">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>A4WAKWpJ7cLE9XiPEbKw/CDmAi7H8rtV9p1shcoo2YrVOgBmiXACT8VUaFLSfMzB</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>41GurI1n2Z6Kk9UKBoTnxH8j+N0=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000013</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000013">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:QA08-PSHA256-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>zrXIQIx5F03cfaRYwJlnwnDDFzTAwxjtF4KnN3Brs9kISfX/0QfJ80lHtQn45dtHaAcmtJMgfI19DpvlSVPLOw==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>UhS9tgvwHZnuK1qN8yaZIfxPTFE=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>2Kmbco73faBtAE1GQGZlW2CudPy+1ttdv4uIhucZJPM=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>D9ug++7+F8Vgz6EdIZYHW5zgN6E=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>Dsa8e4kXeccvO5bV1hr3aNgOr9iSlGizp2BvvFkZ7jI=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>Pdr9y7KRtpkLDYeN6IUQ/Mt7Z0o=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+            <pskc:Policy>
+                <pskc:PINPolicy PINEncoding="BINARY" PINUsageMode="Algorithmic" PINKeyId="ZZ9900000013"/>
+            </pskc:Policy>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9900000013</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:pin" Id="ZZ9900000013">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>9Jrxfs1YlWcOLlsnRsC9BCr1jsLeCxuzFMu3fb2UifkAFzpyIJmdGGLrHVgz6XuqTq6R+wvTczNyBlqL6Eec4g==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>DEd9uUkZS5otw3NoAljFYCiG4M8=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000014</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000014">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-6:QA06</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>93rMicSI4iJq4/GnE8xCHPCZg6yDxbyhHYMULxfNJTl9o0ej5e0NJai7idXpZ0dy</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>gZaMejTDMm7HzBlr2s9JSVYMYuQ=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000015</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000015">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:QA08</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>v/a768VMIE/ILhM0ECvN2SRdQOy/aRAbDGyQ/zhKdhWwxaX3yqWdj7Jf2XfUuccb</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>a9c35TuApOMWiTcCvTmqoAz0cTo=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000016</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000016">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:QA08</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>+IwfWgQtRPu7ltWK15F/VO71E6HTGF2qxUcGtxToXRklDD9k2fNuz/XrM1txjV2SVWCUIZc0V38na6h4MJi0Sw==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>bkKCVLivS0quRvTQg2x1gvX6kY0=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000017</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000017">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-6:QA06-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>ESnLJlQD85YtFq5sDwLo4mwlMKbNgnCIk1wgVzZlCKH+KVFCr0S2HcdqA18iHklf</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>Esd7kmOtLwGsnfvnEAUW+gcEFMQ=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>9sem1svGk57xGg9vw68KnUfw1xPJOOmAEFe56FijwLw=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>qG9EiRdQi9CBD8N6AQBLnbRdrgU=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>IjjpMqJQ/8PhB8m8CHuOQY30LRtdxZU5I9/DB6yYAZo=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>v6fPyj34+fDabjOGOMcHs+UYh64=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000018</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000018">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:QA08-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>FNJtVaoXkbTL55ZiLaJskew4ldRebOAha+SErJfRw6KYeeQDoRvAKoCvJSprpNHQ</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>OsA/kz7r9aJFsIi+A9fnZBQMNwA=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>cX4bi1203JI48hWsftfzNDqd2HEjN4GOLZZZOmcwMBM=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>PfWAQmkkgDoVHzSuP0z3Zp1y0ME=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>8f6TlXcEKVozm68TSE0bEzAvN2VmLlKOAB/XJANFFXQ=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>fo6Psq89kQEFJMVBMP9V7XqVbJM=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000019</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000019">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-6:QA06-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>kgcOrgBjm4ko/wb3zauucOANcNJK9pm//dwEs1tVc0DVC9y1k6AihtLVc+T+Qj5O0/ozYwP5AbLxvCK/7l4vKg==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>wWE/RcUaiD91hdPtIyel0we6acA=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>D8E4aP+BX+yOrCqbMm6o4nrc1gB4JMVhwp6hUFaIVo8=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>2XGFP2m0aAL9qjmRECqFPlqLQrk=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>KwVJ2SykUK4A0/40Oc4S0EsMkNiSoLA5BrVYMV69MhY=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>cMGUHUA2Aj/724eezVljb351d5E=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000020</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000020">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:QA08-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>A1uqZaf3GyTvwkx2v6uh9pKRzil05k+Cof3CD8jVZalmWgfp6mnDxGDOEB1fHgN4nHqocpgaNDeukbMNkyEfIg==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>1pU7gblaKHQMg8M4+OnU1y5z580=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>bUyYhX5ZXmS7aAmJO3uTuhj3HWuj0FYNMXRPkbtHkrE=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>GbilU0KldLYm2qzgmerdi/YdmVc=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>BOpE7cNil/vt29rZZv9oRnXaH6Be5+nZsVr2ld71pew=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>O4v8BGevBGDlgD96lvM0g+bnndA=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000021</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000021">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-6:QH40</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>cW7wssP4ofGpmXCMygejt6THgKKK6oE+vZp67VXR1dYZCrH6d5kmgPB4C+0isgl0</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>7ez8ijPPcmu5akvkEj3hNQzdzdo=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000022</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000022">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:QA32</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>Atlpw0AmlQZeqZjUbyAx/dGxPOCt+nfmzl0L5D0AvuDuRsRxeE4sOnCYt7EULSk9</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>IKARR2Vs2kdLv4OyaLX5ylKrbyw=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000023</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000023">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:QH40</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>i71y5cubNftGXQelHjkN9OaDfmIxl5e6EDAsPU1czgbJ9EC4VoBL3lWeBAUzKF0C</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>lbaC6WXRCoqcoTyJURdtgHqeqiA=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000024</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000024">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:QA32</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>JTz8SLxWk3KJndIFj8cFStAL4wptD918xF43lkX69CGi3Cv+SIvxcYSFkz+3cudIEitqnWsJeUFWGoPyh8kT/w==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>XoweMnAqLMh2KWnCDNx0rpoPucA=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000025</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000025">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:QH64</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>EHhmfSBnElpTYcvgx2LgoQaxfQjuKXR7p78BWNpt9ToT5EufihiAhe6CMACVfV/dIeiEJpaFgNtrPQT9/CJ24g==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>ljgNnKpoBXVOjsQbzPBGcS5ogqw=</pskc:ValueMAC>
+                </pskc:Secret>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000026</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000026">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-6:QA32-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>vwpradcA029rA/yj6HcUJwl5ylkrEqp8aNALDwiMMu9A+Oz6jE60mvTAGCZqSSoe</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>N9zH7bQi+euQZ94scr12ZdR5Dek=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>YAK8r3BxdVd9w3aO37G0ZHQ/sQWAK+GA9RfcFP15pcA=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>gwItZVroPaJdiZYTfH4p+fX6mZk=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>DswW6MGFaOUNlJWef9kJ+rmfZqUyhZdn8Hyj+6P+RPw=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>4iLnj+1VWxtPDSdCTbO8mmffzU4=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000027</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000027">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-6:QH40-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>oVP8EpcI8WA0Qd7PPsYSG9TSP9T+Qrj9I4euTDqPkAvGAeVmjagHBibpFs10k8bB</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>VU/O2/FQZw9ZzYLVUJhs1zK+MU4=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>jL4JpbKmkvtVdthap2Mmsl6DK7H0FM+SAhsSuPmrB9w=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>UTlNoBXskvQydI+kPJjy5BVDwvA=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>NGwF8XfW28qcqGlxkim7RxmD8+blsMmV3a5CjQ+b2H8=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>cIAvElM0Xob5tamSmbTmUts6FO8=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000028</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000028">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:QA32-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>inBVnKPWyvjYRemW54qbFCkaV8QSdkM+yHnvWh+tc5QMgiv8+3+IjwVV60/7jHI/</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>X+hTYvcTw8bFcMCcXm8YnG5BObA=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>lnGeD5pFoGu8FMJwblbKKCwTFOitZpFLz+jHlFuKnxw=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>GxJhXxwDE3E75whjA81ww2xiDbc=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>HaHrtO8BBYHkXLfXdiQCoemwr/LeYdDvHC+4V+HgniU=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>VBsN2fam75+cNarN0OfKXYks9Tg=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000029</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000029">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA1-8:QH40-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>I+ifaWEYZ4anCimA5BA1mwGMYkczCgDJGs9jhtTbviNhFUxwxj7ejCMgsf6cEk8X</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>1t7hwN9GMibAcCcN2sJr24tUZcA=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>pOklWp9UxC4t4zQqsW/xUbWBoChfc1VBNlA8SeKxusA=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>mwd7xtihR/iBVsHK+UGAZfEDSFk=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>epsMCzzn6JvhOhYK9tLIxaOR0bEHcFAoTcu5qk0Hcho=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>+yUkk7ZmmjrjMVc3xPz5ROlKgI8=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000030</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000030">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-6:QH64-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="6" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>O7+CQ9pcYN0MtbqiZ3g0Tso3CvYzCrDTV9Kh+wwqZkoTV5/jg4l/eZXfRM8E8JkD1K7MlgibA0PhwtlV8DMIIA==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>aKwqMJLS4MICd4PMGKUsvb0lbIQ=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>jz2bjkZ03IjwWyl1gZqiHoJjv/AjK7/TOA9qW6fLfhQ=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>NHfciyj3u1IhENAoBvohcRF9Wx0=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>KO0Po1NyLSTkHf6niARIocLJUXLrdz7e4qiowd/NPtE=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>mdbPUCunsrog0KT3uo4MRQZiMqM=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000031</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000031">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:QA32-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>d17Oq0cv1HFK/XEAmASgK0DlMHiO8W950Wpf5is4BMXY9D1ot5n5nnZGEftd8IoX95il7K5aBdKfBFnl2ZuFZg==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>p2yeNXvUOxKsU29oz9b66s2XrkM=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>TotQApim/RCnT8MhiFkudOaBptHFU9iESxQk9exa7mE=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>R6Nmk8Gjcx35T4XYIk4I7uG56V4=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>8O/Hsl1q8sR302k1CJWyFtrmQUWq/ZrE/WwEZY7Bg4g=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>1K2lB+KnTWAKicqqpEWf91XAIj0=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+    <pskc:KeyPackage>
+        <pskc:DeviceInfo>
+            <pskc:Manufacturer>Manufacturer</pskc:Manufacturer>
+            <pskc:SerialNo>ZZ9000000032</pskc:SerialNo>
+        </pskc:DeviceInfo>
+        <pskc:Key Algorithm="urn:ietf:params:xml:ns:keyprov:pskc:ocra" Id="ZZ9000000032">
+            <pskc:Issuer>Issuer0</pskc:Issuer>
+            <pskc:AlgorithmParameters>
+                <pskc:Suite>OCRA-1:HOTP-SHA256-8:QH64-T30S</pskc:Suite>
+                <pskc:ResponseFormat Length="8" Encoding="DECIMAL"/>
+            </pskc:AlgorithmParameters>
+            <pskc:Data>
+                <pskc:Secret>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>jAZ2fmJOcMxeOB/0uc1Oo4egMStEMpPHGDpN11wuCv32WrshyMIuZ8pLaYHE1M0jRWRYIy2bTxSiEt4OvSZoqQ==</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>XdjbNQkRNpkHtXk3Nw9YqFcA4mE=</pskc:ValueMAC>
+                </pskc:Secret>
+                <pskc:Time>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>zLRD33LH/x0e4vZTMpeBBRa+1JWmr4J5qNmLh+p1eTo=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>dyaS1yjyDW4PSt9vGHyn6sBmKas=</pskc:ValueMAC>
+                </pskc:Time>
+                <pskc:TimeInterval>
+                    <pskc:EncryptedValue>
+                        <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+                        <xenc:CipherData>
+                            <xenc:CipherValue>1or92lj58ODH7gFDQmD9kydoPSMb2oMdDpo5AwP79Zk=</xenc:CipherValue>
+                        </xenc:CipherData>
+                    </pskc:EncryptedValue>
+                    <pskc:ValueMAC>z0tP1ak/jhxAyUs3t2Y83DxBnOw=</pskc:ValueMAC>
+                </pskc:TimeInterval>
+            </pskc:Data>
+        </pskc:Key>
+    </pskc:KeyPackage>
+</pskc:KeyContainer>

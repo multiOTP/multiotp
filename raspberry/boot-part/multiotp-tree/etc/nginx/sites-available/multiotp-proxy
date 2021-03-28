@@ -1,0 +1,50 @@
+# multiOTP open source
+# @version   5.0.4.9
+# @date      2017-06-09
+# since 5.0.3.8, fastcgi_read_timeout 86400;
+server {
+    listen              127.0.0.1:18081;
+    server_name         localhost;
+
+    root /usr/local/bin/multiotp;
+    index multiotp.proxy.php;
+
+    access_log off;
+
+    gzip            on;
+    gzip_comp_level 4;
+    gzip_disable    msie6;
+    gzip_min_length 1000;
+    gzip_proxied    any;
+    gzip_static     on;
+    gzip_types      application/xml application/x-javascript text/css text/plain;
+    gzip_vary       on;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    try_files $uri $uri/ /multiotp.proxy.php;
+
+    location ~* \.(appcache|manifest)$ {
+        expires -1;
+    }
+
+    location ~ \.php$ {
+            include /etc/nginx/fastcgi_params;
+            try_files $uri /multiotp.proxy.php;
+            fastcgi_param HTTPS on;
+            fastcgi_index multiotp.proxy.php;
+            fastcgi_split_path_info ^(.+\.php)(/.+)$;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            fastcgi_pass unix:/var/run/php5-fpm.sock;
+            # since 5.0.3.8, fastcgi_read_timeout 86400;
+            fastcgi_read_timeout 86400;
+    }
+
+    location / {
+        try_files $uri $uri/ /multiotp.proxy.php;
+    }
+}

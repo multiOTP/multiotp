@@ -1,0 +1,57 @@
+#!/bin/bash
+########################################
+#
+# @file   multiotp
+# @brief  Initialization file for a Raspberry implementation
+#
+# multiOTP package - Strong two-factor authentication open source package
+# http://www.multiOTP.net/
+#
+# The multiOTP package is the lightest package available that provides so many
+# strong authentication functionalities and goodies, and best of all, for anyone
+# that is interested about security issues, it's a fully open source solution!
+#
+# This package is the result of a *LOT* of work. If you are happy using this
+# package, [Donation] are always welcome to support this project.
+# Please check http://www.multiOTP.net/ and you will find the magic button ;-)
+#
+# @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
+# @version   5.4.1.7
+# @date      2019-01-27
+# @since     2013-11-29
+# @copyright (c) 2013-2019 by SysCo systemes de communication sa
+# @copyright GNU Lesser General Public License
+#
+########################################
+
+### BEGIN INIT INFO
+# Provides:          multiotp
+# Required-Start:    $local_fs $network $named $time
+# Required-Stop:     
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Initialize the multiOTP functionalities
+# Description:       Initialize the multiOTP functionalities
+### END INIT INFO
+
+case "$1" in
+  start|"")
+    /usr/local/bin/multiotp/scripts/multiotp-service.sh start-multiotp
+    exit 0
+    ;;
+  restart|reload|force-reload)
+    exit 3
+    ;;
+  stop)
+    /usr/local/bin/multiotp/scripts/multiotp-service.sh stop-multiotp
+    exit 0
+    ;;
+  status)
+    exit 0
+    ;;
+  *)
+    exit 3
+    ;;
+esac
+
+:

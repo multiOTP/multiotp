@@ -1,0 +1,1 @@
+www-data ALL = NOPASSWD: /bin/chmod,/bin/chown,/bin/cp,/usr/bin/7za

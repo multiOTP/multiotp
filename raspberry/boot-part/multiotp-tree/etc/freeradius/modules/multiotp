@@ -1,0 +1,7 @@
+exec multiotp {
+        wait = yes
+        input_pairs = request
+        output_pairs = reply
+        program = "/usr/local/bin/multiotp/multiotp.php -base-dir=/usr/local/bin/multiotp/ '%{User-Name}' '%{User-Password}' -request-nt-key -src=%{Packet-Src-IP-Address} -tag=%{Client-Shortname} -mac=%{Called-Station-Id} -calling-ip=%{Framed-IP-Address} -calling-mac=%{Calling-Station-Id} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"
+        shell_escape = yes
+}
