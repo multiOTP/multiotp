@@ -4,13 +4,13 @@ REM @file  radius_debug.cmd
 REM @brief Script to launch the debug version of the radius service.
 REM
 REM multiOTP - Strong two-factor authentication PHP class package
-REM http://www.multiotp.net
+REM https://www\.multiOTP.net
 REM 
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.8.1.9
-REM @date      2021-03-25
+REM @version   5.8.2.1
+REM @date      2021-04-08
 REM @since     2014-04-22
 REM @copyright (c) 2014-2021 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -93,7 +93,7 @@ IF NOT EXIST %_radius_folder%radius SET _radius_folder=%~d0%~p0..\
 IF NOT EXIST %_tools_folder%tools SET _tools_folder=%~d0%~p0..\
 
 REM Create the multiotp module for the radius server
-ECHO # Exec module instance for multiOTP (http://www.multiotp.net/).>%_radius_folder%radius\etc\raddb\modules\multiotp
+ECHO # Exec module instance for multiOTP (https://www\.multiOTP.net/).>%_radius_folder%radius\etc\raddb\modules\multiotp
 ECHO exec multiotp {>>%_radius_folder%radius\etc\raddb\modules\multiotp
 ECHO         wait = yes>>%_radius_folder%radius\etc\raddb\modules\multiotp
 ECHO         input_pairs = request>>%_radius_folder%radius\etc\raddb\modules\multiotp

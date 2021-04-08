@@ -4,13 +4,13 @@ REM @file  webservice_uninstall.cmd
 REM @brief Script to uninstall the web service.
 REM
 REM multiOTP - Strong two-factor authentication PHP class package
-REM http://www.multiotp.net
+REM https://www\.multiOTP.net
 REM 
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.8.1.9
-REM @date      2021-03-25
+REM @version   5.8.2.1
+REM @date      2021-04-08
 REM @since     2013-08-09
 REM @copyright (c) 2013-2021 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License

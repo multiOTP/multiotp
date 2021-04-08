@@ -71,6 +71,71 @@ function pcre_fnmatch($pattern, $string, $flags = 0) {
 
 
 /***********************************************************************
+ * Name: ram_total_space
+ * Short description: return total RAM in Bytes.
+ *
+ * @return int Bytes
+ ***********************************************************************/
+if (!function_exists('ram_total_space')) {
+    function ram_total_space() {
+        $size = 0;
+        if (mb_strtolower(mb_substr(PHP_OS, 0, 3),'UTF-8') === 'win') {
+            $lines = null;
+            $matches = null;
+            exec('wmic ComputerSystem get TotalPhysicalMemory /Value', $lines);
+            if (preg_match('/^TotalPhysicalMemory\=(\d+)$/', $lines[2], $matches)) {
+                $size = $matches[1];
+            }
+        } else {
+            $meminfo_file = fopen('/proc/meminfo', 'r');
+            while ($line = fgets($meminfo_file)) {
+                $elements = array();
+                if (preg_match('/^MemTotal:\s+(\d+)\skB$/', $line, $elements)) {
+                    $size = $elements[1] * 1024;
+                    break;
+                }
+            }
+            fclose($meminfo_file);
+        }
+        return (double) $size;
+    }
+}
+
+
+/***********************************************************************
+ * Name: ram_free_space
+ * Short description: return free RAM in Bytes.
+ *
+ * @return int Bytes
+ ***********************************************************************/
+if (!function_exists('ram_free_space')) {
+    function ram_free_space() {
+        $size = 0;
+        if (mb_strtolower(mb_substr(PHP_OS, 0, 3),'UTF-8') === 'win') {
+            $lines = null;
+            $matches = null;
+            exec('wmic OS get FreePhysicalMemory /Value', $lines);
+            if (preg_match('/^FreePhysicalMemory\=(\d+)$/', $lines[2], $matches)) {
+                $size = $matches[1] * 1024;
+            }
+        } else {
+            $meminfo_file = fopen('/proc/meminfo', 'r');
+            while ($line = fgets($meminfo_file)) {
+                $elements = array();
+                if (preg_match('/^MemFree:\s+(\d+)\skB$/', $line, $elements)) {
+                    // KB to Bytes
+                    $size = $elements[1] * 1024;
+                    break;
+                }
+            }
+            fclose($meminfo_file);
+        }
+        return (double) $size;
+    }
+}
+
+
+/***********************************************************************
  * Name: bytes_nice_format
  * Short description: nice format for a size in bytes
  *
@@ -82,11 +147,13 @@ function pcre_fnmatch($pattern, $string, $flags = 0) {
  * @param   int     $bytes   size in bytes
  * @return  string           nice size in a string
  ***********************************************************************/
-function bytes_nice_format($bytes) {
-    $size_prefix = array( 'B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB' );
-    $base = 1024;
-    $class = min((int)log($bytes , $base) , count($size_prefix) - 1);
-    return sprintf('%1.2f' , $bytes / pow($base,$class)) . ' ' . $size_prefix[$class];
+if (!function_exists('bytes_nice_format')) {
+    function bytes_nice_format($bytes) {
+        $size_prefix = array( 'B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB' );
+        $base = 1024;
+        $class = min((int)log($bytes , $base) , count($size_prefix) - 1);
+        return sprintf('%1.2f' , $bytes / pow($base,$class)) . ' ' . $size_prefix[$class];
+    }
 }
 
 

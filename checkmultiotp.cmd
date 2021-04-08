@@ -4,15 +4,15 @@ REM @file  checkmultiotp.cmd
 REM @brief Test file for the multiOTP package.
 REM
 REM multiOTP - Strong two-factor authentication PHP class package
-REM http://www.multiotp.net
+REM https://www\.multiOTP.net
 REM 
 REM The Readme file contains additional information.
 REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.8.1.9
-REM @date      2021-03-25
+REM @version   5.8.2.1
+REM @date      2021-04-08
 REM @since     2010-07-10
 REM @copyright (c) 2010-2021 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License

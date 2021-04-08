@@ -1,9 +1,15 @@
 How to build a Raspberry Pi RADIUS strong two factors authentication server in some easy steps ?
 ================================================================================================
-Last update: 2020-08-31, for Raspberry Pi 1B/1B+/2B/3B/3B+/4B
+
+(c) 2010-2021 SysCo systemes de communication sa
+https://www\.multiOTP.net/
+
+Current build: 5.8.2.1 (2021-04-08)
+
+Supported Raspberry Pi hardware: 1B/1B+/2B/3B/3B+/4B
 
 0) If you want to download a multiOTP Raspberry Pi image ready to use, follow this URL:
-   http://download.multiotp.net/raspberry/
+   https://download.multiotp.net/raspberry/
    
    Nano-computer name: multiotp
    IP address: 192.168.1.44 (netmask: 255.255.255.0, default gateway: 192.168.1.1)
@@ -15,16 +21,16 @@ Last update: 2020-08-31, for Raspberry Pi 1B/1B+/2B/3B/3B+/4B
    
 1) If you want to use a battery backed up Real Time Clock, install it now in your
    Raspberry Pi, the drivers for these models are included in the package:
-     http://afterthoughtsoftware.com/products/rasclock
+     https://afterthoughtsoftware.com/products/rasclock
      http://www.cjemicros.co.uk/micros/products/rpirtc.shtml
-     http://www.robotshop.com/ca/en/mini-real-time-clock-rtc-module.html
-     http://nicegear.co.nz/raspberry-pi/high-precision-real-time-clock-for-raspberry-pi/
+     https://www.robotshop.com/ca/en/elecrow-ds3231-high-precision-rtc-clock-module-raspberry-pi-b.html
+     https://learningdevelopments.co.nz/products/rtc-clock-module-for-raspberry-pi
    
 2) Download the last image of Raspbian Lite to be flashed
-   https://downloads.raspberrypi.org/raspios_lite_armhf_latest (currently 2020-08-20-raspios-buster-armhf-lite.zip)
+   https://downloads.raspberrypi.org/raspios_lite_armhf_latest (currently 2021-03-04-raspios-buster-armhf-lite.zip)
 
-3) Format your SD Card using the SD Card Associationâ€™s formatting tool
-   https://www.sdcard.org/downloads/formatter_4/
+3) Format your SD Card using the SD Card Association’s formatting tool
+   https://www.sdcard.org/downloads/formatter/
 
 4) Flash the raw image using the universal Windows/macOS/Linux Etcher from Balena: https://www.balena.io/etcher/
    or Win32DiskImager for Windows: https://sourceforge.net/projects/win32diskimager/files/latest/download
@@ -68,3 +74,4 @@ Last update: 2020-08-31, for Raspberry Pi 1B/1B+/2B/3B/3B+/4B
 
 17) The default radius secret is set to myfirstpass for the subnet 192.168.0.0/16.
     To adapt the freeradius configuration, edit the file /etc/freeradius/clients.conf.
+

@@ -3,8 +3,14 @@
     PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY
     Version 2.1+
 
-	Adapted 2013-2018 by SysCo/al 5.2.0.0 (2018-07-16)
+	Adapted 2013-2021 by SysCo/al 5.8.2.1 (2021-04-07)
 
+ *
+ * 
+ *   2021-04-07 5.8.2.1 SysCo/al Test connection filter changed from (dn=test-connection) to (objectClass=user)
+ *                               (dn=xxx not supported by eDirectory)
+ *                               New LDAP type 4 for eDirectory : users are searched with the class posixAccount or user
+ *                               enhanced LDAP type 2 : users are searched with the class posixAccount or user
  *   2018-07-16 5.2.0.0 SysCo/al Active Directory support enhancement (member:1.2.840.113556.1.4.1941:=)
  *                               Active Directory primary group optimized detection
  *                               _users_dn added
@@ -178,7 +184,7 @@ class MultiotpAdLdap {
     var $_error; // Added by SysCo/al
     var $_error_message; // Added by SysCo/al
     var $_error_no; // Added by SysCo/al
-    var $_ldap_server_type; // Added by SysCo/al, 1 (default) for Active Directory, 2 for Generic LDAP, 3 for legacy Active Directory
+    var $_ldap_server_type; // Added by SysCo/al, 1 (default) for Active Directory, 2 for Generic LDAP, 3 for legacy Active Directory, 4 for eDirectory (Novell)
     var $_oui_sr; // Added by SysCo/al
     var $_debug_message; // Added by SysCo/al 4.3.2.2
     var $_warning_message; // Added by SysCo/al
@@ -294,14 +300,14 @@ class MultiotpAdLdap {
                     $this->_bind = @ldap_bind($this->_conn,$this->_ad_username.$this->_account_suffix,$this->_ad_password);
                     $this->_bind_paged = @ldap_bind($this->_conn_paged,$this->_ad_username.$this->_account_suffix,$this->_ad_password);
                     if ($this->_bind) {
-                        if (FALSE !== (@ldap_search($this->_conn, $this->_base_dn, "(dn=test-connection)"))) {
+                        if (FALSE !== (@ldap_search($this->_conn, $this->_base_dn, "(objectClass=user)"))) {
                             $this->_error = FALSE;
                             $this->_error_message = '';
                             $connected = TRUE;
                             break;
                         } else {
                             $this->_error = TRUE;
-                            $this->_error_message = 'FATAL: AD/LDAP bind failed. The BaseDN '.$this->_base_dn.' is not accepted.';
+                            $this->_error_message = 'FATAL: AD/LDAP bind failed. The BaseDN '.$this->_base_dn.' is not accepted ('.ldap_error($this->_conn).').';
                         }
                     } else {
                         $this->_server_reachable = (!(-1 == ldap_errno($this->_conn)));
@@ -437,6 +443,7 @@ class MultiotpAdLdap {
 
 // echo "DEBUG attributes\n";
 // print_r($attributes);
+
                 for($j=0; $j<$attributes['count']; $j++) {
                     if ('distinguishedname' == strtolower($attributes[$j]))
                     {
@@ -812,7 +819,6 @@ class MultiotpAdLdap {
         if ($group_name==NULL){ return (false); }
         if (!$this->_bind){ return (false); }
         $filter="(&(|(objectClass=posixGroup)(objectClass=groupofNames))(".$this->_group_cn_identifier."=".$this->ldap_search_encode($group_name)."))";
-
         $fields=array("member","memberuid");
         $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
         if (FALSE === $sr) {
@@ -947,8 +953,8 @@ class MultiotpAdLdap {
             } elseif (3 == $this->_ldap_server_type) { // legacy Active Directory
                 $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$username."))";
                 if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","description","displayname","telephonenumber","primarygroupid","distinguishedname"); }
-            } else { // Generic LDAP (2) or others
-                $filter = "(&(objectClass=posixAccount)(".$this->_cn_identifier."=".$username."))";
+            } else { // eDirectory (4) or Generic LDAP (2) or others
+                $filter = "(&(|(objectClass=posixAccount)(objectClass=user))(".$this->_cn_identifier."=".$username."))";
                 if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","gecos","description","displayname","telephonenumber","gidnumber","distinguishedname"); }
             }
 			$this->_oui_paged_sr = @ldap_search($this->_conn_paged,$this->_users_dn,$filter,$fields);
@@ -1225,7 +1231,7 @@ class MultiotpAdLdap {
         $this->_warning_message = "";
         if (!$this->_bind){ return (false); }
 
-        if (2 == $this->_ldap_server_type) { // Generic LDAP
+        if ((2 == $this->_ldap_server_type) || (4 == $this->_ldap_server_type)) { // Generic LDAP or eDirectory
             $filter="(|(objectClass=posixGroup)(objectClass=groupofNames))";
             $fields=array($this->_group_cn_identifier,"description");
         } else { // Active Directory
@@ -1260,9 +1266,13 @@ class MultiotpAdLdap {
                 if ($include_desc && strlen($entries[$i]["description"][0]) > 0 ){
                     $groups_array[ $entries[$i][$this->_group_cn_identifier][0] ] = $entries[$i]["description"][0];
                 } elseif ($include_desc){
-                    $groups_array[ $entries[$i][$this->_group_cn_identifier][0] ] = $entries[$i][$this->_group_cn_identifier][0];
+                    if (isset($entries[$i][$this->_group_cn_identifier][0])) {
+                        $groups_array[ $entries[$i][$this->_group_cn_identifier][0] ] = $entries[$i][$this->_group_cn_identifier][0];
+                    }
                 } else {
-                    array_push($groups_array, $entries[$i][$this->_group_cn_identifier][0]);
+                    if (isset($entries[$i][$this->_group_cn_identifier][0])) {
+                        array_push($groups_array, $entries[$i][$this->_group_cn_identifier][0]);
+                    }
                 }
             }
             if (function_exists('ldap_control_paged_result_response')) {
@@ -1373,7 +1383,7 @@ class MultiotpAdLdap {
         }
 		if (!$r_data) {
             if (!$cache_only) {
-                if (2 == $this->_ldap_server_type) { // Generic LDAP
+                if ((2 == $this->_ldap_server_type) || (4 == $this->_ldap_server_type)) { // Generic LDAP or eDirectory
                     // http://www.rainingpackets.com/ldap-posixgroup-groupofnames/
                     $filter="(|(objectClass=posixGroup)(objectClass=groupofNames))";
                     $fields=array("gidnumber",$this->_group_cn_identifier,"distinguishedname");
@@ -1401,13 +1411,16 @@ class MultiotpAdLdap {
                     }
                 
                     $entries = $this->ldap_get_entries_raw($sr);
-                    
+
                     for ($i=0; $i<$entries["count"]; $i++) {
                         // if (!isset($entries[$i]["distinguishedname"][0]))
-                        if (2 == $this->_ldap_server_type) { // We don't want the full distinguishedname for posixGroups, cn only
+                        if ((2 == $this->_ldap_server_type) || (4 == $this->_ldap_server_type)) { // Generic LDAP and eDirectory, we don't want the full distinguishedname for posixGroups, cn only
                             // $entries[$i]["distinguishedname"][0] = ldap_get_dn($this->_conn, $entries[$i]);
                             // We want to use the cn only
-                            $entries[$i]["distinguishedname"][0] = $entries[$i][$this->_group_cn_identifier][0];
+
+                            if (isset($entries[$i][$this->_group_cn_identifier][0])) {
+                                $entries[$i]["distinguishedname"][0] = $entries[$i][$this->_group_cn_identifier][0];
+                            }
                         }
                         if (!isset($entries[$i]["primarygrouptoken"][0])) {
                             $entries[$i]["primarygrouptoken"][0] = (isset($entries[$i]["gidnumber"][0])?$entries[$i]["gidnumber"][0]:NULL);

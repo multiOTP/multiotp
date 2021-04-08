@@ -4,11 +4,11 @@
  * @brief Command line implementation of the multiOTP PHP class.
  *
  * multiOTP PHP CLI header - Strong two-factor authentication PHP class
- * http://www.multiotp.net
+ * https://www\.multiOTP.net
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
- * Donation are always welcome! Please check http://www.multiotp.net
+ * Donation are always welcome! Please check https://www\.multiOTP.net
  * and you will find the magic button ;-)
  *
  * If the name of this file is multiotp.php, it means that it is already
@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.9
- * @date      2021-03-25
+ * @version   5.8.2.1
+ * @date      2021-04-08
  * @since     2010-06-08
  * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -440,6 +440,7 @@
  *
  * Change Log
  *
+ *   2021-04-08 5.8.2.1 SysCo/al ENH: eDirectory LDAP server support (set the LDAP server type to 4)
  *   2021-02-12 5.8.1.0 SysCo/al FIX: Minor fixes
  *   2020-12-11 5.8.0.6 SysCo/al ENH: Some new commands added/updated, like sync-delete-retention-days
  *   2019-10-23 5.6.1.4 SysCo/al FIX: Separated configuration/statistics storage handling
@@ -2620,7 +2621,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "       ldap-network-timeout: LDAP/AD network timeout (in seconds)".$crlf;
                 echo "                  ldap-port: LDAP/AD port (default is set to 389)".$crlf;
                 echo "       ldap-server-password: LDAP/AD server password".$crlf;
-                echo "           ldap-server-type: [1|2] LDAP/AD server type (1=AD, 2=standard LDAP)".$crlf;
+                echo "           ldap-server-type: [1|2|4] LDAP/AD server type".$crlf;
+                echo "           ldap-server-type:         (1=AD, 2=standard LDAP, 4=eDirectory)".$crlf;
                 echo "                   ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection".$crlf;
                 echo " ldap-synced-user-attribute: LDAP/AD attribute used as the account name".$crlf;
                 echo "            ldap-time-limit: LDAP/AD number of sec. to wait for search results".$crlf;
@@ -2874,11 +2876,11 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "order to have a very low budget strong authentication device. Please look at".$crlf;
                 echo "the readme file in order to learn how to set it up in a few steps.".$crlf;
                 echo "The distribution is already optimized with an HTTP proxy to speed up the CLI.".$crlf;
-                echo "A ready to use binary image can be downloaded at http://download.multiotp.net/".$crlf;
+                echo "A ready to use binary image can be downloaded at https://download.multiOTP.net/".$crlf;
                 echo $crlf;
                 echo "multiOTP open source is also available as a ready to use virtual appliance in".$crlf;
                 echo "standard OVA, VMware optimized or Hyper-V formats.".$crlf;
-                echo "Virtual appliance images can be downloaded at http://download.multiotp.net/".$crlf;
+                echo "Virtual appliance images can be downloaded at https://download.multiOTP.net/".$crlf;
                 echo $crlf;
                 echo "multiOTP web service is working fine with any web server supporting PHP.".$crlf;
                 echo " - nginx is a light one under Linux and Windows (http://nginx.org/)".$crlf;
@@ -2906,9 +2908,9 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "  Open-source One Time Password app for ownCloud (http://owncloud.org)".$crlf;
                 echo " UserCredential (https://github.com/cymapgt/UserCredential)".$crlf;
                 echo "  Open-source authentication PHP library by Cyril Ogana".$crlf;
-                echo " multiOTP Pro 501V (https://www.multiOTP.com)".$crlf;
+                echo " multiOTP Pro 501V (https://www\.multiOTP.com)".$crlf;
                 echo "  Pro version virtual appliance, with full web GUI, 1 free user licence".$crlf;
-                echo " multiOTP Pro 420B (https://www.multiOTP.com)".$crlf;
+                echo " multiOTP Pro 420B (https://www\.multiOTP.com)".$crlf;
                 echo "  Pro version tiny hardware device (BeagleBone Black), with full web GUI".$crlf;
                 echo " multiOTP Enterprise (http:s//firmware.multiotp.com/enterprise/)".$crlf;
                 echo "  Enterprise version virtual appliance, with HA master-slave support,".$crlf;

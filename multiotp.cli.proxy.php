@@ -4,19 +4,19 @@
  * @brief Command line calling the proxy of the multiOTP PHP class.
  *
  * multiOTP PHP CLI proxy - Strong two-factor authentication PHP class
- * http://www.multiotp.net
+ * https://www\.multiOTP.net
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
- * Donation are always welcome! Please check http://www.multiotp.net
+ * Donation are always welcome! Please check https://www\.multiOTP.net
  * and you will find the magic button ;-)
  *
  *
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.9
- * @date      2021-03-25
+ * @version   5.8.2.1
+ * @date      2021-04-08
  * @since     2010-06-08
  * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License

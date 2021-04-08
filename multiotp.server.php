@@ -4,11 +4,11 @@
  * @brief web service for the multiOTP class.
  *
  * multiOTP web service - Strong two-factor authentication PHP class
- * http://www.multiotp.net
+ * https://www\.multiOTP.net
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
- * Donation are always welcome! Please check http://www.multiotp.net
+ * Donation are always welcome! Please check https://www\.multiOTP.net
  * and you will find the magic button ;-)
  *
  * The multiOTP web service is simply merged with the multiOTP PHP class
@@ -27,8 +27,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.9
- * @date      2021-03-25
+ * @version   5.8.2.1
+ * @date      2021-04-08
  * @since     2013-08-06
  * @copyright (c) 2013-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -165,9 +165,9 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
     $soap_server = new soap_server();
 
     $soap_service_name = "multiotp";
-    $soap_tns_namespace = 'http://www.multiotp.net/wsdl/multiotp/';
+    $soap_tns_namespace = 'https://www\.multiOTP.net/wsdl/multiotp/';
     $soap_endpoint_url = false;
-    $soap_schema_target_namespace = 'http://www.multiotp.net/wsdl/multiotp/';
+    $soap_schema_target_namespace = 'https://www\.multiOTP.net/wsdl/multiotp/';
     $soap_openotp_namespace = 'urn:openotp'; // urn:openotp
 
     // Create the WSDL 
@@ -1181,7 +1181,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
             <div id="package_info_section">
                 This package is the result of a *bunch* of work. If you find this package useful, <a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=B78FJAH6RBNZ2">[Donation]</a> are always welcome to support this project.
                 <br />
-                Please check <a target="_blank" href="http://www.multiOTP.net/">http://www.multiOTP.net/</a> and you will find the magic button ;-)
+                Please check <a target="_blank" href="https://www\.multiOTP.net/">https://www\.multiOTP.net/</a> and you will find the magic button ;-)
 				<br />
 				Visit <a target="_blank" href="http://forum.multiotp.net/">http://forum.multiotp.net/</a> for additional support.
                 <hr />
@@ -1505,7 +1505,7 @@ EOWEBPAGE;
 <i>
     Are you interested in additional features like automatic syncronization of AD/LDAP users, provisioning PDF automatic email distribution, API automation, HA in master-slave mode and many others, everything through an easy and fast web interface ?
     <br />
-    Check out our commercial editions here: <a target="_blank" href="http://www.multiotp.com/">http://www.multiotp.com/</a>
+    Check out our commercial editions here: <a target="_blank" href="https://www.multiOTP.com/">https://www.multiOTP.com/</a>
 </i>
 EOI;
         }

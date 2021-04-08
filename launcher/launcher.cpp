@@ -3,19 +3,19 @@
  * @brief Launcher for the multiOTP open source embedded CLI package
  *
  * multiOTP C++ launcher - Strong two-factor authentication solution
- * http://www.multiotp.net
+ * https://www\.multiOTP.net
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
- * Donation are always welcome! Please check http://www.multiotp.net
+ * Donation are always welcome! Please check https://www\.multiOTP.net
  * and you will find the magic button ;-)
  *
  * The multiOTP C++ launcher is simply used to launch PHP
  * and run multiotp.windows.php with the provided arguments.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.9
- * @date      2021-03-25
+ * @version   5.8.2.1
+ * @date      2021-04-08
  * @since     2016-12-08
  * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -68,8 +68,8 @@
 #include <iostream>
 
 #define SOFTWARE    "LAUNCHPHPMULTIOTP"
-#define VER_NUMBER  "5.8.1.9"
-#define VER_DATE    "2021-03-25"
+#define VER_NUMBER  "5.8.2.1"
+#define VER_DATE    "2021-04-08"
 
 int _tmain(int argc, _TCHAR* argv[])
 {

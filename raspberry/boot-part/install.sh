@@ -5,7 +5,7 @@
 # @brief  Installer file for an easy Raspberry Pi / VM / Docker implementation
 #
 # multiOTP package - Strong two-factor authentication open source package
-# http://www.multiOTP.net/
+# https://www\.multiOTP.net/
 #
 # The multiOTP package is the lightest package available that provides so many
 # strong authentication functionalities and goodies, and best of all, for anyone
@@ -13,11 +13,11 @@
 #
 # This package is the result of a *LOT* of work. If you are happy using this
 # package, [Donation] are always welcome to support this project.
-# Please check http://www.multiOTP.net/ and you will find the magic button ;-)
+# Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.1.9
-# @date      2021-03-25
+# @version   5.8.2.1
+# @date      2021-04-08
 # @since     2013-11-29
 # @copyright (c) 2013-2019 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
@@ -64,7 +64,7 @@ SSH_ROOT_LOGIN="1"
 DEFAULT_IP="192.168.1.44"
 REBOOT_AT_THE_END="1"
 
-TEMPVERSION="@version   5.8.1.9"
+TEMPVERSION="@version   5.8.2.1"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
@@ -1022,7 +1022,7 @@ if [ -e /etc/systemd/system/ ] ; then
 [Unit]
 Description=Initialize the multiOTP functionalities
 After=local-fs.target network.target
-Documentation=http://www.multiotp.com/
+Documentation=https://www.multiOTP.com/
 
 [Service]
 Type=simple

@@ -4,7 +4,7 @@
 #
 # multiOTP package - Strong two-factor authentication open source package
 # multiOTP is OATH certified for TOTP/HOTP
-# http://www.multiOTP.net/
+# https://www\.multiOTP.net/
 #
 # The multiOTP package is the lightest package available that provides so many
 # strong authentication functionalities and goodies, and best of all, for anyone
@@ -12,11 +12,11 @@
 #
 # This package is the result of a *LOT* of work. If you are happy using this
 # package, [Donation] are always welcome to support this project.
-# Please check http://www.multiOTP.net/ and you will find the magic button ;-)
+# Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    SysCo/yj, SysCo/al, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.1.9
-# @date      2021-03-25
+# @version   5.8.2.1
+# @date      2021-04-08
 # @since     2014-08-14
 # @copyright (c) 2014-2021 SysCo systemes de communication sa
 # @copyright (c) 2002 by Boian Jordanov <bjordanov@orbitel.bg>
@@ -55,7 +55,7 @@
 =head1 NAME
 
 multiotp.pl - Perl module for use with FreeRADIUS rlm_perl, to authenticate against 
- multiOTP open source   http://www.multiOTP.net
+ multiOTP open source   https://www\.multiOTP.net
 
 =head1 SYNOPSIS
 

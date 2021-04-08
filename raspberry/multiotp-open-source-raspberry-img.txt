@@ -2,10 +2,10 @@ multiOTP open source Raspberry Pi image ready to use
 ====================================================
 multiOTP open source is a strong two-factor authentication device
 
-(c) 2010-2019 SysCo systemes de communication sa
-http://www.multiOTP.net/
+(c) 2010-2021 SysCo systemes de communication sa
+https://www\.multiOTP.net/
 
-Current build: 5.8.0.0 (2020-08-31)
+Current build: 5.8.2.1 (2021-04-08)
 
 Check the readme file of the multiOTP open source edition for more information.
 
@@ -34,17 +34,17 @@ Radius password: myfirstpass (for subnet 192.168.0.0/16)
 
 This package is the result of a *bunch* of work. If you are happy using this
 package, [Donation] are always welcome to support this project.
-Please check http://www.multiOTP.net/ and you will find the magic button ;-)
+Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 
 
 Real-time clock
 ===============
 If you want to install a battery backed up Real Time Clock in your
 Raspberry Pi, the drivers for these models are included in the package:
-  http://afterthoughtsoftware.com/products/rasclock
+  https://afterthoughtsoftware.com/products/rasclock
   http://www.cjemicros.co.uk/micros/products/rpirtc.shtml
-  http://www.robotshop.com/ca/en/mini-real-time-clock-rtc-module.html
-  http://nicegear.co.nz/raspberry-pi/high-precision-real-time-clock-for-raspberry-pi/
+  https://www.robotshop.com/ca/en/elecrow-ds3231-high-precision-rtc-clock-module-raspberry-pi-b.html
+  https://learningdevelopments.co.nz/products/rtc-clock-module-for-raspberry-pi
 
 
 Disclaimer

@@ -9,7 +9,7 @@
  * multiOTP PHP class - strong two-factor authentication PHP class
  * multiOTP is OATH certified for TOTP/HOTP
  *
- * http://www.multiOTP.net/
+ * https://www\.multiOTP.net/
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
@@ -19,7 +19,7 @@
  *
  * This package is the result of a *bunch* of work. If you are happy using this
  * package, [Donation] are always welcome to support this project.
- * Please check http://www.multiOTP.net/ and you will find the magic button ;-)
+ * Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
  * https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PRS3VDNYL58HJ
  *
  * If you need some specific features in the open source edition of multiOTP,
@@ -61,7 +61,7 @@
  * products and services developed by SysCo systemes de communication sa:
  *  - multiOTP Pro, available as a virtual appliance or a device in order
  *    to provide a complete strong authentication solution with a simple
- *    to use web based interface (http://www.multiotp.com/)
+ *    to use web based interface (https://www.multiOTP.com/)
  *  - multiOTP Enterprise, an HA master-slave virtual appliance to
  *    provide a complete strong authentication solution
  *  - secuPASS.net, a simple service to centralize provisioning and SMS
@@ -72,8 +72,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.9
- * @date      2021-03-25
+ * @version   5.8.2.1
+ * @date      2021-04-08
  * @since     2010-06-08
  * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -267,6 +267,9 @@
  *
  *
  * Users feedbacks and comments
+ *
+ * 2021-04-08 Derek Kenny (CA)
+ *   Thanks for your valuable support in order to support eDirectory LDAP server
  *
  * 2018-08-25 Muzammel (PK)
  *   Thanks for your questions about the client/server process,
@@ -513,6 +516,7 @@
  *
  * Change Log
  *
+ *   2021-04-08 5.8.2.1 SysCo/al ENH: eDirectory LDAP server support (set the LDAP server type value to 4)
  *   2021-03-25 5.8.1.9 SysCo/al FIX: Cookie privacy (httponly and secure) backported to previous virtual appliances
  *                               ENH: Cookie privacy (httponly and secure) are now handled in the application directly
  *                               ENH: Weak SSL ciphers disabled
@@ -880,8 +884,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.1.9
- * @date      2021-03-25
+ * @version   5.8.2.1
+ * @date      2021-04-08
  * @since     2010-07-18
  */
 {
@@ -975,8 +979,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.8.1.9
-   * @date      2021-03-25
+   * @version   5.8.2.1
+   * @date      2021-04-08
    * @since     2010-07-18
    */
   function __construct(
@@ -1000,11 +1004,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.8.1.9'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.8.2.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2021-03-25'; // You should update the date with the date of your changes
+        $temp_date = '@date      2021-04-08'; // You should update the date with the date of your changes
         $this->_date = trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMSBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -4260,8 +4264,14 @@ class Multiotp
         }
       }
       foreach (glob($this->GetLogFolder().$this->GetLogFileName().".*") as $filename) {
+        if ($this->GetVerboseFlag()) {
+          $this->WriteLog("Debug: *ClearLog: check modification date for log file $filename : ".filemtime($filename), FALSE, FALSE, 8888, 'System', '');
+        }
         if ((filemtime($filename) + ($days * 86400)) < time()) {
           unlink($filename);
+          if ($this->GetVerboseFlag()) {
+            $this->WriteLog("Debug: *ClearLog: log file $filename deleted".filemtime($filename), FALSE, FALSE, 8888, 'System', '');
+          }
         }
       }
       return $result;
@@ -7081,7 +7091,7 @@ class Multiotp
 
   function GetLdapFieldsArray()
   {
-      if (2 != $this->GetLdapServerType()) { // Active Directory (not generic)
+      if ((1 == $this->GetLdapServerType()) || (3 == $this->GetLdapServerType())) { // Active Directory (enhanced or legacy)
           // "department" removed, while not used
           $ldap_fields = array($this->GetLdapCnIdentifier(),
                                "mail",
@@ -7101,7 +7111,7 @@ class Multiotp
                                $this->GetLdapSyncedUserAttribute(),
                                "userPrincipalName" // post-2000 Windows account
                               );
-      } else { // Generic LDAP, no attribute like "msNPAllowDialin" or "msRADIUSFramedIPAddress"
+      } else { // Generic LDAP (2) or eDirectory (4), no attribute like "msNPAllowDialin" or "msRADIUSFramedIPAddress"
           /*
            * shadowexpire: -1: not used, otherwise, number of days since 01.01.1970 when the account will be disabled
            * sambaAcctFlags (details: http://pig.made-it.com/samba-accounts.html):
@@ -7302,20 +7312,36 @@ class Multiotp
       $this->_config_data['ldap_server_type'] = intval($value);
       
       // These values are not in the options for now
-      if (1 == $value) { // Active Directory
+      if (1 == $value) { // enhanced Active Directory
+          $this->SetLdapCnIdentifier('sAMAccountName');
+          $this->SetLdapGroupAttribute("memberOf");
           $this->SetLdapGroupCnIdentifier('cn');
-      } elseif (3 == $value) { // enhanced Active Directory
+      } elseif (3 == $value) { // legacy Active Directory
+          $this->SetLdapCnIdentifier('sAMAccountName');
+          $this->SetLdapGroupAttribute("memberOf");
           $this->SetLdapGroupCnIdentifier('cn');
-      } else { // Generic LDAP
+      } elseif (4 == $value) { // eDirectory
+          $this->SetLdapCnIdentifier('uid');
+          $this->SetLdapGroupAttribute("groupMembership");
+          $this->SetLdapGroupCnIdentifier('cn');
+      } else { // Generic LDAP or eDirectory
+          $this->SetLdapCnIdentifier('uid');
+          $this->SetLdapGroupAttribute("memberOf");
           $this->SetLdapGroupCnIdentifier('cn');
       }
       if ($default_parameters) {
-          if (1 == $value) { // Active Directory
+          if (1 == $value) { // enhanced Active Directory
               $this->SetLdapCnIdentifier('sAMAccountName');
-          } elseif (3 == $value) { // enhanced Active Directory
+              $this->SetLdapGroupAttribute("memberOf");
+          } elseif (3 == $value) { // legacy Active Directory
               $this->SetLdapCnIdentifier('sAMAccountName');
+              $this->SetLdapGroupAttribute("memberOf");
+          } elseif (4 == $value) { // eDirectory
+              $this->SetLdapCnIdentifier('uid');
+              $this->SetLdapGroupAttribute("groupMembership");
           } else { // Generic LDAP
               $this->SetLdapCnIdentifier('uid');
+              $this->SetLdapGroupAttribute("memberOf");
           }
       }
   }
@@ -13888,7 +13914,7 @@ class Multiotp
 
       $users_list = '';
 
-      if (1 == $this->GetLdapServerType()) {
+      if (1 == $this->GetLdapServerType()) { // enhanced Active Directory
           $recursive_prefix = "1.2.840.113556.1.4.1941:=";
       } else {
           $recursive_prefix = "";
@@ -13996,7 +14022,7 @@ class Multiotp
               $users_in_groups = array();
 
               if ('' != trim($this->GetLdapInGroup())) {
-                  if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
+                  if ((2 == $this->GetLdapServerType()) || (4 == $this->GetLdapServerType())) { // Generic LDAP or eDirectory, eventually no memberOf function like in AD
                       foreach($in_groups_array_raw as $one_group) {
                           $temp_array = $ldap_connection->group_users($one_group);
                           foreach($temp_array as $one_temp) {
@@ -14132,19 +14158,17 @@ class Multiotp
                                               }
                                           }
 
-                                      // Generic LDAP, eventually no memberOf function like in AD
+                                      // Generic LDAP or eDirectory, eventually no memberOf function like in AD
                                       } elseif (2 == $this->GetLdapServerType()) {
 
                                           // Prepare the array "users_in_groups" if we are using a generic LDAP and an LdapInGroup Filtering
-                                          if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
-                                              foreach($in_groups_array_raw as $one_group) {
-                                                  $temp_array = $ldap_connection->group_users($one_group);
-                                                  foreach($temp_array as $one_temp) {
-                                                      $one_user = $this->EncodeForBackend($one_temp);
-                                                      if ($user == $one_user) {
-                                                          $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_group;
-                                                          $in_a_group = TRUE;
-                                                      }
+                                          foreach($in_groups_array_raw as $one_group) {
+                                              $temp_array = $ldap_connection->group_users($one_group);
+                                              foreach($temp_array as $one_temp) {
+                                                  $one_user = $this->EncodeForBackend($one_temp);
+                                                  if ($user == $one_user) {
+                                                      $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_group;
+                                                      $in_a_group = TRUE;
                                                   }
                                               }
                                           }
@@ -14154,11 +14178,42 @@ class Multiotp
                                               $group = $temp_array[0];
                                           }
 
+                                      // eDirectory
+                                      } elseif (4 == $this->GetLdapServerType()) {
+                                          if (isset($one_user[$ldap_connection->_group_attribute])) {
+                                            $groups_array_raw = $ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]);
+                                          } else {
+                                            $groups_array_raw = array();
+                                          }
+                                          if ($ldap_connection->_recursive_groups) {
+                                              foreach ($groups_array_raw as $id => $group_name){
+                                                  $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
+                                                  if ('' != $ldap_connection->get_warning_message()) {
+                                                      $this->WriteLog("Warning: LDAP warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                                  }
+                                                  $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
+                                              }
+                                          }
+
+                                          foreach($groups_array_raw as $one_group) {
+                                              $this_group = $this->EncodeForBackend($one_group);
+                                              $groups_lower_array[] = mb_strtolower($this_group,'UTF-8');
+                                          }
+                                          
+                                          foreach($in_groups_array as $one_filtered_group) {
+                                              if (in_array(mb_strtolower($one_filtered_group,'UTF-8'), $groups_lower_array)) {
+                                                  $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_filtered_group;
+                                                  $in_a_group = TRUE;
+                                                  if ("" == $group) {
+                                                      $group = $one_filtered_group;
+                                                  }
+                                              }
+                                          }
+
                                       // Legacy Active Directory
                                       } else {
                                           // $groups_array_raw = $ldap_connection->user_groups($user);
                                           $groups_array_raw=$ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
-
                                           if ($ldap_connection->_recursive_groups) {
                                               foreach ($groups_array_raw as $id => $group_name){
                                                   $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
@@ -14483,15 +14538,13 @@ class Multiotp
                                       } elseif (2 == $this->GetLdapServerType()) {
 
                                           // Prepare the array "users_in_groups" if we are using a generic LDAP and an LdapInGroup Filtering
-                                          if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
-                                              foreach($in_groups_array_raw as $one_group) {
-                                                  $temp_array = $ldap_connection->group_users($one_group);
-                                                  foreach($temp_array as $one_temp) {
-                                                      $one_user = $this->EncodeForBackend($one_temp);
-                                                      if ($user == $one_user) {
-                                                          $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_group;
-                                                          $in_a_group = TRUE;
-                                                      }
+                                          foreach($in_groups_array_raw as $one_group) {
+                                              $temp_array = $ldap_connection->group_users($one_group);
+                                              foreach($temp_array as $one_temp) {
+                                                  $one_user = $this->EncodeForBackend($one_temp);
+                                                  if ($user == $one_user) {
+                                                      $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_group;
+                                                      $in_a_group = TRUE;
                                                   }
                                               }
                                           }
@@ -14501,11 +14554,42 @@ class Multiotp
                                               $group = $temp_array[0];
                                           }
 
+                                      // eDirectory
+                                      } elseif (4 == $this->GetLdapServerType()) {
+                                          if (isset($one_user[$ldap_connection->_group_attribute])) {
+                                            $groups_array_raw = $ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]);
+                                          } else {
+                                            $groups_array_raw = array();
+                                          }
+                                          if ($ldap_connection->_recursive_groups) {
+                                              foreach ($groups_array_raw as $id => $group_name){
+                                                  $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
+                                                  if ('' != $ldap_connection->get_warning_message()) {
+                                                      $this->WriteLog("Warning: LDAP warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                                  }
+                                                  $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
+                                              }
+                                          }
+
+                                          foreach($groups_array_raw as $one_group) {
+                                              $this_group = $this->EncodeForBackend($one_group);
+                                              $groups_lower_array[] = mb_strtolower($this_group,'UTF-8');
+                                          }
+                                          
+                                          foreach($in_groups_array as $one_filtered_group) {
+                                              if (in_array(mb_strtolower($one_filtered_group,'UTF-8'), $groups_lower_array)) {
+                                                  $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_filtered_group;
+                                                  $in_a_group = TRUE;
+                                                  if ("" == $group) {
+                                                      $group = $one_filtered_group;
+                                                  }
+                                              }
+                                          }
+
                                       // Legacy Active Directory
                                       } else {
                                           // $groups_array_raw = $ldap_connection->user_groups($user);
                                           $groups_array_raw=$ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
-
                                           if ($ldap_connection->_recursive_groups) {
                                               foreach ($groups_array_raw as $id => $group_name){
                                                   $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
@@ -14856,7 +14940,8 @@ class Multiotp
               $users_in_groups = array();
 
               if ('' != trim($this->GetLdapInGroup())) {
-                  if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
+                  if ((2 == $this->GetLdapServerType()) || (4 == $this->GetLdapServerType())) { // Generic LDAP or eDirectory, eventually no memberOf function like in AD
+                  
                       foreach($in_groups_array_raw as $one_group) {
                           $temp_array = $ldap_connection->group_users($one_group);
                           foreach($temp_array as $one_temp) {
@@ -14873,6 +14958,7 @@ class Multiotp
 
               $users_dn_array_raw = explode("\t",trim(str_replace(";","\t",$this->GetLdapUsersDn())));
               foreach($users_dn_array_raw as $one_user_dn) {
+
                   $ldap_connection->set_users_dn($one_user_dn);
                   do { // LDAP pagination loop
                       if (function_exists('ldap_control_paged_result')) {
@@ -15028,17 +15114,14 @@ class Multiotp
                                           
                                       // Generic LDAP, eventually no memberOf function like in AD
                                       } elseif (2 == $this->GetLdapServerType()) {
-
                                           // Prepare the array "users_in_groups" if we are using a generic LDAP and an LdapInGroup Filtering
-                                          if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
-                                              foreach($in_groups_array_raw as $one_group) {
-                                                  $temp_array = $ldap_connection->group_users($one_group);
-                                                  foreach($temp_array as $one_temp) {
-                                                      $one_user = $this->EncodeForBackend($one_temp);
-                                                      if ($user == $one_user) {
-                                                          $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_group;
-                                                          $in_a_group = TRUE;
-                                                      }
+                                          foreach($in_groups_array_raw as $one_group) {
+                                              $temp_array = $ldap_connection->group_users($one_group);
+                                              foreach($temp_array as $one_temp) {
+                                                  $one_user = $this->EncodeForBackend($one_temp);
+                                                  if ($user == $one_user) {
+                                                      $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_group;
+                                                      $in_a_group = TRUE;
                                                   }
                                               }
                                           }
@@ -15048,11 +15131,42 @@ class Multiotp
                                               $group = $temp_array[0];
                                           }
 
+                                      // eDirectory
+                                      } elseif (4 == $this->GetLdapServerType()) {
+                                          if (isset($one_user[$ldap_connection->_group_attribute])) {
+                                            $groups_array_raw = $ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]);
+                                          } else {
+                                            $groups_array_raw = array();
+                                          }
+                                          if ($ldap_connection->_recursive_groups) {
+                                              foreach ($groups_array_raw as $id => $group_name){
+                                                  $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
+                                                  if ('' != $ldap_connection->get_warning_message()) {
+                                                      $this->WriteLog("Warning: LDAP warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                                  }
+                                                  $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
+                                              }
+                                          }
+
+                                          foreach($groups_array_raw as $one_group) {
+                                              $this_group = $this->EncodeForBackend($one_group);
+                                              $groups_lower_array[] = mb_strtolower($this_group,'UTF-8');
+                                          }
+                                          
+                                          foreach($in_groups_array as $one_filtered_group) {
+                                              if (in_array(mb_strtolower($one_filtered_group,'UTF-8'), $groups_lower_array)) {
+                                                  $user_in_groups.= (('' != $user_in_groups) ? ',' : '') . $one_filtered_group;
+                                                  $in_a_group = TRUE;
+                                                  if ("" == $group) {
+                                                      $group = $one_filtered_group;
+                                                  }
+                                              }
+                                          }
+
                                       // Legacy Active Directory
                                       } else {
                                           // $groups_array_raw = $ldap_connection->user_groups($user);
                                           $groups_array_raw=$ldap_connection->nice_names($one_user[$ldap_connection->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
-
                                           if ($ldap_connection->_recursive_groups) {
                                               foreach ($groups_array_raw as $id => $group_name){
                                                   $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
@@ -21488,7 +21602,7 @@ require_once('contrib/MultiotpXmlParser.php'); // External contribution
 /*****************************************
  * MultiotpYubikey Class (LGPLv3)        *
  * André Liechti                         *
- * http://www.multiotp.net/              *
+ * https://www\.multiOTP.net/              *
  *****************************************/
 require_once('contrib/MultiotpYubikey.php'); // External contribution
 

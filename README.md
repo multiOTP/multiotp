@@ -4,9 +4,9 @@ multiOTP open source is a GNU LGPL implementation of a strong two-factor authent
 multiOTP open source is OATH certified for HOTP/TOTP
 
 (c) 2010-2021 SysCo systemes de communication sa  
-http://www.multiOTP.net/
+https://www\.multiOTP.net/
 
-Current build: 5.8.1.9 (2021-03-25)
+Current build: 5.8.2.1 (2021-04-08)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -27,13 +27,13 @@ that is interested about security issues, it's a fully open source solution!
 
 This package is the result of a *bunch* of work. If you are happy using this
 package, [Donation] are always welcome to support this project.
-Please check http://www.multiOTP.net/ and you will find the magic button ;-)
+Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 
 If you need some specific features in the open source edition of multiOTP,
 please contact us in order to discuss about a sponsorship in order to
 prioritize your needs.
 
-You can also have a look on on http://www.multiotp.com for multiOTP Pro and
+You can also have a look on on https://www.multiOTP.com for multiOTP Pro and
 multiOTP Enterprise, which are commercial editions of ready to use virtual
 appliances including more features like:
  - Full Web GUI interface
@@ -159,14 +159,15 @@ subfolders from windows to your current multiOTP folder
 WHAT'S NEW IN THE RELEASES
 ==========================
 # What's new in 5.8 releases
- - Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
- - New sync-delete-retention-days= option in order to purge inexistent AD/LDAP users
- - Enhanced windows command line scripts (automatic administrator level)
- - Debian Buster 10.5 support (PHP 7.3, FreeRADIUS 3.0.17)
- - Raspberry Pi 4B support
- - Database optimization, TEXT fields instead of varchar(255)
- - Better mysqli support for alternate connection port
- - Better unicode handling
+- eDirectory LDAP server support
+- Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
+- New sync-delete-retention-days= option in order to purge inexistent AD/LDAP users
+- Enhanced windows command line scripts (automatic administrator level)
+- Debian Buster 10.5 support (PHP 7.3, FreeRADIUS 3.0.17)
+- Raspberry Pi 4B support
+- Database optimization, TEXT fields instead of varchar(255)
+- Better mysqli support for alternate connection port
+- Better unicode handling
 
 # What's new in 5.6 releases
 - Generic web based SMS provider support
@@ -311,6 +312,7 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-04-08 5.8.2.1 ENH: eDirectory LDAP server support
 2021-03-25 5.8.1.9 FIX: Cookie privacy (httponly and secure) backported to previous virtual appliances
                    ENH: Cookie privacy (httponly and secure) are now handled in the application directly
                    ENH: Weak SSL ciphers disabled
@@ -883,7 +885,7 @@ It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.
 The Credential Provider does not need any RADIUS connection! It uses instead a
 local version of multiOTP which can be configured as a client of a
 centralized server (with caching support).
-(http://download.multiotp.net/credential-provider/)
+(https://download.multiOTP.net/credential-provider/)
 
 LSE Experts provides a commercial Radius Credential Provider which can talk
 directly with a radius server.
@@ -1072,7 +1074,7 @@ now be displayed (like with the same option used with ntlm_auth).
 
 1) Create a new module file called "multiotp" in etc/raddb/modules/ containing:  
 ```
-    # Exec module instance for multiOTP (http://www.multiotp.net/).  
+    # Exec module instance for multiOTP (https://www\.multiOTP.net/).  
     # for Linux  : replace '/path/to/multiotp' with the actual path to the multiotp.php file, including the full file name.
     # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /), including the fulle file name.
     exec multiotp {  
@@ -1088,7 +1090,7 @@ now be displayed (like with the same option used with ntlm_auth).
     a) Add the multiOTP handling  
 ```
     #  
-    # Handle multiOTP (http://www.multiotp.net/) authentication.  
+    # Handle multiOTP (https://www\.multiOTP.net/) authentication.  
     # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
 ```
@@ -1096,7 +1098,7 @@ now be displayed (like with the same option used with ntlm_auth).
     b) Add the multiOTP authentication handling  
 ```
     #  
-    # Handle multiOTP (http://www.multiotp.net/) authentication.  
+    # Handle multiOTP (https://www\.multiOTP.net/) authentication.  
     # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
@@ -1118,7 +1120,7 @@ now be displayed (like with the same option used with ntlm_auth).
     a) Add the multiOTP handling  
 ```
     #  
-    # Handle multiOTP (http://www.multiotp.net/) authentication.  
+    # Handle multiOTP (https://www\.multiOTP.net/) authentication.  
     # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
 ```
@@ -1126,7 +1128,7 @@ now be displayed (like with the same option used with ntlm_auth).
     b) Add the multiOTP authentication handling  
 ```
     #  
-    # Handle multiOTP (http://www.multiotp.net/) authentication.  
+    # Handle multiOTP (https://www\.multiOTP.net/) authentication.  
     # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
@@ -1147,7 +1149,7 @@ now be displayed (like with the same option used with ntlm_auth).
    Add the multiOTP authorization policy  
 ```
     #  
-    # Handle multiOTP (http://www.multiotp.net/) authorization policy.  
+    # Handle multiOTP (https://www\.multiOTP.net/) authorization policy.  
     # This must be added just before the last "}"  
     multiotp.authorize {  
         if (!control:Auth-Type) {  
@@ -1166,7 +1168,7 @@ now be displayed (like with the same option used with ntlm_auth).
    Add the clients IP, mask and secret that you want to authorize.  
 ```
     #  
-    # Handle multiOTP (http://www.multiotp.net/) for some clients.  
+    # Handle multiOTP (https://www\.multiOTP.net/) for some clients.  
     client 0.0.0.0 {  
         netmask = 0  
         secret = multiotpsecret  
@@ -1477,7 +1479,7 @@ HOW TO INSTALL A LOCAL ONLY STRONG AUTHENTICATION ON A WINDOWS MACHINE ?
 ========================================================================
 1) Install multiOTPCredentialProvider, which contains also multiOTP inside.
    It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.
-   (http://download.multiotp.net/credential-provider/)
+   (https://download.multiOTP.net/credential-provider/)
 2) During the installation, specify the folder on the client where the
    multiotp.exe file and folders must be installed and configured.
 3) In the wizard, leave the URL of the multiOTP server(s) empty.
@@ -1494,7 +1496,7 @@ FOR STRONG AUTHENTICATION ON WINDOWS DESKTOPS OR RDP ?
 1) Install a client/server multiOTP environment like explained above.
 2) On each client, install multiOTPCredentialProvider .
    It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.
-   (http://download.multiotp.net/credential-provider/)
+   (https://download.multiOTP.net/credential-provider/)
 3) During the installation, specify the folder on the client where the
    multiotp.exe file and folders must be installed and configured.
 4) In the wizard, type the URL of the multiOTP server(s).
@@ -1508,7 +1510,7 @@ FOR STRONG AUTHENTICATION ON WINDOWS DESKTOPS OR RDP ?
 HOW TO BUILD A RASPBERRY PI STRONG AUTHENTICATION SERVER ?
 ==========================================================
 0) If you want to download a multiOTP Raspberry Pi image ready to use, follow this URL:  
-   http://download.multiotp.net/raspberry/
+   https://download.multiOTP.net/raspberry/
    
 ```
    Nano-computer name: multiotp
@@ -1522,10 +1524,10 @@ HOW TO BUILD A RASPBERRY PI STRONG AUTHENTICATION SERVER ?
    
 1) If you want to use a battery backed up Real Time Clock, install it now in your
    Raspberry Pi, the drivers for these models are included in the package:
-   - http://afterthoughtsoftware.com/products/rasclock
+   - https://afterthoughtsoftware.com/products/rasclock
    - http://www.cjemicros.co.uk/micros/products/rpirtc.shtml
-   - http://www.robotshop.com/ca/en/mini-real-time-clock-rtc-module.html
-   - http://nicegear.co.nz/raspberry-pi/high-precision-real-time-clock-for-raspberry-pi/
+   - https://www.robotshop.com/ca/en/elecrow-ds3231-high-precision-rtc-clock-module-raspberry-pi-b.html
+   - https://learningdevelopments.co.nz/products/rtc-clock-module-for-raspberry-pi
    
 2) Download the last image of Raspbian to be flashed  
    http://downloads.raspberrypi.org/raspbian_latest (currently 2017-09-07-raspbian-stretch.zip)
@@ -1583,17 +1585,13 @@ You can define a custom cipher suite with the ldaptls_cipher_suite option.
 
 COMPATIBLE CLIENTS APPLICATIONS AND DEVICES
 ===========================================
-Open source multiOTPCredentialProvider, based on MultiotpCPV2RDP and mOTP-CP
+Open source multiOTPCredentialProvider, based on MultiotpCPV2RDP and mOTP-CP.
 If you want to have strong authentication on Windows logon, have a look at the
 open source multiOTPCredentialProvider.  
-It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.  
+It works with Windows 7/8/8.1/10/2012(R2)/2016/2019 in both 32 and 64 bits.  
 The Credential Provider is using directly a local version of multiOTP which
 can be configured as a client of a centralized multiOTP server (with caching support)
 (https://github.com/multiOTP/multiOTPCredentialProvider)
-
-LSE Experts is providing a commercial Radius Credential Provider which can talk
-directly with any radius server to check the token. multiOTP will work with it.
-(http://www.lsexperts.de)
 
 Any firewall can connect with the Radius protocol to a multiOTP radius server.
 On advanced firewalls like the ZyXEL ZyWALL USG series, you can do some advanced
@@ -1616,11 +1614,11 @@ EXTERNAL PACKAGES AND SOFTWARE USED
 
     FreeRADIUS / WinRADIUS for Windows (GPLv2)
     This product contains software provided by FreeRADIUS team and its contributors.
-    http://freeradius.org/ - http://winradius.eu/
+    https://freeradius.org/ - http://www.winradius.eu/
 
     md5 JavaScript 2010 algorithm (BSD)
     Joseph Myers, Paul Johnston, Greg Holt, Will Bond
-    http://www.myersdaily.org/joseph/javascript/md5-text.html
+    https://www.myersdaily.org/joseph/javascript/md5-text.html
 
     multiOTPCredentialProvider, based on MultiotpCPV2RDP (Apache License)
     Credential Provider (32 and 64 bits) supporting Windows 7/8/8.1/10/2012(R2)/2016
@@ -1629,10 +1627,10 @@ EXTERNAL PACKAGES AND SOFTWARE USED
 
     Nginx (BSD)
     This product contains software provided by Nginx, Inc. and its contributors.
-    http://nginx.org/
+    https://nginx.org/
     
     nssm service helper (public domain)
-    http://nssm.cc/
+    https://nssm.cc/
 
     NuSOAP - PHP Web Services Toolkit (LGPLv2.1)
     NuSphere Corporation
@@ -1640,7 +1638,7 @@ EXTERNAL PACKAGES AND SOFTWARE USED
 
     PHP (PHP License)
     Voluntary contributions made by many individuals on behalf of the PHP Group.    
-    http://www.php.net/
+    https://www.php.net/
     
     phpseclib (MIT License)
     MMVI Jim Wigginton
@@ -1652,19 +1650,19 @@ EXTERNAL PACKAGES AND SOFTWARE USED
 
     PHP radius class (LGPLv3)
     Andre Liechti
-    http://developer.sysco.ch/php/
+    https://developer.sysco.ch/php/
 
     PHP Syslog class (FREE "AS IS")
     Andre Liechti
-    http://developer.sysco.ch/php/
+    https://developer.sysco.ch/php/
 
     status_bar.php (2010) (FREE "AS IS")
     dealnews.com, Inc.
-    http://brian.moonspot.net/status_bar.php.txt or http://snipplr.com/view/29548/
+    https://snipplr.com/view/29548
 
     TCPDF (LGPLv3)
     Nicola Asuni
-    http://www.tcpdf.org/
+    https://tcpdf.org/
 
     XML Parser Class (LGPLv3)
     Adam A. Flynn - enhanced by SysCo
@@ -1674,7 +1672,7 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     Tanase Laurentiu Iulian
     http://xpertmailer.sourceforge.net/
 
-    The source files can be downloaded at http://download.multiotp.net/multiotp.zip
+    The source files can be downloaded at https://download.multiOTP.net/multiotp.zip
 ```
 
  
@@ -1688,7 +1686,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.8.1.9 (2021-03-25)
+multiOTP 5.8.2.1 (2021-04-08)
 (c) 2010-2021 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1890,7 +1888,8 @@ Usage:
        ldap-network-timeout: LDAP/AD network timeout (in seconds)
                   ldap-port: LDAP/AD port (default is set to 389)
        ldap-server-password: LDAP/AD server password
-           ldap-server-type: [1|2] LDAP/AD server type (1=AD, 2=standard LDAP)
+           ldap-server-type: [1|2|4] LDAP/AD server type
+           ldap-server-type:         (1=AD, 2=standard LDAP, 4=eDirectory)
                    ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection
  ldap-synced-user-attribute: LDAP/AD attribute used as the account name
             ldap-time-limit: LDAP/AD number of sec. to wait for search results
@@ -2144,11 +2143,11 @@ multiOTP can be combined with a Raspberry Pi (http://www.raspberrypi.org/) in
 order to have a very low budget strong authentication device. Please look at
 the readme file in order to learn how to set it up in a few steps.
 The distribution is already optimized with an HTTP proxy to speed up the CLI.
-A ready to use binary image can be downloaded at http://download.multiotp.net/
+A ready to use binary image can be downloaded at https://download.multiOTP.net/
 
 multiOTP open source is also available as a ready to use virtual appliance in
 standard OVA, VMware optimized or Hyper-V formats.
-Virtual appliance images can be downloaded at http://download.multiotp.net/
+Virtual appliance images can be downloaded at https://download.multiOTP.net/
 
 multiOTP web service is working fine with any web server supporting PHP.
  - nginx is a light one under Linux and Windows (http://nginx.org/)
@@ -2176,9 +2175,9 @@ Some of other products and services based on multiOTP:
   Open-source One Time Password app for ownCloud (http://owncloud.org)
  UserCredential (https://github.com/cymapgt/UserCredential)
   Open-source authentication PHP library by Cyril Ogana
- multiOTP Pro 501V (https://www.multiOTP.com)
+ multiOTP Pro 501V (https://www\.multiOTP.com)
   Pro version virtual appliance, with full web GUI, 1 free user licence
- multiOTP Pro 420B (https://www.multiOTP.com)
+ multiOTP Pro 420B (https://www\.multiOTP.com)
   Pro version tiny hardware device (BeagleBone Black), with full web GUI
  multiOTP Enterprise (http:s//firmware.multiotp.com/enterprise/)
   Enterprise version virtual appliance, with HA master-slave support,
@@ -2194,8 +2193,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.8.1.9.zip 
-SHA256:f07fdc9420a2700f5f3627a4f6e8e50fca64ae485214a2fa25ba7a5e738b2fd1 
-SHA1:87159d78fb582b20f8d796bd7549e1ba78232fbf 
-MD5:3b7d16b66ceb83be0c5800c74ac2a7bc 
+Hash verification for multiotp_5.8.2.1.zip 
+SHA256:40f430ff388dbe917ab86b99ff290c85bc239fe599dce665fa81b48d9ca04ed6 
+SHA1:c2de48e5cb14549dfda1c97c6004a0e6133687a0 
+MD5:06c9ec65a82c4c27dbded757d95b5461 
 ``` 
