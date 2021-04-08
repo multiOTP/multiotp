@@ -4,11 +4,11 @@
  * @brief web service for the multiOTP class.
  *
  * multiOTP web service - Strong two-factor authentication PHP class
- * https://www\.multiOTP.net
+ * https://www.multiotp.net
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
- * Donation are always welcome! Please check https://www\.multiOTP.net
+ * Donation are always welcome! Please check https://www.multiotp.net
  * and you will find the magic button ;-)
  *
  * The multiOTP web service is simply merged with the multiOTP PHP class
@@ -128,7 +128,7 @@ if (!class_exists('Multiotp')) {
  * multiOTP PHP class - strong two-factor authentication PHP class
  * multiOTP is OATH certified for TOTP/HOTP
  *
- * https://www\.multiOTP.net/
+ * https://www.multiOTP.net/
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
@@ -138,7 +138,7 @@ if (!class_exists('Multiotp')) {
  *
  * This package is the result of a *bunch* of work. If you are happy using this
  * package, [Donation] are always welcome to support this project.
- * Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
+ * Please check https://www.multiOTP.net/ and you will find the magic button ;-)
  * https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PRS3VDNYL58HJ
  *
  * If you need some specific features in the open source edition of multiOTP,
@@ -29492,7 +29492,7 @@ class MultiotpXMLTag
 /*****************************************
  * MultiotpYubikey Class (LGPLv3)        *
  * André Liechti                         *
- * https://www\.multiOTP.net/              *
+ * https://www.multiotp.net/              *
  *****************************************/
 /*****************************************
  * MultiotpYubikey Class (LGPLv3)        *
@@ -73175,9 +73175,9 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
     $soap_server = new soap_server();
 
     $soap_service_name = "multiotp";
-    $soap_tns_namespace = 'https://www\.multiOTP.net/wsdl/multiotp/';
+    $soap_tns_namespace = 'https://www.multiotp.net/wsdl/multiotp/';
     $soap_endpoint_url = false;
-    $soap_schema_target_namespace = 'https://www\.multiOTP.net/wsdl/multiotp/';
+    $soap_schema_target_namespace = 'https://www.multiotp.net/wsdl/multiotp/';
     $soap_openotp_namespace = 'urn:openotp'; // urn:openotp
 
     // Create the WSDL 
@@ -74370,7 +74370,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
             <div id="package_info_section">
                 This package is the result of a *bunch* of work. If you find this package useful, <a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=B78FJAH6RBNZ2">[Donation]</a> are always welcome to support this project.
                 <br />
-                Please check <a target="_blank" href="https://www\.multiOTP.net/">https://www\.multiOTP.net/</a> and you will find the magic button ;-)
+                Please check <a target="_blank" href="https://www.multiotp.net/">https://www.multiotp.net/</a> and you will find the magic button ;-)
 				<br />
 				Visit <a target="_blank" href="http://forum.multiotp.net/">http://forum.multiotp.net/</a> for additional support.
                 <hr />

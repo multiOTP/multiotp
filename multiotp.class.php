@@ -9,7 +9,7 @@
  * multiOTP PHP class - strong two-factor authentication PHP class
  * multiOTP is OATH certified for TOTP/HOTP
  *
- * https://www\.multiOTP.net/
+ * https://www.multiOTP.net/
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
@@ -19,7 +19,7 @@
  *
  * This package is the result of a *bunch* of work. If you are happy using this
  * package, [Donation] are always welcome to support this project.
- * Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
+ * Please check https://www.multiOTP.net/ and you will find the magic button ;-)
  * https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PRS3VDNYL58HJ
  *
  * If you need some specific features in the open source edition of multiOTP,
@@ -21602,7 +21602,7 @@ require_once('contrib/MultiotpXmlParser.php'); // External contribution
 /*****************************************
  * MultiotpYubikey Class (LGPLv3)        *
  * André Liechti                         *
- * https://www\.multiOTP.net/              *
+ * https://www.multiotp.net/              *
  *****************************************/
 require_once('contrib/MultiotpYubikey.php'); // External contribution
 

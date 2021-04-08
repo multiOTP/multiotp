@@ -6,11 +6,11 @@
  * @brief Command line calling the proxy of the multiOTP PHP class.
  *
  * multiOTP PHP CLI proxy - Strong two-factor authentication PHP class
- * https://www\.multiOTP.net
+ * https://www.multiotp.net
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
- * Donation are always welcome! Please check https://www\.multiOTP.net
+ * Donation are always welcome! Please check https://www.multiotp.net
  * and you will find the magic button ;-)
  *
  *

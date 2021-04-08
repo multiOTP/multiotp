@@ -4,11 +4,11 @@
 Launcher for the multiOTP open source embedded CLI package
 
 multiOTP C++ launcher - Strong two-factor authentication solution
-https://www\.multiOTP.net
+https://www.multiotp.net
 
 Visit http://forum.multiotp.net/ for additional support.
 
-Donation are always welcome! Please check https://www\.multiOTP.net
+Donation are always welcome! Please check https://www.multiotp.net
 and you will find the magic button ;-)
 
 The multiOTP C++ launcher is simply used to launch PHP

@@ -4,11 +4,11 @@
  * @brief Check the implementation of some multiOTP functionalities
  *
  * multiOTP - Strong two-factor authentication PHP class package
- * https://www\.multiOTP.net
+ * https://www.multiotp.net
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
- * Donation are always welcome! Please check https://www\.multiOTP.net
+ * Donation are always welcome! Please check https://www.multiotp.net
  * and you will find the magic button ;-)
  *
  *

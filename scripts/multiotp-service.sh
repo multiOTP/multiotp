@@ -5,7 +5,7 @@
 # @brief  Bash helper for multiOTP service
 #
 # multiOTP package - Strong two-factor authentication open source package
-# https://www\.multiOTP.net/
+# https://www.multiotp.net/
 #
 # The multiOTP package is the lightest package available that provides so many
 # strong authentication functionalities and goodies, and best of all, for anyone
@@ -13,7 +13,7 @@
 #
 # This package is the result of a *LOT* of work. If you are happy using this
 # package, [Donation] are always welcome to support this project.
-# Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
+# Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
 # @version   5.8.2.1

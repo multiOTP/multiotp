@@ -4,7 +4,7 @@ multiOTP open source is a GNU LGPL implementation of a strong two-factor authent
 multiOTP open source is OATH certified for HOTP/TOTP
 
 (c) 2010-2021 SysCo systemes de communication sa  
-https://www\.multiOTP.net/
+https://www.multiotp.net/
 
 Current build: 5.8.2.1 (2021-04-08)
 
@@ -27,7 +27,7 @@ that is interested about security issues, it's a fully open source solution!
 
 This package is the result of a *bunch* of work. If you are happy using this
 package, [Donation] are always welcome to support this project.
-Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
+Please check https://www.multiotp.net/ and you will find the magic button ;-)
 
 If you need some specific features in the open source edition of multiOTP,
 please contact us in order to discuss about a sponsorship in order to
@@ -1074,7 +1074,7 @@ now be displayed (like with the same option used with ntlm_auth).
 
 1) Create a new module file called "multiotp" in etc/raddb/modules/ containing:  
 ```
-    # Exec module instance for multiOTP (https://www\.multiOTP.net/).  
+    # Exec module instance for multiOTP (https://www.multiotp.net/).  
     # for Linux  : replace '/path/to/multiotp' with the actual path to the multiotp.php file, including the full file name.
     # for Windows: replace '/path/to' with the actual path to the multiotp.exe file (also with /), including the fulle file name.
     exec multiotp {  
@@ -1090,7 +1090,7 @@ now be displayed (like with the same option used with ntlm_auth).
     a) Add the multiOTP handling  
 ```
     #  
-    # Handle multiOTP (https://www\.multiOTP.net/) authentication.  
+    # Handle multiOTP (https://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
 ```
@@ -1098,7 +1098,7 @@ now be displayed (like with the same option used with ntlm_auth).
     b) Add the multiOTP authentication handling  
 ```
     #  
-    # Handle multiOTP (https://www\.multiOTP.net/) authentication.  
+    # Handle multiOTP (https://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
@@ -1120,7 +1120,7 @@ now be displayed (like with the same option used with ntlm_auth).
     a) Add the multiOTP handling  
 ```
     #  
-    # Handle multiOTP (https://www\.multiOTP.net/) authentication.  
+    # Handle multiOTP (https://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
 ```
@@ -1128,7 +1128,7 @@ now be displayed (like with the same option used with ntlm_auth).
     b) Add the multiOTP authentication handling  
 ```
     #  
-    # Handle multiOTP (https://www\.multiOTP.net/) authentication.  
+    # Handle multiOTP (https://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
     Auth-Type multiotp {  
         multiotp  
@@ -1149,7 +1149,7 @@ now be displayed (like with the same option used with ntlm_auth).
    Add the multiOTP authorization policy  
 ```
     #  
-    # Handle multiOTP (https://www\.multiOTP.net/) authorization policy.  
+    # Handle multiOTP (https://www.multiotp.net/) authorization policy.  
     # This must be added just before the last "}"  
     multiotp.authorize {  
         if (!control:Auth-Type) {  
@@ -1168,7 +1168,7 @@ now be displayed (like with the same option used with ntlm_auth).
    Add the clients IP, mask and secret that you want to authorize.  
 ```
     #  
-    # Handle multiOTP (https://www\.multiOTP.net/) for some clients.  
+    # Handle multiOTP (https://www.multiotp.net/) for some clients.  
     client 0.0.0.0 {  
         netmask = 0  
         secret = multiotpsecret  
@@ -2175,9 +2175,9 @@ Some of other products and services based on multiOTP:
   Open-source One Time Password app for ownCloud (http://owncloud.org)
  UserCredential (https://github.com/cymapgt/UserCredential)
   Open-source authentication PHP library by Cyril Ogana
- multiOTP Pro 501V (https://www\.multiOTP.com)
+ multiOTP Pro 501V (https://www.multiotp.com)
   Pro version virtual appliance, with full web GUI, 1 free user licence
- multiOTP Pro 420B (https://www\.multiOTP.com)
+ multiOTP Pro 420B (https://www.multiotp.com)
   Pro version tiny hardware device (BeagleBone Black), with full web GUI
  multiOTP Enterprise (http:s//firmware.multiotp.com/enterprise/)
   Enterprise version virtual appliance, with HA master-slave support,
@@ -2194,7 +2194,7 @@ Visit https://forum.multiotp.net/ for additional support
  
 ``` 
 Hash verification for multiotp_5.8.2.1.zip 
-SHA256:40f430ff388dbe917ab86b99ff290c85bc239fe599dce665fa81b48d9ca04ed6 
-SHA1:c2de48e5cb14549dfda1c97c6004a0e6133687a0 
-MD5:06c9ec65a82c4c27dbded757d95b5461 
+SHA256:dbfe53a8ab426971c77d3f3be12e49025ede73b69930c3a75dfb34d57c5569f3 
+SHA1:47ac6678656263f577ac7b1e98606633907bcdc2 
+MD5:0c56e463ab880d28b441602a2f0bb73b 
 ``` 

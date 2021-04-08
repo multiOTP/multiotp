@@ -3,7 +3,7 @@ multiOTP open source Raspberry Pi image ready to use
 multiOTP open source is a strong two-factor authentication device
 
 (c) 2010-2021 SysCo systemes de communication sa
-https://www\.multiOTP.net/
+https://www.multiotp.net/
 
 Current build: 5.8.2.1 (2021-04-08)
 
@@ -34,7 +34,7 @@ Radius password: myfirstpass (for subnet 192.168.0.0/16)
 
 This package is the result of a *bunch* of work. If you are happy using this
 package, [Donation] are always welcome to support this project.
-Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
+Please check https://www.multiotp.net/ and you will find the magic button ;-)
 
 
 Real-time clock

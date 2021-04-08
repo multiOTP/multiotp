@@ -4,11 +4,11 @@
  * @brief Command line implementation of the multiOTP PHP class.
  *
  * multiOTP PHP CLI header - Strong two-factor authentication PHP class
- * https://www\.multiOTP.net
+ * https://www.multiotp.net
  *
  * Visit http://forum.multiotp.net/ for additional support.
  *
- * Donation are always welcome! Please check https://www\.multiOTP.net
+ * Donation are always welcome! Please check https://www.multiOTP.net
  * and you will find the magic button ;-)
  *
  * If the name of this file is multiotp.php, it means that it is already
@@ -2908,9 +2908,9 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "  Open-source One Time Password app for ownCloud (http://owncloud.org)".$crlf;
                 echo " UserCredential (https://github.com/cymapgt/UserCredential)".$crlf;
                 echo "  Open-source authentication PHP library by Cyril Ogana".$crlf;
-                echo " multiOTP Pro 501V (https://www\.multiOTP.com)".$crlf;
+                echo " multiOTP Pro 501V (https://www.multiotp.com)".$crlf;
                 echo "  Pro version virtual appliance, with full web GUI, 1 free user licence".$crlf;
-                echo " multiOTP Pro 420B (https://www\.multiOTP.com)".$crlf;
+                echo " multiOTP Pro 420B (https://www.multiotp.com)".$crlf;
                 echo "  Pro version tiny hardware device (BeagleBone Black), with full web GUI".$crlf;
                 echo " multiOTP Enterprise (http:s//firmware.multiotp.com/enterprise/)".$crlf;
                 echo "  Enterprise version virtual appliance, with HA master-slave support,".$crlf;

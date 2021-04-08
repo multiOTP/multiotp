@@ -5,7 +5,7 @@
 # @brief  Reset multiOTP open source installation (Raspberry Pi / VM / Docker)
 #
 # multiOTP package - Strong two-factor authentication open source package
-# https://www\.multiOTP.net/
+# https://www.multiotp.net/
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
 # @version   5.8.2.1
