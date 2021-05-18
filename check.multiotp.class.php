@@ -22,8 +22,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.1
- * @date      2021-04-08
+ * @version   5.8.2.3
+ * @date      2021-05-19
  * @since     2013-07-10
  * @copyright (c) 2013-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License

@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.1
- * @date      2021-04-08
+ * @version   5.8.2.3
+ * @date      2021-05-19
  * @since     2010-06-08
  * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -2622,7 +2622,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                  ldap-port: LDAP/AD port (default is set to 389)".$crlf;
                 echo "       ldap-server-password: LDAP/AD server password".$crlf;
                 echo "           ldap-server-type: [1|2|4] LDAP/AD server type".$crlf;
-                echo "           ldap-server-type:         (1=AD, 2=standard LDAP, 4=eDirectory)".$crlf;
+                echo "                             (1=AD, 2=standard LDAP, 4=eDirectory)".$crlf;
                 echo "                   ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection".$crlf;
                 echo " ldap-synced-user-attribute: LDAP/AD attribute used as the account name".$crlf;
                 echo "            ldap-time-limit: LDAP/AD number of sec. to wait for search results".$crlf;

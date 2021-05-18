@@ -15,8 +15,8 @@
 # Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    SysCo/yj, SysCo/al, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.2.1
-# @date      2021-04-08
+# @version   5.8.2.3
+# @date      2021-05-19
 # @since     2014-08-14
 # @copyright (c) 2014-2021 SysCo systemes de communication sa
 # @copyright (c) 2002 by Boian Jordanov <bjordanov@orbitel.bg>

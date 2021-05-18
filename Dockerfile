@@ -24,7 +24,7 @@
 # docker build .
 # docker run --mount source=multiotp-data,target=/etc/multiotp -p 80:80 -p 443:443 -p 1812:1812/udp -p 1813:1813/udp -d xxxxxxxxxxxx
 #
-# 2021-05-19 5.8.2.3 SysCo/al Added php-bcmath
+# 2021-05-19 5.8.2.3 SysCo/al Addded php-bcmath
 # 2021-03-25 5.8.1.9 SysCo/al Remove apt-offline, which is not used
 # 2020-08-31 5.8.0.0 SysCo/al Debian Buster 10.5 support
 # 2019-10-22 5.6.1.3 SysCo/al Debian 10 support
@@ -42,7 +42,7 @@ MAINTAINER Andre Liechti <andre.liechti@multiotp.net>
 LABEL Description="multiOTP open source, running on Debian ${DEBIAN} with PHP${PHPVERSION}." \
       License="LGPL-3.0" \
       Usage="docker run --mount source=[SOURCE PERSISTENT VOLUME],target=/etc/multiotp -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d multiotp-open-source" \
-      Version="5.8.2.2"
+      Version="5.8.2.3"
 
 ARG DEBIAN_FRONTEND=noninteractive
 

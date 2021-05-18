@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2021 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.8.2.1 (2021-04-08)
+Current build: 5.8.2.3 (2021-05-19)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -312,6 +312,7 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-05-19 5.8.2.3 FIX: Dockerfile updated (php-bcmath added)
 2021-04-08 5.8.2.1 ENH: eDirectory LDAP server support
 2021-03-25 5.8.1.9 FIX: Cookie privacy (httponly and secure) backported to previous virtual appliances
                    ENH: Cookie privacy (httponly and secure) are now handled in the application directly
@@ -1686,7 +1687,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.8.2.1 (2021-04-08)
+multiOTP 5.8.2.3 (2021-05-19)
 (c) 2010-2021 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1889,7 +1890,7 @@ Usage:
                   ldap-port: LDAP/AD port (default is set to 389)
        ldap-server-password: LDAP/AD server password
            ldap-server-type: [1|2|4] LDAP/AD server type
-           ldap-server-type:         (1=AD, 2=standard LDAP, 4=eDirectory)
+                             (1=AD, 2=standard LDAP, 4=eDirectory)
                    ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection
  ldap-synced-user-attribute: LDAP/AD attribute used as the account name
             ldap-time-limit: LDAP/AD number of sec. to wait for search results

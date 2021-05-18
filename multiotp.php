@@ -37,8 +37,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.1
- * @date      2021-04-08
+ * @version   5.8.2.3
+ * @date      2021-05-19
  * @since     2010-06-08
  * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -665,8 +665,8 @@ if (!isset($multiotp)) {
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.1
- * @date      2021-04-08
+ * @version   5.8.2.3
+ * @date      2021-05-19
  * @since     2010-06-08
  * @copyright (c) 2010-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -1477,8 +1477,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.1
- * @date      2021-04-08
+ * @version   5.8.2.3
+ * @date      2021-05-19
  * @since     2010-07-18
  */
 {
@@ -1572,8 +1572,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.8.2.1
-   * @date      2021-04-08
+   * @version   5.8.2.3
+   * @date      2021-05-19
    * @since     2010-07-18
    */
   function __construct(
@@ -1597,11 +1597,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.8.2.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.8.2.3'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2021-04-08'; // You should update the date with the date of your changes
+        $temp_date = '@date      2021-05-19'; // You should update the date with the date of your changes
         $this->_date = trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMSBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -75634,7 +75634,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                  ldap-port: LDAP/AD port (default is set to 389)".$crlf;
                 echo "       ldap-server-password: LDAP/AD server password".$crlf;
                 echo "           ldap-server-type: [1|2|4] LDAP/AD server type".$crlf;
-                echo "           ldap-server-type:         (1=AD, 2=standard LDAP, 4=eDirectory)".$crlf;
+                echo "                             (1=AD, 2=standard LDAP, 4=eDirectory)".$crlf;
                 echo "                   ldap-ssl: [0|1] enable/disable LDAP/AD SSL connection".$crlf;
                 echo " ldap-synced-user-attribute: LDAP/AD attribute used as the account name".$crlf;
                 echo "            ldap-time-limit: LDAP/AD number of sec. to wait for search results".$crlf;
