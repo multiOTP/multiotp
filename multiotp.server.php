@@ -27,8 +27,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.3
- * @date      2021-05-19
+ * @version   5.8.2.9
+ * @date      2021-08-19
  * @since     2013-08-06
  * @copyright (c) 2013-2021 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -137,6 +137,7 @@ $multiotp->ForceNoDisplayLog(); // No log on display as we are running a web ser
 if ('' != $multiotp_etc_dir) {
   $multiotp->SetLogFolder('/var/log/multiotp/');
   $multiotp->SetConfigFolder($multiotp_etc_dir.'/config/');
+  $multiotp->SetDdnsFolder($multiotp_etc_dir.'/ddns/');
   $multiotp->SetDevicesFolder($multiotp_etc_dir.'/devices/');
   $multiotp->SetGroupsFolder($multiotp_etc_dir.'/groups/');
   $multiotp->SetTokensFolder($multiotp_etc_dir.'/tokens/');

@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2021 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.8.2.3 (2021-05-19)
+Current build: 5.8.2.9 (2021-08-19)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -159,6 +159,7 @@ subfolders from windows to your current multiOTP folder
 WHAT'S NEW IN THE RELEASES
 ==========================
 # What's new in 5.8 releases
+- Added compatibility with new multiOTP Credential Provider (5.8.2 and further)
 - eDirectory LDAP server support
 - Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
 - New sync-delete-retention-days= option in order to purge inexistent AD/LDAP users
@@ -312,6 +313,7 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-08-19 5.8.2.9 ENH: Added compatibility with new multiOTP Credential Provider (5.8.2 and further)
 2021-05-19 5.8.2.3 FIX: Dockerfile updated (php-bcmath added)
 2021-04-08 5.8.2.1 ENH: eDirectory LDAP server support
 2021-03-25 5.8.1.9 FIX: Cookie privacy (httponly and secure) backported to previous virtual appliances
@@ -1687,7 +1689,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.8.2.3 (2021-05-19)
+multiOTP 5.8.2.9 (2021-08-19)
 (c) 2010-2021 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -2194,8 +2196,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.8.2.3.zip 
-SHA256:cf783d52948b68abb8e7c98dedc9d93fcc9a27399d48afab2a595407ccd665c9 
-SHA1:25a7666e3f9f8ba9440ef257f7d1f6048ec886f7 
-MD5:70f206da9d1142e1edb11bd82e3867f8 
+Hash verification for multiotp_5.8.2.9.zip 
+SHA256:d188a2226ab7b31bd2c2257a41ce74db6a03da57644ba6dbc981a5eeb2054d3b 
+SHA1:7ab236e288b8620a35f106f5093970375ac1ef7a 
+MD5:3e532a1c9bbee08dbb4e744f5bb0c4c5 
 ``` 
