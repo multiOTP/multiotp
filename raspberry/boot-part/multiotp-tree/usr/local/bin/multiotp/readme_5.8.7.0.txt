@@ -3,10 +3,10 @@ multiOTP open source
 multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
 multiOTP open source is OATH certified for HOTP/TOTP
 
-(c) 2010-2021 SysCo systemes de communication sa  
+(c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.8.2.9 (2021-08-19)
+Current build: 5.8.7.0 (2022-04-28)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -158,7 +158,18 @@ subfolders from windows to your current multiOTP folder
 
 WHAT'S NEW IN THE RELEASES
 ==========================
+# What's new in 5.8.7 releases
+- Embedded Windows nginx edition updated to version 1.21.6
+- Embedded Windows PHP edition updated to version 7.4.29
+- New MariaDB/MySQL indexes handling during schema creation and schema updates
+- Enhanced internal tests
+
 # What's new in 5.8 releases
+- New Telnyx SMS provider support
+- PHP 7.4 deprecated code cleaned
+- Email token is now supported for Credential Provider
+- If username doesn't exist, it try automatically a shorter domain name step by step
+- Embedded Windows nginx edition updated to version 1.21.4
 - Added compatibility with new multiOTP Credential Provider (5.8.2 and further)
 - eDirectory LDAP server support
 - Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
@@ -313,7 +324,23 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2022-04-28 5.8.7.0 ENH: PHP 7.4 deprecated code cleaned
+                   ENH: Embedded Windows nginx edition updated to version 1.21.6
+                   ENH: Embedded Windows PHP edition updated to version 7.4.29
+                   ENH: New MariaDB/MySQL indexes handling during schema creation and schema updates
+                   ENH: Enhanced internal tests
+2022-04-14 5.8.6.1 FIX: Token "Without2FA" where not working all time with LDAP users
+                   ENH: Telnyx SMS provider support
+                   ENH: PHP 7.4 deprecated code cleaned
+                   ENH: Email token is now supported for Credential Provider
+                   ENH: In CLI check, if username doesn't exist, it try automatically a shorter domain name step by step
+2022-01-14 5.8.5.1 ENH: Embedded Windows nginx edition updated to version 1.21.4
+2021-11-18 5.8.3.2 ENH: Enhanced multiOTP Credential Provider support
+2021-09-14 5.8.3.0 ENH: VM version 011 support
+                        (Debian Bullseye 11.0, PHP 7.4, FreeRADIUS 3.0.21, Nginx 1.18.0)
+                   ENH: Removed multicast support on the network card
 2021-08-19 5.8.2.9 ENH: Added compatibility with new multiOTP Credential Provider (5.8.2 and further)
+2021-06-04 5.8.2.4 ENH: Detect Credential Provider Request and force the no prefix option
 2021-05-19 5.8.2.3 FIX: Dockerfile updated (php-bcmath added)
 2021-04-08 5.8.2.1 ENH: eDirectory LDAP server support
 2021-03-25 5.8.1.9 FIX: Cookie privacy (httponly and secure) backported to previous virtual appliances
@@ -690,8 +717,8 @@ CHANGE LOG OF RELEASED VERSIONS
 
 CONTENT OF THE PACKAGE
 ======================
-In the credential-provider:
-- the installer of multiOTP Credential Provider for Windows 7/8/8.1/10/2012(R2)/2016
+- the MSI installer of multiOTP Credential Provider for Windows 7/8/8.1/10/2012(R2)/2016
+  must be downloaded separately on https://download.multiotp.net/credential-provider/
 
 In the linux folder:
 - multiotp.php             : command line tool (merge of the header and the class, external files also included)
@@ -882,13 +909,13 @@ in the radius server and provide the IP address(es) of the device(s)
 (often called NAS) and their shared Secret.
 
 If you want to have strong authentication on Windows logon, have a look at the
-open source multiOTPCredentialProvider which is based on MultiotpCPV2RDP from
+open source project multiOTPCredentialProvider which is based on MultiotpCPV2RDP from
 arcadejust and MultiOneTimePassword Credential Provider from Last Squirrel IT.
 It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.  
 The Credential Provider does not need any RADIUS connection! It uses instead a
 local version of multiOTP which can be configured as a client of a
 centralized server (with caching support).
-(https://download.multiOTP.net/credential-provider/)
+(https://download.multiotp.net/credential-provider/)
 
 LSE Experts provides a commercial Radius Credential Provider which can talk
 directly with a radius server.
@@ -1482,7 +1509,7 @@ HOW TO INSTALL A LOCAL ONLY STRONG AUTHENTICATION ON A WINDOWS MACHINE ?
 ========================================================================
 1) Install multiOTPCredentialProvider, which contains also multiOTP inside.
    It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.
-   (https://download.multiOTP.net/credential-provider/)
+   (https://download.multiotp.net/credential-provider/)
 2) During the installation, specify the folder on the client where the
    multiotp.exe file and folders must be installed and configured.
 3) In the wizard, leave the URL of the multiOTP server(s) empty.
@@ -1499,7 +1526,7 @@ FOR STRONG AUTHENTICATION ON WINDOWS DESKTOPS OR RDP ?
 1) Install a client/server multiOTP environment like explained above.
 2) On each client, install multiOTPCredentialProvider .
    It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.
-   (https://download.multiOTP.net/credential-provider/)
+   (https://download.multiotp.net/credential-provider/)
 3) During the installation, specify the folder on the client where the
    multiotp.exe file and folders must be installed and configured.
 4) In the wizard, type the URL of the multiOTP server(s).
@@ -1689,8 +1716,8 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.8.2.9 (2021-08-19)
-(c) 2010-2021 SysCo systemes de communication sa
+multiOTP 5.8.7.0 (2022-04-28)
+(c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
 multiotp will check if the token of a user is correct, based on a specified
@@ -1699,7 +1726,8 @@ and OATH/TOTP (RFC 6238) are implemented). PSKC format supported (RFC 6030).
 Supported encryption methods are PAP and CHAP.
 Yubico OTP format supported (44 bytes long, with prefixed serial number).
 SMS-code are supported (current providers: aspsms,clickatell,clickatell2,
-                        intellisms,nexmo,nowsms,smseagle,swisscom,custom,exec).
+                        intellisms,nexmo,nowsms,smseagle,swisscom,telnyx,
+                        custom,exec).
 Specific SMS sender program supported by specifying exec as SMS provider.
 
 Google Authenticator base32_seed tokens must be of n*8 characters.
@@ -1784,6 +1812,7 @@ Return codes:
 82 ERROR: User not allowed for this device 
 88 ERROR: Device is not defined as a HA slave 
 89 ERROR: Device is not defined as a HA master 
+92 ERROR: Authentication failed (bad password) 
 93 ERROR: Authentication failed (time based token probably out of sync) 
 94 ERROR: API request error 
 95 ERROR: API authentication failed 
@@ -1930,8 +1959,8 @@ Usage:
                sms-password: SMS account password
                    sms-port: Port of the SMS server (for inhouse server)
                sms-provider: SMS provider (aspsms,clickatell,clickatell2,
-                             intellisms,nexmo,nowsms,smseagle,swisscom,custom,
-                             exec)
+                             intellisms,nexmo,nowsms,smseagle,swisscom,telnyx,
+                             custom,exec)
                 sms-userkey: SMS account username or userkey
 
 Custom SMS provider only

@@ -15,15 +15,16 @@
 # Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.2.9
-# @date      2021-08-19
+# @version   5.8.7.0
+# @date      2022-04-28
 # @since     2013-11-29
-# @copyright (c) 2013-2021 SysCo systemes de communication sa
+# @copyright (c) 2013-2022 SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
 # docker build .
 # docker run --mount source=multiotp-data,target=/etc/multiotp -p 80:80 -p 443:443 -p 1812:1812/udp -p 1813:1813/udp -d xxxxxxxxxxxx
 #
+# 2021-09-14 5.8.3.0 SysCo/al Debian Bullseye 11.0 support
 # 2021-05-19 5.8.2.3 SysCo/al Added php-bcmath
 # 2021-03-25 5.8.1.9 SysCo/al Remove apt-offline, which is not used
 # 2020-08-31 5.8.0.0 SysCo/al Debian Buster 10.5 support
@@ -32,17 +33,18 @@
 # 2018-03-20 5.1.1.2 SysCo/al Initial public Dockerfile release
 ##########################################################################
 
-FROM debian:10
-ENV DEBIAN 10
+FROM debian:11
+ENV DEBIAN 11
 ENV PHPINSTALLPREFIX php
-ENV PHPINSTALLPREFIXSQLITE php7.3
-ENV PHPVERSION 7.3
+ENV PHPINSTALLPREFIXVERSION php7.4
+ENV PHPVERSION 7.4
+ENV SQLITEVERSION sqlite3
 
 MAINTAINER Andre Liechti <andre.liechti@multiotp.net>
 LABEL Description="multiOTP open source, running on Debian ${DEBIAN} with PHP${PHPVERSION}." \
       License="LGPL-3.0" \
       Usage="docker run --mount source=[SOURCE PERSISTENT VOLUME],target=/etc/multiotp -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d multiotp-open-source" \
-      Version="5.8.2.9"
+      Version="5.8.7.0"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -80,11 +82,11 @@ RUN apt-get update && \
     ${PHPINSTALLPREFIX}-gd \
     ${PHPINSTALLPREFIX}-gmp \
     ${PHPINSTALLPREFIX}-ldap \
-    ${PHPINSTALLPREFIXSQLITE}-sqlite \
+    ${PHPINSTALLPREFIXVERSION}-${SQLITEVERSION} \
     slapd \
     snmp \
     snmpd \
-    sqlite \
+    ${SQLITEVERSION} \
     subversion \
     sudo \
     unzip \

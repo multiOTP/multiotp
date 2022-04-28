@@ -716,7 +716,7 @@ if (!function_exists('md4'))
             $nblk = ((strlen($str) + 8) >> 6) + 1;
             for($i = 0; $i < $nblk * 16; $i++) $blks[$i] = 0;
             for($i = 0; $i < strlen($str); $i++)
-                $blks[$i >> 2] |= ord($str{$i}) << (($i % 4) * 8);
+                $blks[$i >> 2] |= ord($str[$i]) << (($i % 4) * 8);
             $blks[$i >> 2] |= 0x80 << (($i % 4) * 8);
             $blks[$nblk * 16 - 2] = strlen($str) * 8;
             return $blks;

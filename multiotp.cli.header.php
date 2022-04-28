@@ -35,17 +35,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.9
- * @date      2021-08-19
+ * @version   5.8.7.0
+ * @date      2022-04-28
  * @since     2010-06-08
- * @copyright (c) 2010-2021 SysCo systemes de communication sa
+ * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2021 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2022 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -440,6 +440,16 @@
  *
  * Change Log
  *
+ *   2022-04-11 5.8.6.0 SysCo/al ENH: Telnyx SMS provider support
+ *                               ENH: PHP 7.4 deprecated code cleaned
+ *                               ENH: In CLI check, if username doesn't exist, it try automatically a shorter domain name step by step
+ *   2022-01-14 5.8.5.1 SysCo/al ENH: Embedded Windows nginx edition updated to version 1.21.4
+ *   2021-11-18 5.8.3.2 SysCo/al ENH: Enhanced multiOTP Credential Provider support
+ *   2021-09-14 5.8.3.0 SysCo/al ENH: VM version 011 support
+ *                                    (Debian Bullseye 11.0, PHP 7.4, FreeRADIUS 3.0.21, Nginx 1.18.0)
+ *                               ENH: Removed multicast support on the network card
+ *   2021-08-19 5.8.2.9 SysCo/al ENH: Added compatibility with new multiOTP Credential Provider (5.8.2 and further)
+ *   2021-05-19 5.8.2.3 SysCo/al FIX: Dockerfile updated (php-bcmath added)
  *   2021-04-08 5.8.2.1 SysCo/al ENH: eDirectory LDAP server support (set the LDAP server type to 4)
  *   2021-02-12 5.8.1.0 SysCo/al FIX: Minor fixes
  *   2020-12-11 5.8.0.6 SysCo/al ENH: Some new commands added/updated, like sync-delete-retention-days
@@ -1455,10 +1465,13 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "check";
+            $check_result = false;
             $self_registration = '';
             $otp_inline = '';
             if  ($param_count > 1) {
+                // If the exact given user is not found, we try some different stages
                 if (!$multiotp->CheckUserExists($all_args[1])) {
+                    $check_result = false;
                     if (false !== mb_strpos($all_args[1], ':')) {
                         /*************************************************************************
                          * Here we check special cases
@@ -1480,25 +1493,16 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                             $otp_inline = $part2;
                         }
                     }
-                    if (false !== mb_strpos($all_args[1], '@')) {
-                        $cleaned_user = mb_substr($all_args[1], 0, mb_strpos($all_args[1], '@'));
-                        if ($multiotp->CheckUserExists($cleaned_user)) {
-                            $all_args[1] = $cleaned_user;
-                            $multiotp->SetUser($all_args[1]);
-                        }
-                    } elseif (false !== mb_strpos($all_args[1], "\\")) {
-                        $cleaned_user = mb_substr($all_args[1], mb_strpos($all_args[1], "\\")+1);
-                        if ($multiotp->CheckUserExists($cleaned_user)) {
-                            $all_args[1] = $cleaned_user;
-                            $multiotp->SetUser($all_args[1]);
-                        }
-                    } else {
-                        $clean_phone = $multiotp->CleanPhoneNumber($all_args[1]);
-                        if ($multiotp->CheckUserExists($clean_phone)) {
-                            $all_args[1] = $clean_phone;
-                            $multiotp->SetUser($all_args[1]);
-                        }
+                    
+
+                    /// Return a real username if the initial one is not existing
+                    $find_user = $multiotp->FindRealUserName($all_args[1], TRUE);
+                    if ($find_user != $all_args[1]) {
+                      $all_args[1] = $find_user;
+                      $multiotp->SetUser($all_args[1]);
                     }
+                } else {
+                    $check_result = true;
                 }
                 # check extension can be added here
             }
@@ -2487,7 +2491,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "Supported encryption methods are PAP and CHAP.".$crlf;
                 echo "Yubico OTP format supported (44 bytes long, with prefixed serial number).".$crlf;
                 echo "SMS-code are supported (current providers: aspsms,clickatell,clickatell2,".$crlf;
-                echo "                        intellisms,nexmo,nowsms,smseagle,swisscom,custom,exec).".$crlf;
+                echo "                        intellisms,nexmo,nowsms,smseagle,swisscom,telnyx,".$crlf;
+                echo "                        custom,exec).".$crlf;
                 echo "Specific SMS sender program supported by specifying exec as SMS provider.".$crlf;
                 echo $crlf;
                 echo "Google Authenticator base32_seed tokens must be of n*8 characters.".$crlf;
@@ -2517,8 +2522,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "Return codes:".$crlf;
                 echo $crlf;
                 
-                reset($multiotp->_errors_text);
-                while(list($key, $value) = each($multiotp->_errors_text)) {
+                foreach ($multiotp->_errors_text as $key => $value) {
                     echo mb_substr("  ".$key, -2)." ".$value." ".$crlf;
                 }
                 echo $crlf;
@@ -2661,8 +2665,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "               sms-password: SMS account password".$crlf;
                 echo "                   sms-port: Port of the SMS server (for inhouse server)".$crlf;
                 echo "               sms-provider: SMS provider (aspsms,clickatell,clickatell2,".$crlf;
-                echo "                             intellisms,nexmo,nowsms,smseagle,swisscom,custom,".$crlf;
-                echo "                             exec)".$crlf;
+                echo "                             intellisms,nexmo,nowsms,smseagle,swisscom,telnyx,".$crlf;
+                echo "                             custom,exec)".$crlf;
                 echo "                sms-userkey: SMS account username or userkey".$crlf;
                 echo $crlf;
                 echo "Custom SMS provider only".$crlf;

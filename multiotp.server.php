@@ -27,17 +27,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.9
- * @date      2021-08-19
+ * @version   5.8.7.0
+ * @date      2022-04-28
  * @since     2013-08-06
- * @copyright (c) 2013-2021 SysCo systemes de communication sa
+ * @copyright (c) 2013-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2021 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2022 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -449,12 +449,13 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
          * Basic web server *
          *********************/
          
-        $actual_date   = date('Y-m-d H:i:s');
-        $class_name    = $multiotp->GetClassName();
-        $class_version = $multiotp->GetVersion();
-        $class_date    = $multiotp->GetDate();
-        $rpi_serial    = $multiotp->GetRaspberryPiSerialNumber();
-        $rpi_info      = (('' != $rpi_serial)?"<br />\n        Raspberry Pi serial number: ".$rpi_serial."\n        ":'');
+        $actual_date     = date('Y-m-d H:i:s');
+        $class_name      = $multiotp->GetClassName();
+        $class_version   = $multiotp->GetVersion();
+        $class_date      = $multiotp->GetDate();
+        $rpi_serial      = $multiotp->GetRaspberryPiSerialNumber();
+        $rpi_info        = (('' != $rpi_serial)?"<br />\n        Raspberry Pi serial number: ".$rpi_serial."\n        ":'');
+        $server_software = (isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'].', ' : '')."PHP/".phpversion();
 
         $prefix_required0_checked = '';
         $prefix_required1_checked = '';
@@ -1175,8 +1176,8 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
             <br />
             <br />
         </div -->
-        Web service is ready $actual_date
-        $rpi_info<hr />
+Web service is ready $actual_date, $server_software
+$rpi_info<hr />
         <div id="login_section">
         <form>
             <div id="package_info_section">

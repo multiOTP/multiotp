@@ -22,17 +22,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.9
- * @date      2021-08-19
+ * @version   5.8.7.0
+ * @date      2022-04-28
  * @since     2013-07-10
- * @copyright (c) 2013-2021 SysCo systemes de communication sa
+ * @copyright (c) 2013-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2013-2021 SysCo systemes de communication sa
+ *   Copyright (c) 2013-2022 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch/)
  *   All rights reserved.
@@ -376,20 +376,31 @@ foreach ($backend_array as $backend) {
 
 
     if (!isset($GLOBALS['keeplog'])) {
+      if (isset($GLOBALS['eraselog'])) {
+        //====================================================================
+        // TEST: Clear completely the log
+        $tests++;
+        echo_full($b_on."Clear the log completely".$b_off.$crlf);
+        if ($multiotp->ClearLog()) {
+          echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfully cleared".$crlf);
+          $successes++;
+        } else {
+          echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to clear the log".$crlf);
+        }
+        echo_full($crlf);
+      } else {
         //====================================================================
         // TEST: Clear the log (keep last 2 days)
         $tests++;
         echo_full($b_on."Clear the log".$b_off.$crlf);
-        if ($multiotp->ClearLog(2))
-        {
-            echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfully cleared (keep the last 2 days)".$crlf);
-            $successes++;
-        }
-        else
-        {
-            echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to clear the log".$crlf);
+        if ($multiotp->ClearLog(2)) {
+          echo_full("- ".$ok_on.'OK!'.$ok_off." Log successfully cleared (keep the last 2 days)".$crlf);
+          $successes++;
+        } else {
+          echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to clear the log".$crlf);
         }
         echo_full($crlf);
+      }
     }
 
 
@@ -929,6 +940,57 @@ foreach ($backend_array as $backend) {
 
 
     //====================================================================
+    // TEST: Deleting the testmail@mydomain.sub.net if it exists
+    echo_full($i_on);
+    echo_full("Deleting the testmail@mydomain".$crlf);
+    if (!$multiotp->DeleteUser('testmail@mydomain', TRUE))
+    {
+        echo_full("- INFO: User testmail@mydomain doesn't exist yet".$crlf);
+    }
+    else
+    {
+        echo_full("- INFO: User testmail@mydomain successfully deleted".$crlf);
+    }
+    echo_full($i_off);
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Creating user testmail@mydomain with the RFC test values HOTP token and PIN prefix
+    $tests++;
+    echo_full($b_on."Creating user testmail@mydomain with the RFC test values HOTP token and PIN prefix".$b_off.$crlf);
+    if ($multiotp->CreateUser('testmail@mydomain',1,'HOTP','3132333435363738393031323334353637383930','*!1-2-3-4-5-6?*',6,0))
+    {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." User testmail@mydomain successfully created".$crlf);
+        $successes++;
+    }
+    else
+    {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Creation of user testmail@mydomain failed".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: Authenticating testmail@mydomain.sub.net with the first token of the RFC test values with PIN
+    $tests++;
+    $test_user = 'testmail@mydomain.sub.net';
+    $real_user = $multiotp->FindRealUserName($test_user);
+    echo_full($b_on."Authenticating testmail@mydomain.sub.net with the first token of the RFC test values with PIN".$b_off.$crlf);
+    $multiotp->SetUser($real_user);
+    if (0 == ($error = $multiotp->CheckToken('*!1-2-3-4-5-6?*755224')))
+    {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Token of the real user $real_user (user $test_user) (with prefix PIN) successfully accepted".$crlf);
+        $successes++;
+    }
+    else
+    {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Error #".$error." authenticating real user $real_user (user $test_user) with the first token and PIN prefix".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
     // Delete the user fast_user if it exists
     echo_full($i_on);
     echo_full("Deleting the user fast_user".$crlf);
@@ -1049,6 +1111,25 @@ foreach ($backend_array as $backend) {
         $successes++;
     } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Authenticating user test_wo2fa with the incorrect prefix PIN accepted".$crlf);
+    }
+    echo_full($crlf);
+
+
+    //====================================================================
+    // TEST: GetActiveUsersCount with and without "without2FA" users
+    $tests++;
+    $multiotp->SetUser('test_wo2fa');
+    $multiotp->EnableUserRequestLdapPassword();
+    $multiotp->WriteUserData();
+    echo_full($b_on."GetActiveUsersCount with and without \"LDAP without 2FA\" users".$b_off.$crlf);
+    $with_2fa = $multiotp->GetActiveUsersCount(FALSE);
+    $without_2fa = $multiotp->GetActiveUsersCount(TRUE);
+    
+    if ($with_2fa > $without_2fa) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." GetActiveUsersCount check successful ($with_2fa/$without_2fa)".$crlf);
+        $successes++;
+    } else {
+        echo_full("- ".$ko_on.'KO!'.$ko_off." GetActiveUsersCount check error ($with_2fa/$without_2fa)".$crlf);
     }
     echo_full($crlf);
 

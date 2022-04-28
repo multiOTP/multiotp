@@ -118,7 +118,7 @@ class FUNC5 {
 				for ($i = 0; $i < $len1; $i++) {
 					$found = false;
 					for ($j = 0; $j < $len2; $j++) {
-						if ($lst{$j} == $str{$i}) {
+						if ($lst[$j] == $str[$i]) {
 							$found = true;
 							break;
 						}

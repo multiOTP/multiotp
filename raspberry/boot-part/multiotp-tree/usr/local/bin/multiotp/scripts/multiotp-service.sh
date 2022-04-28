@@ -16,10 +16,10 @@
 # Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.2.9
-# @date      2021-08-19
+# @version   5.8.7.0
+# @date      2022-04-28
 # @since     2013-11-29
-# @copyright (c) 2013-2019 by SysCo systemes de communication sa
+# @copyright (c) 2013-2021 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
 ##########################################################################################
@@ -91,7 +91,10 @@ elif [[ "${UNAME}" == *docker* ]]; then
     # Docker
     FAMILY="VAP"
     TYPE="DOCKER"
-elif is_running_in_container; then
+elif grep -q docker /proc/1/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/self/cgroup; then 
     FAMILY="VAP"
     TYPE="DOCKER"
 elif [ -f /.dockerenv ]; then
@@ -103,8 +106,8 @@ else
     TYPE="VA"
     DMIDECODE=$(dmidecode -s system-product-name)
     if [[ "${DMIDECODE}" == *VMware* ]]; then
-        VMTOOLS=$(dpkg-query -l | grep "open-vm-tools")
-        if [[ "${VMTOOLS}" == *open-vm-tools* ]]; then
+        VMTOOLS=$(which vmtoolsd)
+        if [[ "${VMTOOLS}" == *vmtoolsd* ]]; then
             TYPE="VM"
         else
             TYPE="VA"

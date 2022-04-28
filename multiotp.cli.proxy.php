@@ -15,17 +15,17 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.9
- * @date      2021-08-19
+ * @version   5.8.7.0
+ * @date      2022-04-28
  * @since     2010-06-08
- * @copyright (c) 2010-2021 SysCo systemes de communication sa
+ * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2014-2021 SysCo systemes de communication sa
+ *   Copyright (c) 2014-2022 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -195,7 +195,7 @@ if (FALSE !== $fp) {
     $header = substr($reply, 0, $pos);
     
     $header_array = explode("\r\n", $header);
-    foreach($header_array as $one_header) {
+    foreach ($header_array as $one_header) {
       $one_header_array = explode(":", $one_header, 2);
       if (isset($one_header_array[1])) {
         if ('X-multiOTP-Error-Level' == trim($one_header_array[0])) {

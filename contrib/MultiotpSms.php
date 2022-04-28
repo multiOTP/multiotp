@@ -6,8 +6,8 @@ class MultiotpSms
  * @brief     SMS message using any SMS Provider.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.6.1.4
- * @date      2019-10-23
+ * @version   5.8.6.0
+ * @date      2022-04-11
  * @since     2018-10-09
  *
  * Predefined providers:
@@ -21,6 +21,7 @@ class MultiotpSms
  *        nowsms: NowSMS.com (on-premises), https://www.nowsms.com/
  *      smseagle: SMSEagle (hardware gateway), https://www.smseagle.eu/
  *      swisscom: Swisscom LA (REST-JSON), https://messagingproxy.swisscom.ch:4300/rest/1.0.0/
+ *        telnyx: Telnyx, https://developers.telnyx.com/docs/api/v2/messaging
  *
  *
  * Existing variables for URL and send_template:
@@ -69,6 +70,10 @@ class MultiotpSms
  *
  * Change Log
  *
+ *   2022-04-11 5.8.6.0 SysCo/al Adding telnyx provider
+ *                               Adding specific header option
+ *                               Adding international format request
+ *   2021-08-26 5.8.3.0 SysCo/al Adding aspsms-ucs2 for special chars (limited to 70 caracters)
  *   2019-10-23 5.4.0.3 SysCo/al Define all parameters for preconfigured providers
  *   2018-11-02 5.4.0.3 SysCo/al Adding and testing preconfigured providers
  *   2018-10-09 5.4.0.2 SysCo/al First implementation
@@ -93,8 +98,10 @@ class MultiotpSms
     var $status_success;
     var $content_success;
     var $no_double_zero;
+    var $international_format;
     var $basic_auth;
     var $content_encoding;
+    var $header;
     
     // Timeout
     var $timeout;
@@ -130,8 +137,10 @@ class MultiotpSms
         if (isset($config_array['status_success'])) { $this->status_success = $config_array['status_success']; }
         if (isset($config_array['content_success'])) { $this->content_success = $config_array['content_success']; }
         if (isset($config_array['no_double_zero'])) { $this->no_double_zero = (TRUE == $config_array['no_double_zero']); }
+        if (isset($config_array['international_format'])) { $this->international_format = (TRUE == $config_array['international_format']); }
         if (isset($config_array['basic_auth'])) { $this->basic_auth = (TRUE == $config_array['basic_auth']); }
         if (isset($config_array['content_encoding'])) { $this->content_encoding = $config_array['content_encoding']; }
+        if (isset($config_array['header'])) { $this->header = $config_array['header']; }
         if (isset($config_array['debug'])) { $this->debug = (TRUE == $config_array['debug']); }
         if (isset($config_array['timeout'])) { $this->timeout = intval($config_array['timeout']); }
         if (isset($config_array['encode_ampersand'])) { $this->encode_ampersand = (TRUE == $config_array['encode_ampersand']); }
@@ -166,8 +175,10 @@ class MultiotpSms
         $this->reply_status = "";
         $this->reply_content = "";
         $this->no_double_zero = FALSE;
+        $this->international_format = FALSE;
         $this->basic_auth = FALSE;
         $this->content_encoding = "";
+        $this->header = "";
 
         $this->encode_ampersand = FALSE;
     }
@@ -182,6 +193,18 @@ class MultiotpSms
     function getNoDoubleZero()
     {
         return (TRUE == $this->no_double_zero);
+    }
+
+
+    function setInternationalFormat($value)
+    {
+        $this->international_format = (TRUE == $value);
+    }
+
+
+    function getInternationalFormat()
+    {
+        return (TRUE == $this->international_format);
     }
 
 
@@ -214,8 +237,10 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "\"status\":\"SUCCESS\"";
                 $this->no_double_zero = TRUE;
+                $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
+                $this->header = "";
                 break;
             case 'aspsms':
                 $this->url = "http://xml1.aspsms.com:5061/xmlsvr.asp http://xml1.aspsms.com:5098/xmlsvr.asp http://xml2.aspsms.com:5061/xmlsvr.asp http://xml2.aspsms.com:5098/xmlsvr.asp";
@@ -236,8 +261,35 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "<ErrorCode>1</ErrorCode>";
                 $this->no_double_zero = FALSE;
+                $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "HTML";
+                $this->header = "";
+                break;
+            case 'aspsms-ucs2':
+                $this->url = "http://xml1.aspsms.com:5061/xmlsvr.asp http://xml1.aspsms.com:5098/xmlsvr.asp http://xml2.aspsms.com:5061/xmlsvr.asp http://xml2.aspsms.com:5098/xmlsvr.asp";
+                $this->send_template = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n".
+                                       "<aspsms>\r\n".
+                                       "  <Userkey>%user</Userkey>\r\n".
+                                       "  <Password>%pass</Password>\r\n".
+                                       "  <AffiliateId>208355</AffiliateId>\r\n".
+                                       "  <Recipient>\r\n".
+                                       "    <PhoneNumber>%to</PhoneNumber>\r\n".
+                                       "  </Recipient>\r\n".
+                                       "  <Originator>%from</Originator>\r\n".
+                                       "  <XSer>020108</XSer>\r\n".
+                                       "  <MessageData>%ucs2msg</MessageData>\r\n".
+                                       "  <Action>SendBinaryData</Action>\r\n".
+                                       "</aspsms>\r\n";
+                $this->method = "POST-XML";
+                $this->encoding = "ISO";
+                $this->status_success = "20";
+                $this->content_success = "<ErrorCode>1</ErrorCode>";
+                $this->no_double_zero = FALSE;
+                $this->international_format = FALSE;
+                $this->basic_auth = FALSE;
+                $this->content_encoding = "HTML";
+                $this->header = "";
                 break;
             case 'clickatell':
                 $this->url = "https://api.clickatell.com/xml/xml http://api.clickatell.com/xml/xml";
@@ -256,8 +308,10 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "<apiMsgId>";
                 $this->no_double_zero = TRUE;
+                $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "";
+                $this->header = "";
                 break;
             case 'clickatell2':
                 $this->url = "https://platform.clickatell.com/messages/http/send?apiKey=%api_id&to=%to&content=%msg";
@@ -267,8 +321,10 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "\"accepted\":true";
                 $this->no_double_zero = TRUE;
+                $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
+                $this->header = "";
                 break;
             case 'ecall':
                 $this->url = "https://www1.ecall.ch/ecallurl/ecallurl.ASP https://www2.ecall.ch/ecallurl/ecallurl.ASP";
@@ -278,9 +334,11 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "0";
                 $this->no_double_zero = TRUE;
+                $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
                 $this->encode_ampersand = TRUE;
+                $this->header = "";
                 break;
             case 'intellisms':
                 $this->url = "https://www.intellisoftware.co.uk/smsgateway/sendmsg.aspx https://www.intellisoftware2.co.uk/smsgateway/sendmsg.aspx";
@@ -290,8 +348,10 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "ID:";
                 $this->no_double_zero = TRUE;
+                $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
+                $this->header = "";
                 break;
             case 'nexmo':
                 $this->url = "https://rest.nexmo.com/sms/json";
@@ -301,8 +361,10 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "\"status\": \"0\"";
                 $this->no_double_zero = TRUE;
+                $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
+                $this->header = "";
                 break;
             case 'nowsms':
                 $this->url = "http://%ip:%port/?PhoneNumber=%to&Text=%msg";
@@ -312,8 +374,10 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "Message Submitted";
                 $this->no_double_zero = FALSE;
+                $this->international_format = FALSE;
                 $this->basic_auth = TRUE;
                 $this->content_encoding = "";
+                $this->header = "";
                 break;
             case 'smseagle':
                 $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%user&pass=%pass&to=%to&message=%msg";
@@ -323,8 +387,10 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "OK";
                 $this->no_double_zero = FALSE;
+                $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "";
+                $this->header = "";
                 break;
             case 'swisscom':
                 $this->url = "https://messagingproxy.swisscom.ch:4300/rest/1.0.0/submit_sm/%api_id";
@@ -340,8 +406,27 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "\"command_status\":0";
                 $this->no_double_zero = TRUE;
+                $this->international_format = FALSE;
                 $this->basic_auth = TRUE;
                 $this->content_encoding = "QUOTES";
+                $this->header = "";
+                break;
+            case 'telnyx':
+                $this->url = "https://api.telnyx.com/v2/messages";
+                $this->send_template = "{\n".
+                                       "\"from\": \"%from\",\n".
+                                       "\"to\": \"%to\",\n".
+                                       "\"text\": \"%msg\"\n".
+                                       "}";
+                $this->method = "POST-JSON";
+                $this->encoding = "UTF";
+                $this->status_success = "20";
+                $this->content_success = "\"errors\": []";
+                $this->no_double_zero = FALSE;
+                $this->international_format = TRUE;
+                $this->basic_auth = FALSE;
+                $this->content_encoding = "QUOTES";
+                $this->header = "Authorization: Bearer %api_id\r\n";
                 break;
             default:
                 break;
@@ -360,8 +445,10 @@ class MultiotpSms
                      'status_success'       => $this->status_success,
                      'content_success'      => $this->content_success,
                      'no_double_zero'       => $this->no_double_zero,
+                     'international_format' => $this->international_format,
                      'basic_auth'           => $this->basic_auth,
                      'content_encoding'     => $this->content_encoding,
+                     'header'               => $this->header,
                     );
     }
 
@@ -369,17 +456,19 @@ class MultiotpSms
     function setCustomValues(
         $custom_array = array()
     ) {
-        if (isset($custom_array['url']))              { $this->url = $custom_array['url']; }
-        if (isset($custom_array['ip']))               { $this->ip = $custom_array['ip']; }
-        if (isset($custom_array['port']))             { $this->port = $custom_array['port']; }
-        if (isset($custom_array['send_template']))    { $this->send_template = $custom_array['send_template']; }
-        if (isset($custom_array['method']))           { $this->method = $custom_array['method']; }
-        if (isset($custom_array['encoding']))         { $this->encoding = $custom_array['encoding']; }
-        if (isset($custom_array['status_success']))   { $this->status_success = $custom_array['status_success']; }
-        if (isset($custom_array['content_success']))  { $this->content_success = $custom_array['content_success']; }
-        if (isset($custom_array['no_double_zero']))   { $this->no_double_zero = $custom_array['no_double_zero']; }
-        if (isset($custom_array['basic_auth']))       { $this->basic_auth = $custom_array['basic_auth']; }
-        if (isset($custom_array['content_encoding'])) { $this->content_encoding = $custom_array['content_encoding']; }
+        if (isset($custom_array['url']))                  { $this->url = $custom_array['url']; }
+        if (isset($custom_array['ip']))                   { $this->ip = $custom_array['ip']; }
+        if (isset($custom_array['port']))                 { $this->port = $custom_array['port']; }
+        if (isset($custom_array['send_template']))        { $this->send_template = $custom_array['send_template']; }
+        if (isset($custom_array['method']))               { $this->method = $custom_array['method']; }
+        if (isset($custom_array['encoding']))             { $this->encoding = $custom_array['encoding']; }
+        if (isset($custom_array['status_success']))       { $this->status_success = $custom_array['status_success']; }
+        if (isset($custom_array['content_success']))      { $this->content_success = $custom_array['content_success']; }
+        if (isset($custom_array['no_double_zero']))       { $this->no_double_zero = $custom_array['no_double_zero']; }
+        if (isset($custom_array['international_format'])) { $this->international_format = $custom_array['international_format']; }
+        if (isset($custom_array['basic_auth']))           { $this->basic_auth = $custom_array['basic_auth']; }
+        if (isset($custom_array['content_encoding']))     { $this->content_encoding = $custom_array['content_encoding']; }
+        if (isset($custom_array['header']))               { $this->header = $custom_array['header']; }
     }
 
 
@@ -420,8 +509,10 @@ class MultiotpSms
         $result.= "status_success: ".$this->status_success."; ";
         $result.= "content_success: ".$this->content_success."; ";
         $result.= "no_double_zero: ".$this->no_double_zero."; ";
+        $result.= "international_format: ".$this->international_format."; ";
         $result.= "basic_auth: ".$this->basic_auth."; ";
         $result.= "content_encoding: ".$this->content_encoding."; ";
+        $result.= "header: ".$this->header."; ";
 
         $result.= "encode_ampersand: ".$this->encode_ampersand."; ";
 
@@ -467,7 +558,11 @@ class MultiotpSms
         $value = str_replace(')','',$value);
         $value = str_replace('+','00',$value);
 
-        if (('00' == substr($value,0,2)) && ($this->getNoDoubleZero())) {
+        if (('00' == substr($value,0,2)) && ($this->getInternationalFormat())) {
+            $value = "+" . substr($value,2);
+        } elseif ($this->getInternationalFormat()) {
+            $value = "+" . $value;
+        } elseif (('00' == substr($value,0,2)) && ($this->getNoDoubleZero())) {
             $value = substr($value,2);
         } else {
         }
@@ -588,11 +683,13 @@ class MultiotpSms
             $this->setMsg($msg);
         }
         
+        /* Payload replacement */
         $payload = $this->send_template;
         $payload = $this->encodeString($payload);
         
         $payload_msg = $this->msg;
-        
+        $ucs2_msg = bin2hex(mb_convert_encoding($this->msg, 'UCS-2', 'auto'));
+
         if (FALSE !== mb_strpos($payload, "![CDATA[", 0, mb_detect_encoding($payload . 'a' , 'UTF-8, ISO-8859-1'))) {
             $this->encode_ampersand = TRUE;
         }
@@ -600,7 +697,7 @@ class MultiotpSms
         if ($this->encode_ampersand) {
             $payload_msg = str_replace('&', '%26', $payload_msg);
         }
-        
+
         $payload = str_replace('%ip',       $this->ip,                                    $payload);
         if (intval($this->port) <= 0) {
             $payload = str_replace(':%port', '', $payload);
@@ -608,6 +705,7 @@ class MultiotpSms
             $payload = str_replace('%port', $this->port,                                  $payload);
         }
         $payload = str_replace('%msg',      $this->encodeHttp($payload_msg),              $payload);
+        $payload = str_replace('%ucs2msg',  $ucs2_msg,                                    $payload);
         $payload = str_replace('%api_id',   $this->encodeHttp($this->api_id),             $payload);
         $payload = str_replace('%username', $this->encodeHttp($this->username),           $payload);
         $payload = str_replace('%user',     $this->encodeHttp($this->username),           $payload);
@@ -616,6 +714,24 @@ class MultiotpSms
         $payload = str_replace('%to',       $this->encodeHttp($this->cleanTo($this->to)), $payload);
         $payload = str_replace('%from',     $this->encodeHttp($this->from),               $payload);
 
+        /* Header replacement */
+        $header = $this->header;
+        $header = str_replace('%ip',       $this->ip,                                    $header);
+        if (intval($this->port) <= 0) {
+            $header = str_replace(':%port', '', $header);
+        } else {
+            $header = str_replace('%port', $this->port,                                  $header);
+        }
+        $header = str_replace('%msg',      $this->encodeHttp($this->msg),                $header);
+        $header = str_replace('%api_id',   $this->encodeHttp($this->api_id),             $header);
+        $header = str_replace('%username', $this->encodeHttp($this->username),           $header);
+        $header = str_replace('%user',     $this->encodeHttp($this->username),           $header);
+        $header = str_replace('%password', $this->encodeHttp($this->password),           $header);
+        $header = str_replace('%pass',     $this->encodeHttp($this->password),           $header);
+        $header = str_replace('%to',       $this->encodeHttp($this->cleanTo($this->to)), $header);
+        $header = str_replace('%from',     $this->encodeHttp($this->from),               $header);
+
+        /* Url replacement */
         $url_array = explode(' ', $this->url);
 
         foreach ($url_array as $one_url) {
@@ -703,6 +819,8 @@ class MultiotpSms
                 } else {
                     $output.= "Content-Type: application/x-www-form-urlencoded\r\n";
                 }
+                $output.= $header;
+
                 if ($this->basic_auth) {
                     $auth_user = (('' != $this->username) ? $this->username : $this->api_id);
                     $output.= "Authorization: Basic ".base64_encode($auth_user.":".$this->password)."\r\n";

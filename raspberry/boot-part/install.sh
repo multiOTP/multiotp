@@ -16,12 +16,14 @@
 # Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.2.9
-# @date      2021-08-19
+# @version   5.8.7.0
+# @date      2022-04-28
 # @since     2013-11-29
-# @copyright (c) 2013-2019 by SysCo systemes de communication sa
+# @copyright (c) 2013-2021 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
+# 2021-09-14 5.8.3.0 SysCo/al VM version 011 support
+#                             (Debian Bullseye 11.0, PHP 7.4, FreeRADIUS 3.0.21, Nginx 1.18.0)
 # 2021-03-25 5.8.1.9 SysCo/al Fix some Nginx options
 #                             Weak SSL ciphers disabled
 # 2020-08-31 5.8.0.0 SysCo/al Raspberry Pi 4B support
@@ -64,7 +66,7 @@ SSH_ROOT_LOGIN="1"
 DEFAULT_IP="192.168.1.44"
 REBOOT_AT_THE_END="1"
 
-TEMPVERSION="@version   5.8.2.9"
+TEMPVERSION="@version   5.8.7.0"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
@@ -100,6 +102,7 @@ PHPINSTALLPREFIX="php"
 PHPINSTALLPREFIXVERSION="php7.3"
 PHPMODULEPREFIX="php/7.3"
 PHPMAJORVERSION="7"
+SQLITEVERSION="sqlite3"
 VMRELEASENUMBER="010"
 if [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     BACKENDDB="mysql"
@@ -109,6 +112,7 @@ if [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     PHPINSTALLPREFIXVERSION="php5"
     PHPMODULEPREFIX="php5"
     PHPMAJORVERSION="5"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="007"
 elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "8" ]]; then
     BACKENDDB="mysql"
@@ -118,6 +122,7 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "8" ]]; then
     PHPINSTALLPREFIXVERSION="php5"
     PHPMODULEPREFIX="php5"
     PHPMAJORVERSION="5"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="007"
 elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "9" ]]; then
     BACKENDDB="mysql"
@@ -127,6 +132,7 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "9" ]]; then
     PHPINSTALLPREFIXVERSION="php7.0"
     PHPMODULEPREFIX="php/7.0"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="008"
 elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "10" ]]; then
     BACKENDDB="mariadb"
@@ -136,7 +142,18 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "10" ]]; then
     PHPINSTALLPREFIXVERSION="php7.3"
     PHPMODULEPREFIX="php/7.3"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite3"
     VMRELEASENUMBER="010"
+elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "11" ]]; then
+    BACKENDDB="mariadb"
+    PHPFPM="php7.4-fpm"
+    PHPFPMSED="php\/php7.4-fpm"
+    PHPINSTALLPREFIX="php"
+    PHPINSTALLPREFIXVERSION="php7.4"
+    PHPMODULEPREFIX="php/7.4"
+    PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite3"
+    VMRELEASENUMBER="011"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     BACKENDDB="mysql"
     PHPFPM="php5-fpm"
@@ -145,6 +162,7 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     PHPINSTALLPREFIXVERSION="php5"
     PHPMODULEPREFIX="php5"
     PHPMAJORVERSION="5"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="007"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "8" ]]; then
     BACKENDDB="mysql"
@@ -154,6 +172,7 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "8" ]]; then
     PHPINSTALLPREFIXVERSION="php5"
     PHPMODULEPREFIX="php5"
     PHPMAJORVERSION="5"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="007"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "9" ]]; then
     BACKENDDB="mysql"
@@ -163,6 +182,7 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "9" ]]; then
     PHPINSTALLPREFIXVERSION="php7.0"
     PHPMODULEPREFIX="php/7.0"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="008"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "10" ]]; then
     BACKENDDB="mariadb"
@@ -172,16 +192,27 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "10" ]]; then
     PHPINSTALLPREFIXVERSION="php7.3"
     PHPMODULEPREFIX="php/7.3"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite3"
     VMRELEASENUMBER="010"
+elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "11" ]]; then
+    BACKENDDB="mariadb"
+    PHPFPM="php7.4-fpm"
+    PHPFPMSED="php\/php7.4-fpm"
+    PHPINSTALLPREFIX="php"
+    PHPINSTALLPREFIXVERSION="php7.4"
+    PHPMODULEPREFIX="php/7.4"
+    PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite3"
+    VMRELEASENUMBER="011"
 fi
 
 
 # Early docker detection
-is_running_in_container() {
-  awk -F: '$3 ~ /^\/$/{ c=1 } END { exit c }' /proc/self/cgroup
-}
+if grep -q docker /proc/1/cgroup; then 
+    TYPE="DOCKER"
+fi
 
-if is_running_in_container; then
+if grep -q docker /proc/self/cgroup; then 
     TYPE="DOCKER"
 fi
 
@@ -283,7 +314,10 @@ elif [[ "${UNAME}" == *docker* ]]; then
     # Docker
     FAMILY="VAP"
     TYPE="DOCKER"
-elif is_running_in_container; then
+elif grep -q docker /proc/1/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/self/cgroup; then 
     FAMILY="VAP"
     TYPE="DOCKER"
 elif [ -f /.dockerenv ]; then
@@ -295,8 +329,8 @@ else
     TYPE="VA"
     DMIDECODE=$(dmidecode -s system-product-name)
     if [[ "${DMIDECODE}" == *VMware* ]]; then
-        VMTOOLS=$(dpkg-query -l | grep "open-vm-tools")
-        if [[ "${VMTOOLS}" == *open-vm-tools* ]]; then
+        VMTOOLS=$(which vmtoolsd)
+        if [[ "${VMTOOLS}" == *vmtoolsd* ]]; then
             TYPE="VM"
         else
             TYPE="VA"
@@ -451,13 +485,11 @@ if [[ "${TYPE}" != "DOCKER" ]]; then
     apt-get -y install ${PHPINSTALLPREFIX}-gd
     apt-get -y install ${PHPINSTALLPREFIX}-gmp
     apt-get -y install ${PHPINSTALLPREFIX}-ldap
+    apt-get -y install ${PHPINSTALLPREFIXVERSION}-${SQLITEVERSION}
     
-    # mcrypt is removed in PHP 7.2 (Debian 10 integrates PHP 7.3), SQLITE updated to version 3 in Debian 10
-    if [[ "${OSVERSION}" != "10" ]]; then
+    # mcrypt is removed in PHP 7.2 (Debian 10 integrates PHP 7.3, Debian 11 integrates PHP 7.4)
+    if [[ "${OSVERSION}" != "10" ]] && [[ "${OSVERSION}" != "11" ]]; then
         apt-get -y install ${PHPINSTALLPREFIX}-mcrypt
-        apt-get -y install ${PHPINSTALLPREFIXVERSION}-sqlite
-    else
-        apt-get -y install ${PHPINSTALLPREFIXVERSION}-sqlite3
     fi
 fi
 
@@ -482,8 +514,7 @@ if [[ "${TYPE}" != "DOCKER" ]]; then
     # http://net-snmp.sourceforge.net/wiki/index.php/Tut:Extending_snmpd_using_shell_scripts
     # http://blog.gamb.fr/index.php?post/2012/10/23/Installation-et-configuration-de-snmpd
 
-    apt-get -y install sqlite
-    apt-get -y install sqlite3
+    apt-get -y install ${SQLITEVERSION}
     apt-get -y install subversion
     apt-get -y install sudo
 fi
@@ -588,9 +619,9 @@ fi
 
 
 # 5.4.1.2
-# For Strech or Buster, reactivate traditional eth0 support (except for Raspbian)
+# For Strech/Buster/Bullseye, reactivate traditional eth0 support (except for Raspbian)
 # https://unix.stackexchange.com/questions/396382/how-can-i-show-the-old-eth0-names-and-also-rename-network-interfaces-in-debian-9
-if [[ "${OSID}" == "debian" ]] && ( [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSION}" == "10" ]] ); then
+if [[ "${OSID}" == "debian" ]] && ( [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSION}" == "10" ]] || [[ "${OSVERSION}" == "11" ]] ); then
     IFNAME=$(ifconfig | grep -o -E '(^e[a-zA-Z0-9]*)')
     if [[ "${IFNAME}" != "eth0" ]]; then
         sed -i 's/.*GRUB_CMDLINE_LINUX=.*/GRUB_CMDLINE_LINUX="net.ifnames=0 biosdevname=0"/' /etc/default/grub
@@ -599,8 +630,8 @@ if [[ "${OSID}" == "debian" ]] && ( [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSI
 fi
 
 
-# 5.4.1.8 Disable the dhcpcd service if we are in the Debian Stretch or Buster distribution
-if [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSION}" == "10" ]]; then
+# 5.4.1.8 Disable the dhcpcd service if we are in the Debian Stretch/Buster/Bullseye distribution
+if [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSION}" == "10" ]] || [[ "${OSVERSION}" == "11" ]]; then
     systemctl stop dhcpcd.service
     systemctl disable dhcpcd.service
 fi
@@ -1043,6 +1074,10 @@ fi
 insserv multiotp
 
 
+# Since 5.8.3.x, disable multicast support
+ifconfig eth0 -multicast
+
+
 # Do the initial FreeRADIUS 3.x configuration job
 if [ -e /etc/freeradius/3.0/ ] ; then
 
@@ -1190,6 +1225,13 @@ else
     # Edit /etc/freeradius/modules/perl
     echo "Edit /etc/freeradius/modules/perl"
     sed -i "s/.*module = .*/        module = \/usr\/local\/bin\/multiotp\/scripts\/multiotp.pl/" /etc/freeradius/modules/perl
+    # Since 5.8.3.0 and FreeRADIUS 3.0.18, set the perl flags
+    sed -i "s/.*perl_flags = .*/        perl_flags = \"-U\"/" /etc/freeradius/3.0/mods-available/perl
+
+    # Since 5.8.3.0 and FreeRADIUS 3.0.18, comment disable_tlsv1_2, disable_tlsv1_1 and disable_tlsv1
+    sed -i "s/.*disable_tlsv1_2 = /\t\t#disable_tlsv1_2 = /" /etc/freeradius/3.0/mods-available/eap
+    sed -i "s/.*disable_tlsv1_1 = /\t\t#disable_tlsv1_2 = /" /etc/freeradius/3.0/mods-available/eap
+    sed -i "s/.*disable_tlsv1 = /\t\t#disable_tlsv1 = /" /etc/freeradius/3.0/mods-available/eap
 
     if [[ "${RADIUS_SAMPLE_ENABLED}" == "1" ]] ; then
         # Check and add freeradius config if needed (only for previous community edition)
@@ -1213,6 +1255,8 @@ usermod -a -G freerad www-data
 usermod -a -G users freerad
 usermod -a -G users www-data
 usermod -a -G www-data freerad
+
+chown -R freerad:freerad /etc/freeradius
 
 # Restart freeradius service
 if [ -e /etc/init.d/freeradius ] ; then

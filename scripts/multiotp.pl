@@ -15,10 +15,10 @@
 # Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    SysCo/yj, SysCo/al, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.2.9
-# @date      2021-08-19
+# @version   5.8.7.0
+# @date      2022-04-28
 # @since     2014-08-14
-# @copyright (c) 2014-2021 SysCo systemes de communication sa
+# @copyright (c) 2014-2022 SysCo systemes de communication sa
 # @copyright (c) 2002 by Boian Jordanov <bjordanov@orbitel.bg>
 # @copyright (c) 2002 by The FreeRADIUS server project
 # @copyright GNU Lesser General Public License

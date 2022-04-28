@@ -15,15 +15,15 @@ The multiOTP C++ launcher is simply used to launch PHP
 and run multiotp.windows.php with the provided arguments.
 
 @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-@version   5.8.2.9
-@date      2021-08-19
+@version   5.8.7.0
+@date      2022-04-28
 @since     2016-12-08
-@copyright (c) 2010-2021 SysCo systemes de communication sa
+@copyright (c) 2010-2022 SysCo systemes de communication sa
 @copyright GNU Lesser General Public License
 
 LICENCE
 
-Copyright (c) 2010-2021 SysCo systemes de communication sa
+Copyright (c) 2010-2022 SysCo systemes de communication sa
 SysCo (tm) is a trademark of SysCo systemes de communication sa
 (http://www.sysco.ch)
 All rights reserved.

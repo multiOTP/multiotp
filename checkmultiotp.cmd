@@ -11,10 +11,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.8.2.9
-REM @date      2021-08-19
+REM @version   5.8.7.0
+REM @date      2022-04-28
 REM @since     2010-07-10
-REM @copyright (c) 2010-2021 SysCo systemes de communication sa
+REM @copyright (c) 2010-2022 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -38,7 +38,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2021 SysCo systemes de communication sa
+REM   Copyright (c) 2010-2022 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -429,7 +429,8 @@ PING 127.0.0.1 -n 5 >NUL
 ECHO.
 ECHO Check the default multiOTP web service page
 %_tools_dir%wget http://127.0.0.1:%_check_web_port% --quiet --output-document="%TEMP%\multiOTPwebservice.check" --timeout=300 --tries=2
-FIND /C "Web service is ready" "%TEMP%\multiOTPwebservice.check" >NUL
+FIND "Web service is ready" "%TEMP%\multiOTPwebservice.check" | FIND "Web service is ready" > "%TEMP%\multiOTPwebservice.ready"
+IF NOT ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.ready"
 IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on http://127.0.0.1:%_check_web_port%
@@ -438,11 +439,13 @@ IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check"
 IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check" (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 DEL "%TEMP%\multiOTPwebservice.check" /Q
+DEL "%TEMP%\multiOTPwebservice.ready" /Q
 
 ECHO.
 ECHO Check the https default multiOTP web service page
 %_tools_dir%wget https://127.0.0.1:%_check_ssl_port% --no-check-certificate --quiet --output-document="%TEMP%\multiOTPwebservice.check" --timeout=300 --tries=2
-FIND /C "Web service is ready" "%TEMP%\multiOTPwebservice.check" >NUL
+FIND "Web service is ready" "%TEMP%\multiOTPwebservice.check" | FIND "Web service is ready" > "%TEMP%\multiOTPwebservice.ready"
+IF NOT ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.ready"
 IF NOT ERRORLEVEL 1 ECHO - OK! multiOTP web service is responding correctly
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on https://127.0.0.1:%_check_ssl_port%
@@ -451,6 +454,7 @@ IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check"
 IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check" (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 DEL "%TEMP%\multiOTPwebservice.check" /Q
+DEL "%TEMP%\multiOTPwebservice.ready" /Q
 
 ECHO.
 ECHO Authenticate test_user2 through web service using default secret

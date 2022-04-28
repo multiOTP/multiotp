@@ -8,12 +8,14 @@
 # https://www.multiotp.net/
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.2.9
-# @date      2021-08-19
+# @version   5.8.7.0
+# @date      2022-04-28
 # @since     2013-09-22
-# @copyright (c) 2013-2021 SysCo systemes de communication sa
+# @copyright (c) 2013-2022 SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
+# 2021-09-14 5.8.3.0 SysCo/al VM version 011 support
+#                             (Debian Bullseye 11.0, PHP 7.4, FreeRADIUS 3.0.21, Nginx 1.18.0)
 # 2020-08-31 5.8.0.0 SysCo/al Raspberry Pi 4B support
 #                             New unified distribution
 #                             Debian Buster 10.5 support
@@ -33,7 +35,7 @@
 # 2013-09-22 4.0.9.0 SysCo/al Initial release
 ##########################################################################
 
-TEMPVERSION="@version   5.8.2.9"
+TEMPVERSION="@version   5.8.7.0"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
@@ -96,6 +98,15 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "10" ]]; then
     PHPMODULEPREFIX="php/7.3"
     PHPMAJORVERSION="7"
     VMRELEASENUMBER="010"
+elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "11" ]]; then
+    BACKENDDB="mariadb"
+    PHPFPM="php7.4-fpm"
+    PHPFPMSED="php\/php7.4-fpm"
+    PHPINSTALLPREFIX="php"
+    PHPINSTALLPREFIXVERSION="php7.4"
+    PHPMODULEPREFIX="php/7.4"
+    PHPMAJORVERSION="7"
+    VMRELEASENUMBER="011"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     BACKENDDB="mysql"
     PHPFPM="php5-fpm"
@@ -136,11 +147,11 @@ fi
 
 
 # Early docker detection
-is_running_in_container() {
-  awk -F: '$3 ~ /^\/$/{ c=1 } END { exit c }' /proc/self/cgroup
-}
+if grep -q docker /proc/1/cgroup; then 
+    TYPE="DOCKER"
+fi
 
-if is_running_in_container; then
+if grep -q docker /proc/self/cgroup; then 
     TYPE="DOCKER"
 fi
 
@@ -224,7 +235,10 @@ elif [[ "${UNAME}" == *docker* ]]; then
     # Docker
     FAMILY="VAP"
     TYPE="DOCKER"
-elif is_running_in_container; then
+elif grep -q docker /proc/1/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/self/cgroup; then 
     FAMILY="VAP"
     TYPE="DOCKER"
 elif [ -f /.dockerenv ]; then
@@ -236,8 +250,8 @@ else
     TYPE="VA"
     DMIDECODE=$(dmidecode -s system-product-name)
     if [[ "${DMIDECODE}" == *VMware* ]]; then
-        VMTOOLS=$(dpkg-query -l | grep "open-vm-tools")
-        if [[ "${VMTOOLS}" == *open-vm-tools* ]]; then
+        VMTOOLS=$(which vmtoolsd)
+        if [[ "${VMTOOLS}" == *vmtoolsd* ]]; then
             TYPE="VM"
         else
             TYPE="VA"
