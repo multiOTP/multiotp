@@ -16,12 +16,14 @@
 # Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.7.0
-# @date      2022-04-28
+# @version   5.8.8.4
+# @date      2022-05-08
 # @since     2013-11-29
 # @copyright (c) 2013-2021 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
+# 2022-05-08 5.8.8.4 SysCo/al Better docker support (also for Synology)
+# 2022-05-08 5.8.8.1 SysCo/al Add Raspberry Pi Bullseye 11.0 support
 # 2021-09-14 5.8.3.0 SysCo/al VM version 011 support
 #                             (Debian Bullseye 11.0, PHP 7.4, FreeRADIUS 3.0.21, Nginx 1.18.0)
 # 2021-03-25 5.8.1.9 SysCo/al Fix some Nginx options
@@ -66,7 +68,7 @@ SSH_ROOT_LOGIN="1"
 DEFAULT_IP="192.168.1.44"
 REBOOT_AT_THE_END="1"
 
-TEMPVERSION="@version   5.8.7.0"
+TEMPVERSION="@version   5.8.8.4"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}

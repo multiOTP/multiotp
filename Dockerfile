@@ -15,15 +15,17 @@
 # Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.7.0
-# @date      2022-04-28
+# @version   5.8.8.4
+# @date      2022-05-08
 # @since     2013-11-29
 # @copyright (c) 2013-2022 SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
 # docker build .
-# docker run --mount source=multiotp-data,target=/etc/multiotp -p 80:80 -p 443:443 -p 1812:1812/udp -p 1813:1813/udp -d xxxxxxxxxxxx
+# docker run -v [PATH/TO/MULTIOTP/DATA/VOLUME]:/etc/multiotp -v [PATH/TO/FREERADIUS/CONFIG/VOLUME]:/etc/freeradius -v [PATH/TO/MULTIOTP/LOG/VOLUME]:/var/log/multiotp -v [PATH/TO/FREERADIUS/LOG/VOLUME]:/var/log/freeradius -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d xxxxxxxxxxxx
 #
+# 2022-05-08 5.8.8.4 SysCo/al Better docker support (also for Synology)
+# 2022-05-08 5.8.8.1 SysCo/al Add Raspberry Pi Bullseye 11.0 support
 # 2021-09-14 5.8.3.0 SysCo/al Debian Bullseye 11.0 support
 # 2021-05-19 5.8.2.3 SysCo/al Added php-bcmath
 # 2021-03-25 5.8.1.9 SysCo/al Remove apt-offline, which is not used
@@ -43,8 +45,8 @@ ENV SQLITEVERSION sqlite3
 MAINTAINER Andre Liechti <andre.liechti@multiotp.net>
 LABEL Description="multiOTP open source, running on Debian ${DEBIAN} with PHP${PHPVERSION}." \
       License="LGPL-3.0" \
-      Usage="docker run --mount source=[SOURCE PERSISTENT VOLUME],target=/etc/multiotp -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d multiotp-open-source" \
-      Version="5.8.7.0"
+      Usage="docker run -v [PATH/TO/MULTIOTP/DATA/VOLUME]:/etc/multiotp -v [PATH/TO/FREERADIUS/CONFIG/VOLUME]:/etc/freeradius -v [PATH/TO/MULTIOTP/LOG/VOLUME]:/var/log/multiotp -v [PATH/TO/FREERADIUS/LOG/VOLUME]:/var/log/freeradius -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d multiotp-open-source" \
+      Version="5.8.8.4"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -117,8 +119,11 @@ COPY raspberry/boot-part/multiotp-tree /boot/multiotp-tree/
 WORKDIR /
 
 RUN chmod 777 /boot/*.sh && \
-    /boot/install.sh
+    /boot/install.sh && \
+    /boot/newvm.sh INIT
 
-EXPOSE 80/tcp 443/tcp 1812/udp 1813/udp 
+EXPOSE 80/tcp 443/tcp 1812/udp 1813/udp
 
-ENTRYPOINT /boot/newvm.sh
+VOLUME /etc/multiotp /etc/freeradius /var/log/multiotp /var/log/freeradius
+
+ENTRYPOINT /boot/newvm.sh RUNDOCKER

@@ -6,11 +6,17 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.8.7.0 (2022-04-28)
+Current build: 5.8.8.4 (2022-05-08)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
-Docker container available: **docker run --mount source=multiotp-data,target=/etc/multiotp -p 80:80 -p 443:443 -p 1812:1812/udp -p 1813:1813/udp -d multiotp/multiotp-open-source**
+Docker container available: **docker run -v path/to/multiotp/data:/etc/multiotp -v path/to/freeradius/config:/etc/freeradius -v path/to/multiotp/log:/var/log/multiotp -v path/to/freeradius/log:/var/log/freeradius -p 80:80 -p 443:443 -p 1812:1812/udp -p 1813:1813/udp -d multiotp/multiotp-open-source**
+
+**Docker volumes**  
+PATH/TO/MULTIOTP/DATA/VOLUME:/etc/multiotp  
+PATH/TO/FREERADIUS/CONFIG/VOLUME:/etc/freeradius  
+PATH/TO/MULTIOTP/LOG/VOLUME:/var/log/multiotp  
+PATH/TO/FREERADIUS/LOG/VOLUME]/var/log/freeradius  
 
 **A Dockerfile is included in the distribution ZIP file**
 
@@ -59,8 +65,8 @@ The multiOTP class supports currently the following algorithms and RFC's:
 - mOTP (http://motp.sourceforge.net)
 - OATH/HOTP or OATH/TOTP, base32/hex/raw seed, QRcode provisioning
   (FreeOTP, Google Authenticator, ...)
-- SMS tokens (using Afilnet, aspsms, Clickatell, eCall, IntelliSMS, Nexmo,
-  NowSMS, SMSEagle, Swisscom LA REST, any custom provider, your own script)
+- SMS tokens (using Afilnet, aspsms, Clickatell, eCall, IntelliSMS, Nexmo, NowSMS,
+  SMSEagle, Swisscom LA REST, Telnyx, any custom provider, your own script)
 - TAN (emergency scratch passwords)
 
 This package was initially published here : http://syscoal.users.phpclasses.org/package/6373.html
@@ -158,13 +164,15 @@ subfolders from windows to your current multiOTP folder
 
 WHAT'S NEW IN THE RELEASES
 ==========================
-# What's new in 5.8.7 releases
+# What's new in 5.8.8 releases
+- Add Raspberry Pi Bullseye 11.0 support
+- Better docker support (also for Synology)
+
+# What's new in 5.8 releases
 - Embedded Windows nginx edition updated to version 1.21.6
 - Embedded Windows PHP edition updated to version 7.4.29
 - New MariaDB/MySQL indexes handling during schema creation and schema updates
 - Enhanced internal tests
-
-# What's new in 5.8 releases
 - New Telnyx SMS provider support
 - PHP 7.4 deprecated code cleaned
 - Email token is now supported for Credential Provider
@@ -324,6 +332,8 @@ WHAT'S NEW IN THE RELEASES
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2022-05-08 5.8.8.4 ENH: Better docker support (also for Synology)
+2022-05-08 5.8.8.1 ENH: Add Raspberry Pi Bullseye 11.0 support
 2022-04-28 5.8.7.0 ENH: PHP 7.4 deprecated code cleaned
                    ENH: Embedded Windows nginx edition updated to version 1.21.6
                    ENH: Embedded Windows PHP edition updated to version 7.4.29
@@ -1716,7 +1726,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.8.7.0 (2022-04-28)
+multiOTP 5.8.8.4 (2022-05-08)
 (c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 

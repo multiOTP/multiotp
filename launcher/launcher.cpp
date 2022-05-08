@@ -14,8 +14,8 @@
  * and run multiotp.windows.php with the provided arguments.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.7.0
- * @date      2022-04-28
+ * @version   5.8.8.4
+ * @date      2022-05-08
  * @since     2016-12-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -68,8 +68,8 @@
 #include <iostream>
 
 #define SOFTWARE    "LAUNCHPHPMULTIOTP"
-#define VER_NUMBER  "5.8.7.0"
-#define VER_DATE    "2022-04-28"
+#define VER_NUMBER  "5.8.8.4"
+#define VER_DATE    "2022-05-08"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
