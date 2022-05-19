@@ -27,8 +27,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.8.4
- * @date      2022-05-08
+ * @version   5.9.0.1
+ * @date      2022-05-19
  * @since     2013-08-06
  * @copyright (c) 2013-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -84,9 +84,10 @@
  *
  * Change Log
  *
+ *   2022-05-08 5.8.8.5 SysCo/al Scratchlist can be generated from the Web GUI
  *   2021-03-25 5.8.1.9 SysCo/al Cookie privacy (httponly and secure) are now handled in the application directly
  *                               Weak SSL ciphers disabled
- *   2021-02-12 5.8.1.0 SysCo/al WebGUI update
+ *   2021-02-12 5.8.1.0 SysCo/al Web GUI update
  *   2019-01-24 5.4.1.5 SysCo/al If any, clean specific NTP DHCP option at every reboot
  *   2019-01-07 5.4.1.1 SysCo/al Raspberry Pi 3B+ support
  *   2018-08-21 5.3.0.0 SysCo/al without2FA algorithm added
@@ -740,6 +741,17 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
                     window.open(full_url,'_blank');
                 }
             }
+
+            function PrintScratchlist(one_user)
+            {
+                if ('' != one_user)
+                {
+                    var http_params = "method=PrintScratchlist"+"&options="+encodeURIComponent(one_user);
+                    var full_url = url_page +'?'+http_params;
+                    window.open(full_url,'_blank');
+                }
+            }
+
             function ResyncUser(one_user)
             {
                 document.getElementById('resync_user').value = one_user;
@@ -1049,6 +1061,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
             function UpdateUsersList()
             {
                 // Users
+                var userslist = 'No user yet...';
                 var counter = 0;
 
                 var remotecall = eval(RemoteCall('GetEnhancedUsersList'));
@@ -1111,6 +1124,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
 
                             userslist = userslist + '<button type="button" onclick="DeleteUser(\''+usersinfo[0]+'\');">Delete</button>';
                             userslist = userslist + '<button type="button" onclick="PrintQrCode(\''+usersinfo[0]+'\');">Print</button>';
+                            userslist = userslist + '<button type="button" onclick="PrintScratchlist(\''+usersinfo[0]+'\');">Scratchlist</button>';
                             userslist = userslist + '<button type="button" onclick="ResyncUser(\''+usersinfo[0]+'\');">Resync</button>';
 
                             userslist = userslist + ' ';
@@ -1626,6 +1640,10 @@ EOI;
                             break;
                         case mb_strtoupper("PrintQrCode",'UTF-8'):
                             echo $multiotp->GenerateHtmlQrCode($options_array[0]);
+                            $ajax_result = '';
+                            break;
+                        case mb_strtoupper("PrintScratchlist",'UTF-8'):
+                            echo $multiotp->GenerateHtmlScratchlist($options_array[0]);
                             $ajax_result = '';
                             break;
                         case mb_strtoupper("ResyncUser",'UTF-8'):

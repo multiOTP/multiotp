@@ -1,9 +1,16 @@
 # multiOTP open source
-# @version   5.0.4.9
-# @date      2017-06-09
+# @version   5.9.0.1
+# @date      2022-05-19
+# since 5.9.0.1, http is redirected to https
 # since 5.0.3.8, fastcgi_read_timeout 86400;
+
 server {
-    listen              80;
+    listen 80 default_server;
+    server_name _;
+    return 301 https://$host$request_uri;
+}
+
+server {
     listen              443 ssl;
     server_name         localhost;
     ssl_certificate     /etc/multiotp/certificates/multiotp.crt;

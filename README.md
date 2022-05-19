@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.8.8.4 (2022-05-08)
+Current build: 5.9.0.1 (2022-05-19)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -16,9 +16,11 @@ Docker container available: **docker run -v path/to/multiotp/data:/etc/multiotp 
 PATH/TO/MULTIOTP/DATA/VOLUME:/etc/multiotp  
 PATH/TO/FREERADIUS/CONFIG/VOLUME:/etc/freeradius  
 PATH/TO/MULTIOTP/LOG/VOLUME:/var/log/multiotp  
-PATH/TO/FREERADIUS/LOG/VOLUME]/var/log/freeradius  
+PATH/TO/FREERADIUS/LOG/VOLUME:/var/log/freeradius  
 
 **A Dockerfile is included in the distribution ZIP file**
+
+The **multiotp/multiotp-open-source** docker is working on Synology devices !  
 
 Binary download of the multiOTP open source Credential Provider V2 for Windows 7/8/8.1/10/2012(R2)/2016 with options like RDP only and UPN name support : https://download.multiotp.net/credential-provider/
 
@@ -162,176 +164,19 @@ upgrade your installation by copying the extracted content of the folder and
 subfolders from windows to your current multiOTP folder
 
 
-WHAT'S NEW IN THE RELEASES
-==========================
-# What's new in 5.8.8 releases
-- Add Raspberry Pi Bullseye 11.0 support
-- Better docker support (also for Synology)
-
-# What's new in 5.8 releases
-- Embedded Windows nginx edition updated to version 1.21.6
-- Embedded Windows PHP edition updated to version 7.4.29
-- New MariaDB/MySQL indexes handling during schema creation and schema updates
-- Enhanced internal tests
-- New Telnyx SMS provider support
-- PHP 7.4 deprecated code cleaned
-- Email token is now supported for Credential Provider
-- If username doesn't exist, it try automatically a shorter domain name step by step
-- Embedded Windows nginx edition updated to version 1.21.4
-- Added compatibility with new multiOTP Credential Provider (5.8.2 and further)
-- eDirectory LDAP server support
-- Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
-- New sync-delete-retention-days= option in order to purge inexistent AD/LDAP users
-- Enhanced windows command line scripts (automatic administrator level)
-- Debian Buster 10.5 support (PHP 7.3, FreeRADIUS 3.0.17)
-- Raspberry Pi 4B support
-- Database optimization, TEXT fields instead of varchar(255)
-- Better mysqli support for alternate connection port
-- Better unicode handling
-
-# What's new in 5.6 releases
-- Generic web based SMS provider support
-- Better PHP 7.3 support
-
-# What's new in 5.5 releases
-- Debian 10.x (buster) binary images support (64 bits)
-- Out of sync detection with specific error message (for example hardware tokens not used for a long time)
-
-# What's new in 5.4 releases
-- SMS providers added (Swisscom LA REST, Afilnet, Clickatell2, eCall, Nexmo, NowSMS, SMSEagle)
-- Generic SMS custom provider
-- Debian 9.x (stretch) binary images support
-- New Raspberry images support for Raspberry Pi 1B/1B+/2B/3B/3B+
-
-# What's new in 5.3 releases
-- Multiple semicolon separated "Users DN" supported for AD/LDAP synchronization
-- New windows executable build process, using PHP 7.2.8
-- Special all-in-one-file created with the updated Enigma Virtual Box version 9.00
-- without2FA algorithm now available (useful to do 2FA only for some accounts and not for others)
-
-# What's new in 5.2 releases
-- Multiple semicolon separated Users DN supported (since 5.2.0.3)
-- Active Directory nested groups support
-  (user1 in groupA, groupA in groupB, setting the OTP groups to "groupB" will add user1)
-- Enhanced AD/LDAP support for huge Microsoft Active Directory
-- Base DN and Users DN are now two different parameters (Users DN optional)
-
-# What's new in 5.1 releases
-- Dockerfile available (5.1.1.2)
-- Credential Provider registry entries are always used when calling multiOTP.exe (5.1.0.6)
-- Expired AD/LDAP password support
-- multiOTP Credential Provider (for Windows) improvements
- (user@domain.name UPN support, default domain name supported and displayed, SMS request link)
-- Better unicode handling, multibyte fonctions used when needed (mb_strtolower(), ...)
-
-# What's new in 5.0 releases
-- Better FreeRADIUS 3.x documentation
-- New QRCode provisioning format for mOTP (compatible with OTP Authenticator) (5.0.5.2)
-- Important, under Linux, the config, devices, groups, tokens and users folders are now always
-  located in /etc/multiotp/. Please be sure to make the move when you are upgrading (5.0.4.6)
-- PostgreSQL support, based on source code provided by Frank van der Aa (5.0.4.5)
-- Restore configuration added in Web GUI (5.0.4.5)
-- New GetDelayedUsersList() method (5.0.3.6)
-- SetUserTokenSeed() and SetTokenSeed() methods accept now also base32 and raw binary (5.0.3.6)
-- Multiple groups per user is now supported (not all devices support multiple groups) (5.0.3.4)
-- Using AD/LDAP password instead of PIN code can be overwritten or not for all synchronized users
-- New windows executable build process, using PHP 7.x (5.0.3.4)
-- It's now possible to do several commands at once with the CLI edition (5.0.3.4)
-- The default TOTP/HOTP generator for Android/iOS is now FreeOTP Authenticator
-- EXE files are now signed in SHA256 (5.0.3.4)
-- New LDAP cache management to support huge AD/LDAP, with cache on disk (5.0.3.4)
-- New PurgeLockFolder() and PurgeLdapCacheFolder() methods (5.0.3.4)
-- If the user dialin IP address is defined, Framed-IP-Address and Framed-IP-Mask
-  are delivered in the RADIUS answer (5.0.3.0)
-- The user dialin IP address is synchronized from the Active Directory msRADIUSFramedIPAddress
-  attribute (5.0.3.0)
-- The first matching group defined in AD/LDAP group(s) filtering is now defined for the user
-  (this group is returned as the Filter-Id (11) option in a successful RADIUS answer) (5.0.1.0)
-- SOAP service available (compatible with OpenOTP SOAP service)
-- It's now possible to select a specific LDAP/AD attribute used as the synchronised account name
-  SetLdapSyncedUserAttribute(), GetLdapSyncedUserAttribute()
-- Cached requests supported (cached during a specific amount of time, useful for WebDAV,
-  device option cache_result_enabled)
-- A try on the previous password is rejected, but the error counter is not incremented
-- ForceNoDisplayLog() method added, in order to be able to disable log on display in server mode
-- YubicoOTP private id check is now implemented
-- SSL AD/LDAP also supported with Windows 2012 server
-- SyncLdapUsers is now using a semaphore file in order to avoid concurrent process for large AD/LDAP sync
-  (tested with 1'000 groups, 100'000 users, 1'000 users in the LDAP sync group)
-- AD/LDAP additional log information
-- Special chars support enhanced in LDAP class (as described in RFC4515)
-- The default ldap_group_cn_identifier is now cn instead of sAMAccountName
-- Enhanced SMS support for Clickatell, SSL is now also working
-- Bug fix concerning QRcode generation for mOTP
-- Weekly anonymized stats added (can be disabled)
-
-# What's new in 4.3 releases
-- Virtual Appliances are now available (VMware, Hyper-V, generic OVA) (4.3.2.5)
-- Raspberry Pi edition has now a special proxy to speed up the command line (4.3.1)
-- Generic LDAP support (in addition to Microsoft Active Directory support) (4.3.1)
-- New AD/LDAP faster sync algorithm to support larger AD (4.3.0)
-- If users are synced using AD/LDAP, it's now possible to use
-  the AD/LDAP password instead of the PIN code (4.3.0)
-- Yubico OTP support, including keys import using the log file in Traditional format (4.3.0)
-- Resync during authentication (autoresync) is now better handled in the class directly
-- QRCode generation for mOTP (compatible with Token2 App for iOS, Android and Windows Phone)
-
-# What's new in 4.2 releases
-- A new option -user-info is now available (4.2.4.1)
-- Tokens CSV import (4.2.4.1)
-- NT_KEY can be displayed for further handling by FreeRADIUS (4.2.4.1)
-- Lot of new QA tests, more than 60 different tests (4.2.4.0)
-- Better MySQL support with mysqli library support (4.2.4.0)
-- If activated, prefix PIN is now also requested for SMS authentication (4.2.2.0)
-- Web GUI is complete for a simple usage (4.2.2.0)
-- Some values can now go back to TekRADIUS (4.2.2.0)
-- AD/LDAP is now fully supported (4.2.1.0)
-- MS-CHAP and MS-CHAPv2 authentication support
-
-# What's new in 4.1 releases
-- Syslog support
-- Token resync only (without login) doesn't need prefix PIN anymore
-- Specific parameters order in QRCode for Microsoft Authenticator support
-- The open source edition of multiOTP is also OATH certified for HOTP and TOTP,
-  which includes encrypted PSKC import support
-- Instructions and files to build your own strong authentication server device
-  on a Raspberry Pi nano-computer
-- Self-registration of unattributed hardware tokens
-- Automatic resync/unlock during authentication
-- Default Linux file mode is now set by default to 0666 to avoid access problem
-- Basic web GUI
-
-# What's new in 4.0 releases
-- Full client/server support with local cache
-- CHAP authentication support
-- Emergency scratch passwords list
-  (providing a list of 10 emergency one-time-usage passwords)
-- SMS code sending (with clickatell, aspsms, intellisms and custom exec support)
-- integrated Google Authenticator support with integrated base 32 seed handling
-- Conversion from hardware HOTP/TOTP tokens to software tokens
-- QRcode generation for HOTP/TOTP automatic provisioning
-- Integrated QRcode generator library (from Y. Swetake)
-- Group attribute per user (sent back through the Radius attribute Filter-Id)
-- A lot of new options, also available in command line
-- Options are stored in an external configuration file (or in the database)
-- Full MySQL support, including tables creation
-- Fully automatic build chain (invisible for you, but very nice for me)
-- (Parts of the) comments have been reformatted and enhanced,
-  but still some work to do.
-
-# What's new in 3.9 releases
-- Support for account with multiple users
-- Some bug fixes
-
-# What's new in 3.2 releases
-- Google Authenticator support. Special information to handle the base 32 seed.
-- Better MySQL backend integration. Now it is possible to store all
-  information in a MySQL backend instead of flat files.
+WHAT'S NEW IN THIS 5.9.x RELEASE
+================================
+- New Raspberry, Hyper-V and OVA appliances available (version 011, based on Debian 11)
+- Scratchlist can be generated from the Web GUI
 
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2022-05-18 5.9.0.1 FIX: Set specific flags to run Perl scripts from FreeRADIUS
+2022-05-18 5.9.0.0 FIX: User account containing special ISO characters are now also converted to UTF
+                   ENH: New Hyper-V and OVA appliances available (version 011, based on Debian 11)
+                   ENH: Scratchlist can be generated from the Web GUI
 2022-05-08 5.8.8.4 ENH: Better docker support (also for Synology)
 2022-05-08 5.8.8.1 ENH: Add Raspberry Pi Bullseye 11.0 support
 2022-04-28 5.8.7.0 ENH: PHP 7.4 deprecated code cleaned
@@ -346,8 +191,7 @@ CHANGE LOG OF RELEASED VERSIONS
                    ENH: In CLI check, if username doesn't exist, it try automatically a shorter domain name step by step
 2022-01-14 5.8.5.1 ENH: Embedded Windows nginx edition updated to version 1.21.4
 2021-11-18 5.8.3.2 ENH: Enhanced multiOTP Credential Provider support
-2021-09-14 5.8.3.0 ENH: VM version 011 support
-                        (Debian Bullseye 11.0, PHP 7.4, FreeRADIUS 3.0.21, Nginx 1.18.0)
+2021-09-14 5.8.3.0 ENH: New VM support (Debian Bullseye 11.0, PHP 7.4, FreeRADIUS 3.0.21, Nginx 1.18.0)
                    ENH: Removed multicast support on the network card
 2021-08-19 5.8.2.9 ENH: Added compatibility with new multiOTP Credential Provider (5.8.2 and further)
 2021-06-04 5.8.2.4 ENH: Detect Credential Provider Request and force the no prefix option
@@ -1726,7 +1570,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.8.8.4 (2022-05-08)
+multiOTP 5.9.0.1 (2022-05-19)
 (c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -2235,8 +2079,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.8.8.4.zip 
-SHA256:fbbca84557c941a7c75f50e58f49f45038472fd4cd470209af5c912e42fd7b2b 
-SHA1:c3399247f53d4eebbfc4adeb61951685bb645e41 
-MD5:8998ed0227b1c56d03c1cf1c3a8a8992 
+Hash verification for multiotp_5.9.0.1.zip 
+SHA256:d1068aa5e26bd89be7dc9dcf0faf7f469131084071facdd66be527a98c6de185 
+SHA1:161741561b46a06b56112cc50322d49b9ec8bbbd 
+MD5:919acc0efe1ba5b65659b258966f7361 
 ``` 

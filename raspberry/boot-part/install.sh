@@ -16,8 +16,8 @@
 # Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.8.8.4
-# @date      2022-05-08
+# @version   5.9.0.1
+# @date      2022-05-19
 # @since     2013-11-29
 # @copyright (c) 2013-2021 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
@@ -68,7 +68,7 @@ SSH_ROOT_LOGIN="1"
 DEFAULT_IP="192.168.1.44"
 REBOOT_AT_THE_END="1"
 
-TEMPVERSION="@version   5.8.8.4"
+TEMPVERSION="@version   5.9.0.1"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
@@ -1132,6 +1132,8 @@ if [ -e /etc/freeradius/3.0/ ] ; then
     # Edit /etc/freeradius/3.0/mods-available/perl
     echo "Edit /etc/freeradius/3.0/mods-available/perl"
     sed -i "s/.*filename = .*/        filename = \/usr\/local\/bin\/multiotp\/scripts\/multiotp.pl/" /etc/freeradius/3.0/mods-available/perl
+    # Since 5.8.3.0 and FreeRADIUS 3.0.18, set the perl flags
+    sed -i "s/.*perl_flags = .*/        perl_flags = \"-U\"/" /etc/freeradius/3.0/mods-available/perl
 
     # Enable perl module
     echo "Enable perl module"

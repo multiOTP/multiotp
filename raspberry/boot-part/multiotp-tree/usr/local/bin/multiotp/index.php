@@ -27,8 +27,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.8.4
- * @date      2022-05-08
+ * @version   5.9.0.1
+ * @date      2022-05-19
  * @since     2013-08-06
  * @copyright (c) 2013-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -84,9 +84,10 @@
  *
  * Change Log
  *
+ *   2022-05-08 5.8.8.5 SysCo/al Scratchlist can be generated from the Web GUI
  *   2021-03-25 5.8.1.9 SysCo/al Cookie privacy (httponly and secure) are now handled in the application directly
  *                               Weak SSL ciphers disabled
- *   2021-02-12 5.8.1.0 SysCo/al WebGUI update
+ *   2021-02-12 5.8.1.0 SysCo/al Web GUI update
  *   2019-01-24 5.4.1.5 SysCo/al If any, clean specific NTP DHCP option at every reboot
  *   2019-01-07 5.4.1.1 SysCo/al Raspberry Pi 3B+ support
  *   2018-08-21 5.3.0.0 SysCo/al without2FA algorithm added
@@ -191,8 +192,8 @@ if (!class_exists('Multiotp')) {
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.8.4
- * @date      2022-05-08
+ * @version   5.9.0.1
+ * @date      2022-05-19
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -635,6 +636,8 @@ if (!class_exists('Multiotp')) {
  *
  * Change Log
  *
+ *   2022-05-18 5.9.0.0 SysCo/al FIX: User account containing special ISO characters are now also converted to UTF
+ *                               ENH: Scratchlist can be generated from the Web GUI
  *   2022-04-28 5.8.7.0 SysCo/al ENH: PHP 7.4 deprecated code cleaned
  *                               ENH: Embedded Windows nginx edition updated to version 1.21.6
  *                               ENH: Embedded Windows PHP edition updated to version 7.4.29
@@ -1020,8 +1023,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.8.4
- * @date      2022-05-08
+ * @version   5.9.0.1
+ * @date      2022-05-19
  * @since     2010-07-18
  */
 {
@@ -1119,8 +1122,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.8.8.4
-   * @date      2022-05-08
+   * @version   5.9.0.1
+   * @date      2022-05-19
    * @since     2010-07-18
    */
   function __construct(
@@ -1144,11 +1147,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.8.8.4'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.0.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2022-05-08'; // You should update the date with the date of your changes
+        $temp_date = '@date      2022-05-19'; // You should update the date with the date of your changes
         $this->_date = trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMiBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -9623,6 +9626,129 @@ class Multiotp
   }
 
 
+  function GenerateHtmlScratchlist(
+      $select_user = '',
+      $alternate_html_template = ''
+  ) {
+
+    if ('' != $select_user) {
+        $user = $this->SetUser($select_user);
+    } else {
+      $user = $this->GetUser();
+    }
+
+    $user = encode_utf8_if_needed($user);
+
+
+    //Get template file
+    if ('' != trim($alternate_html_template)) {
+      $html = $alternate_html_template;
+    } else {
+      //Get template file
+      $file_name = "scratchtemplate";
+      $file_to_show = $this->GetTemplatesFolder().$file_name.'.html';
+      if(file_exists($file_to_show)) {
+        $html = (file_get_contents($file_to_show));
+      } else {
+        $html = '';
+      }
+    }
+
+    $html = encode_utf8_if_needed($html);
+
+    $user_utf8 = encode_utf8_if_needed($user);
+    
+    $descr = encode_utf8_if_needed($this->GetUserDescription());
+    $descr = encode_utf8_if_needed(empty($descr) ? $user_utf8 : $descr);
+    
+    $html = str_replace('{MultiotpUserDescriptionUC}', mb_strtoupper($descr, 'UTF-8'), $html);
+    $html = str_replace('{MultiotpUserDescription}', $descr, $html);
+    $html = str_replace('{MultiotpUserAccount}', $user_utf8, $html);
+
+    // Check if a specific language exists in the tags
+    $specific_language = $this->GetUserLanguage();
+    if (false === mb_stripos($html, '{IfMultiotpLanguage="'.$specific_language.'"')) {
+      $specific_language = $this->GetLanguage();
+      if (false === mb_stripos($html, '{IfMultiotpLanguage="'.$specific_language.'"')) {
+        $specific_language = 'en';
+      }
+    }
+    // Clean other languages info
+    $html = preg_replace('/<!--\s*\{\/IfMultiotpLanguage="'.$specific_language.'"\}\s*-->/i', '', $html);
+    $html = preg_replace('/<!--\s*\{IfMultiotpLanguage="'.$specific_language.'"\}\s*-->/i', '', $html);
+    $html = preg_replace('/<!--\s*\{\/IfMultiotpLanguage="[a-z]*"\}\s*-->/i', ' -- {/IfMultiotpLanguage="other"} {ML} -->', $html);
+    $html = preg_replace('/<!--\s*\{IfMultiotpLanguage="[a-z]*"\}\s*-->/i', '<!-- {ML} {IfMultiotpLanguage="other"} -- ', $html);
+
+    // Clean language comments
+    $html_cleaned = "";
+    $html_slice = explode("{ML} -->",$html);
+    foreach ($html_slice as $one_slice) {
+      $comment_pos = mb_strpos($one_slice,'<!-- {ML}');
+      if(FALSE !== $comment_pos) {
+        $html_cleaned.=mb_substr($one_slice,0,$comment_pos);
+      }
+    }
+    $html_cleaned .= end($html_slice);
+    $html = $html_cleaned."\n";
+
+    $html = preg_replace('/<body.*>/i', '', $html);
+    $html = preg_replace('/<\/body>/i', '', $html);
+
+    // Clean comments
+    $html_cleaned = "";
+    $html_slice = explode("-->",$html);
+    foreach ($html_slice as $one_slice) {
+        $comment_pos = mb_strpos($one_slice,'<!--');
+        if(FALSE !== $comment_pos) {
+          $html_cleaned.=mb_substr($one_slice,0,$comment_pos);
+        }
+    }
+    $html_cleaned .= end($html_slice);
+    $html = $html_cleaned."\n";
+    
+    $regex_format='/\sformat=\"?([^\"\}]*)\"?.*\}/';
+
+    $passwords = explode("\t", $this->GetUserScratchPasswordsList($user));
+    $values = '';
+    foreach ($passwords as $password)
+    {
+      if('' == $values)
+        $values.= $password;
+      else
+        $values.= ", ".$password;
+    }
+    $html = str_replace('{MultiotpScratchPasswordList}', $values, $html);
+
+    //date and time replacement
+    $regex_tag='/\{MultiotpDateTime(.*)\}/';
+    $format = "Y-m-d H:i:s";
+    if(preg_match_all($regex_tag, $html, $matches))
+    {
+      foreach ($matches[0] as $item)
+      {
+        if(!empty($item))
+        {
+          if(preg_match($regex_format, $item, $values))
+          {
+            $format = $values[1];
+          }
+          $html = str_replace($item, date($format), $html);
+        }
+      }
+    }
+    
+    /*$table = '<table border="1">';
+    foreach ($passwords as $password)
+    {
+        $table .= '<tr><td>'.$password.'</td></tr>';
+    }
+    $table .= '</table>';
+    $html = str_replace('{MultiotpScratchPasswordList}', $table, $html);*/
+
+    return $html;
+  }
+
+
   /*********************************************************************
    *
    * Name: GetUserTokenUrlLink
@@ -10780,12 +10906,17 @@ class Multiotp
   
   function GetEnhancedUsersList() {
     $array_result = array();
-    $users_array = explode("\t", $this->GetUsersList());
-    foreach ($users_array as $user) {
-      $this->SetUser($user);
-      array_push($array_result, $user . "|" . "s" . ((1 == intval($this->GetUserSynchronized())) ? "1" : "0"));
+    $user_list = trim($this->GetUsersList());
+    $users_array = explode("\t", $user_list);
+    if (("" != $user_list) && (count($users_array) > 0)) {
+      foreach ($users_array as $user) {
+        $this->SetUser($user);
+        array_push($array_result, $user . "|" . "s" . ((1 == intval($this->GetUserSynchronized())) ? "1" : "0"));
+      }
+      return implode("\t", $array_result);
+    } else {
+      return "";
     }
-    return implode("\t", $array_result);
   }
 
 
@@ -74586,6 +74717,17 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
                     window.open(full_url,'_blank');
                 }
             }
+
+            function PrintScratchlist(one_user)
+            {
+                if ('' != one_user)
+                {
+                    var http_params = "method=PrintScratchlist"+"&options="+encodeURIComponent(one_user);
+                    var full_url = url_page +'?'+http_params;
+                    window.open(full_url,'_blank');
+                }
+            }
+
             function ResyncUser(one_user)
             {
                 document.getElementById('resync_user').value = one_user;
@@ -74895,6 +75037,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
             function UpdateUsersList()
             {
                 // Users
+                var userslist = 'No user yet...';
                 var counter = 0;
 
                 var remotecall = eval(RemoteCall('GetEnhancedUsersList'));
@@ -74957,6 +75100,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
 
                             userslist = userslist + '<button type="button" onclick="DeleteUser(\''+usersinfo[0]+'\');">Delete</button>';
                             userslist = userslist + '<button type="button" onclick="PrintQrCode(\''+usersinfo[0]+'\');">Print</button>';
+                            userslist = userslist + '<button type="button" onclick="PrintScratchlist(\''+usersinfo[0]+'\');">Scratchlist</button>';
                             userslist = userslist + '<button type="button" onclick="ResyncUser(\''+usersinfo[0]+'\');">Resync</button>';
 
                             userslist = userslist + ' ';
@@ -75651,6 +75795,10 @@ EOI;
                             break;
                         case mb_strtoupper("PrintQrCode",'UTF-8'):
                             echo $multiotp->GenerateHtmlQrCode($options_array[0]);
+                            $ajax_result = '';
+                            break;
+                        case mb_strtoupper("PrintScratchlist",'UTF-8'):
+                            echo $multiotp->GenerateHtmlScratchlist($options_array[0]);
                             $ajax_result = '';
                             break;
                         case mb_strtoupper("ResyncUser",'UTF-8'):

@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.8.4
- * @date      2022-05-08
+ * @version   5.9.0.1
+ * @date      2022-05-19
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -795,7 +795,7 @@ if ($cli_mode) {
 
 for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
 
-    $current_arg = clean_quotes($argv[$arg_loop]);
+    $current_arg = encode_utf8_if_needed(clean_quotes($argv[$arg_loop]));
 
     $not_a_command = FALSE;
 
