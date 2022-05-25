@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.0.1
-REM @date      2022-05-19
+REM @version   5.9.0.3
+REM @date      2022-05-26
 REM @since     2010-07-10
 REM @copyright (c) 2010-2022 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -112,6 +112,9 @@ IF NOT %ERRORLEVEL% == 0 (
 )
 :NoWarning
 
+REM UTF-8 mode
+CHCP 65001
+
 IF EXIST "%TEMP%\multiotp_error.log" DEL "%TEMP%\multiotp_error.log" /Q
 
 REM No web display of the webservice installation
@@ -201,6 +204,40 @@ ECHO Backend is set to %_backend%
 IF "mysql"=="%_backend%" %_multiotp% -display-log -initialize-backend
 IF "pgsql"=="%_backend%" %_multiotp% -display-log -initialize-backend
 
+
+REM Delete the test_stéphane (if existing)
+%_multiotp% -log -delete test_stéphane
+IF NOT ERRORLEVEL 13 ECHO.
+IF NOT ERRORLEVEL 13 ECHO - User test_stéphane successfully deleted
+
+ECHO.
+ECHO Create user test_stéphane with the RFC test values HOTP token and a big alpha PIN
+%_multiotp% -log -create -prefix-pin test_stéphane HOTP 3132333435363738393031323334353637383930 "ThisIsALongNonDigitPinCode!" 6 0
+IF NOT ERRORLEVEL 12 ECHO - OK! User test_stéphane successfully created
+IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
+IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_stéphane
+IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_stéphane (%_backend%) >>"%TEMP%\multiotp_error.log"
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
+
+ECHO.
+ECHO Authenticate test_stéphane with the first token of the RFC test values, no prefix
+%_multiotp% -keep-local -log test_st\351phane 755224
+IF NOT ERRORLEVEL 1 ECHO - KO! Token of the user test_stéphane successfully accepted without prefix
+IF NOT ERRORLEVEL 1 ECHO - KO! Token of the user test_stéphane successfully accepted without prefix (%_backend%) >>"%TEMP%\multiotp_error.log"
+IF NOT ERRORLEVEL 1 GOTO ErrorNoPrefix
+IF ERRORLEVEL 1 ECHO - OK! Token of the user test_stéphane successfully REJECTED (no prefix)
+IF ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
+:ErrorNoPrefix
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
+
+ECHO.
+ECHO Authenticate test_stéphane with the first token of the RFC test values, with prefix
+%_multiotp% -keep-local -log test_st\351phane "ThisIsALongNonDigitPinCode!755224"
+IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_stéphane successfully accepted
+IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_stéphane with the first token
+IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_stéphane with the first token (%_backend%) >>"%TEMP%\multiotp_error.log"
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 REM Delete the test_user (if existing)
 %_multiotp% -log -delete test_user
@@ -543,6 +580,8 @@ IF ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 :ErrorBadValue2FA
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
+REM GOTO DelTestUserSkip
+
 ECHO.
 ECHO And now, delete old users...
 REM Delete the test_user2 (if existing)
@@ -550,8 +589,6 @@ ECHO  - test_user2
 %_multiotp% -log -delete test_user2
 IF NOT ERRORLEVEL 13 ECHO.
 IF NOT ERRORLEVEL 13 ECHO - User test_user2 successfully deleted
-
-REM GOTO DelTestUserSkip
 
 REM Delete the test_user
 ECHO  - test_user
@@ -570,6 +607,14 @@ ECHO  - test_user_no_2fa
 %_multiotp% -log -delete test_user_no_2fa
 IF NOT ERRORLEVEL 13 ECHO.
 IF NOT ERRORLEVEL 13 ECHO - User test_user2 successfully deleted
+
+REM Delete the test_stéphane
+ECHO  - test_stéphane
+%_multiotp% -log -delete test_stéphane
+IF NOT ERRORLEVEL 13 ECHO.
+IF NOT ERRORLEVEL 13 ECHO - User test_stéphane successfully deleted
+
+:DelTestUserSkip
 
 REM Show Log
 REM %_multiotp% -showlog
@@ -622,8 +667,6 @@ ECHO.
 ECHO End of the CLI multiOTP tests
 IF %SUCCESSES% EQU %TOTAL_TESTS% ECHO (everything is OK so far...)
 ECHO.
-
-:DelTestUserSkip
 
 
 ECHO.

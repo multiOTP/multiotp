@@ -618,17 +618,37 @@ if (!function_exists('base32_decode'))
 
 
 /*******************************************************************
- * Custom function encode_utf8_if_needed
+ * Custom function encode_utf8_if_needed (now also décoding octal notation)
  *
  * @author SysCo/al
  *******************************************************************/
+/***********************************************************************
+ * Name: encode_utf8_if_needed
+ * Short description: encode to UTF-8 if needed, and also converting ISO octal notation
+ *
+ * Creation 2022-05-20
+ * Update   2021-03-14
+ * @version 1.1.0
+ * @author  SysCo/al
+ *
+ * @param   string  $data   string to encode if needed
+ * @return  string          UTF-8 string
+ ***********************************************************************/
 if (!function_exists('encode_utf8_if_needed')) {
-	function encode_utf8_if_needed($data)
-	{
+	function encode_utf8_if_needed(
+    $data
+  ) {
 		$text = $data;
-        $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
-        if ("UTF-8" != $encoding) {
-            $text = utf8_encode($text);
+
+    preg_match_all('#\\\\[0-9]{3}#', $text, $matches);
+    foreach($matches[0] as $match){
+      $char = preg_replace("#(\\\)#", "", $match);
+      $a = pack("H*", base_convert($char, 8, 16));
+      $text = preg_replace('#(\\\\)'.$char.'#',$a,$text);
+    }
+    $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
+    if ("UTF-8" != $encoding) {
+      $text = utf8_encode($text);
 		// $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1, WINDOWS-1252');
 		// if ("UTF-8" != $encoding) {
             // $text = mb_convert_encoding($text, "UTF-8", "UTF-8, ISO-8859-1, WINDOWS-1252");

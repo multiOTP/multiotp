@@ -8,12 +8,13 @@
 # https://www.multiotp.net/
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.0.1
-# @date      2022-05-19
+# @version   5.9.0.3
+# @date      2022-05-26
 # @since     2013-09-22
 # @copyright (c) 2013-2022 SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
+# 2022-05-26 5.9.0.3 SysCo/al ssue with /run/php when a Docker container is restarted
 # 2022-05-08 5.8.8.4 SysCo/al Better docker support (also for Synology)
 # 2022-05-08 5.8.8.1 SysCo/al Add Raspberry Pi Bullseye 11.0 support
 # 2021-09-14 5.8.3.0 SysCo/al VM version 011 support
@@ -37,7 +38,7 @@
 # 2013-09-22 4.0.9.0 SysCo/al Initial release
 ##########################################################################
 
-TEMPVERSION="@version   5.9.0.1"
+TEMPVERSION="@version   5.9.0.3"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
@@ -555,11 +556,21 @@ else
   else
     service ntp start
   fi
+  
   if [ -e /etc/init.d/${PHPFPM} ] ; then
-    /etc/init.d/${PHPFPM} start
+    if [ -e /run/php ] ; then
+      /etc/init.d/${PHPFPM} restart
+    else
+      /etc/init.d/${PHPFPM} start
+    fi
   else
-    service ${PHPFPM} start
+    if [ -e /run/php ] ; then
+      service ${PHPFPM} restart
+    else
+      service ${PHPFPM} start
+    fi
   fi
+  
   # Keep container running
   while true;
     do sleep 30;

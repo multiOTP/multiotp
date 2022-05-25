@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.0.1 (2022-05-19)
+Current build: 5.9.0.3 (2022-05-26)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -168,11 +168,15 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 ================================
 - New Raspberry, Hyper-V and OVA appliances available (version 011, based on Debian 11)
 - Scratchlist can be generated from the Web GUI
-
+- {MultiOtpDisplayName} (AD/LDAP DisplayName) can be used in templates
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2022-05-26 5.9.0.3 FIX: Issue with /run/php when a Docker container is restarted
+                   FIX: {MultiOtpVersion} is now correctly replaced in scratchtemplate.html
+                   ENH: {MultiOtpDisplayName} tag (AD/LDAP DisplayName) can be used in templates
+2022-05-20 5.9.0.2 FIX: User account containing octal encoded ISO characters are now also converted to UTF
 2022-05-18 5.9.0.1 FIX: Set specific flags to run Perl scripts from FreeRADIUS
 2022-05-18 5.9.0.0 FIX: User account containing special ISO characters are now also converted to UTF
                    ENH: New Hyper-V and OVA appliances available (version 011, based on Debian 11)
@@ -1570,7 +1574,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.0.1 (2022-05-19)
+multiOTP 5.9.0.3 (2022-05-26)
 (c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 

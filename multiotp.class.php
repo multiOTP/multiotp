@@ -72,8 +72,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.0.1
- * @date      2022-05-19
+ * @version   5.9.0.3
+ * @date      2022-05-26
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -266,635 +266,9 @@
  *     https://github.com/google/google-authenticator
  *
  *
- * Users valuable feedbacks and comments
- *
- * 2021-04-08 Derek Kenny (CA)
- *   Thanks for your valuable support in order to support eDirectory LDAP server
- *
- * 2018-08-25 Muzammel (PK)
- *   Thanks for your questions about the client/server process,
- *    which has been enhanced based on the exchange we had.
- *
- * 2018-07-31 Sergey, Kiev (UA)
- *   Thanks for your questions regarding -restore-config in the command line version.
- *   The restore function has been corrected
- *
- * 2018-02-13 Jonathan Garber (via GitHub)
- *   Thanks for your feedback about various issues.
- *
- * 2017-11-22 vak255 (via GitHub)
- *   Thanks for your feedback about a bad handled unicode issue.
- *   All strtoXXX and strpos have been changed to the the multibyte version.
- *
- * 2017-06-11 Richard Green
- *   Thanks for your proposal about specific LDAPTLS configuration values to be moved in the config parameters.
- *
- * 2017-04-19 Frank van der Aa, Vanboxtel BV (NL)
- *   Thanks a lot for your valuable implementation suggestion about PostgreSQL.
- *   The proposed code has been adapted and integrated in the project.
- *
- * 2017-02-14 Frank van der Aa, Vanboxtel BV (NL)
- *   Thanks for your proposal about GetList() method sorted output.
- *
- * 2017-02-09 Frank van der Aa, Vanboxtel BV (NL)
- *   Thanks for your debug about lockedlistarray[], the proposed
- *   GetDelayedUsersList() method and the delayed users display on the web GUI.
- *
- * 2017-02-02 Stefan Kügler, SerNet GmbH (DE)
- *   Thanks for your feedback on the last edition.
- *
- * 2017-01-24 Jean-François Perillo, Kudelski Security (CH)
- *   As proposed by Jean-François, requested LDAP password for synchronized users can be overwritten.
- *
- * 2017-01-05 Stefan Kügler, SerNet GmbH (DE)
- *   Thanks for your feedbacks on the last beta edition.
- *
- * 2017-01-04 Frank van der Aa, Vanboxtel (NL)
- *   Thanks for your feedback concerning leading zeros that can be omitted for the OTP or the PIN.
- *   This has been fixed for the next 5.0.3.4 release.
- *
- * 2016-12-07, 2016-12-01 Stefan Kügler, SerNet GmbH (DE)
- *   Thanks for your feedbacks on the last beta edition.
- *
- * 2016-12-02, Jim Bailey (USA)
- *   Thanks for your feedbacks with some features proposals.
- *
- * 2016-11-25 SKB Kontur (RU)
- *   Thanks for your appreciated $$$ donation.
- *
- * 2016-11-23 Serg Avtukhovich, SKB Kontur (RU)
- *   Serg had some issues with large Active Directory. He did the beta tests for several improvements.
- *
- * 2016-11-10 SerNet GmbH (DE)
- *   MANY thanks for your appreciated $$$ sponsorship for new implemented features proposed by Stefan Kügler.
- *
- * 2016-04-18 Serg Avtukhovich, SKB Kontur (RU)
- *   Serg had some strange problems when using multiOTP in client/server mode.
- *   After some trials, we fix the issue with the server when "log on display" is activated.
- *
- * 2015-12-20 Svetoslav Mateev, STS Soft (BG)
- *   Thanks for your appreciated $$$ donation.
- *
- * 2015-12-18 Sam Leach, Warwickshire County Council (UK)
- *   Sam informed us that a huge AD/LDAP organizational unit (100'000 users)
- *   crashed the sync process. This has been internally reproduced and corrected.
- *
- * 2015-08-10 Edward Kovarski (CA)
- *   Edward informed us that some special chars in the LDAP/AD group name
- *    was killing the SyncLdapUsers process. This has been corrected.
- *
- * 2015-07-14 Pierre-Nicolas Paradis, SherWeb (FR)
- *   Pierre-Nicolas informed us that it was still not possible to change
- *    the admin password using the web GUI. This has been corrected.
- *
- * 2015-06-23 Jun Li (CN)
- *   As proposed by Jun Li, launching the command line version without
- *    enough parameters returns now a 30 error code (instead of 19).
- *    Side effect is that -help is now required to display help page.
- *
- * 2015-06-02 Jean-François Perillo, Kudelski Security (CH)
- *   As proposed by Jean-François, token length error information has been
- *    added in the regular log and the autoresync is now enabled by default.
- *
- * 2015-06-02 Sébastien Charlier, Thesis SA (CH)
- * 2015-03-09 Martin
- *   Martin and Sébastien informed us that passwords containing the minus sign are not accepted.
- *
- * 2015-02-16 Sylvain Maret, Kudelski Security (CH)
- *   Sylvain informed us that Gemalto PSKC file don't provide the time interval for TOTP tokens.
- *   RFC default value (30 seconds) is now set by default if no time interval is given.
- *
- * 2015-01-27 Thomas Klute, ingenit GmbH & Co. KG (DE)
- *   Thanks Thomas for you feedback concerning a potential exploit with dots and slashes in a username.
- *   Even if no information can be extracted using this method, it's always good to patch this kind of weakness.
- *
- * 2015-01-08 Markus Arnoldi, LEWA Attendorn GmbH (DE)
- *   Useful comments about prefix PIN handling, documentation has been enhanced.
- *   Two new command line options are now available (fastcreatenopin and fastecreatewithpin)
- *
- * 2014-12-22 Sajid Hameed, Network Places Ltd (UK)
- *   Questions about users lockout, documentation has been enhanced.
- *   Three command line options information has been added in the documentation.
- *
- * 2014-12-15 Steve Jacot-Guillarmod, Swissdotnet SA (CH)
- *   Thanks Steve for your valuable feedback about LDAP sync and groups
- *   handling with a specific Synology OpenLDAP server implementation.
- *
- * 2014-11-04 Yubico Inc. (USA) / Yubico AB (S) / Yubico Ltd. (UK)
- *   BIG THANKS to the Yubico team which provides us several YubiKeys for the
- *   workshop organized during the Application Security Forum in Yverdon-les-Bains (Switzerland).
- *   Starting with version 4.3.0.0, YubiKeys (both Yubico OTP and HOTP) are now also supported and easy to import.
- *   (simply import the YubiKey traditional format log file)
- *
- * 2014-10-13 Adam Twardowski, Choopa LLC (USA)
- *   Thanks Adam for your valuable feedback concerning a bug with the NT_KEY generation if prefix PIN is enabled.
- *   Adam discovered the bug and fixed it when he configured pptpd with
- *   FreeRADIUS in order to set up a PPTP VPN with strong authentication.
- *
- * 2014-06-17 Stefan Kügler, SerNet GmbH (DE)
- *   Stefan proposes to add Active Directory msRADIUSFramedIPAddress attribute
- *   synchronization in order to distribute the Framed-IP-Address to a user.
- *
- * 2014-04-04 Stefan Kügler, SerNet GmbH (DE)
- * 2014-04-01 Daniel Särnström, Donator AB (SE)
- *   Daniel & Stefan asks some info in order to import tokens without a know format.
- *   Good question, multiOTP supports now importation of tokens from CSV file.
- *
- * 2014-04-02 Prashant Kumar, Alscient (UK)
- *   Prash is playing with FreeRADIUS and VPN (PPTP with MPPE). This requires radius to send MPPE keys.
- *   Interesting feedback, multiOTP provides now NT_KEY, like the ntlm_auth external helper.
- *
- * 2014-03-31 Alex Tasikas (GR)
- *   Thanks Alex for your valuable feedback concerning some bugs in LDAP support.
- *
- * 2014-03-25 Prashant Kumar, Alscient (UK)
- *   As proposed by Prash, we have added the possibility to modify the list of attributes to encrypt.
- *
- * 2014-03-17 Arthur de Jong, West Consulting (NL)
- *   Arthur gave some feedbacks concerning distributing the source code in the
- *    "preferred form of the work for making modifications".
- *
- * 2014-03-14 Soeren Malchow, MCON (DE)
- *   Thanks for your feedback concerning a bug in the SQL request for the log table.
- *
- * 2014-01-27 Henk van der Helm (NL)
- *   MANY thanks for your appreciated $$$ donation.
- *
- * 2014-01-19 Erik Nylund (FI)
- *   Thanks four your feedback concerning specific parameters order in QRCode for Microsoft Authenticator
- *
- * 2014-01-14 Sylvain Maret, Kudelski Security (CH)
- *   Thanks for your feedback concerning possible zero division in the ComputeOathTruncate method.
- *    Method has been altered in order to be more compatible with almost any PHP version.
- *   Thanks also for the suggestion to resync without the prefix PIN. Both are supported now.
- *
- * 2014-01-08/09  Cheng Shao-Pin (CN)
- *   Thanks for your feedback concerning possible missing JSON extension in old PHP distribution
- *    and possible image functions incompatibilities with some PHP versions during QRcode generation.
- *   Thanks also for your appreciated $ donation.
- *
- * 2014-01-08  Cheng Shao-Pin (CN) and Daniel Särnström, Donator AB (SE)
- *   Thanks for your feedback concerning md5.js missing in the distribution.
- *
- * 2013-12-20 Rico Zeiss, Hermann Wegener GmbH & Co. KG (DE)
- *   MANY thanks for your appreciated $$$ sponsorship to support us to add MS-CHAP and MS-CHAPv2 in a next release.
- *
- * 2013-12-18 Xavier Céspedes (ES)
- *   Thanks to Xavier who noticed a problem with the hex2bin() function duringthe scratch password generation.
- *   In the meantime, the GetUserScratchPasswordsList() function has been improved and fixed and is in the 4.1 release.
- *
- * 2013-09-20 Sean Butler-Lee (IE)
- *   Thanks a lot for announcing a bug with the GetUserScratchPasswordsArray() method.
- *
- * 2013-08-22,26 Frank Bongrand (FR)
- *   Thanks a lot for valuable feedbacks concerning some minor bugs in 4.0.4 and 4.0.6
- *
- * 2013-08-21 Henk van der Helm (NL)
- *   Thanks a lot for a valuable feedback concerning some minor bugs in 4.0.4
- *
- * 2013-08-15 Donator AB (SE)
- *   MANY thanks for your appreciated $$$ sponsorship to support us to add self-registration in a next release.
- *
- * 2013-08-13 Daniel Särnström, Donator AB (SE)
- *   Daniel proposed to add self-registration and pskc v12 with encrypted data support (OATH compliant).
- * 
- * 2013-07-25 Dominik Pretzsch from Last Squirrel IT (DE)
- *   After some discussions with Dominik, integration of the client/server support in the basic library
- *
- * 2013-07-23 Stefan Kügler (DE) (again ;-)
- *   Stefan proposed to add the possibility to show the log, which is especially convenient for MySQL log.
- *   He proposed also to be able to call an external program to send SMS.
- *
- * 2013-07-11 Stefan Kügler (DE)
- *   Stefan proposed to add a lock and unlock option for the user.
- *
- * 2013-06-19 SerNet GmbH (DE)
- *   MANY thanks for your appreciated $$$ sponsorship after we implemented some features proposed by Stefan Kügler.
- *
- * 2013-06-13 Henk van der Helm (NL) (again ;-)
- *   Henk proposed to be able to have a specific description for the software token.
- *   (we use the already existing user description attribute)
- *
- * 2013-06-01 Stefan Irion (CH)
- *   Thanks for your appreciated $$ donation.
- *
- * 2013-05-14 Henk van der Helm (NL)
- *   Henk asked to support also the provider IntelliSMS. Thanks for the $$ sponsorship!
- *
- * 2013-05-03 Stefan Kügler (DE)
- *   Stefan proposed to lower the default max_time_window to 600 seconds.
- *
- * 2013-03-04 Alan DeKok (CA)
- *   Alan proposed in the freeradius mailing-list to put a prefix to be able to handle the
- *   debug info by the freeradius server.
- *
- * 2012-11-28  Gareth Thomas
- *   Thanks for your appreciated $$ donation.
- *
- * 2012-03-16 Nicolas Goralski (LU)
- *   Nicolas proposed an enhancement in order to support PAM. Thanks also for the $$ sponsorship!
- *     (with the -checkpam option in the command line edition)
- *
- * 2011-05-19 Fabiano Domeniconi (CH)
- *   Fabiano found old info in the samples, CheckToken() is not boolean anymore! Samples fixed.
- *
- * 2011-04-24 Steven Roddis (AU)
- *   Steven asked for more examples. Thanks to Steven for the $ donation ;-)
- *
- * 2010-09-15 Jasper Pol (NL)
- *   Jasper has added an initial MySQL backend support
- *
- * 2010-09-13 Brenno Hiemstra (NL)
- *   Brenno reported bad extra spaces after the #!/usr/bin/php in the Linux version of multiotp.php
- *
- * 2010-08-20 C. Christophi, BirdNet (CH)
- *   Documentation enhancement proposal for the TekRADIUS part, thanks !
- *
- * 2010-07-19 SysCo/al (CH)
- *   Well, as requested by some users, the new "class" design is done, enjoy !
- *
- *
  * Change Log
  *
- *   2022-05-18 5.9.0.0 SysCo/al FIX: User account containing special ISO characters are now also converted to UTF
- *                               ENH: Scratchlist can be generated from the Web GUI
- *   2022-04-28 5.8.7.0 SysCo/al ENH: PHP 7.4 deprecated code cleaned
- *                               ENH: Embedded Windows nginx edition updated to version 1.21.6
- *                               ENH: Embedded Windows PHP edition updated to version 7.4.29
- *                               ENH: New MariaDB/MySQL indexes handling during schema creation and schema updates
- *                               ENH: Enhanced internal tests
- *   2022-04-14 5.8.6.1 SysCo/al FIX: Token "Without2FA" where not working all time with LDAP users
- *                               ENH: Telnyx SMS provider support
- *                               ENH: PHP 7.4 deprecated code cleaned
- *                               ENH: Email token is now supported for Credential Provider
- *                               ENH: In CLI check, if username doesn't exist, it try automatically a shorter domain name step by step
- *   2022-01-14 5.8.5.1 SysCo/al ENH: Embedded Windows nginx edition updated to version 1.21.4
- *   2021-11-18 5.8.3.2 SysCo/al ENH: Enhanced multiOTP Credential Provider support
- *   2021-09-14 5.8.3.0 SysCo/al ENH: VM version 011 support
- *                                    (Debian Bullseye 11.0, PHP 7.4, FreeRADIUS 3.0.21, Nginx 1.18.0)
- *                               ENH: Removed multicast support on the network card
- *   2021-08-19 5.8.2.9 SysCo/al ENH: Added compatibility with new multiOTP Credential Provider (5.8.2 and further)
- *   2021-06-04 5.8.2.4 SysCo/al ENH: Detect Credential Provider Request and force the no prefix option
- *   2021-04-08 5.8.2.1 SysCo/al ENH: eDirectory LDAP server support (set the LDAP server type value to 4)
- *   2021-03-25 5.8.1.9 SysCo/al FIX: Cookie privacy (httponly and secure) backported to previous virtual appliances
- *                               ENH: Cookie privacy (httponly and secure) are now handled in the application directly
- *                               ENH: Weak SSL ciphers disabled
- *                               ENH: Better Docker support
- *                               ENH: Better log handling
- *   2021-03-21 5.8.1.2 SysCo/al ENH: Test (1 == GetUserPrefixPin()) replaced by IsUserPrefixPin()
- *   2021-03-14 5.8.1.1 SysCo/al FIX: In some cases, the HOTP/TOTP was not well computed
- *   2021-02-12 5.8.1.0 SysCo/al ENH: Enhanced Web GUI accounts list (green=AD/LDAP synced, orange = delayed, red=locked)
- *   2020-12-11 5.8.0.7 SysCo/al ENH: -sync-delete-retention-days= option is set by default to 30 days
- *   2020-12-11 5.8.0.6 SysCo/al ENH: VM version 010 support  (Debian Buster 10.5, PHP 7.3, FreeRADIUS 3.0.17)
- *                               ENH: MySQL optimization
- *                               ENH: Enhanced windows command line scripts (automatic administrator level)
- *   2020-09-20 5.8.0.2 SysCo/al ENH: New -sync-delete-retention-days= option in order to purge inexistent AD/LDAP users
- *                                    (SetSyncDeleteRetentionDays and GetSyncDeleteRetentionDays method)
- *   2020-08-31 5.8.0.0 SysCo/al ENH: Raspberry Pi 4B support
- *                               ENH: New unified distribution
- *                               ENH: Debian Buster 10.5 support
- *                               ENH: Enhanced PHP 7.3 support
- *                               ENH: Better mysqli support for alternate connection port
- *                               FIX: Too many ReadConfigData loop during initialization
- *                               FIX: Better unicode handling, multibyte fonctions also for mb_substr()
- *                               FIX: A device file was searched with the name of the FreeRADIUS Client-Shortname
- *   2019-10-23 5.6.1.4 SysCo/al FIX: Separated configuration/statistics storage handling
- *   2019-10-22 5.6.1.3 SysCo/al ENH: Better PHP 7.3 support
- *                               ENH: Base32 encoder/decoder new implementation
- *                               ENH: During WriteConfigData, loop on the current values, and check with the old values
- *                               ENH: Enhanced internal tests
- *   2019-09-02 5.5.0.3 SysCo/al ENH: Give an info if time based token is probably out of sync (in a window 10 time bigger)
- *                                    (for example for hardware tokens not used for a long time)
- *   2019-03-29 5.4.1.8 SysCo/al ENH: Enhanced error messages, more log information
- *                               ENH: In debug mode, display an error if logfile cannot be written
- *                               ENH: Global Access-Challenge support
- *   2019-01-30 5.4.1.7 SysCo/al FIX: IsTemporaryBadServer function (thanks to brownowski on GitHub)
- *                               ENH: New QRcode library used (without external files dependency)
- *   2019-01-25 5.4.1.6 SysCo/al FIX: If any, clean specific NTP DHCP option at every reboot
- *   2019-01-18 5.4.1.4 SysCo/al ENH: Modifications for Debian 9.x (stretch) binary images support
- *   2019-01-07 5.4.1.1 SysCo/al ENH: Raspberry Pi 3B+ support
- *   2018-11-13 5.4.0.2 SysCo/al ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
- *                      SysCo/al ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
- *                      SysCo/al ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
- *                      SysCo/al ENH: PHP display error flag is now set to off by default in the webservice under Windows
- *                      SysCo/al ENH: Import of PSKC definition files with binary decoding key file
- *                      SysCo/al ENH: Added Swisscom LA REST, Afilnet, Clickatell2, eCall, Nexmo,
- *                                    NowSMS, SMSEagle and custom SMS provider support
- *   2018-09-14 5.4.0.1 SysCo/al FIX: Values of SetUserCacheLevel(), GetUserCacheLevel(), SetUserCacheLifetime()
- *                                    and GetUserCacheLifetime() are not correctly initialized
- *                      SysCo/al ENH: Enigma Virtual Box updated to version 9.10 (to create the special all-in-one-file)
- *                      SysCo/al ENH: PHP 7.1.22 used in the one single file (only PHP < 7.2 is still compatible with Windows 7/2008)
- *                      SysCo/al ENH: Compatibility mode to Windows 7 automatically added for radiusd.exe during radius service installation
- *                      SysCo/al ENH: PHP display error flag is now set to off by default in the webservice under Windows
- *   2018-08-26 5.3.0.3 SysCo/al FIX: Better without2FA algorithm support
- *                               FIX: Restore configuration has been fixed in the command line edition
- *                               ENH: Cache-level and cache-lifetime can be set separately for each user
- *                               ENH: In client/server mode, only unencrypted user attributes are sent back to a successful client request
- *                               ENH: Enhanced monitoring
- *   2018-08-22 5.3.0.1 SysCo/al ENH: Monitoring fields added (create_host, create_time, last_update_host)
- *   2018-08-21 5.3.0.0 SysCo/al FIX: stream_timeout is no more pushed to 20 seconds in PostHttpDataXmlRequest if we are in Credential Provider mode
- *                               FIX: RemoveTokenFromUser() method corrected. Token administrative information corrected,
- *                                    new software token created for the user
- *                               ENH: Multiple semicolon separated "Users DN" supported for AD/LDAP synchronization
- *                               ENH: Additional debug messages for disabled users during synchronization
- *                               ENH: Enigma Virtual Box updated to version 9.00 (to create the special all-in-one-file)
- *                               ENH: PHP 7.2.8 used in the one single file
- *                               ENH: without2FA algorithm now available (useful to do 2FA only for some accounts and not for others)
- *   2018-07-16 5.2.0.2 SysCo/al ENH: Active Directory nested groups support
- *                                    (user1 in groupA, groupA in groupB, setting the OTP groups to "groupB" will add user1)
- *                               ENH: Enhanced AD/LDAP support for huge Microsoft Active Directory
- *                               ENH: "Base DN" and "Users DN" are now two different parameters ("Users DN" optional)
- *   2018-03-20 5.1.1.2 SysCo/al FIX: typo in the source code of the command line option for ldap-pwd and prefix-pin
- *                               ENH: Dockerfile available
- *   2018-03-05 5.1.0.8 SysCo/al FIX: Enigma Virtual Box updated to version 8.10 (to create the special all-in-one-file)
- *   2018-02-27 5.1.0.7 SysCo/al FIX: [Receive an OTP by SMS] link is now fixed for Windows 10
- *   2018-02-26 5.1.0.6 SysCo/al ENH: Credential Provider registry entries are now always used when calling multiOTP.exe
- *   2018-02-21 5.1.0.5 SysCo/al FIX: To avoid virus false positive alert, multiOTP.exe is NO more packaged in one single file
- *                                    using Enigma, a php folder is now included in the multiOTP folder
- *                               FIX: multiOTPOptions registry entry is now useless
- *   2018-02-21 5.1.0.4 SysCo/al ENH: Credential Provider registry entries are used if available
- *   2018-02-19 5.1.0.3 SysCo/al FIX: Better unicode handling, multibyte fonctions used when needed (mb_strtolower(), ...)
- *                               ENH: Expired AD/LDAP password support
- *                               ENH: multiOTP Credential Provider (for Windows) improvements
- *                                     (user@domain.name UPN support, default domain name supported and displayed, SMS request link)
- *                               ENH: "force_no_prefix_pin" option for devices (for example if the device is a
- *                                     computer with multiOTP credential Provider and AD/LDAP synced password)
- *   2017-11-04 5.0.5.6 SysCo/al Better FreeRADIUS 3.x documentation
- *                               New radius tag prefix configuration option
- *                               New multiple groups device option
- *                               Some notice corrections (if the array element doesn't exist)
- *                               A user cannot be created with a leading backslash (fixed in FastCreateUser and CreateUserFromToken)
- *   2017-09-29 5.0.5.2 SysCo/al The proposed mOTP generator for Android/iOS is now OTP Authenticator
- *                               New xml QRCode provisioning format for mOTP (compatible with OTP Authenticator)
- *   2017-09-08 5.0.5.0 SysCo/al NirSoft nircmd.exe tool removed from the distribution (false virus detection)
- *                               Multiple URLs separator for client/server config is still ";", but [space] and "," are accepted
- *                               New developer mode for some specific detailed logs during development process only
- *   2017-07-07 5.0.4.9 SysCo/al New methods: SetLdapTlsReqcert, GetLdapTlsReqcert, SetLdapTlsCipherSuite, GetLdapTlsCipherSuite
- *                                to change config parameters, instead of hard coded parameters (for SSL/TLS LDAP connection)
- *                               Fixed too much detailed information in the log when trying
- *                                to detect a token serial number for self-registration
- *   2017-06-06 5.0.4.8 SysCo/al Fixed SSL/TLS LDAP failed connection for PHP 7.x (GnuTLS TLS1.2 restriction removed for PHP 7.x)
- *   2017-06-02 5.0.4.6 SysCo/al Fixed a typo in the ReadCacheData method for PostgreSQL support
- *                               Important, under Linux, the config, devices, groups, tokens and users folders are now always
- *                                located in /etc/multiotp/. Please be sure to make the move when you are upgrading
- *                               Cleaned some ugly PHP warnings when the backend is not initialized
- *   2017-05-29 5.0.4.5 SysCo/al Restore configuration added in Web GUI
- *                               Fixed configuration file directory under Windows in Web GUI
- *                               Fixed path with spaces handling for the command line edition (thanks Scott for the feedback)
- *                               PostgreSQL support, based on source code provided by Frank van der Aa
- *                               Fixed file_get_contents issue with offset parameter in PHP 7.x
- *   2017-05-16 5.0.4.4 SysCo/al GetList() is now sorted with files backend
- *                               A replay during a defined delay (default 60 seconds) of the previous refused password is rejected,
- *                                but the error counter is not incremented (SetLastFailedWhiteDelay and GetLastFailedWhiteDelay)
- *                               A user cannot be created with a leading backslash
- *   2017-02-23 5.0.3.7 SysCo/al Group names are now always trimed to avoid blank spaces
- *                               SetLinuxFolderMode() and GetLinuxFolderMode() methods added
- *   2017-02-21 5.0.3.6 SysCo/al GetDelayedUsersList() method added
- *                               GetList() is now sorted with MySQL backend
- *                               RestoreConfiguration() method updated, system configuration data can be ignored
- *                               SetUserTokenSeed() and SetTokenSeed() methods accept now also base32 and raw binary
- *                               The full windows package has been fixed and cleaned
- *   2017-02-03 5.0.3.5 SysCo/al GetUserInfo() method added
- *                               ImportTokensFromCsv fixed when the file is not readable
- *                               Fix possible endless loop when opening a file that exists but without the right to read it
- *   2017-01-26 5.0.3.4 SysCo/al It's now possible to do several commands at once with the CLI edition
- *                               New overwrite_request_ldap_pwd option (enabled by default).
- *                                If overwrite is enabled, default_request_ldap_pwd value is forced during synchronization
- *                               Multiple groups per user is now supported (not all devices support multiple groups).
- *                                (radius reply attributor has been changed to += by default)
- *                               multiotp -delete-token command has been added in the CLI
- *                               -lock and -unlock command return now 19 (instead of 99) in the CLI
- *                               Better support of DialinIp functions in command line usage
- *                               New LDAP cache management to support huge AD/LDAP, with cache on disk (system temporary folder)
- *                               New PurgeLockFolder() and PurgeLdapCacheFolder() method
- *                               The default proposed TOTP/HOTP generator for Android/iOS is now FreeOTP Authenticator
- *                               Better Eastern European languages support
- *                               Multiple purpose tokens provisioning format PSKCV10,
- *                                like Gemalto e3050cL and t1050 tokens, is now supported.
- *                               Various bug fixes and enhancements when using the proxy mode.
- *   2016-11-14 5.0.3.0 SysCo/al Log messages are better categorized
- *                               The user dialin IP address is synchronized from the Active Directory msRADIUSFramedIPAddress attribute
- *                               New IP dialin methods : SetUserDialinIpAddress(), SetUserDialinIpMask(), SetDefaultDialinIpMask(),
- *                                GetUserDialinIpAddress(), GetUserDialinIpMask(), GetDefaultDialinIpMask()
- *                               If the user dialin IP address is defined, Framed-IP-Address
- *                                and Framed-IP-Mask are delivered in the RADIUS answer
- *                               Enhanced token importation process (to support binary encryption key in hexadecimal 0xAABBCC format)
- *   2016-11-04 5.0.2.6 SysCo/al Better log message for automatically or manually created objects
- *                               External packages update
- *                               New GetUserLastLogin() and SetUserLastLogin() methods
- *                               Backup configuration file can now be restored in commercial version without any changes
- *   2016-10-16 5.0.2.5 SysCo/al Better SSL support using context if available (for PHP >= 5.3)
- *                               New methods SetTouchFolder(), GetTouchFolder(), TouchFolder(), FolderTouched() to offer asynchronous capabilities
- *                               New methods added for SOAP service
- *                               Weekly anonymized stats added (can be disabled). Anonymized stats include the following information:
- *                                backend type, AD/LDAP used or not, OS version, PHP version, library version, number of accounts defined,
- *                                number of tokens defined. They are sent on the stats.multiotp.net FQDN which is hosted in Switzerland.
- *                               It's now possible to select a specific LDAP/AD attribute used as the synchronised account name
- *                                SetLdapSyncedUserAttribute(), GetLdapSyncedUserAttribute()
- *                               An account can be tested from the dashboard
- *                               Unified configuration backup and restore format (BackupConfiguration)
- *                               Better support of MS-CHAPv2 in the provided appliances
- *                               Cached requests supported (cached during a specific amount of time, useful for WebDAV authentication)
- *                                (device option cache_result_enabled)
- *                               A try on the previous accepted password is rejected, but the error counter is not incremented
- *                               ForceNoDisplayLog() method added, in order to be able to disable log on display in server mode
- *                               XML parsing error are more verbose
- *                               XmlServer is now sending XML response with the specific Content-type: text/xml
- *                               YubicoOTP private id check is now implemented
- *                               SSL AD/LDAP also supported with Windows 2012 server
- *                               SyncLdapUsers is now using a semaphore file in order to avoid concurrent process for large AD/LDAP sync
- *                                (tested with 1'000 groups, 100'000 users, 1'000 users in the LDAP sync group)
- *                               AD/LDAP additional log information
- *                               New GetNetworkInfo and SetNetworkInfo methods
- *                               Special chars support enhanced in LDAP class (as described in RFC4515)
- *                               The default ldap_group_cn_identifier is now cn instead of sAMAccountName
- *                               The first matching group defined in AD/LDAP group(s) filtering is now defined for the user
- *                                (this group is returned as the Filter-Id (11) option in a successful RADIUS answer)
- *                               Enhanced SMS support for Clickatell, SSL is now also working
- *                               Bug fix concerning QRcode generation for mOTP
- *                               Code fixes
- *                               New AssignTokenToUser() and RemoveTokenFromUser() methods
- *   2015-07-18 4.3.2.6 SysCo/al New ResetTempUserArray method (as we want to move away from global array in the near future)
- *                               For _user_data, default values are now extracted from the definition array
- *                               QRcode generation for mOTP (motp://[SITENAME]:[USERNAME]?secret=[SECRET-KEY])
- *   2015-07-15 4.3.2.5 SysCo/al Calling multiotp CLI without parameter returns now error code 30 (instead of 19)
- *   2015-06-24 4.3.2.4 SysCo/al multi_account automatic support
- *                               Scratch password generation (UTF)
- *   2015-06-10 4.3.2.3 SysCo/al Enhancements for the Dev(Talks): demo
- *   2015-06-09 4.3.2.2 SysCo/al Empty users are refused
- *                               TOTP time interval of imported tokens is set by default to 30s
- *                               More accuracy in the logged information
- *                               Refactoring backend methods, sharing code
- *                               Refactoring some ugly parts (!)
- *                               Documentation update concerning lockout functions and prefix PIN prefix
- *                               Special token entry 'Sms' is now also accepted, like 'SMS' or 'sms', to send an SMS token
- *                               The minus (-) in the prefix password is now supported (it was filtered to fix some rare user issues)
- *                               The autoresync option is now enabled by default
- *                               Resync during authentication (autoresync) is now better handled in the class directly
- *                               The server_cache_level is now set to 1 by default (instead of 0)
- *                               If the token length is not correct, it's now written in the log
- *                               Some LDAP messages are now only logged in debug mode
- *   2014-12-15 4.3.1.1 SysCo/al Better generic LDAP support
- *                                 - description sync done in the following order: description, gecos, displayName
- *                                 - memberOf is not always implemented, alternative method to sync users based on group names.
- *                                 - disabled account synchronization using shadowExpire or sambaAcctFlags
- *                               Better Active Directory support
- *                                 - accountExpires is now supported for synchronization
- *                                 - ms-DS-User-Account-Control-Computed (to handle locked out accounts, available since Windows 2003)
- *   2014-12-09 4.3.1.0 SysCo/al MULTIOTP_PATH environment variable support
- *                               CLI proxy added to speed up the command line
- *                               Scratch password need also the prefix PIN if it's activated
- *                               OTP with integrated serial numbers better supported (in PAP)
- *                               Generic LDAP support (instead of Microsoft AD support only)
- *                               Raspberry Pi edition has now a special proxy to speed up the command line
- *   2014-11-04 4.3.0.0 SysCo/al It's now possible to use the AD/LDAP password instead of the PIN code
- *                               Yubico OTP support, including keys import using the log file in Traditional format
- *                               qrcode() stub enhanced to check if the required folders are available
- *                               SyncLdapUsers completely redesigned
- *                                 - no more complete array in memory
- *                                 - MultiotpAdLdap class also enhanced accordingly
- *                                   - cached group_cn requests
- *                                   - cached recursive_groups requests
- *                                   - new "by element" functions
- *                               Demo mode support
- *                               Bug fix concerning the NT_KEY generation with enabled prefix PIN (thanks Adam)
- *                               ResyncToken() method added (instead of using CheckToken() method for synchronization)
- *   2014-06-12 4.2.4.3 SysCo/al Bug fix concerning aspsms provider
- *   2014-04-13 4.2.4.2 SysCo/al XML parsing consolidation, one library for the whole project
- *                               Fixed bug concerning tokens CSV import
- *   2014-04-06 4.2.4.1 SysCo/al Fixed bug concerning LDAP handling
- *                               NT_KEY support added (for FreeRADIUS further handling)
- *                               Tokens CSV import (serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
- *                               When a user is deleted, the token(s) attributed to this user is/are unassigned
- *                               New option -user-info added
- *   2014-03-30 4.2.4   SysCo/al Fixed bug concerning MySQL handling and mysqli support added
- *                               Enhanced SetAttributesToEncrypt function
- *                               New implementation fo some external classes
- *                               Generated QRcode are better
- *                               LOT of new QA tests, more than 60 different tests (including PHP class and command line versions)
- *                               Enhanced documentation
- *   2014-03-13 4.2.3   SysCo/al Fixed bug for clear text password going back to TekRADIUS (PIN was always prefixed for mOTP)
- *                               Fixed bug when client/server mode is activated, but not working well
- *   2014-03-03 4.2.2   SysCo/al Better AD/LDAP integration
- *                               Web GUI is now complete for a simple usage, including hardware tokens import
- *                               Better template for provisioning information
- *                               Some values can now go back to TekRADIUS
- *                               If activated, prefix PIN is now also requested for SMS authentication
- *                               More information in the logs
- *                               Better list of the external packages used
- *   2014-02-14 4.2.1   SysCo/al AD/LDAP is now fully supported in order to create users based on AD/LDAP content
- *                                (with groups filtering)
- *   2014-02-07 4.2.0   SysCo/al MS-CHAP and MS-CHAPv2 are now supported
- *                                (md4 implementation added for PHP backward compatibility)
- *                               Enhanced LDAP configuration structure
- *                               Fixed bug during token attribution to users
- *                                (a "no name" token appeared sometimes)
- *   2014-01-20 4.1.1   SysCo/al md5.js was missing in the public distribution
- *                               Alternate json_encode function is defined if the JSON extension is not loaded
- *                               Fixed possible image functions incompatibilities with some PHP versions
- *                                during QRcode generation
- *                               As suggested by Sylvain, token resync doesn't need prefix PIN anymore
- *                                (but still accepted)
- *                               More verbosity in the logs in debug mode
- *                               Specific parameters order in QRCode for Microsoft Authenticator support
- *                                (thanks to Erik Nylund)
- *   2013-12-23 4.1.0   SysCo/al The open source edition of multiOTP is OATH certified ;-)
- *                                (that means full compatibility with any OATH tokens and encrypted PSKC import support)
- *                               Raspberry Pi nanocomputer is now fully supported
- *                               Basic web interface
- *                               Self-registration of hardware tokens is now possible
- *                                PAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
- *                                [serial number][OTP] instead of [OTP]. If user has a prefix PIN, type [serial number][PIN][OTP])
- *                                PAP/CHAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
- *                                [username:serialnumber] as the username and the [OTP] in the password field.
- *                                If user has a prefix PIN, [PIN][OTP] must be typed in the password field
- *                               Automatic resync/unlock option during authentication (PAP only). When the autoresync option
- *                                is enabled, any user can resync his token by typing [OTP1] [OTP2] in the password field. 
- *                                If user has a prefix PIN, he must type [PIN][OTP1] [PIN][OTP2].
- *                               Tokens with less than 3 characters are not accepted anymore in CheckToken()
- *                               Default Linux file mode is now set by default (0666 for created and changed files)
- *                               Error 28 is returned if the file is not writable, even after a successful login
- *                               Added GetUsersCount() function
- *                               Added GenerateSmsToken() function
- *                               Added Groups management functions
- *                               Added Tokens assignation functions
- *                               Added SetUserActivated(1|0) and GetUserActivated() function
- *                               Added SetUserSynchronized(1|0) and GetUserSynchronized() function
- *                               scratch_passwords is now a text field in the database
- *                               The third parameter of the Decrypt method is now mandatory
- *                               Some modifications in order to correctly handle the class methods
- *   2013-09-22 4.0.9   SysCo/al Fixed a bug in GetUserScratchPasswordsArray. If a user had no scratch password
- *                                and the implementation accepted blank password, it was accepted
- *                               Fixed a bug where scratch passwords generation used odd numbers of characters for hex2bin()
- *   2013-08-30 4.0.7   SysCo/al GetScriptFolder() was still buggy sometimes, thanks Frank for the feedback
- *                               File mode of the created QRcode file is also changed based on GetLinuxFileMode()
- *                               'sms' as the password to request an SMS token can now be sent in lower or uppercase
- *                               Added a description attribute for the tokens
- *   2013-08-25 4.0.6   SysCo/al base32_encode() is now RFC compliant with uppercases
- *                               GetUserTokenQrCode() and GetTokenQrCode() where buggy
- *                               GetScriptFolder() use now __FILE__ if the full path is included
- *                               When doing a check in the CLI header, @... is automatically removed from the
- *                                username if the user doesn't exist, and the check is done on the clean name
- *                               Added a lot of tests to enhance release quality
- *   2013-08-21 4.0.5   SysCo/al Fixed the check of the cache lifetime
- *                               Added a temporary server blacklist during the same instances
- *                               Default server timeout is now set to 1 second
- *   2013-08-20 4.0.4   SysCo/al Added an optional group attribute for the user
- *                                (which will be send with the Radius Filter-Id option)
- *                               Added scratch passwords generation (if the token is lost)
- *                               Automatic database schema upgrade using method UpgradeSchemaIfNeeded()
- *                               Added client/server support with local cache
- *                               Added CHAP authentication support (PAP is of course still supported)
- *                               The encryption key is now a parameter of the class constructor
- *                               The method SetEncryptionKey('MyPersonalEncryptionKey') is DEPRECATED
- *                               The method DefineMySqlConnection is DEPRECATED
- *                               Full MySQL support, including tables creation (see example and SetSqlXXXX methods)
- *                               Added email, sms and seed_password to users attributes
- *                               Added sms support (aspsms, clickatell, intellisms, exec)
- *                               Added prefix support for debug mode (in order to send Reply-Message := to Radius)
- *                               Added a lot of new methods to handle easier the users and the tokens
- *                               General speedup by using available native functions for hash_hmac and others
- *                               Default max_time_window has been lowered to 600 seconds (thanks Stefan for suggestion)
- *                               Integrated Google Authenticator support with integrated base 32 seed handling
- *                               Integrated QRcode generator library (from Y. Swetake)
- *                               General options in an external configuration file
- *                               Comments have been reformatted and enhanced for automatic documentation
- *                               Development process enhanced, source code reorganized, external contributions are
- *                                added automatically at the end of the library after an internal build release
- *   2011-10-25 3.9.2   SysCo/al Some quick fixes after intensive check
- *                               Improved get_script_dir() in CLI for Linux/Windows compatibility
- *   2011-09-15 3.9.1   SysCo/al Some quick fixes concerning multiple users
- *   2011-09-13 3.9.0   SysCo/al Added support for account with multiple users
- *   2011-07-06 3.2.0   SysCo/al Encryption hash handling with additional error message 33
- *                                (if the key has changed)
- *                               Added more examples
- *                               Added generic user with multiple account
- *                                (Real account name is combined: "user" and "account password")
- *                               Added log options, now default doesn't log token value anymore
- *                               Debugging MySQL backend support for the token handling
- *                               Fixed automatic detection of \ or / for script path detection
- *   2010-12-19 3.1.1   SysCo/al Better MySQL backend support, including in CLI version
- *   2010-09-15 3.1.0   SysCo/al Removed bad extra spaces in the multiotp.php file for Linux
- *                               MySQL backend support
- *   2010-09-02 3.0.0   SysCo/al Added tokens handling support
- *                                including importing XML tokens definition file
- *                                (http://tools.ietf.org/html/draft-hoyer-keyprov-pskc-algorithm-profiles-00)
- *                               Enhanced flat database file format (multiotp is still compatible with old versions)
- *                               Internal method SetDataReadFlag renamed to SetUserDataReadFlag
- *                               Internal method GetDataReadFlag renamed to GetUserDataReadFlag
- *   2010-08-21 2.0.4   SysCo/al Enhancement in order to use an alternate php "compiler" for Windows command line
- *                               Documentation enhancement
- *   2010-08-18 2.0.3   SysCo/al Minor notice fix
- *   2010-07-21 2.0.2   SysCo/al Fix to create correctly the folders "users" and "log" if needed
- *   2010-07-19 2.0.1   SysCo/al Foreach was not working well in PHP4, replaced at some places
- *   2010-07-19 2.0.0   SysCo/al New design using a class, mOTP support, cleaning of the code
- *   2010-06-15 1.1.5   SysCo/al Added OATH/TOTP support
- *   2010-06-15 1.1.4   SysCo/al Project renamed to multiotp to avoid overlapping
- *   2010-06-08 1.1.3   SysCo/al Typo in script folder detection
- *   2010-06-08 1.1.2   SysCo/al Typo in variable name
- *   2010-06-08 1.1.1   SysCo/al Status bar during resynchronization
- *   2010-06-08 1.1.0   SysCo/al Fix in the example, distribution not compressed
- *   2010-06-07 1.0.0   SysCo/al Initial implementation
+ *   Please check the readme file for the whole change log since 2010
  *********************************************************************/
 
 class Multiotp
@@ -903,8 +277,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.0.1
- * @date      2022-05-19
+ * @version   5.9.0.3
+ * @date      2022-05-26
  * @since     2010-07-18
  */
 {
@@ -1002,8 +376,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.0.1
-   * @date      2022-05-19
+   * @version   5.9.0.3
+   * @date      2022-05-26
    * @since     2010-07-18
    */
   function __construct(
@@ -1027,11 +401,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.0.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.0.3'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2022-05-19'; // You should update the date with the date of your changes
+        $temp_date = '@date      2022-05-26'; // You should update the date with the date of your changes
         $this->_date = trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMiBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -1462,6 +836,7 @@ class Multiotp
           'description'             => "TEXT DEFAULT ''",
           'dialin_ip_address'       => "TEXT DEFAULT ''",
           'dialin_ip_mask'          => "TEXT DEFAULT ''",
+          'display_name'            => "TEXT DEFAULT ''",
           'email'                   => "TEXT DEFAULT ''",
           'email_otp'               => "TEXT DEFAULT ''",
           // User email otp validity
@@ -9320,6 +8695,7 @@ class Multiotp
       
       $descr = encode_utf8_if_needed($this->GetUserDescription());
       $descr = encode_utf8_if_needed(empty($descr) ? $user : $descr);
+      $display_name = encode_utf8_if_needed($this->GetUserDisplayName());
 
       if ('' != trim($alternate_html_template)) {
           $html = $alternate_html_template;
@@ -9424,8 +8800,9 @@ class Multiotp
       $html = str_replace('{MultiotpVersion}', $this->GetVersion(), $html);
       $html = str_replace('{MultiotpUserDescriptionUC}', mb_strtoupper($descr, 'UTF-8'), $html);
       $html = str_replace('{MultiotpUserDescription}', $descr, $html);
+      $html = str_replace('{MultiotpUserAccount}', $user, $html);
+      $html = str_replace('{MultiotpUserDisplayName}', $display_name, $html);
 
-      $html = str_replace('{MultiotpUserAccount}', $user, $html);                    
       $html = str_replace('{MultiotpUserPin}', $this->GetUserPin(), $html);
       $html = str_replace('{MultiotpUserAlgorithm}', mb_strtoupper($this->GetUserAlgorithm(),'UTF-8'), $html);
       $html = str_replace('{MultiotpUserTokenSeed}', $this->GetUserTokenSeed(), $html);
@@ -9437,8 +8814,9 @@ class Multiotp
 
       $regex_url='/\surl=(.*?)[\}\s}]/';
       $regex_format='/\sformat=\"?([^\"\}]*)\"?.*\}/';
-      $regex_w='/\swidth=(.*?)[\}\s]/';
-      $regex_h='/\sheight=(.*?)[\}\s]/';
+      $regex_w='/\swidth=[\D]*([\d]*)[\D]*/';
+      $regex_h='/\sheight=[\D]*([\d]*)[\D]*/';
+      $regex_name='/\saccount=(.*?)[\}\s]/';
 
       // Date and time replacement
       $regex_tag='/\{MultiotpDateTime(.*)\}/';
@@ -9484,7 +8862,7 @@ class Multiotp
 
           if(preg_match_all($regex_tag, $html, $matches)) {
               foreach ($matches[0] as $item) {
-                  $url = $this->GetUserTokenUrlLink($user, $descr, $qrcode_format);
+                  $url_display_name = $descr;
                   $w = $code_width;
                   $h = $code_height;
                   if(!empty($item)) {
@@ -9496,6 +8874,22 @@ class Multiotp
                           $h = str_replace('"', '', explode('=', $values[0],2));
                           $h = trim(str_replace('}', '', $h[1]));
                       }
+                      if(preg_match($regex_name, $item, $values)) {
+                          $name_tag = str_replace('"', '', explode('=', $values[0],2));
+                          $name_tag = trim(str_replace('}', '', $name_tag[1]));
+                          if (strtoupper("MultiotpUserDisplayName" == $name_tag)) {
+                            $url_display_name = $display_name;
+                          } elseif (strtoupper("MultiotpUserAccount" == $name_tag)) {
+                            $url_display_name = $user;
+                          } elseif (strtoupper("MultiotpUserDescriptionUC" == $name_tag)) {
+                            $url_display_name = mb_strtoupper($descr, 'UTF-8');
+                          } elseif (strtoupper("MultiotpUserDescription" == $name_tag)) {
+                            $url_display_name = $descr;
+                          } else {
+                            $url_display_name = $descr;
+                          }
+                      }
+                      $url = $this->GetUserTokenUrlLink($user, $url_display_name, $qrcode_format);
                       $html = str_replace($item, "<a id=\"QrCodeUserToken\" href=\"".$url."\" target=\"blank\"><img border=\"0\" width=\"".$w."\" height=\"".$h."\" src=\"data:image/png;base64,".base64_encode($this->qrcode($url, 'binary'))."\"></a>", $html);
                   }
               }
@@ -9540,10 +8934,13 @@ class Multiotp
     
     $descr = encode_utf8_if_needed($this->GetUserDescription());
     $descr = encode_utf8_if_needed(empty($descr) ? $user_utf8 : $descr);
+    $display_name = encode_utf8_if_needed($this->GetUserDisplayName());
     
+    $html = str_replace('{MultiotpVersion}', $this->GetVersion(), $html);
     $html = str_replace('{MultiotpUserDescriptionUC}', mb_strtoupper($descr, 'UTF-8'), $html);
     $html = str_replace('{MultiotpUserDescription}', $descr, $html);
     $html = str_replace('{MultiotpUserAccount}', $user_utf8, $html);
+    $html = str_replace('{MultiotpUserDisplayName}', $display_name, $html);
 
     // Check if a specific language exists in the tags
     $specific_language = $this->GetUserLanguage();
@@ -10936,7 +10333,7 @@ class Multiotp
                                           $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
                                           if ('error_counter' == trim($line_array[0]))
                                           {
-                                              $error_counter = $line_array[1];
+                                              $error_counter = intval($line_array[1]);
                                           }
                                           if ('last_error' == trim($line_array[0]))
                                           {
@@ -11601,6 +10998,7 @@ class Multiotp
       } else {
           $fields_array = array('user',
                                 'description',
+                                'display_name',
                                 'email',
                                 'group',
                                 'desactivated',
@@ -11696,6 +11094,7 @@ class Multiotp
                           if (isset($aRow['user'])) {
                               $user_array = array('user'                 => $aRow['user'],
                                                   'description'          => $aRow['description'],
+                                                  'display_name'         => $aRow['display_name'],
                                                   'email'                => $aRow['email'],
                                                   'enabled'              => (0 == $aRow['desactivated']),
                                                   'group'                => $aRow['group'],
@@ -11721,6 +11120,7 @@ class Multiotp
                           if (isset($aRow['user'])) {
                               $user_array = array('user'                 => $aRow['user'],
                                                   'description'          => $aRow['description'],
+                                                  'display_name'         => $aRow['display_name'],
                                                   'email'                => $aRow['email'],
                                                   'enabled'              => (0 == $aRow['desactivated']),
                                                   'group'                => $aRow['group'],
@@ -11748,6 +11148,7 @@ class Multiotp
                           $this->SetUser($user);
                           $user_array = array('user'                 => $user,
                                               'description'          => $this->GetUserDescription(),
+                                              'display_name'         => $this->GetUserDisplayName(),
                                               'email'                => $this->GetUserEmail(),
                                               'enabled'              => (1 == $this->GetUserActivated()),
                                               'group'                => $this->GetUserGroup(),
@@ -12161,6 +11562,34 @@ class Multiotp
           $this->SetUser($user);
       }
       return $this->_user_data['description'];
+  }
+
+
+  function SetUserDisplayName(
+      $first_param,
+      $second_param = "*-*"
+  ) {
+      $result = "";
+      if ($second_param == "*-*") {
+          $result = $first_param;
+      } else {
+          $this->SetUser($first_param);
+          $result = $second_param;
+      }
+      $result = $this->EncodeForBackend($result);
+      $this->_user_data['display_name'] = $result;
+      
+      return $result;
+  }
+
+
+  function GetUserDisplayName(
+      $user = ''
+  ) {
+      if($user != '') {
+          $this->SetUser($user);
+      }
+      return $this->_user_data['display_name'];
   }
 
 
@@ -12896,13 +12325,13 @@ class Multiotp
   function SetUserErrorCounter(
       $counter
   ) {
-      $this->_user_data['error_counter'] = $counter;
+      $this->_user_data['error_counter'] = intval($counter);
   }
 
 
   function GetUserErrorCounter()
   {
-      return $this->_user_data['error_counter'];
+      return intval($this->_user_data['error_counter']);
   }
 
 
@@ -14707,21 +14136,7 @@ class Multiotp
                                   }
                                   
                                   if ($ignore_in_group || $in_a_group) {
-                                      $description = '';
-                                      if (isset($one_user['description'][0])) {
-                                          $description = trim($one_user['description'][0]);
-                                      }
-                                      if (('' == $description) && (isset($one_user['gecos'][0]))) {
-                                          $description = trim($one_user['gecos'][0]);
-                                      }
-                                      if (('' == $description) && (isset($one_user['displayname'][0]))) {
-                                          $description = trim($one_user['displayname'][0]);
-                                      }
-                                      if ('' == $description) {
-                                          $description = $account;
-                                      }
-
-                                      $users_list.= (('' != $users_list)?"\t":'').$account;
+                                    $users_list.= (('' != $users_list)?"\t":'').$account;
                                   }
                               }
                           } // if ($account != '')
@@ -15095,13 +14510,17 @@ class Multiotp
                                       if ('' == $description) {
                                           $description = $account;
                                       }
+                                      $display_name = '';
+                                      if (isset($one_user['displayname'][0])) {
+                                          $display_name = trim($one_user['displayname'][0]);
+                                      }
 
                                       $result_array[$user]['user'] = $user;
                                       $result_array[$user]['groups'] = $user_in_groups;
                                       $result_array[$user]['accountdisable'] = $accountdisable;
                                       $result_array[$user]['mail'] = (isset($one_user['mail'][0]) ? $this->EncodeForBackend($one_user['mail'][0]) : "");
-                                      $result_array[$user]['displayname'] = (isset($one_user['displayname'][0]) ? $this->EncodeForBackend($one_user['displayname'][0]) : "");
                                       $result_array[$user]['description'] = (isset($one_user['description'][0]) ? $this->EncodeForBackend($one_user['description'][0]) : "");
+                                      $result_array[$user]['displayname'] = (isset($one_user['displayname'][0]) ? $this->EncodeForBackend($one_user['displayname'][0]) : "");
                                       $result_array[$user]['mobile'] = (isset($one_user['mobile'][0]) ? $this->EncodeForBackend($one_user['mobile'][0]) : "");
                                       $result_array[$user]['msnpallowdialin'] = ("TRUE" == (isset($one_user['msnpallowdialin'][0]) ? ($one_user['msnpallowdialin'][0]) : "FALSE"));
                                       if ("---" != $one_user['msradiusframedipaddress'][0]) {
@@ -15156,6 +14575,7 @@ class Multiotp
       $result.= "   AD/LDAP synchronized: ".((1 == $this->GetUserSynchronized()) ? 'yes' : 'no').$crlf;
       $result.= "      Prefix pin needed: ".(($this->IsUserPrefixPin()) ? 'yes' : 'no').$crlf;
       $result.= "            Description: ".$this->GetUserDescription().$crlf;
+      $result.= "            DisplayName: ".$this->GetUserDisplayName().$crlf;
       $result.= "                  Email: ".$this->GetUserEmail().$crlf;
       $result.= "           Mobile phone: ".$this->GetUserSms().$crlf;
       $result.= "                  Group: ".$this->GetUserGroup().$crlf;
@@ -15671,6 +15091,10 @@ class Multiotp
                                       if ('' == $description) {
                                           $description = $account;
                                       }
+                                      $display_name = '';
+                                      if (isset($one_user['displayname'][0])) {
+                                          $display_name = trim($one_user['displayname'][0]);
+                                      }
 
                                       // $user;
                                       $ldap_email = trim(isset($one_user['mail'][0])?$this->EncodeForBackend($one_user['mail'][0]):"");
@@ -15679,6 +15103,7 @@ class Multiotp
                                           $ldap_group = trim(('' != $user_in_groups) ? $user_in_groups : $this->GetDefaultUserGroup());
                                       }
                                       $ldap_description = $this->EncodeForBackend($description);
+                                      $ldap_display_name = $this->EncodeForBackend($display_name);
                                       $ldap_sms = (isset($one_user['mobile'][0])?$this->EncodeForBackend($one_user['mobile'][0]):"");
                                       $ldap_msnpallowdialin = ("TRUE" == (isset($one_user['msnpallowdialin'][0])?($one_user['msnpallowdialin'][0]):"FALSE"));
                                       $ldap_enabled = ((!$accountdisable)?1:0);
@@ -15725,6 +15150,7 @@ class Multiotp
                                           $this->SetUser($account);
                                           if (1 == $this->GetUserSynchronized()) {
                                               $description = $this->GetUserDescription();
+                                              $display_name = $this->GetUserDisplayName();
                                               $email = $this->GetUserEmail();
                                               $enabled = $this->GetUserActivated();
                                               $group = $this->GetUserGroup();
@@ -15742,6 +15168,12 @@ class Multiotp
                                                   $this->SetUserDescription($ldap_description);
                                                   $modified = TRUE;
                                                   $detailed_modif = (('' != $detailed_modif) ? ', ' : '') . "Description: $description -> $ldap_description";
+                                              }
+                                              
+                                              if (('' != $ldap_display_name) && ($display_name != $ldap_display_name)) {
+                                                  $this->SetUserDisplayName($ldap_display_name);
+                                                  $modified = TRUE;
+                                                  $detailed_modif = (('' != $detailed_modif) ? ', ' : '') . "DisplayName: $display_name -> $ldap_display_name";
                                               }
                                               
                                               if (('' != $ldap_email) && ($email != $ldap_email)) {
@@ -15883,6 +15315,7 @@ class Multiotp
                       if (isset($one_user['user'])) {
                           $modified_user = $one_user['user'];
                           $modified_description = $one_user['description'];
+                          $modified_display_name = $one_user['display_name'];
                           $modified_email = $one_user['email'];
                           $modified_group = trim($one_user['group']);
                           $modified_enabled = $one_user['enabled'];
@@ -17678,7 +17111,7 @@ class Multiotp
           $last_event        = $this->GetUserTokenLastEvent();
           $last_login        = $this->GetUserTokenLastLogin();
           $digits            = (('without2fa' == mb_strtolower($algorithm,'UTF-8')) ? 0 : $this->GetUserTokenNumberOfDigits());
-          $error_counter     = $this->GetUserErrorCounter();
+          $error_counter     = intval($this->GetUserErrorCounter());
           $time_window       = $this->GetMaxTimeWindow();
           $event_window      = $this->GetMaxEventWindow();
           $time_sync_window  = $this->GetMaxTimeResyncWindow();

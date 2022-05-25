@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.0.1 (2022-05-19)
+Current build: 5.9.0.3 (2022-05-26)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -168,11 +168,15 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 ================================
 - New Raspberry, Hyper-V and OVA appliances available (version 011, based on Debian 11)
 - Scratchlist can be generated from the Web GUI
-
+- {MultiOtpDisplayName} (AD/LDAP DisplayName) can be used in templates
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2022-05-26 5.9.0.3 FIX: Issue with /run/php when a Docker container is restarted
+                   FIX: {MultiOtpVersion} is now correctly replaced in scratchtemplate.html
+                   ENH: {MultiOtpDisplayName} tag (AD/LDAP DisplayName) can be used in templates
+2022-05-20 5.9.0.2 FIX: User account containing octal encoded ISO characters are now also converted to UTF
 2022-05-18 5.9.0.1 FIX: Set specific flags to run Perl scripts from FreeRADIUS
 2022-05-18 5.9.0.0 FIX: User account containing special ISO characters are now also converted to UTF
                    ENH: New Hyper-V and OVA appliances available (version 011, based on Debian 11)
@@ -1570,7 +1574,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.0.1 (2022-05-19)
+multiOTP 5.9.0.3 (2022-05-26)
 (c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -2079,8 +2083,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.9.0.1.zip 
-SHA256:d1068aa5e26bd89be7dc9dcf0faf7f469131084071facdd66be527a98c6de185 
-SHA1:161741561b46a06b56112cc50322d49b9ec8bbbd 
-MD5:919acc0efe1ba5b65659b258966f7361 
+Hash verification for multiotp_5.9.0.3.zip 
+SHA256:b85ada800247a7c3aa21c5539fff6cc282cc97ed1f6af7ab4f36577883968827 
+SHA1:ee7d8ddbb2a5e7b58173ce30595214b2390411b6 
+MD5:3240046388f4b8328a80c32636a2df7c 
 ``` 
