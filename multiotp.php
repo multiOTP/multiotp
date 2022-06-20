@@ -37,8 +37,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.0.3
- * @date      2022-05-26
+ * @version   5.9.1.0
+ * @date      2022-06-17
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -195,407 +195,9 @@
  *   do not hesistate to contact us per email at info@multiotp.net.
  *
  *
- * Users feedbacks and comments
- *
- * 2018-08-25 Muzammel (PK)
- *   Thanks for your questions about the client/server process,
- *    which has been enhanced based on the exchange we had.
- *
- * 2018-07-31 Sergey, Kiev (UA)
- *   Thanks for your questions regarding -restore-config in the command line version.
- *   The restore function has been corrected
- *
- * 2018-02-13 Jonathan Garber (via GitHub)
- *   Thanks for your feedback about various issues.
- *
- * 2017-11-22 vak255 (via GitHub)
- *   Thanks for your feedback about a bad handled unicode issue.
- *   All strtoXXX and strpos have been changed to the the multibyte version.
- *
- * 2017-06-11 Richard Green
- *   Thanks for your proposal about specific LDAPTLS configuration values to be moved in the config parameters.
- *
- * 2017-04-19 Frank van der Aa, Vanboxtel BV (NL)
- *   Thanks a lot for your valuable implementation suggestion about PostgreSQL.
- *   The proposed code has been adapted and integrated in the project.
- *
- * 2017-02-14 Frank van der Aa, Vanboxtel BV (NL)
- *   Thanks for your proposal about GetList() method sorted output.
- *
- * 2017-02-09 Frank van der Aa, Vanboxtel BV (NL)
- *   Thanks for your debug about lockedlistarray[], the proposed
- *   GetDelayedUsersList() method and the delayed users display on the web GUI.
- *
- * 2017-02-02 Stefan Kügler, SerNet GmbH (DE)
- *   Thanks for your feedback on the last edition.
- *
- * 2017-01-24 Jean-François Perillo, Kudelski Security (CH)
- *   As proposed by Jean-François, requested LDAP password for synchronized users can be overwritten.
- *
- * 2017-01-05 Stefan Kügler, SerNet GmbH (DE)
- *   Thanks for your feedbacks on the last beta edition.
- *
- * 2017-01-04 Frank van der Aa, Vanboxtel (NL)
- *   Thanks for your feedback concerning leading zeros that can be omitted for the OTP or the PIN.
- *   This has been fixed for the next 5.0.3.4 release.
- *
- * 2016-12-07, 2016-12-01 Stefan Kügler, SerNet GmbH (DE)
- *   Thanks for your feedbacks on the last beta edition.
- *
- * 2016-12-02, Jim Bailey (USA)
- *   Thanks for your feedbacks with some features proposals.
- *
- * 2016-11-25 SKB Kontur (RU)
- *   Thanks for your appreciated $$$ donation.
- *
- * 2016-11-23 Serg Avtukhovich, SKB Kontur (RU)
- *   Serg had some issues with large Active Directory. He did the beta tests for several improvements.
- *
- * 2016-11-10 SerNet GmbH (DE)
- *   MANY thanks for your appreciated $$$ sponsorship for new implemented features proposed by Stefan Kügler.
- *
- * 2016-04-18 Serg Avtukhovich, SKB Kontur (RU)
- *   Serg had some strange problems when using multiOTP in client/server mode.
- *   After some trials, we fix the issue with the server when "log on display" is activated.
- *
- * 2015-12-20 Svetoslav Mateev, STS Soft (BG)
- *   Thanks for your appreciated $$$ donation.
- *
- * 2015-12-18 Sam Leach, Warwickshire County Council (UK)
- *   Sam informed us that a huge AD/LDAP organizational unit (100'000 users)
- *   crashed the sync process. This has been internally reproduced and corrected.
- *
- * 2015-08-10 Edward Kovarski (CA)
- *   Edward informed us that some special chars in the LDAP/AD group name
- *    was killing the SyncLdapUsers process. This has been corrected.
- *
- * 2015-07-14 Pierre-Nicolas Paradis, SherWeb (FR)
- *   Pierre-Nicolas informed us that it was still not possible to change
- *    the admin password using the web GUI. This has been corrected.
- *
- * 2015-06-23 Jun Li (CN)
- *   As proposed by Jun Li, launching the command line version without
- *    enough parameters returns now a 30 error code (instead of 19).
- *    Side effect is that -help is now required to display help page.
- *
- * 2015-06-02 Jean-François Perillo, Kudelski Security (CH)
- *   As proposed by Jean-François, token length error information has been
- *    added in the regular log and the autoresync is now enabled by default.
- *
- * 2015-06-02 Sébastien Charlier, Thesis SA (CH)
- * 2015-03-09 Martin
- *   Martin and Sébastien informed us that passwords containing the minus sign are not accepted.
- *
- * 2015-02-16 Sylvain Maret, Kudelski Security (CH)
- *   Sylvain informed us that Gemalto PSKC file don't provide the time interval for TOTP tokens.
- *   RFC default value (30 seconds) is now set by default if no time interval is given.
- *
- * 2015-01-27 Thomas Klute, ingenit GmbH & Co. KG (DE)
- *   Thanks Thomas for you feedback concerning a potential exploit with dots and slashes in a username.
- *   Even if no information can be extracted using this method, it's always good to patch this kind of weakness.
- *
- * 2015-01-08 Markus Arnoldi, LEWA Attendorn GmbH (DE)
- *   Useful comments about prefix PIN handling, documentation has been enhanced.
- *   Two new command line options are now available (fastcreatenopin and fastecreatewithpin)
- *
- * 2014-12-22 Sajid Hameed, Network Places Ltd (UK)
- *   Questions about users lockout, documentation has been enhanced.
- *   Three command line options information has been added in the documentation.
- *
- * 2014-12-15 Steve Jacot-Guillarmod, Swissdotnet SA (CH)
- *   Thanks Steve for your valuable feedback about LDAP sync and groups
- *   handling with a specific Synology OpenLDAP server implementation.
- *
- * 2014-11-04 Yubico Inc. (USA) / Yubico AB (S) / Yubico Ltd. (UK)
- *   BIG THANKS to the Yubico team which provides us several YubiKeys for the
- *   workshop organized during the Application Security Forum in Yverdon-les-Bains (Switzerland).
- *   Starting with version 4.3.0.0, YubiKeys (both Yubico OTP and HOTP) are now also supported and easy to import.
- *   (simply import the YubiKey traditional format log file)
- *
- * 2014-10-13 Adam Twardowski, Choopa LLC (USA)
- *   Thanks Adam for your valuable feedback concerning a bug with the NT_KEY generation if prefix PIN is enabled.
- *   Adam discovered the bug and fixed it when he configured pptpd with
- *   FreeRADIUS in order to set up a PPTP VPN with strong authentication.
- *
- * 2014-06-17 Stefan Kügler, SerNet GmbH (DE)
- *   Stefan proposes to add Active Directory msRADIUSFramedIPAddress attribute
- *   synchronization in order to distribute the Framed-IP-Address to a user.
- *
- * 2014-04-04 Stefan Kügler, SerNet GmbH (DE)
- * 2014-04-01 Daniel Särnström, Donator AB (SE)
- *   Daniel & Stefan asks some info in order to import tokens without a know format.
- *   Good question, multiOTP supports now importation of tokens from CSV file.
- *
- * 2014-04-02 Prashant Kumar, Alscient (UK)
- *   Prash is playing with FreeRADIUS and VPN (PPTP with MPPE). This requires radius to send MPPE keys.
- *   Interesting feedback, multiOTP provides now NT_KEY, like the ntlm_auth external helper.
- *
- * 2014-03-31 Alex Tasikas (GR)
- *   Thanks Alex for your valuable feedback concerning some bugs in LDAP support.
- *
- * 2014-03-25 Prashant Kumar, Alscient (UK)
- *   As proposed by Prash, we have added the possibility to modify the list of attributes to encrypt.
- *
- * 2014-03-17 Arthur de Jong, West Consulting (NL)
- *   Arthur gave some feedbacks concerning distributing the source code in the
- *    "preferred form of the work for making modifications".
- *
- * 2014-03-14 Soeren Malchow, MCON (DE)
- *   Thanks for your feedback concerning a bug in the SQL request for the log table.
- *
- * 2014-01-27 Henk van der Helm (NL)
- *   MANY thanks for your appreciated $$$ donation.
- *
- * 2014-01-19 Erik Nylund (FI)
- *   Thanks four your feedback concerning specific parameters order in QRCode for Microsoft Authenticator
- *
- * 2014-01-14 Sylvain Maret, Kudelski Security (CH)
- *   Thanks for your feedback concerning possible zero division in the ComputeOathTruncate method.
- *    Method has been altered in order to be more compatible with almost any PHP version.
- *   Thanks also for the suggestion to resync without the prefix PIN. Both are supported now.
- *
- * 2014-01-08/09  Cheng Shao-Pin (CN)
- *   Thanks for your feedback concerning possible missing JSON extension in old PHP distribution
- *    and possible image functions incompatibilities with some PHP versions during QRcode generation.
- *   Thanks also for your appreciated $ donation.
- *
- * 2014-01-08  Cheng Shao-Pin (CN) and Daniel Särnström, Donator AB (SE)
- *   Thanks for your feedback concerning md5.js missing in the distribution.
- *
- * 2013-12-20 Rico Zeiss, Hermann Wegener GmbH & Co. KG (DE)
- *   MANY thanks for your appreciated $$$ sponsorship to support us to add MS-CHAP and MS-CHAPv2 in a next release.
- *
- * 2013-12-18 Xavier Céspedes (ES)
- *   Thanks to Xavier who noticed a problem with the hex2bin() function duringthe scratch password generation.
- *   In the meantime, the GetUserScratchPasswordsList() function has been improved and fixed and is in the 4.1 release.
- *
- * 2013-09-20 Sean Butler-Lee (IE)
- *   Thanks a lot for announcing a bug with the GetUserScratchPasswordsArray() method.
- *
- * 2013-08-22,26 Frank Bongrand (FR)
- *   Thanks a lot for valuable feedbacks concerning some minor bugs in 4.0.4 and 4.0.6
- *
- * 2013-08-21 Henk van der Helm (NL)
- *   Thanks a lot for a valuable feedback concerning some minor bugs in 4.0.4
- *
- * 2013-08-15 Donator AB (SE)
- *   MANY thanks for your appreciated $$$ sponsorship to support us to add self-registration in a next release.
- *
- * 2013-08-13 Daniel Särnström, Donator AB (SE)
- *   Daniel proposed to add self-registration and pskc v12 with encrypted data support (OATH compliant).
- * 
- * 2013-07-25 Dominik Pretzsch from Last Squirrel IT (DE)
- *   After some discussions with Dominik, integration of the client/server support in the basic library
- *
- * 2013-07-23 Stefan Kügler (DE) (again ;-)
- *   Stefan proposed to add the possibility to show the log, which is especially convenient for MySQL log.
- *   He proposed also to be able to call an external program to send SMS.
- *
- * 2013-07-11 Stefan Kügler (DE)
- *   Stefan proposed to add a lock and unlock option for the user.
- *
- * 2013-06-19 SerNet GmbH (DE)
- *   MANY thanks for your appreciated $$$ sponsorship after we implemented some features proposed by Stefan Kügler.
- *
- * 2013-06-13 Henk van der Helm (NL) (again ;-)
- *   Henk proposed to be able to have a specific description for the software token.
- *   (we use the already existing user description attribute)
- *
- * 2013-06-01 Stefan Irion (CH)
- *   Thanks for your appreciated $$ donation.
- *
- * 2013-05-14 Henk van der Helm (NL)
- *   Henk asked to support also the provider IntelliSMS. Thanks for the $$ sponsorship!
- *
- * 2013-05-03 Stefan Kügler (DE)
- *   Stefan proposed to lower the default max_time_window to 600 seconds.
- *
- * 2013-03-04 Alan DeKok (CA)
- *   Alan proposed in the freeradius mailing-list to put a prefix to be able to handle the
- *   debug info by the freeradius server.
- *
- * 2012-11-28  Gareth Thomas
- *   Thanks for your appreciated $$ donation.
- *
- * 2012-03-16 Nicolas Goralski (LU)
- *   Nicolas proposed an enhancement in order to support PAM. Thanks also for the $$ sponsorship!
- *     (with the -checkpam option in the command line edition)
- *
- * 2011-05-19 Fabiano Domeniconi (CH)
- *   Fabiano found old info in the samples, CheckToken() is not boolean anymore! Samples fixed.
- *
- * 2011-04-24 Steven Roddis (AU)
- *   Steven asked for more examples. Thanks to Steven for the $ donation ;-)
- *
- * 2010-09-15 Jasper Pol (NL)
- *   Jasper has added an initial MySQL backend support
- *
- * 2010-09-13 Brenno Hiemstra (NL)
- *   Brenno reported bad extra spaces after the #!/usr/bin/php in the Linux version of multiotp.php
- *
- * 2010-08-20 C. Christophi, BirdNet (CH)
- *   Documentation enhancement proposal for the TekRADIUS part, thanks !
- *
- * 2010-07-19 SysCo/al (CH)
- *   Well, as requested by some users, the new "class" design is done, enjoy !
- *
- *
  * Change Log
  *
- *   2022-04-11 5.8.6.0 SysCo/al ENH: Telnyx SMS provider support
- *                               ENH: PHP 7.4 deprecated code cleaned
- *                               ENH: In CLI check, if username doesn't exist, it try automatically a shorter domain name step by step
- *   2022-01-14 5.8.5.1 SysCo/al ENH: Embedded Windows nginx edition updated to version 1.21.4
- *   2021-11-18 5.8.3.2 SysCo/al ENH: Enhanced multiOTP Credential Provider support
- *   2021-09-14 5.8.3.0 SysCo/al ENH: VM version 011 support
- *                                    (Debian Bullseye 11.0, PHP 7.4, FreeRADIUS 3.0.21, Nginx 1.18.0)
- *                               ENH: Removed multicast support on the network card
- *   2021-08-19 5.8.2.9 SysCo/al ENH: Added compatibility with new multiOTP Credential Provider (5.8.2 and further)
- *   2021-05-19 5.8.2.3 SysCo/al FIX: Dockerfile updated (php-bcmath added)
- *   2021-04-08 5.8.2.1 SysCo/al ENH: eDirectory LDAP server support (set the LDAP server type to 4)
- *   2021-02-12 5.8.1.0 SysCo/al FIX: Minor fixes
- *   2020-12-11 5.8.0.6 SysCo/al ENH: Some new commands added/updated, like sync-delete-retention-days
- *   2019-10-23 5.6.1.4 SysCo/al FIX: Separated configuration/statistics storage handling
- *   2019-10-22 5.6.1.3 SysCo/al ENH: Better PHP 7.3 support
- *                               ENH: Base32 encoder/decoder new implementation
- *                               ENH: During WriteConfigData, loop on the current values, and check with the old values
- *                               ENH: Enhanced internal tests
- *   2019-09-02 5.5.0.3 SysCo/al ENH: Give an info if time based token is probably out of sync (in a window 10 time bigger)
- *                                    (for example for hardware tokens not used for a long time)
- *   2019-03-29 5.4.1.8 SysCo/al ENH: Challenge-Response support
- *   2019-01-24 5.4.1.5 SysCo/al FIX: If any, clean specific NTP DHCP option at every reboot
- *   2019-01-07 5.4.1.1 SysCo/al ENH: Raspberry Pi 3B+ support
- *   2018-11-13 5.4.0.2 SysCo/al ENH: Import of PSKC definition files with binary decoding key file
- *                               ENH: added new sms providers (clickatell2, nexmo, nowsms, smseagle, swisscom, custom)
- *   2018-08-26 5.3.0.3 SysCo/al FIX: Restore configuration has been fixed in the command line edition
- *   2018-08-21 5.3.0.0 SysCo/al ENH: help text enhanced, without2fa option added
- *   2018-07-16 5.2.0.2 SysCo/al ENH: new commande line option ldap-users-dn
- *   2018-03-16 5.1.1.1 SysCo/al FIX: command line -set error for ldap-pwd and prefix-pin
- *   2018-02-26 5.1.0.6 SysCo/al ENH: Regular registry entries are now used directly from the Credential Provider.
- *   2018-02-19 5.1.0.3 SysCo/al ENH: Credential Provider multiOTPOptions registry entry is used if available
- *   2017-11-10 5.0.6.0 SysCo/al New -cp option (Credential Provider mode)
- *   2017-05-29 5.0.4.5 SysCo/al PostgreSQL support, based on source code provided by Frank van der Aa
- *   2017-02-21 5.0.3.6 SysCo/al Seed can now be given in Base32 format
- *   2017-02-03 5.0.3.5 SysCo/al -user-info fixed and replaced by a call to the GetUserInfo method
- *   2017-01-24 5.0.3.4 SysCo/al It's now possible to do several commands at once with the CLI edition
- *                               Some new commands added
- *                               Commands -user-info and -ldap-user-info enhanced
- *                               Commands -lock and -unlock return now 19 (instead of 99)
- *   2016-11-14 5.0.3.0 SysCo/al Better SSL support
- *                               Some new commands added
- *   2016-11-04 5.0.2.6 SysCo/al Better SSL support
- *                               Specific LDAP/AD attribute used as the synchronised account name can be defined
- *                               Implementing new library options
- *                               Additional error information sent back in the Reply-Message attribute
- *                                  (the debug prefix must be set to Reply-Message = )
- *                               Backup configuration file can now be restored in commercial version without any change
- *   2016-08-02 5.0.1.4 SysCo/al Command -network-info added
- *                               More debug information
- *   2015-07-18 4.3.2.6 SysCo/al Minor fixes
- *   2015-07-15 4.3.2.5 SysCo/al Calling multiotp CLI without parameter returns now error code 30 (instead of 19)
- *   2015-06-24 4.3.2.4 SysCo/al multiotp_account automatic support
- *   2015-06-10 4.3.2.3 SysCo/al Enhancements for the Dev(Talks): demo
- *   2015-06-09 4.3.2.2 SysCo/al Additional CLI features (fastcreatenopin, fastcreatewithpin)
- *                               Initialize-backend process enhanced
- *                               Resync during authentication (autoresync) is now better handled in the class directly
- *   2014-12-09 4.3.1.0 SysCo/al MULTIOTP_PATH environment variable support
- *                               CLI local proxy mode support added to speed up the command line
- *                               Scratch password need also the prefix PIN if it's activated
- *                               OTP with integrated serial numbers better supported (in PAP)
- *                               Generic LDAP support (no more only Microsoft AD compatible LDAP)
- *                               Raspberry Pi edition has the local proxy mode activated to speed up the process
- *   2014-11-04 4.3.0.0 SysCo/al Command -lockeduserslist added
- *                               Resynchronization is now done with ResyncToken() method instead of CheckToken()
- *                      SysCo/yj Changing examples : %message -> %msg; Added " around parameter sms-api-id in the example
- *   2014-06-12 4.2.4.3 SysCo/al Bug fix concerning aspsms provider
- *   2014-04-13 4.2.4.2 SysCo/al Minor fixes
- *   2014-04-06 4.2.4.1 SysCo/al Fixed bug concerning LDAP handling
- *                               NT_KEY support added (for FreeRADIUS further handling)
- *                               Tokens CSV import (serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
- *                               When a user is deleted, the token(s) attributed to this user is/are unassigned
- *                               New option -user-info added
- *   2014-03-30 4.2.4   SysCo/al Fixed bug concerning MySQL handling and mysqli support added
- *                               Enhanced SetAttributesToEncrypt function
- *                               New implementation for some external classes
- *                               Generated QRcode are better
- *                               LOT of new QA tests, more than 60 different tests (including PHP class and command line versions)
- *                               Enhanced documentation
- *   2014-03-13 4.2.3   SysCo/al Updated examples
- *   2014-03-03 4.2.2   SysCo/al Cleaned some non-interpreted TekRADIUS variables (for old TeKRADIUS releases)
- *                               Some values can now go back to TekRADIUS
- *   2014-02-07 4.2.0   SysCo/al MS-CHAP and MS-CHAPv2 fully supported
- *   2014-01-21 4.1.2   SysCo/al Direct call of class methods using -call-method
- *   2014-01-20 4.1.1   SysCo/al Minor fixes
- *   2013-12-23 4.1.0   SysCo/al Some modifications in order to correctly handle the class methods
- *                               It is now possible to activate or deactivate a user
- *                               Encrypted pskc files are now supported
- *   2013-08-30 4.0.7   SysCo/al GetScriptFolder() was still buggy sometimes, thanks Frank for the feedback
- *                               File mode of the created QRcode file is also changed base on GetLinuxFileMode()
- *   2013-08-25 4.0.6   SysCo/al base32_encode() is now RFC compliant with uppercases
- *                               GetUserTokenQrCode() and GetTokenQrCode() where buggy
- *                               GetScriptFolder() use now __FILE__ if the full path is included
- *                               When doing a check in the CLI header, @... is automatically removed from the
- *                                username if the user doesn't exist, and the check is done on the clean name
- *                               Added a lot of tests to enhance release quality
- *   2013-08-21 4.0.5   SysCo/al Fixed the check of the cache lifetime
- *                               Added a temporary server blacklist during the same instances
- *                               Default server timeout is now set to 1 second
- *   2013-08-20 4.0.4   SysCo/al Added an optional group attribute for the user
- *                                (which will be send with the Radius Filter-Id option)
- *                               Added scratch passwords generation (if the token is lost)
- *                               Automatic database schema upgrade using method UpgradeSchemaIfNeeded()
- *                               Added client/server support with local cache
- *                               Added CHAP authentication support (PAP is of course still supported)
- *                               The encryption key is now a parameter of the class constructor
- *                               The method SetEncryptionKey('MyPersonalEncryptionKey') IS DEPRECATED
- *                               The method DefineMySqlConnection IS DEPRECATED
- *                               Full MySQL support, including tables creation (see example and SetSqlXXXX methods)
- *                               Added email, sms and seed_password to users attributes
- *                               Added sms support (aspsms, clickatell, intellisms, custom, exec)
- *                               Added prefix support for debug mode (in order to send Reply-Message := to Radius)
- *                               Added a lot of new methods to handle easier the users and the tokens
- *                               General speedup by using available native functions for hash_hmac and others
- *                               Default max_time_window has been lowered to 600 seconds (thanks Stefan for suggestion)
- *                               Integrated Google Authenticator support with integrated base 32 seed handling
- *                               Integrated QRcode generator library (from Y. Swetake)
- *                               General options in an external configuration file
- *                               Comments have been reformatted and enhanced for automatic documentation
- *                               Development process enhanced, source code reorganized, external contributions are
- *                                added automatically at the end of the library after an internal build release
- *   2011-10-25 3.9.2   SysCo/al Improved get_script_dir() for Linux/Windows compatibility
- *   2011-09-15 3.9.1   SysCo/al Some quick fixes concerning multiple users
- *   2011-09-13 3.9.0   SysCo/al Adding support for account with multiple users
- *   2011-07-06 3.2.0   SysCo/al Encryption hash handling with additional error message 33
- *                                (if the key has changed)
- *                               Adding more examples
- *                               Adding generic user with multiple account
- *                                (Real account name is combined: "user" and "account password")
- *                               Adding log options, now default doesn't log token value anymore
- *                               Debugging MySQL backend support for the token handling
- *                               Fixed automatic detection of \ or / for script path detection
- *   2010-12-19 3.1.1   SysCo/al Better MySQL backend support, including in CLI version
- *   2010-09-15 3.1.0   SysCo/al Removed bad extra spaces in the multiotp.php file for Linux
- *                               MySQL backend support
- *   2010-09-02 3.0.0   SysCo/al Adding tokens handling support, including importing XML tokens definition file
- *                                (http://tools.ietf.org/html/draft-hoyer-keyprov-pskc-algorithm-profiles-00)
- *                               Enhanced flat database file format (multiotp is still compatible with old formats)
- *                               Internal method SetDataReadFlag renamed to SetUserDataReadFlag
- *                               Internal method GetDataReadFlag renamed to GetUserDataReadFlag
- *   2010-08-21 2.0.4   SysCo/al Enhancement in order to use an alternate php "compiler" for Windows command line
- *                               Documentation enhancement
- *   2010-08-18 2.0.3   SysCo/al Minor notice fix, define timezone if not defined (for embedded command line)
- *                               If user doesn't exist, do not create the related flat file after a check
- *   2010-07-21 2.0.2   SysCo/al Fix to create correctly the folders "users" and "log" if needed
- *   2010-07-19 2.0.1   SysCo/al Adding more information in the help text
- *   2010-07-19 2.0.0   SysCo/al New design using a class and a cli header stub
- *   2010-06-15 1.1.5   SysCo/al Adding OATH/TOTP support
- *   2010-06-15 1.1.4   SysCo/al Project renamed to multiotp to avoid overlapping
- *   2010-06-08 1.1.3   SysCo/al Typo in script folder detection
- *   2010-06-08 1.1.2   SysCo/al Typo in variable name
- *   2010-06-08 1.1.1   SysCo/al Status bar during resynchronization
- *   2010-06-08 1.1.0   SysCo/al Fix in the example, distribution not compressed
- *   2010-06-07 1.0.0   SysCo/al Initial implementation
- *
+ *   Please check the readme file for the whole change log since 2010
  *********************************************************************/
 
 global $argc;
@@ -675,8 +277,8 @@ if (!isset($multiotp)) {
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.0.3
- * @date      2022-05-26
+ * @version   5.9.1.0
+ * @date      2022-06-17
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -880,8 +482,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.0.3
- * @date      2022-05-26
+ * @version   5.9.1.0
+ * @date      2022-06-17
  * @since     2010-07-18
  */
 {
@@ -979,8 +581,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.0.3
-   * @date      2022-05-26
+   * @version   5.9.1.0
+   * @date      2022-06-17
    * @since     2010-07-18
    */
   function __construct(
@@ -1004,11 +606,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.0.3'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.1.0'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2022-05-26'; // You should update the date with the date of your changes
+        $temp_date = '@date      2022-06-17'; // You should update the date with the date of your changes
         $this->_date = trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMiBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -74197,6 +73799,7 @@ $state               = '';
 $sync_delete_retention_days = '';
 $write_config_data   = false;
 $write_param_data    = false;
+$nt_key_only         = false;
 
 
 // Extract all parameters
@@ -74492,6 +74095,8 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
             $no_php_info = true;
         } elseif ("-no-prefix-pin" == mb_strtolower($current_arg,'UTF-8')) {
             $set_prefix_pin = false;
+        } elseif ("-nt-key-only" == mb_strtolower($current_arg,'UTF-8')) {
+            $nt_key_only = true;
         } elseif ("-param" == mb_strtolower($current_arg,'UTF-8')) {
             $param_info_debug = true;
         } elseif ("-prefix-pin" == mb_strtolower($current_arg,'UTF-8')) {
@@ -76240,9 +75845,10 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo " -log            Log operation in the log subdirectory or in the database".$crlf;
                 echo "                 (the permanent state of log can be set with -config log=1)".$crlf;
                 echo " -network-info   Display network info (mode, ip, mask, gateway, dns1, dns2)".$crlf;
+                echo " -nt-key-only    Return ONLY NT_KEY to the radius server".$crlf;
                 echo " -param          All parameters are logged for debugging purposes".$crlf;
                 echo " -php-version    Display the current version of the running PHP interpreter".$crlf;
-                echo " -request-nt-key This will return the NT_KEY to the radius server".$crlf;
+                echo " -request-nt-key Return NT_KEY with the other attributes to the radius server".$crlf;
                 echo " -status         Display a status bar during resynchronization".$crlf;
                 echo " -version        Display the current version of the library".$crlf;
                 echo $crlf;
@@ -76437,10 +76043,14 @@ if ($command != "libhash") {
                 }
             }
         }
-        if ($request_nt_key) {
+        if ($request_nt_key || $nt_key_only) {
             $nt_key = trim($multiotp->GetNtKey());
             if ('' != $nt_key) {
+              if ($nt_key_only) {
+                $radius_additional = "NT_KEY: ".$nt_key.$crlf;
+              } else {
                 $radius_additional.= $radius_separator."NT_KEY: ".$nt_key.$crlf;
+              }
             }
         }
         if (0 < mb_strlen($radius_additional)) {

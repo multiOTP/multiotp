@@ -16,12 +16,13 @@
 # Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.0.3
-# @date      2022-05-26
+# @version   5.9.1.0
+# @date      2022-06-17
 # @since     2013-11-29
-# @copyright (c) 2013-2021 by SysCo systemes de communication sa
+# @copyright (c) 2013-2022 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
+# 2022-06-17 5.9.1.0 SysCo/al Option -request-nt-key replaced by -nt-key-only for MSCHAP for FreeRADIUS 3.x
 # 2022-05-08 5.8.8.4 SysCo/al Better docker support (also for Synology)
 # 2022-05-08 5.8.8.1 SysCo/al Add Raspberry Pi Bullseye 11.0 support
 # 2021-09-14 5.8.3.0 SysCo/al VM version 011 support
@@ -68,7 +69,7 @@ SSH_ROOT_LOGIN="1"
 DEFAULT_IP="192.168.1.44"
 REBOOT_AT_THE_END="1"
 
-TEMPVERSION="@version   5.9.0.3"
+TEMPVERSION="@version   5.9.1.0"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
@@ -1107,7 +1108,7 @@ if [ -e /etc/freeradius/3.0/ ] ; then
     echo "    wait = yes" >> /etc/freeradius/3.0/mods-available/multiotp
     echo "    input_pairs = request" >> /etc/freeradius/3.0/mods-available/multiotp
     echo "    output_pairs = reply" >> /etc/freeradius/3.0/mods-available/multiotp
-    echo "    program = \"/usr/local/bin/multiotp/multiotp.php -base-dir='/usr/local/bin/multiotp/' '%{User-Name}' '%{User-Password}' -request-nt-key -src='%{Packet-Src-IP-Address}' -tag='%{Client-Shortname}' -mac='%{Called-Station-Id}' -calling-ip='%{Framed-IP-Address}' -calling-mac='%{Calling-Station-Id}' -chap-challenge='%{CHAP-Challenge}' -chap-password='%{CHAP-Password}' -ms-chap-challenge='%{MS-CHAP-Challenge}' -ms-chap-response='%{MS-CHAP-Response}' -ms-chap2-response='%{MS-CHAP2-Response}' -state='%{State}'\"" >> /etc/freeradius/3.0/mods-available/multiotp
+    echo "    program = \"/usr/local/bin/multiotp/multiotp.php -base-dir='/usr/local/bin/multiotp/' '%{User-Name}' '%{User-Password}' -src='%{Packet-Src-IP-Address}' -tag='%{Client-Shortname}' -mac='%{Called-Station-Id}' -calling-ip='%{Framed-IP-Address}' -calling-mac='%{Calling-Station-Id}' -chap-challenge='%{CHAP-Challenge}' -chap-password='%{CHAP-Password}' -ms-chap-challenge='%{MS-CHAP-Challenge}' -ms-chap-response='%{MS-CHAP-Response}' -ms-chap2-response='%{MS-CHAP2-Response}' -state='%{State}'\"" >> /etc/freeradius/3.0/mods-available/multiotp
     echo "    shell_escape = yes" >> /etc/freeradius/3.0/mods-available/multiotp
     echo "}" >> /etc/freeradius/3.0/mods-available/multiotp
 
@@ -1121,7 +1122,7 @@ if [ -e /etc/freeradius/3.0/ ] ; then
     echo "Create /etc/freeradius/3.0/mods-available/multiotpmschap"
     cp -f /etc/freeradius/3.0/mods-available/mschap /etc/freeradius/3.0/mods-available/multiotpmschap
     sed -i "s/mschap {/mschap multiotpmschap {/" /etc/freeradius/3.0/mods-available/multiotpmschap
-    sed -i "s/.*ntlm_auth = .*/        ntlm_auth = \"\/usr\/local\/bin\/multiotp\/multiotp.php -base-dir='\/usr\/local\/bin\/multiotp\/' '%{User-Name}' '%{User-Password}' -request-nt-key -src='%{Packet-Src-IP-Address}' -tag='%{Client-Shortname}' -mac='%{Called-Station-Id}' -calling-ip='%{Framed-IP-Address}' -calling-mac='%{Calling-Station-Id}' -chap-challenge='%{CHAP-Challenge}' -chap-password='%{CHAP-Password}' -ms-chap-challenge='%{MS-CHAP-Challenge}' -ms-chap-response='%{MS-CHAP-Response}' -ms-chap2-response='%{MS-CHAP2-Response}' -state='%{State}'\"/" /etc/freeradius/3.0/mods-available/multiotpmschap
+    sed -i "s/.*ntlm_auth = .*/        ntlm_auth = \"\/usr\/local\/bin\/multiotp\/multiotp.php -base-dir='\/usr\/local\/bin\/multiotp\/' '%{User-Name}' '%{User-Password}' -nt-key-only -src='%{Packet-Src-IP-Address}' -tag='%{Client-Shortname}' -mac='%{Called-Station-Id}' -calling-ip='%{Framed-IP-Address}' -calling-mac='%{Calling-Station-Id}' -chap-challenge='%{CHAP-Challenge}' -chap-password='%{CHAP-Password}' -ms-chap-challenge='%{MS-CHAP-Challenge}' -ms-chap-response='%{MS-CHAP-Response}' -ms-chap2-response='%{MS-CHAP2-Response}' -state='%{State}'\"/" /etc/freeradius/3.0/mods-available/multiotpmschap
 
     # Enable multiotpmschap module
     echo "Enable multiotpmschap module"

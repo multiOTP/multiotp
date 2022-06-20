@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.0.3 (2022-05-26)
+Current build: 5.9.1.0 (2022-06-17)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -117,27 +117,6 @@ is always welcome even if it's as low as $1!
 You can also sponsor the development of a specific feature. Please contact
 us in order to discuss the detail of the implementation.
 
-Thanks to our main donators and sponsors:  
-CSG De Lage Waard (NL)
-Donator AB (SE)  
-Henk van der Helm (NL)  
-Hermann Wegener GmbH & Co. KG (DE)  
-SerNet GmbH (DE)  
-SKB Kontur (RU)
-
-
-WISHLIST FOR FUTURE RELEASES
-============================
-- Email account recovery
-- Multiple hardware tokens support for one account
-- VueJS frontend
-- Radius gateway support
-- YubiCloud support
-- FIDO support (SOAP service)
-- Doxygen documentation format
-- Users CSV import
-  (username;pin;prefix_pin_needed;email;sms;serial_number;manufacturer;algorithm;seed;digits;interval_or_event)
-
 
 HOW CAN I UPGRADE FROM A PREVIOUS VERSION ?
 ===========================================
@@ -173,6 +152,8 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2022-06-17 5.9.1.0 ENH: Enhanced multiOTP Credential Provider
+                   ENH: Additional CLI option -nt-key-only added
 2022-05-26 5.9.0.3 FIX: Issue with /run/php when a Docker container is restarted
                    FIX: {MultiOtpVersion} is now correctly replaced in scratchtemplate.html
                    ENH: {MultiOtpDisplayName} tag (AD/LDAP DisplayName) can be used in templates
@@ -1101,7 +1082,7 @@ exec multiotp {
         wait = yes
         input_pairs = request
         output_pairs = reply
-        program = "/path/to/multiotp.php %{User-Name} %{User-Password} -request-nt-key -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"
+        program = "/path/to/multiotp.php %{User-Name} %{User-Password} -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"
         shell_escape = yes
 }
 ```
@@ -1117,12 +1098,7 @@ to
 
 Also change ntlm_auth variable:
 ```
-ntlm_auth = "/path/to/multiotp.php %{User-Name} %{User-Password}
--request-nt-key -src=%{Packet-Src-IP-Address}
--chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password}
--ms-chap-challenge=%{MS-CHAP-Challenge}
--ms-chap-response=%{MS-CHAP-Response}
--ms-chap2-response=%{MS-CHAP2-Response}"
+ntlm_auth = "/path/to/multiotp.php %{User-Name} %{User-Password} -nt-key-only -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"
 ```
 
 3) Edit 'raddb/policy.conf' and add the following to override the authorize method of the exec module: (or add a new multiotp file in the policy.d folder)
@@ -1574,7 +1550,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.0.3 (2022-05-26)
+multiOTP 5.9.1.0 (2022-06-17)
 (c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1961,9 +1937,10 @@ Switches:
  -log            Log operation in the log subdirectory or in the database
                  (the permanent state of log can be set with -config log=1)
  -network-info   Display network info (mode, ip, mask, gateway, dns1, dns2)
+ -nt-key-only    Return ONLY NT_KEY to the radius server
  -param          All parameters are logged for debugging purposes
  -php-version    Display the current version of the running PHP interpreter
- -request-nt-key This will return the NT_KEY to the radius server
+ -request-nt-key Return NT_KEY with the other attributes to the radius server
  -status         Display a status bar during resynchronization
  -version        Display the current version of the library
 
