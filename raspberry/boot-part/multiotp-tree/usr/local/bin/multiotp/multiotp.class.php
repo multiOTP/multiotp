@@ -72,8 +72,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.1.0
- * @date      2022-06-17
+ * @version   5.9.2.1
+ * @date      2022-08-10
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -277,8 +277,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.1.0
- * @date      2022-06-17
+ * @version   5.9.2.1
+ * @date      2022-08-10
  * @since     2010-07-18
  */
 {
@@ -376,8 +376,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.1.0
-   * @date      2022-06-17
+   * @version   5.9.2.1
+   * @date      2022-08-10
    * @since     2010-07-18
    */
   function __construct(
@@ -401,11 +401,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.1.0'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.2.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2022-06-17'; // You should update the date with the date of your changes
+        $temp_date = '@date      2022-08-10'; // You should update the date with the date of your changes
         $this->_date = trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMiBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -1648,6 +1648,8 @@ class Multiotp
   {
     $this->_errors_text[0] = "OK: Token accepted";
 
+    $this->_errors_text[7] = "INFO: User requires a token";
+    $this->_errors_text[8] = "INFO: User can be authenticated without a token (WITHOUT2FA)";
     $this->_errors_text[9] = "INFO: Access Challenge returned back to the client";
     $this->_errors_text[10] = "INFO: Access Challenge returned back to the client";
 
@@ -9680,9 +9682,7 @@ class Multiotp
           } else {
               $result = unlink($this->GetUsersFolder().$user_filename);
               if ($result) {
-                  if ($this->GetVerboseFlag()) {
-                      $this->WriteLog("Info: *User ".$this->GetUser()." successfully deleted", FALSE, FALSE, 12, 'User');
-                  }
+                  $this->WriteLog("Info: User ".$this->GetUser()." successfully deleted", FALSE, FALSE, 12, 'User');
               } elseif (!$this->GetMigrationFromFile()) {
                   if (!$no_error_info) {
                       $this->WriteLog("Error: Unable to delete user ".$this->GetUser(), FALSE, FALSE, 28, 'User');
@@ -9720,9 +9720,7 @@ class Multiotp
                                   $this->WriteLog("Error: Could not delete user ".$this->GetUser().". User does not exist", FALSE, FALSE, 21, 'User');
                               }
                           } else {
-                              if ($this->GetVerboseFlag()) {
-                                  $this->WriteLog("Info: *User ".$this->GetUser()." successfully deleted", FALSE, FALSE, 12, 'User');
-                              }
+                              $this->WriteLog("Info: User ".$this->GetUser()." successfully deleted", FALSE, FALSE, 12, 'User');
                               $result = TRUE;
                           }
                       }
@@ -9747,9 +9745,7 @@ class Multiotp
                                   $this->WriteLog("Error: Could not delete user ".$this->GetUser().". User does not exist", FALSE, FALSE, 21, 'User');
                               }
                           } else {
-                              if ($this->GetVerboseFlag()) {
-                                  $this->WriteLog("Info: *User ".$this->GetUser()." successfully deleted", FALSE, FALSE, 12, 'User');
-                              }
+                              $this->WriteLog("Info: User ".$this->GetUser()." successfully deleted", FALSE, FALSE, 12, 'User');
                               $result = TRUE;
                           }
                       }

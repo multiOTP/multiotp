@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.1.0
- * @date      2022-06-17
+ * @version   5.9.2.1
+ * @date      2022-08-10
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -418,6 +418,8 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         }
     } elseif ("-check" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "check";
+    } elseif ("-iswithout2fa" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "iswithout2fa";
     } elseif ("-check-ldap-password" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "check-ldap-password";
     } elseif ("-checkpam" == mb_strtolower($current_arg,'UTF-8')) {
@@ -1075,6 +1077,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             $otp_inline = '';
             if  ($param_count > 1) {
                 // If the exact given user is not found, we try some different stages
+                // (check also the check command)
                 if (!$multiotp->CheckUserExists($all_args[1])) {
                     $check_result = false;
                     if (false !== mb_strpos($all_args[1], ':')) {
@@ -1889,6 +1892,57 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 }
             }
             break;
+        case "iswithout2fa":
+            if  ($param_count < 1) {
+                $result = 30; // ERROR: At least one parameter is missing
+            } else {
+                // If the exact given user is not found, we try some different stages
+                // (check also the iswithout2fa command)
+                if (!$multiotp->CheckUserExists($all_args[1])) {
+                    $check_result = false;
+                    if (false !== mb_strpos($all_args[1], ':')) {
+                        /*************************************************************************
+                         * Here we check special cases
+                         *
+                         * 1) serial_number:username (for alternate self-registration process)
+                         *    Do not forget to activate self-registration !
+                         *
+                         * 2) username:OTP (for alternate authentication with OTP and AD password)
+                         *    For example in order to do MS-CHAPv2 authentication
+                         *
+                         *************************************************************************/
+                        $part1 = mb_substr($all_args[1], 0, mb_strpos($all_args[1], ':'));
+                        $part2 = mb_substr($all_args[1], mb_strpos($all_args[1], ':')+1);
+                        if ($multiotp->IsSelfRegistrationEnabled() && ($multiotp->CheckTokenExists($part1))) {
+                            $self_registration = $part1;
+                            $all_args[1] = $part2;
+                        } elseif ($multiotp->IsUserRequestLdapPasswordEnabled() && ($multiotp->CheckUserExists($part1))) {
+                            $all_args[1] = $part1;
+                            $otp_inline = $part2;
+                        }
+                    }
+                    
+
+                    /// Return a real username if the initial one is not existing
+                    $find_user = $multiotp->FindRealUserName($all_args[1], TRUE);
+                    if ($find_user != $all_args[1]) {
+                      $all_args[1] = $find_user;
+                      $multiotp->SetUser($all_args[1]);
+                    }
+                } else {
+                    $check_result = true;
+                }
+                # check extension can be added here
+            }
+            if (!$multiotp->ReadUserData($all_args[1])) {
+                $result = 21; // ERROR: user doesn't exist.
+            } else {
+                $result = 7; // INFO: User requires a token
+                if ("without2fa" == mb_strtolower($multiotp->GetUserAlgorithm(),'UTF-8')) {
+                    $result = 8; // INFO: User can be authenticated without a token (WITHOUT2FA)
+                }
+            }
+            break;
         case "qrcode":
             if  ($param_count < 2) {
                 $result = 30; // ERROR: At least one parameter is missing
@@ -2172,6 +2226,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo " multiotp -import-alpine-xml alpineXml.xml (SafeWord/Aladdin/SafeNet)".$crlf;
                 echo " multiotp -import-xml xml_tokens_definition_file.xml (old Feitian)".$crlf;
                 echo " multiotp -import-sql tokens_definition_file.sql (ZyXEL/Authenex)".$crlf;
+                echo $crlf;
+                echo " multiotp -iswithout2fa user (return 8 for WITHOUT2FA token, otherwise 7)".$crlf;
                 echo $crlf;
                 echo " multiotp -delete-token token".$crlf;
                 echo $crlf;

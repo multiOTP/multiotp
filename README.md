@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.1.0 (2022-06-17)
+Current build: 5.9.2.1 (2022-08-10)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -152,6 +152,7 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2022-08-10 5.9.2.1 ENH: Command -iswithout2fa added as a CLI option (to check if a token is needed)
 2022-06-17 5.9.1.0 ENH: Enhanced multiOTP Credential Provider
                    ENH: Additional CLI option -nt-key-only added
 2022-05-26 5.9.0.3 FIX: Issue with /run/php when a Docker container is restarted
@@ -1550,7 +1551,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.1.0 (2022-06-17)
+multiOTP 5.9.2.1 (2022-08-10)
 (c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1587,6 +1588,8 @@ The check will return 0 for a correct token, and the other return code means:
 Return codes:
 
  0 OK: Token accepted 
+ 7 INFO: User requires a token 
+ 8 INFO: User can be authenticated without a token (WITHOUT2FA) 
  9 INFO: Access Challenge returned back to the client 
 10 INFO: Access Challenge returned back to the client 
 11 INFO: User successfully created or updated 
@@ -1696,6 +1699,8 @@ Usage:
  multiotp -import-alpine-xml alpineXml.xml (SafeWord/Aladdin/SafeNet)
  multiotp -import-xml xml_tokens_definition_file.xml (old Feitian)
  multiotp -import-sql tokens_definition_file.sql (ZyXEL/Authenex)
+
+ multiotp -iswithout2fa user (return 8 for WITHOUT2FA token, otherwise 7)
 
  multiotp -delete-token token
 
@@ -2060,8 +2065,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.9.1.0.zip 
-SHA256:8a2a5b2358be9755ff6d434de56068d5aebcbc2ffee14e8a0636d99bfdc88bf4 
-SHA1:153da0c2ce56f343c1312e52e35f427085263690 
-MD5:af020c6a3f53a5ab625c1e678d5f9e10 
+Hash verification for multiotp_5.9.2.1.zip 
+SHA256:4a0bc9a678f45baf03862fb9b476b1c0e57bea922815f518f3e5934105edb554 
+SHA1:6f3bd554af9fec674f50b52b10955bfa79beeebf 
+MD5:1cb1267578c7ee978c463912b1318441 
 ``` 

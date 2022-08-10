@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.1.0
-REM @date      2022-06-17
+REM @version   5.9.2.1
+REM @date      2022-08-10
 REM @since     2010-07-10
 REM @copyright (c) 2010-2022 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -62,6 +62,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2022-08-05 5.9.2.0 SysCo/al Tests added for user without 2FA token
 REM   2020-12-11 5.8.0.6 SysCo/al Do an automatic "Run as administrator" if needed
 REM                               Tests added for PostGreSQL backend (set the _check_pgsql_xxx parameters below)
 REM   2018-11-13 5.4.0.2 SysCo/al Calls to nircmd tool removed
@@ -578,6 +579,29 @@ IF NOT ERRORLEVEL 1 GOTO ErrorBadValue2FA
 IF ERRORLEVEL 1 ECHO - OK! Token of the user test_user_no_2fa successfully REJECTED (bad value)
 IF ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 :ErrorBadValue2FA
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
+
+ECHO.
+ECHO Check test_user_no_2fa to see if it is a without 2FA token
+%_multiotp% -iswithout2fa -keep-local -log test_user_no_2fa ""
+IF NOT ERRORLEVEL 8 ECHO - KO! Error checking the user test_user_no_2fa token type
+IF NOT ERRORLEVEL 8 ECHO - KO! Error checking the user test_user_no_2fa token type (%_backend%) >>"%TEMP%\multiotp_error.log"
+IF ERRORLEVEL 8 ECHO - OK! Token of the user test_user_no_2fa is a without 2FA token
+IF ERRORLEVEL 8 SET /A SUCCESSES=SUCCESSES+1
+SET /A TOTAL_TESTS=TOTAL_TESTS+1
+
+ECHO.
+ECHO Check test_user2 to see if it is not a without 2FA token
+%_multiotp% -iswithout2fa -keep-local -log test_user2 ""
+IF ERRORLEVEL 8 ECHO - KO! Error 8 checking the user test_user2 token type
+IF ERRORLEVEL 8 ECHO - KO! Error 8 checking the user test_user2 token type (%_backend%) >>"%TEMP%\multiotp_error.log"
+IF ERRORLEVEL 8 GOTO CheckIsNotWithout2FA
+IF ERRORLEVEL 7 ECHO - OK! Token of the user test_user2 is a without 2FA token
+IF ERRORLEVEL 7 SET /A SUCCESSES=SUCCESSES+1
+IF ERRORLEVEL 7 GOTO CheckIsNotWithout2FA
+ECHO - KO! Error checking the user test_user2 token type
+ECHO - KO! Error checking the user test_user2 token type (%_backend%) >>"%TEMP%\multiotp_error.log"
+:CheckIsNotWithout2FA
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 REM GOTO DelTestUserSkip
