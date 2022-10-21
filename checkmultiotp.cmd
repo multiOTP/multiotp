@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.2.1
-REM @date      2022-08-10
+REM @version   5.9.3.1
+REM @date      2022-10-21
 REM @since     2010-07-10
 REM @copyright (c) 2010-2022 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -408,7 +408,7 @@ IF NOT ERRORLEVEL 13 ECHO - User test_user2 successfully deleted
 ECHO.
 ECHO Create user test_user2 with the RFC test values HOTP token and a big PIN prefix
 ECHO (like Authenex / ZyXEL / Billion is doing for their OTP solution)
-%_multiotp% -log -create -prefix-pin test_user2 HOTP 3132333435363738393031323334353637383930 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space" 6 0 -display-log -debug -param
+%_multiotp% -log -create -prefix-pin test_user2 HOTP 3132333435363738393031323334353637383930 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space And ^&" 6 0 -display-log -debug -param
 IF NOT ERRORLEVEL 12 ECHO - OK! User test_user2 successfully created
 IF NOT ERRORLEVEL 12 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 12 ECHO - KO! Error creating the user test_user2
@@ -417,7 +417,7 @@ SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
 ECHO.
 ECHO Authenticate test_user2 with the first token of the RFC test value with big PIN
-%_multiotp% -keep-local -log test_user2 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space755224" -display-log -debug -param
+%_multiotp% -keep-local -log test_user2 "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space And ^&755224" -display-log -debug -param
 IF NOT ERRORLEVEL 1 ECHO - OK! Token of the user test_user2 (with prefix PIN) successfully accepted
 IF NOT ERRORLEVEL 1 SET /A SUCCESSES=SUCCESSES+1
 IF ERRORLEVEL 1 ECHO - KO! Error authenticating the user test_user2 with the first token and PIN prefix
@@ -435,7 +435,7 @@ PING 127.0.0.1 -n 5 >NUL
 ECHO.
 ECHO Authenticate test_user2 with the second token through the RADIUS server
 ECHO User-Name = "test_user2">"%TEMP%\radiustest.conf"
-ECHO User-Password = "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space287082">>"%TEMP%\radiustest.conf"
+ECHO User-Password = "ThisIsAnOtherBigAlphaNumericPrefixPinWith-Minus And Space And ^&287082">>"%TEMP%\radiustest.conf"
 ECHO NAS-IP-Address = 127.0.0.1>>"%TEMP%\radiustest.conf"
 ECHO NAS-Port = %_check_r_auth_port%>>"%TEMP%\radiustest.conf"
 

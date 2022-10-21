@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.2.1
- * @date      2022-08-10
+ * @version   5.9.3.1
+ * @date      2022-10-21
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -414,7 +414,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "call-method";
         $src_array = explode("=",$current_arg,2);
         if (2 == count($src_array)) {
-            $call_method = $src_array[1];
+            $call_method = clean_quotes($src_array[1]);
         }
     } elseif ("-check" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "check";
@@ -1939,7 +1939,17 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             } else {
                 $result = 7; // INFO: User requires a token
                 if ("without2fa" == mb_strtolower($multiotp->GetUserAlgorithm(),'UTF-8')) {
-                    $result = 8; // INFO: User can be authenticated without a token (WITHOUT2FA)
+                    if (($multiotp->GetUserAutolockTime() > 0) && ($multiotp->GetUserAutolockTime() < time())) {
+                        $multiotp->DeleteUser("", TRUE);
+                        $this->WriteLog("Error: cache too old for user ".$real_user.", cache deleted.", FALSE, FALSE, $result, 'User', $real_user);
+                        $result = 81; // ERROR: Cache too old for this user
+                    } elseif (1 != $multiotp->GetUserActivated()) {
+                      $multiotp->DeleteUser("", TRUE);
+                      $result = 38; // ERROR: User is desactivated
+                    } else {
+                      $multiotp->WriteUserData(); // We cache the user locally
+                      $result = 8; // INFO: User can be authenticated without a token (WITHOUT2FA)
+                    }
                 }
             }
             break;

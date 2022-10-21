@@ -15,8 +15,8 @@
 # Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    SysCo/yj, SysCo/al, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.2.1
-# @date      2022-08-10
+# @version   5.9.3.1
+# @date      2022-10-21
 # @since     2014-08-14
 # @copyright (c) 2014-2022 SysCo systemes de communication sa
 # @copyright (c) 2002 by Boian Jordanov <bjordanov@orbitel.bg>
@@ -43,6 +43,7 @@
 #
 #
 # Change Log
+#   2022-09-23 5.9.3.0 SysCo/yj Better special characters support in username and password
 #   2020-08-31 5.8.0.0 SysCo/al Multiple values support for the same attribute
 #   2019-01-24 5.4.1.5 SysCo/al All parameters are now between ''
 #   2019-01-07 5.4.1.1 SysCo/al FreeRADIUS 3 support
@@ -141,8 +142,15 @@ sub authenticate {
 
         # print Dumper(%RAD_REQUEST);
         # print Dumper(%RAD_CONFIG);
+        
+        my $multiotp_username = $RAD_REQUEST{'User-Name'};
+        $multiotp_username =~ s/([\$])/\\$1/g;
+        my $multiotp_password = $RAD_REQUEST{'User-Password'};
+        $multiotp_password =~ s/([\$])/\\$1/g;
+        my $multiotp_shortname = $RAD_REQUEST{'Client-Shortname'};
+        $multiotp_shortname =~ s/([\$])/\\$1/g;
 
-        my $output=`/usr/local/bin/multiotp/multiotp.php -base-dir='/usr/local/bin/multiotp/' '$RAD_REQUEST{'User-Name'}' '$RAD_REQUEST{'User-Password'}' -src='$RAD_CONFIG{'Packet-Src-IP-Address'}' -tag='$RAD_CONFIG{'Client-Shortname'}' -mac='$RAD_REQUEST{'Called-Station-Id'}' -calling-ip='$RAD_REQUEST{'Framed-IP-Address'}' -calling-mac='$RAD_REQUEST{'Calling-Station-Id'}' -chap-challenge='$RAD_REQUEST{'CHAP-Challenge'}' -chap-password='$RAD_REQUEST{'CHAP-Password'}' -ms-chap-challenge='$RAD_REQUEST{'MS-CHAP-Challenge'}' -ms-chap-response='$RAD_REQUEST{'MS-CHAP-Response'}' -ms-chap2-response='$RAD_REQUEST{'MS-CHAP2-Response'}' -state='$RAD_REQUEST{'State'}'`;
+        my $output=`/usr/local/bin/multiotp/multiotp.php -base-dir='/usr/local/bin/multiotp/' "$multiotp_username" "$multiotp_password" -src='$RAD_CONFIG{'Packet-Src-IP-Address'}' -tag="$multiotp_shortname" -mac='$RAD_REQUEST{'Called-Station-Id'}' -calling-ip='$RAD_REQUEST{'Framed-IP-Address'}' -calling-mac='$RAD_REQUEST{'Calling-Station-Id'}' -chap-challenge='$RAD_REQUEST{'CHAP-Challenge'}' -chap-password='$RAD_REQUEST{'CHAP-Password'}' -ms-chap-challenge='$RAD_REQUEST{'MS-CHAP-Challenge'}' -ms-chap-response='$RAD_REQUEST{'MS-CHAP-Response'}' -ms-chap2-response='$RAD_REQUEST{'MS-CHAP2-Response'}' -state='$RAD_REQUEST{'State'}'`;
         
         # Clean the \r and \n
         $output =~ s/\r$|\n$//ig;

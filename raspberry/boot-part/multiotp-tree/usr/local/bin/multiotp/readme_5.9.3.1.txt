@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.2.1 (2022-08-10)
+Current build: 5.9.3.1 (2022-10-21)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -144,7 +144,7 @@ subfolders from windows to your current multiOTP folder
 
 
 WHAT'S NEW IN THIS 5.9.x RELEASE
-================================
+- Users without 2FA tokens don't see the second screen in the Credential Provider during logon
 - New Raspberry, Hyper-V and OVA appliances available (version 011, based on Debian 11)
 - Scratchlist can be generated from the Web GUI
 - {MultiOtpDisplayName} (AD/LDAP DisplayName) can be used in templates
@@ -152,7 +152,11 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
-2022-08-10 5.9.2.1 ENH: Command -iswithout2fa added as a CLI option (to check if a token is needed)
+2022-10-21 5.9.3.1 FIX: Better special characters support in username and password
+                   ENH: The locked accounts list now also list the temporary delayed accounts
+                   ENH: Accounts with Without2FA tokens can now also be stored in cache
+2022-08-10 5.9.2.1 ENH: Enhanced Without2FA support, bypassing the 2FA in Credential Provider
+                   ENH: Command -iswithout2fa added as a CLI option (to check if a token is needed)
 2022-06-17 5.9.1.0 ENH: Enhanced multiOTP Credential Provider
                    ENH: Additional CLI option -nt-key-only added
 2022-05-26 5.9.0.3 FIX: Issue with /run/php when a Docker container is restarted
@@ -1551,7 +1555,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.2.1 (2022-08-10)
+multiOTP 5.9.3.1 (2022-10-21)
 (c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 

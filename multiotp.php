@@ -37,8 +37,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.2.1
- * @date      2022-08-10
+ * @version   5.9.3.1
+ * @date      2022-10-21
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -277,8 +277,8 @@ if (!isset($multiotp)) {
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.2.1
- * @date      2022-08-10
+ * @version   5.9.3.1
+ * @date      2022-10-21
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -482,8 +482,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.2.1
- * @date      2022-08-10
+ * @version   5.9.3.1
+ * @date      2022-10-21
  * @since     2010-07-18
  */
 {
@@ -581,8 +581,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.2.1
-   * @date      2022-08-10
+   * @version   5.9.3.1
+   * @date      2022-10-21
    * @since     2010-07-18
    */
   function __construct(
@@ -606,11 +606,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.2.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.3.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2022-08-10'; // You should update the date with the date of your changes
+        $temp_date = '@date      2022-10-21'; // You should update the date with the date of your changes
         $this->_date = trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMiBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -10285,6 +10285,11 @@ class Multiotp
                   }
               }
               $result = true;
+          } elseif (21 == $server_result) {
+            // If user doesn't exist anymore on the server,
+            //   reply false and delete local cached file if any
+            $this->DeleteUser('', true);
+            $result = false;
           }
       }
 
@@ -10587,6 +10592,8 @@ class Multiotp
       $limit = 0
   ) {
 
+      $now_epoch = time();
+
       // We initialize the local encryption check variable
       $local_encryption_check = false;
 
@@ -10598,7 +10605,7 @@ class Multiotp
               switch ($this->GetBackendType()) {
                   case 'mysql':
                       if ($this->OpenMysqlDatabase()) {
-                          $sQuery  = "SELECT user FROM `".$this->_config_data['sql_users_table']."` WHERE (`locked` = 1) ORDER BY user ASC";
+                          $sQuery  = "SELECT user FROM `".$this->_config_data['sql_users_table']."` WHERE ((`locked` = 1) OR ((`error_counter` >= ".$this->GetMaxDelayedFailures().") AND (".$now_epoch." < (`last_error` + ".$this->GetMaxDelayedTime().")))) ORDER BY user ASC";
                           if ($limit > 0) {
                               $sQuery.= " LIMIT 0,".$limit;
                           }
@@ -10628,7 +10635,7 @@ class Multiotp
                       break;
                   case 'pgsql':
                       if ($this->OpenPGSQLDatabase()) {
-                          $sQuery  = "SELECT \"user\" FROM \"".$this->_config_data['sql_schema']."\".\"".$this->_config_data['sql_users_table']."\" WHERE (\"locked\" = 1) ORDER BY \"user\" ASC";
+                          $sQuery  = "SELECT \"user\" FROM \"".$this->_config_data['sql_schema']."\".\"".$this->_config_data['sql_users_table']."\" WHERE ((\"locked\" = 1) OR ((\"error_counter\" >= ".$this->GetMaxDelayedFailures().") AND (".$now_epoch." < (\"last_error\" + ".$this->GetMaxDelayedTime().")))) ORDER BY \"user\" ASC";
                           if ($limit > 0) {
                               $sQuery.= " LIMIT 0,".$limit;
                           }
@@ -10653,6 +10660,8 @@ class Multiotp
                           while ($file = readdir($users_handle))
                           {
                               $locked = FALSE;
+                              $error_counter = 0;
+                              $last_error = 0;
                               $desactivated = FALSE;
                               if ((mb_substr($file, -3) == ".db") && ($file != '.db'))
                               {
@@ -10684,27 +10693,31 @@ class Multiotp
                                                   }
                                               }
                                               $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
-                                              if ('locked' == trim($line_array[0]))
-                                              {
+                                              if ('locked' == trim($line_array[0])) {
                                                   if (1 == (isset($line_array[1])?$line_array[1]:0))
                                                   {
                                                       $locked = TRUE;
                                                   }
-                                              }
-                                              if ('desactivated' == trim($line_array[0]))
-                                              {
+                                              } elseif ('desactivated' == trim($line_array[0])) {
                                                   if (1 == (isset($line_array[1])?$line_array[1]:0))
                                                   {
                                                       $desactivated = TRUE;
                                                   }
+                                              } elseif ('error_counter' == trim($line_array[0])) {
+                                                  $error_counter = (isset($line_array[1])?$line_array[1]:0);
+                                              } elseif ('last_error' == trim($line_array[0])) {
+                                                  $last_error = (isset($line_array[1])?$line_array[1]:0);
                                               }
                                           }
                                       }
                                       fclose($file_handler);
                                       $users_count++;
                                       
-                                      if ($locked)
-                                      {
+                                      if (($error_counter >= $this->GetMaxDelayedFailures()) && ($now_epoch < $last_error + $this->GetMaxDelayedTime())) {
+                                        $locked = true;
+                                      }
+                                      
+                                      if ($locked) {
                                           $locked_users_list.= (('' != $locked_users_list)?"\t":'').$current_user;
                                           $locked_users_count++;
                                       }
@@ -10744,6 +10757,8 @@ class Multiotp
 
   function GetLockedUsersCount() {
 
+      $now_epoch = time();
+
       // We initialize the local encryption check variable
       $local_encryption_check = false;
 
@@ -10762,7 +10777,7 @@ class Multiotp
                   case 'mysql':
                       if ($this->OpenMysqlDatabase())
                       {
-                          $sQuery  = "SELECT COUNT(user) AS counter FROM `".$this->_config_data['sql_users_table']."` WHERE (`locked` = 1)";
+                          $sQuery  = "SELECT COUNT(user) AS counter FROM `".$this->_config_data['sql_users_table']."` WHERE ((`locked` = 1) OR ((`error_counter` >= ".$this->GetMaxDelayedFailures().") AND (".$now_epoch." < (`last_error` + ".$this->GetMaxDelayedTime()."))))";
                           if (is_object($this->_mysqli)) {
                               if (!($result = $this->_mysqli->query($sQuery))) {
                                   $this->WriteLog("Error: Unable to access the database: ".trim($this->_mysqli->error), FALSE, FALSE, 41, 'System', '', 3);
@@ -10786,7 +10801,7 @@ class Multiotp
                   case 'pgsql':
                       if ($this->OpenPGSQLDatabase())
                       {
-                          $sQuery  = "SELECT COUNT(\"user\") AS \"counter\" FROM \"".$this->_config_data['sql_schema']."\".\"".$this->_config_data['sql_users_table']."\" WHERE (\"locked\" = 1)";
+                          $sQuery  = "SELECT COUNT(\"user\") AS \"counter\" FROM \"".$this->_config_data['sql_schema']."\".\"".$this->_config_data['sql_users_table']."\" WHERE ((\"locked\" = 1) OR ((\"error_counter\" >= ".$this->GetMaxDelayedFailures().") AND (".$now_epoch." < (\"last_error\" + ".$this->GetMaxDelayedTime()."))))";
                           if (!($rResult = pg_query($this->_pgsql_database_link, $sQuery))) {
                               $this->WriteLog("Error: Unable to access the database: ".pg_last_error(), FALSE, FALSE, 41, 'System', '', 3);
                           } else {
@@ -10830,16 +10845,23 @@ class Multiotp
                                                   if (1 == (isset($line_array[1])?$line_array[1]:0)) {
                                                       $locked = TRUE;
                                                   }
-                                              }
-                                              if ('desactivated' == trim($line_array[0])) {
+                                              } elseif ('desactivated' == trim($line_array[0])) {
                                                   if (1 == (isset($line_array[1])?$line_array[1]:0)) {
                                                       $desactivated = TRUE;
                                                   }
+                                              } elseif ('error_counter' == trim($line_array[0])) {
+                                                  $error_counter = (isset($line_array[1])?$line_array[1]:0);
+                                              } elseif ('last_error' == trim($line_array[0])) {
+                                                  $last_error = (isset($line_array[1])?$line_array[1]:0);
                                               }
                                           }
                                       }
                                       fclose($file_handler);
                                       $users_count++;
+                                      
+                                      if (($error_counter >= $this->GetMaxDelayedFailures()) && ($now_epoch < $last_error + $this->GetMaxDelayedTime())) {
+                                        $locked = true;
+                                      }
                                       
                                       if ($locked) {
                                           $locked_users_count++;
@@ -11605,7 +11627,7 @@ class Multiotp
           $input = $second_param;
       }
       if ($this->GetVerboseFlag()) {
-          $this->WriteLog("Debug: *CompareUserLastCachedCredential cached credential: ".str_repeat('x', (mb_strlenmb_strlen($input) >= 6)?mb_strlen($input)-6:0).mb_substr($input, -6), FALSE, FALSE, 8888, 'Debug', '');
+          $this->WriteLog("Debug: *CompareUserLastCachedCredential cached credential: ".str_repeat('x', (mb_strlen($input) >= 6)?mb_strlen($input)-6:0).mb_substr($input, -6), FALSE, FALSE, 8888, 'Debug', '');
       }
       return (sha1('$+Cred'.$input.'!@#S') == $this->_user_data['last_cached_credential']);
   }
@@ -21059,6 +21081,7 @@ EOL;
                       $this->WriteLog("Info: Host returned the following result: $error_code ($error_description)", FALSE, FALSE, $error_code, 'Debug', '');
                   }
               }
+              
               if ((19 == intval($error_code)) && (isset($xml->document->user[0]))) {
                   $result = (isset($xml->document->user[0]->userdata[0])?($xml->document->user[0]->userdata[0]->tagData):'');
               } else {
@@ -21130,6 +21153,7 @@ EOL;
                       $this->WriteLog("Info: Host returned the following result: $error_code ($error_description).", FALSE, FALSE, $error_code, 'Debug', '');
                   }
               }
+              
               // User doesn't exist: 21 - User exists = 22
               $result = intval($error_code);
           } else {
@@ -21801,7 +21825,7 @@ EOL;
                       if ($cache_level > $this->GetUserCacheLevel()) {
                           $cache_level = $this->GetUserCacheLevel();
                           if ($this->GetVerboseFlag()) {
-                              $this->WriteLog("Info: *Cache leve lowered to $cache_level for the user $user_id", FALSE, FALSE, 8888, 'Server-Client', '');
+                              $this->WriteLog("Info: *Cache level lowered to $cache_level for the user $user_id", FALSE, FALSE, 8888, 'Server-Client', '');
                           }
                       }
                       
@@ -21847,6 +21871,11 @@ EOL;
                   $this->WriteLog("Info: *ReadUserData server request for $user_id", FALSE, FALSE, 8888, 'Server-Client', '');
               }
 
+              $cache_level = (isset($xml->document->readuserdata[0]->cachelevel[0])?($xml->document->readuserdata[0]->cachelevel[0]->tagData):0);
+              if ($cache_level > $this->GetServerCacheLevel()) {
+                  $cache_level = $this->GetServerCacheLevel();
+              }
+
               $error_code = 70;
 
               if ('MOSH' == mb_substr($server_challenge, 0, 4)) {
@@ -21856,6 +21885,25 @@ EOL;
                   if ($this->ReadUserData($user_id, FALSE, TRUE)) {
                       // $no_server_check = TRUE;
                       $error_code = 19;
+                      
+                      // Preparing caching code
+                      $now_epoch = time();
+                      $cache_lifetime = $this->GetServerCacheLifetime();
+                      if ($cache_lifetime > $this->GetUserCacheLifetime()) {
+                          $cache_lifetime = $this->GetUserCacheLifetime();
+                          if ($this->GetVerboseFlag()) {
+                              $this->WriteLog("Info: *Cache lifetime lowered to $cache_lifetime for the user $user_id", FALSE, FALSE, 8888, 'Server-Client', '');
+                          }
+                      }
+
+                      if ($cache_level > $this->GetUserCacheLevel()) {
+                          $cache_level = $this->GetUserCacheLevel();
+                          if ($this->GetVerboseFlag()) {
+                              $this->WriteLog("Info: *Cache level lowered to $cache_level for the user $user_id", FALSE, FALSE, 8888, 'Server-Client', '');
+                          }
+                      }
+                      // End of preparing caching code
+                      
                       foreach ($this->_user_data as $key => $value) {
                           if ('' != trim($key)) {
                               // ReadUserData will only return non-encrypted attributes
@@ -21864,6 +21912,13 @@ EOL;
                                      ("*all*" == mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8')))
                                   )
                                  ) {
+                                  if ('autolock_time' == $key) {
+                                      if (0 < $cache_lifetime) {
+                                          if (($value == 0) || ($value > ($now_epoch + $cache_lifetime))) {
+                                              $value = ($now_epoch + $cache_lifetime);
+                                          }
+                                      }
+                                  }
                                   $user_data.= mb_strtolower($key,'UTF-8');
                                   $value = $this->Encrypt($key, $value, $this->GetServerSecret($remote_ip));
                                   $user_data = $user_data.":";
@@ -21872,6 +21927,21 @@ EOL;
                               }
                           }
                       }
+                     
+                      // Caching for without2fa algorithm only
+                      if ((0 < $cache_level) && ("without2fa" == mb_strtolower($this->_user_data['algorithm'],'UTF-8'))) {
+                          if ($this->GetVerboseFlag()) {
+                              $this->WriteLog("Info: *Cache level is set to $cache_level", FALSE, FALSE, 8888, 'Server-Client', '');
+                          }
+
+                          $cache_user = '';
+                          $one_cache_user = str_replace('*UserId*', $user_id, $user_template);
+                          $one_cache_user = str_replace('*UserData*', $user_data, $one_cache_user);
+                          $cache_user .= $one_cache_user;
+                          
+                          // $cache_data = str_replace('*UserInCache*', $cache_user, $cache_data_template);
+                      }
+                      // End of caching for without2fa
 
                       $user_info = str_replace('*UserId*', $user_id, $user_template);
                       $user_info = str_replace('*UserData*', $user_data, $user_info);
@@ -21885,6 +21955,11 @@ EOL;
                   $this->WriteLog("Info: *CheckUserExists server request for $user_id with challenge $server_challenge", FALSE, FALSE, 8888, 'Server-Client', '');
               }
 
+              $cache_level = (isset($xml->document->checkuserexists[0]->cachelevel[0])?($xml->document->checkuserexists[0]->cachelevel[0]->tagData):0);
+              if ($cache_level > $this->GetServerCacheLevel()) {
+                  $cache_level = $this->GetServerCacheLevel();
+              }
+
               $error_code = 70;
 
               if ('MOSH' == mb_substr($server_challenge, 0, 4)) {
@@ -21894,6 +21969,66 @@ EOL;
                   if ($this->CheckUserExists($user_id, TRUE)) {
                       // $no_server_check = TRUE;
                       $error_code = 22;
+                      
+                      // Preparing caching code
+                      $now_epoch = time();
+                      $cache_lifetime = $this->GetServerCacheLifetime();
+                      if ($cache_lifetime > $this->GetUserCacheLifetime()) {
+                          $cache_lifetime = $this->GetUserCacheLifetime();
+                          if ($this->GetVerboseFlag()) {
+                              $this->WriteLog("Info: *Cache lifetime lowered to $cache_lifetime for the user $user_id", FALSE, FALSE, 8888, 'Server-Client', '');
+                          }
+                      }
+
+                      if ($cache_level > $this->GetUserCacheLevel()) {
+                          $cache_level = $this->GetUserCacheLevel();
+                          if ($this->GetVerboseFlag()) {
+                              $this->WriteLog("Info: *Cache level lowered to $cache_level for the user $user_id", FALSE, FALSE, 8888, 'Server-Client', '');
+                          }
+                      }
+                      // End of preparing caching code
+                      
+                      // Reading caching info
+                      foreach ($this->_user_data as $key => $value) {
+                          if ('' != trim($key)) {
+                              // ReadUserData will only return non-encrypted attributes
+                              if (('encryption_hash' != $key) &&
+                                  (!((FALSE !== mb_strpos(mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8'), mb_strtolower('*'.$key.'*','UTF-8'))) ||
+                                     ("*all*" == mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8')))
+                                  )
+                                 ) {
+                                  if ('autolock_time' == $key) {
+                                      if (0 < $cache_lifetime) {
+                                          if (($value == 0) || ($value > ($now_epoch + $cache_lifetime))) {
+                                              $value = ($now_epoch + $cache_lifetime);
+                                          }
+                                      }
+                                  }
+                                  $user_data.= mb_strtolower($key,'UTF-8');
+                                  $value = $this->Encrypt($key, $value, $this->GetServerSecret($remote_ip));
+                                  $user_data = $user_data.":";
+                                  $user_data = $user_data."=".$value;
+                                  $user_data.= "\n";
+                              }
+                          }
+                      }
+                      // End of reading caching info
+
+                      // Caching for without2fa algorithm only
+                      if ((0 < $cache_level) && ("without2fa" == mb_strtolower($this->_user_data['algorithm'],'UTF-8'))) {
+                          if ($this->GetVerboseFlag()) {
+                              $this->WriteLog("Info: *Cache level is set to $cache_level", FALSE, FALSE, 8888, 'Server-Client', '');
+                          }
+
+                          $cache_user = '';
+                          $one_cache_user = str_replace('*UserId*', $user_id, $user_template);
+                          $one_cache_user = str_replace('*UserData*', $user_data, $one_cache_user);
+                          $cache_user .= $one_cache_user;
+                          
+                          // $cache_data = str_replace('*UserInCache*', $cache_user, $cache_data_template);
+                      }
+                      // End of caching for without2fa
+                      
                   }
               }
               if ($this->GetVerboseFlag()) {
@@ -73841,7 +73976,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "call-method";
         $src_array = explode("=",$current_arg,2);
         if (2 == count($src_array)) {
-            $call_method = $src_array[1];
+            $call_method = clean_quotes($src_array[1]);
         }
     } elseif ("-check" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "check";
@@ -75366,7 +75501,17 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             } else {
                 $result = 7; // INFO: User requires a token
                 if ("without2fa" == mb_strtolower($multiotp->GetUserAlgorithm(),'UTF-8')) {
-                    $result = 8; // INFO: User can be authenticated without a token (WITHOUT2FA)
+                    if (($multiotp->GetUserAutolockTime() > 0) && ($multiotp->GetUserAutolockTime() < time())) {
+                        $multiotp->DeleteUser("", TRUE);
+                        $this->WriteLog("Error: cache too old for user ".$real_user.", cache deleted.", FALSE, FALSE, $result, 'User', $real_user);
+                        $result = 81; // ERROR: Cache too old for this user
+                    } elseif (1 != $multiotp->GetUserActivated()) {
+                      $multiotp->DeleteUser("", TRUE);
+                      $result = 38; // ERROR: User is desactivated
+                    } else {
+                      $multiotp->WriteUserData(); // We cache the user locally
+                      $result = 8; // INFO: User can be authenticated without a token (WITHOUT2FA)
+                    }
                 }
             }
             break;

@@ -4,7 +4,7 @@ How to build a Raspberry Pi RADIUS strong two factors authentication server in s
 (c) 2010-2022 SysCo systemes de communication sa
 https://www.multiotp.net/
 
-Current build: 5.9.2.1 (2022-08-10)
+Current build: 5.9.3.1 (2022-10-21)
 
 Supported Raspberry Pi hardware: 1B/1B+/2B/3B/3B+/4B
 

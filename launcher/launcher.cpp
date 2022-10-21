@@ -14,8 +14,8 @@
  * and run multiotp.windows.php with the provided arguments.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.2.1
- * @date      2022-08-10
+ * @version   5.9.3.1
+ * @date      2022-10-21
  * @since     2016-12-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -68,8 +68,18 @@
 #include <iostream>
 
 #define SOFTWARE    "LAUNCHPHPMULTIOTP"
-#define VER_NUMBER  "5.9.2.1"
-#define VER_DATE    "2022-08-10"
+#define VER_NUMBER  "5.9.3.1"
+#define VER_DATE    "2022-10-21"
+
+void replaceAll(std::string& str, const std::string& from, const std::string& to) {
+    if (from.empty())
+        return;
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+}
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -92,9 +102,12 @@ int _tmain(int argc, _TCHAR* argv[])
   // strcat_s(defaultPath, "php");
 
   std::string run_software = pathToPhp + " " + pathToMultiotp + " -base-dir=" + quote + basePath + "." + quote;
-
+  std::string escapedArgv;
   for (int i = 1; i < argc; i = i + 1) {
-      run_software = run_software + " " + quote + argv[i] + quote;
+      escapedArgv = argv[i];
+      replaceAll(escapedArgv, "\"", "\\\"");
+      replaceAll(escapedArgv, "&", "^&");
+      run_software = run_software + " " + quote + escapedArgv + quote;
   }
 
   // Put the run software between quotes, because system use CMD /K
