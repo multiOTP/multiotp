@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.3.1 (2022-10-21)
+Current build: 5.9.4.0 (2022-11-04)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -152,6 +152,7 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2022-11-04 5.9.4.0 ENH: Enhanced multiOTP Credential Provider
 2022-10-21 5.9.3.1 FIX: Better special characters support in username and password
                    ENH: The locked accounts list now also list the temporary delayed accounts
                    ENH: Accounts with Without2FA tokens can now also be stored in cache
@@ -1555,7 +1556,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.3.1 (2022-10-21)
+multiOTP 5.9.4.0 (2022-11-04)
 (c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -2069,8 +2070,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.9.3.1.zip 
-SHA256:45b474f41c30cfd1d64f356f7fe43ea43cdacfbe396280df40b18d5b6938bc10 
-SHA1:b6ed7b4e5e73f3b2e1759184f98a7b24b9c681c8 
-MD5:54290a33328af3989341214efcf3359a 
+Hash verification for multiotp_5.9.4.0.zip 
+SHA256:2b227098d6b2980dd29f7deb372434916936eae1f7d91b45b309cf5911201470 
+SHA1:9dd0246a4764ab5bf9c837ebe16be3c3b7d1609e 
+MD5:e52beba7ea09cf688ba68833ccfd6b71 
 ``` 
