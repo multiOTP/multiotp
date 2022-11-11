@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.4.0
-REM @date      2022-11-04
+REM @version   5.9.5.0
+REM @date      2022-11-11
 REM @since     2010-07-10
 REM @copyright (c) 2010-2022 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License

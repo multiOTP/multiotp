@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.4.0
- * @date      2022-11-04
+ * @version   5.9.5.0
+ * @date      2022-11-11
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -1602,6 +1602,10 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 $multiotp->SetLdapUsersDn($actual_array[1]);
                                 $write_config_data = true;
                                 break;
+                            case 'ldap-without2fa-in-group':
+                                $multiotp->SetLdapWithout2faInGroup($actual_array[1]);
+                                $write_config_data = true;
+                                break;
                             case 'log':
                                 $multiotp->SetLogOption(intval($actual_array[1]));
                                 $write_config_data = true;
@@ -2304,6 +2308,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "            ldap-time-limit: LDAP/AD number of sec. to wait for search results".$crlf;
                 echo "              ldap-users-dn: LDAP/AD users DN (optional, use base-dn if empty)".$crlf;
                 echo "                             (you can put several DN separated by semicolons)".$crlf;
+                echo "   ldap-without2fa-in-group: Special LDAP/AD group(s) for without2fa users".$crlf;
                 echo "            ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS".$crlf;
                 echo "                             server certificate checks (LDAPTLS_REQCERT)".$crlf;
                 echo "                             'auto' means 'never' for Windows and '' for Linux".$crlf;

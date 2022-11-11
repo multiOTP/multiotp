@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2022 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.4.0 (2022-11-04)
+Current build: 5.9.5.0 (2022-11-11)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -152,6 +152,7 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2022-11-11 5.9.5.0 ENH: It's now possible to define a special AD/LDAP group to attribute "Without2FA" token to specific users
 2022-11-04 5.9.4.0 ENH: Enhanced multiOTP Credential Provider
 2022-10-21 5.9.3.1 FIX: Better special characters support in username and password
                    ENH: The locked accounts list now also list the temporary delayed accounts
@@ -1556,7 +1557,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.4.0 (2022-11-04)
+multiOTP 5.9.5.0 (2022-11-11)
 (c) 2010-2022 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1771,6 +1772,7 @@ Usage:
             ldap-time-limit: LDAP/AD number of sec. to wait for search results
               ldap-users-dn: LDAP/AD users DN (optional, use base-dn if empty)
                              (you can put several DN separated by semicolons)
+   ldap-without2fa-in-group: Special LDAP/AD group(s) for without2fa users
             ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS
                              server certificate checks (LDAPTLS_REQCERT)
                              'auto' means 'never' for Windows and '' for Linux
@@ -2070,8 +2072,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.9.4.0.zip 
-SHA256:2b227098d6b2980dd29f7deb372434916936eae1f7d91b45b309cf5911201470 
-SHA1:9dd0246a4764ab5bf9c837ebe16be3c3b7d1609e 
-MD5:e52beba7ea09cf688ba68833ccfd6b71 
+Hash verification for multiotp_5.9.5.0.zip 
+SHA256:ec8e92d38d236b3ddbf1ae5d7e5286656fd7457960204e4e74ef2bcd6089f6ae 
+SHA1:ff298f47886abbdf55a9a366a82b4b800a39978d 
+MD5:7ccf347a26f8fc83e5634bffe827256e 
 ``` 

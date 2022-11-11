@@ -72,8 +72,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.4.0
- * @date      2022-11-04
+ * @version   5.9.5.0
+ * @date      2022-11-11
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -277,8 +277,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.4.0
- * @date      2022-11-04
+ * @version   5.9.5.0
+ * @date      2022-11-11
  * @since     2010-07-18
  */
 {
@@ -376,8 +376,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.4.0
-   * @date      2022-11-04
+   * @version   5.9.5.0
+   * @date      2022-11-11
    * @since     2010-07-18
    */
   function __construct(
@@ -401,11 +401,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.4.0'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.5.0'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2022-11-04'; // You should update the date with the date of your changes
+        $temp_date = '@date      2022-11-11'; // You should update the date with the date of your changes
         $this->_date = trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMiBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -589,6 +589,7 @@ class Multiotp
           'ldap_ssl'                    => "int(1) DEFAULT 0",
           'ldap_synced_user_attribute'  => "TEXT DEFAULT ''",
           'ldap_time_limit'             => "int(10) DEFAULT 30",
+          'ldap_without2fa_in_group'    => "TEXT DEFAULT ''",
           // If ldaptls_reqcert is empty, the default value used is "auto"
           'ldaptls_reqcert'             => "TEXT DEFAULT ''",
           // If ldaptls_cipher_suite is empty, the default value used is "auto"
@@ -6754,7 +6755,7 @@ class Multiotp
   function SetLdapInGroup(
       $value
   ) {
-      $this->_config_data['ldap_in_group'] = $value;
+      $this->_config_data['ldap_in_group'] = trim($value);
 
       $ldap_in_group_array = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$value))));
 
@@ -6778,9 +6779,46 @@ class Multiotp
   }
 
 
-  function GetLdapInGroup()
+  function GetLdapInGroup($included_without2fa = false)
   {
-      return $this->_config_data['ldap_in_group'];
+    $groups = trim($this->_config_data['ldap_in_group']);
+    if ((true === $included_without2fa) && ('' != $groups) && ('' != $this->GetLdapWithout2faInGroup())) {
+      $groups = $this->GetLdapWithout2faInGroup() . "," . $groups;
+    }
+    return $groups;
+  }
+
+
+  function SetLdapWithout2faInGroup(
+      $value
+  ) {
+      $this->_config_data['ldap_without2fa_in_group'] = trim($value);
+
+      $ldap_without2fa_in_group_array = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$value))));
+
+      $groups_array = array();
+      $list = explode("\t", $this->GetGroupsList());
+      $n = count($list);
+      for($i = 0; $i < $n; $i++) {
+          if($list[$i] != '') {
+              $this->SetGroup($list[$i]);
+              $groups_array[] = $this->GetGroupName();
+          }
+      }
+
+      foreach ($ldap_without2fa_in_group_array as $one_group) {
+          if (!in_array(trim($one_group), $groups_array)) {
+              if ('' != trim($one_group)) {
+                  $this->CreateGroup('', trim($one_group), trim($one_group));
+              }
+          }
+      }
+  }
+
+
+  function GetLdapWithout2faInGroup()
+  {
+      return $this->_config_data['ldap_without2fa_in_group'];
   }
 
 
@@ -13836,8 +13874,8 @@ class Multiotp
       // Prepare the array "users_in_groups"
       // - if we are using a generic LDAP and an LdapInGroup Filtering
       // - if we are using enhanced Active Directory
-      if ('' != trim($this->GetLdapInGroup())) {
-        $in_groups_array_raw = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$this->GetLdapInGroup()))));
+      if ('' != trim($this->GetLdapInGroup(true))) {
+        $in_groups_array_raw = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$this->GetLdapInGroup(true)))));
       } else {
         $in_groups_array_raw = array();
       }
@@ -13933,7 +13971,7 @@ class Multiotp
 
               $users_in_groups = array();
 
-              if ('' != trim($this->GetLdapInGroup())) {
+              if ('' != trim($this->GetLdapInGroup(true))) {
                   if ((2 == $this->GetLdapServerType()) || (4 == $this->GetLdapServerType())) { // Generic LDAP or eDirectory, eventually no memberOf function like in AD
                       foreach ($in_groups_array_raw as $one_group) {
                           $temp_array = $ldap_connection->group_users($one_group);
@@ -14026,7 +14064,7 @@ class Multiotp
                               }
                               if ($include_disabled || (!$accountdisable)) {
                                   // TODO $in_a_group discovery
-                                  if ('' == trim($this->GetLdapInGroup())) {
+                                  if ('' == trim($this->GetLdapInGroup(true))) {
                                       $in_a_group = TRUE;
                                   } else {
                                       $in_a_group = FALSE;
@@ -14198,8 +14236,8 @@ class Multiotp
       // Prepare the array "users_in_groups"
       // - if we are using a generic LDAP and an LdapInGroup Filtering
       // - if we are using enhanced Active Directory
-      if ('' != trim($this->GetLdapInGroup())) {
-        $in_groups_array_raw = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$this->GetLdapInGroup()))));
+      if ('' != trim($this->GetLdapInGroup(true))) {
+        $in_groups_array_raw = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$this->GetLdapInGroup(true)))));
       } else {
         $in_groups_array_raw = array();
       }
@@ -14294,7 +14332,7 @@ class Multiotp
 
               $users_in_groups = array();
 
-              if ('' != trim($this->GetLdapInGroup())) {
+              if ('' != trim($this->GetLdapInGroup(true))) {
                   if (2 == $this->GetLdapServerType()) { // Generic LDAP, eventually no memberOf function like in AD
                       foreach ($in_groups_array_raw as $one_group) {
                           $temp_array = $ldap_connection->group_users($one_group);
@@ -14387,7 +14425,7 @@ class Multiotp
                               }
                               if ($include_disabled || (!$accountdisable)) {
                                   // TODO $in_a_group discovery
-                                  if ('' == trim($this->GetLdapInGroup())) {
+                                  if ('' == trim($this->GetLdapInGroup(true))) {
                                       $in_a_group = TRUE;
                                   } else {
                                       $in_a_group = FALSE;
@@ -14688,8 +14726,8 @@ class Multiotp
       // Prepare the array "users_in_groups"
       // - if we are using a generic LDAP and an LdapInGroup Filtering
       // - if we are using enhanced Active Directory
-      if ('' != trim($this->GetLdapInGroup())) {
-        $in_groups_array_raw = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$this->GetLdapInGroup()))));
+      if ('' != trim($this->GetLdapInGroup(true))) {
+        $in_groups_array_raw = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$this->GetLdapInGroup(true)))));
       } else {
         $in_groups_array_raw = array();
       }
@@ -14840,7 +14878,7 @@ class Multiotp
 
               $users_in_groups = array();
 
-              if ('' != trim($this->GetLdapInGroup())) {
+              if ('' != trim($this->GetLdapInGroup(true))) {
                   if ((2 == $this->GetLdapServerType()) || (4 == $this->GetLdapServerType())) { // Generic LDAP or eDirectory, eventually no memberOf function like in AD
                   
                       foreach ($in_groups_array_raw as $one_group) {
@@ -14969,7 +15007,7 @@ class Multiotp
                               }
                               if ($include_disabled || (!$accountdisable)) {
                                   // TODO $in_a_group discovery
-                                  if ('' == trim($this->GetLdapInGroup())) {
+                                  if ('' == trim($this->GetLdapInGroup(true))) {
                                       $in_a_group = TRUE;
                                   } else {
                                       $in_a_group = FALSE;
@@ -15135,16 +15173,31 @@ class Multiotp
                                       }
                                       $ldap_framedipnetmask = (isset($one_user['radiusframedipnetmask'][0]) ? ($one_user['radiusframedipnetmask'][0]) : "---");
 
+                                      $ldap_algorithm = $this->GetLdapDefaultAlgorithm();
+                                      if ('' != trim($this->GetLdapWithout2faInGroup())) {
+                                        $without2fa_in_groups_array_raw = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$this->GetLdapWithout2faInGroup()))));
+                                        $user_in_groups_array_raw = explode("\t",trim(str_replace(",","\t",str_replace(";","\t",$user_in_groups))));
+                                        foreach ($without2fa_in_groups_array_raw as $one_without2fa_group) {
+                                          foreach ($user_in_groups_array_raw as $one_temp) {
+                                            if (strtolower($one_without2fa_group) == strtolower($one_temp)) {
+                                              $ldap_algorithm = "without2fa";
+                                              break;
+                                            }
+                                          }
+                                        }
+                                      }
+
                                       if (!$this->CheckUserExists($account, true, true)) { // $no_server_check = TRUE; $no_error = TRUE
                                       // User doesn't exist yet
                                           if ('' == $ldap_description) {
                                               $ldap_description = $account;
                                           }
+
                                           $result = $this->FastCreateUser($account,
                                                                           $ldap_email,
                                                                           $ldap_sms,
                                                                           -1, // Prefix pin needed
-                                                                          $this->GetLdapDefaultAlgorithm(),
+                                                                          $ldap_algorithm,
                                                                           $ldap_enabled,
                                                                           $ldap_description,
                                                                           $ldap_group,
@@ -15167,6 +15220,7 @@ class Multiotp
                                           $existing_ldap_users_counter++;
                                           $this->SetUser($account);
                                           if (1 == $this->GetUserSynchronized()) {
+                                              $algorithm = $this->GetUserAlgorithm();
                                               $description = $this->GetUserDescription();
                                               $display_name = $this->GetUserDisplayName();
                                               $email = $this->GetUserEmail();
@@ -15182,6 +15236,15 @@ class Multiotp
                                               $modified = FALSE;
                                               $detailed_modif = "";
 
+                                              // !!! Special without2fa behavior !!!
+                                              if ((('without2fa' == $ldap_algorithm) && ($algorithm != $ldap_algorithm)) ||
+                                                  (('without2fa' != $ldap_algorithm) && ('without2fa' == $algorithm) && ('' != trim($this->GetLdapWithout2faInGroup())))
+                                                 ) {
+                                                $this->SetUserAlgorithm($ldap_algorithm);
+                                                $modified = TRUE;
+                                                $detailed_modif = (('' != $detailed_modif) ? ', ' : '') . "Algorithm: $algorithm -> $ldap_algorithm";
+                                              }
+                                              
                                               if (('' != $ldap_description) && ($description != $ldap_description)) {
                                                   $this->SetUserDescription($ldap_description);
                                                   $modified = TRUE;
