@@ -9,7 +9,7 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.5.0
+REM @version   5.9.5.1
 REM @date      2022-11-11
 REM @since     2013-08-09
 REM @copyright (c) 2013-2022 SysCo systemes de communication sa
@@ -41,6 +41,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2022-11-11 5.9.5.1 SysCo/al Windows nginx subfolders are now protected
 REM   2020-12-11 5.8.0.6 SysCo/al Do an automatic "Run as administrator" if needed
 REM   2017-05-29 5.0.4.5 SysCo/al Unified script with some bug fixes
 REM                               Alternate GUI file support
@@ -159,6 +160,11 @@ ECHO.>> %_config_file%
 IF NOT "%_check_pattern%"=="" ECHO %_check_pattern%>> %_config_file%
 IF NOT "%_check_pattern%"=="" ECHO.>> %_config_file%
 
+ECHO     location ~ /(config^|log^|users^|tokens^|devices^|groups^|radius^|webservice) {>> %_config_file%
+ECHO         deny all;>> %_config_file%
+ECHO         return 404;>> %_config_file%
+ECHO     }>> %_config_file%
+ECHO.>> %_config_file%
 ECHO     location ~* \.(appcache^|manifest)$ {>> %_config_file%
 ECHO         expires -1;>> %_config_file%
 ECHO     }>> %_config_file%
