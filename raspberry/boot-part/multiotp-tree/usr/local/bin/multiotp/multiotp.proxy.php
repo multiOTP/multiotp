@@ -36,7 +36,7 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.0
+ * @version   5.9.5.1
  * @date      2022-11-11
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
@@ -276,7 +276,7 @@ if (!isset($multiotp)) {
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.0
+ * @version   5.9.5.1
  * @date      2022-11-11
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
@@ -481,7 +481,7 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.0
+ * @version   5.9.5.1
  * @date      2022-11-11
  * @since     2010-07-18
  */
@@ -580,7 +580,7 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.5.0
+   * @version   5.9.5.1
    * @date      2022-11-11
    * @since     2010-07-18
    */
@@ -605,7 +605,7 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.5.0'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.5.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {

@@ -14,7 +14,7 @@
  * and run multiotp.windows.php with the provided arguments.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.0
+ * @version   5.9.5.1
  * @date      2022-11-11
  * @since     2016-12-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
@@ -68,7 +68,7 @@
 #include <iostream>
 
 #define SOFTWARE    "LAUNCHPHPMULTIOTP"
-#define VER_NUMBER  "5.9.5.0"
+#define VER_NUMBER  "5.9.5.1"
 #define VER_DATE    "2022-11-11"
 
 void replaceAll(std::string& str, const std::string& from, const std::string& to) {

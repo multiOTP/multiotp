@@ -27,7 +27,7 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.0
+ * @version   5.9.5.1
  * @date      2022-11-11
  * @since     2013-08-06
  * @copyright (c) 2013-2022 SysCo systemes de communication sa
@@ -192,7 +192,7 @@ if (!class_exists('Multiotp')) {
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.0
+ * @version   5.9.5.1
  * @date      2022-11-11
  * @since     2010-06-08
  * @copyright (c) 2010-2022 SysCo systemes de communication sa
@@ -397,7 +397,7 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.0
+ * @version   5.9.5.1
  * @date      2022-11-11
  * @since     2010-07-18
  */
@@ -496,7 +496,7 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.5.0
+   * @version   5.9.5.1
    * @date      2022-11-11
    * @since     2010-07-18
    */
@@ -521,7 +521,7 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.5.0'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.5.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
@@ -74093,6 +74093,14 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
             $prefix_required0_checked = ' checked="checked" ';
         }
 
+        if ($multiotp->CheckAdminPassword("1234")) {
+          $default_user_info = "(default is admin)";
+          $default_password_info = "(default is 1234)";
+        } else {
+          $default_user_info = "";
+          $default_password_info = "";
+        }
+
         $webpage = <<<EOWEBPAGE
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -75007,15 +75015,15 @@ $rpi_info<hr />
             </div>
             <hr />
             <div class="section_title" id="login_title"><span id="login_text">Login</span></div>
-            Username: <input type=text" onfocus="this.blur();" name="user" id="user" length="20" value="admin" /> (default is admin)
-            <span id="log_info"></span><span id="logged"></span>
+            Username: <input type=text" name="user" id="user" length="20" value="" /> $default_user_info
             <br />
-            Password: <input type="password" onfocus="this.value='';" name="password" id="password" length="20" value="1234" /> (default is 1234)
-            &nbsp;
+            Password: <input type="password" onfocus="this.value='';" name="password" id="password" length="20" value="" /> $default_password_info
+            <br />
             <span id="login"><button type="button" onclick="Login();" >Login</button></span>
         </form>
         </div>
         <div id="logout_section">
+        <div id="log_info"></span><span id="logged"></div>
         <form>
             <span id="logout"><button type="button" onclick="Logout();">Logout</button></span>
         </form>

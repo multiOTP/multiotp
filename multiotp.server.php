@@ -27,7 +27,7 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.0
+ * @version   5.9.5.1
  * @date      2022-11-11
  * @since     2013-08-06
  * @copyright (c) 2013-2022 SysCo systemes de communication sa
@@ -468,6 +468,14 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
         else
         {
             $prefix_required0_checked = ' checked="checked" ';
+        }
+
+        if ($multiotp->CheckAdminPassword("1234")) {
+          $default_user_info = "(default is admin)";
+          $default_password_info = "(default is 1234)";
+        } else {
+          $default_user_info = "";
+          $default_password_info = "";
         }
 
         $webpage = <<<EOWEBPAGE
@@ -1205,15 +1213,15 @@ $rpi_info<hr />
             </div>
             <hr />
             <div class="section_title" id="login_title"><span id="login_text">Login</span></div>
-            Username: <input type=text" onfocus="this.blur();" name="user" id="user" length="20" value="admin" /> (default is admin)
-            <span id="log_info"></span><span id="logged"></span>
+            Username: <input type=text" name="user" id="user" length="20" value="" /> $default_user_info
             <br />
-            Password: <input type="password" onfocus="this.value='';" name="password" id="password" length="20" value="1234" /> (default is 1234)
-            &nbsp;
+            Password: <input type="password" onfocus="this.value='';" name="password" id="password" length="20" value="" /> $default_password_info
+            <br />
             <span id="login"><button type="button" onclick="Login();" >Login</button></span>
         </form>
         </div>
         <div id="logout_section">
+        <div id="log_info"></span><span id="logged"></div>
         <form>
             <span id="logout"><button type="button" onclick="Logout();">Logout</button></span>
         </form>
