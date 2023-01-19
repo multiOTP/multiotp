@@ -15,10 +15,10 @@
 # Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    SysCo/yj, SysCo/al, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.5.1
-# @date      2022-11-11
+# @version   5.9.5.5
+# @date      2023-01-19
 # @since     2014-08-14
-# @copyright (c) 2014-2022 SysCo systemes de communication sa
+# @copyright (c) 2014-2023 SysCo systemes de communication sa
 # @copyright (c) 2002 by Boian Jordanov <bjordanov@orbitel.bg>
 # @copyright (c) 2002 by The FreeRADIUS server project
 # @copyright GNU Lesser General Public License
@@ -43,6 +43,7 @@
 #
 #
 # Change Log
+#   2023-01-19 5.9.5.5 SysCo/al Client-Shortname is now extracted from the right array (RAD_CONFIG instead of RAD_REQUEST)
 #   2022-09-23 5.9.3.0 SysCo/yj Better special characters support in username and password
 #   2020-08-31 5.8.0.0 SysCo/al Multiple values support for the same attribute
 #   2019-01-24 5.4.1.5 SysCo/al All parameters are now between ''
@@ -92,7 +93,7 @@ SysCo systemes de communication sa (info@multiotp.net)
 
 =head1 COPYRIGHT
 
-Copyright 2014-2020
+(c) 2014-2023 SysCo systemes de communication sa
 
 This library is free software; you can redistribute it 
 under the GPLv2.
@@ -147,7 +148,7 @@ sub authenticate {
         $multiotp_username =~ s/([\$])/\\$1/g;
         my $multiotp_password = $RAD_REQUEST{'User-Password'};
         $multiotp_password =~ s/([\$])/\\$1/g;
-        my $multiotp_shortname = $RAD_REQUEST{'Client-Shortname'};
+        my $multiotp_shortname = $RAD_CONFIG{'Client-Shortname'};
         $multiotp_shortname =~ s/([\$])/\\$1/g;
 
         my $output=`/usr/local/bin/multiotp/multiotp.php -base-dir='/usr/local/bin/multiotp/' "$multiotp_username" "$multiotp_password" -src='$RAD_CONFIG{'Packet-Src-IP-Address'}' -tag="$multiotp_shortname" -mac='$RAD_REQUEST{'Called-Station-Id'}' -calling-ip='$RAD_REQUEST{'Framed-IP-Address'}' -calling-mac='$RAD_REQUEST{'Calling-Station-Id'}' -chap-challenge='$RAD_REQUEST{'CHAP-Challenge'}' -chap-password='$RAD_REQUEST{'CHAP-Password'}' -ms-chap-challenge='$RAD_REQUEST{'MS-CHAP-Challenge'}' -ms-chap-response='$RAD_REQUEST{'MS-CHAP-Response'}' -ms-chap2-response='$RAD_REQUEST{'MS-CHAP2-Response'}' -state='$RAD_REQUEST{'State'}'`;

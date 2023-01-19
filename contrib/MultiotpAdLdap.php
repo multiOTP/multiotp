@@ -3,14 +3,18 @@
     PHP LDAP CLASS FOR MANIPULATING ACTIVE DIRECTORY
     Version 2.1+
 
-	Adapted 2013-2021 by SysCo/al 5.8.2.1 (2021-04-07)
+	Adapted 2013-2022 by SysCo/al 5.9.5.5 (2023-01-18)
 
  *
  * 
+ *   2023-01-18 5.9.5.5 SysCo/al New _ldap_filter attribute
+ *                               New paging support for 7.3+
+ *
  *   2021-04-07 5.8.2.1 SysCo/al Test connection filter changed from (dn=test-connection) to (objectClass=user)
  *                               (dn=xxx not supported by eDirectory)
  *                               New LDAP type 4 for eDirectory : users are searched with the class posixAccount or user
  *                               enhanced LDAP type 2 : users are searched with the class posixAccount or user
+ *
  *   2018-07-16 5.2.0.0 SysCo/al Active Directory support enhancement (member:1.2.840.113556.1.4.1941:=)
  *                               Active Directory primary group optimized detection
  *                               _users_dn added
@@ -70,7 +74,7 @@
     Attributes documentation : http://www.selfadsi.org/user-attributes.htm
     
     LDAP information, also for other implementation: https://github.com/mfreiholz/iF.SVNAdmin/issues/53
-    LDAP trick for > 1000: http://php.net/manual/fr/function.ldap-search.php
+    LDAP trick for > 1000: http://php.net/manual/en/function.ldap-search.php
 */
 
 // Added by SysCo/al
@@ -185,7 +189,12 @@ class MultiotpAdLdap {
     var $_error_message; // Added by SysCo/al
     var $_error_no; // Added by SysCo/al
     var $_ldap_server_type; // Added by SysCo/al, 1 (default) for Active Directory, 2 for Generic LDAP, 3 for legacy Active Directory, 4 for eDirectory (Novell)
+    var $_ldap_filter; // Added by SysCo/al
     var $_oui_sr; // Added by SysCo/al
+    var $_paging_cookie; // Added 2023 by SysCo/al
+    var $_paging_legacy; // Added 2023 by SysCo/al
+    var $_paging_ldap_control; // Added 2023 by SysCo/al
+    var $_paging_size; // Added 2023 by SysCo/al
     var $_debug_message; // Added by SysCo/al 4.3.2.2
     var $_warning_message; // Added by SysCo/al
     var $_server_reachable; // Added by SysCo/al
@@ -195,6 +204,10 @@ class MultiotpAdLdap {
     var $_cache_timeout = 3600; // Added by SysCo/al
 
     var $_linux_file_mode = '0666'; // Added by SysCo/al
+    
+    // Creation of dynamic property is deprecated
+    var $_oui_paged_sr;
+    var $_expired_password_valid;
 
     // default constructor
     function __construct($options=array()) {
@@ -209,7 +222,13 @@ class MultiotpAdLdap {
         $this->_error_message = ''; // Added by SysCo/al
         $this->_error_no = 0; // Added by SysCo/al
         $this->_ldap_server_type = 1; // Added by SysCo/al
+        $this->_ldap_filter = ''; // Added by SysCo/al
         $this->_oui_paged_sr = NULL; // Added by SysCo/al
+        $this->_paging_cookie = '';
+        $this->_paging_legacy = false;
+        $this->_paging_ldap_control = false;
+        $this->_paging_size = 1000;
+
         $this->_debug_message = ''; // Added by SysCo/al
         $this->_warning_message = ''; // Added by SysCo/al
         $this->_server_reachable = FALSE; // Added by SysCo/al
@@ -227,6 +246,7 @@ class MultiotpAdLdap {
             if (array_key_exists("use_ssl",$options)){ $this->_use_ssl=$options["use_ssl"]; }
             if (array_key_exists("recursive_groups",$options)){ $this->_recursive_groups=$options["recursive_groups"]; }
             if (array_key_exists("ldap_server_type",$options)){ $this->_ldap_server_type=$options["ldap_server_type"]; }
+            if (array_key_exists("ldap_filter ",$options)){ $this->_ldap_filter=$options["ldap_filter"]; }
             if (array_key_exists("cache_support",$options)){ $this->_cache_support=$options["cache_support"]; }
             if (array_key_exists("cache_folder",$options)){ $this->_cache_folder=$options["cache_folder"]; }
             if (array_key_exists("expired_password_valid",$options)){ $this->_expired_password_valid=(TRUE == $options["expired_password_valid"]); }
@@ -286,7 +306,7 @@ class MultiotpAdLdap {
                         ldap_set_option($this->_conn, LDAP_OPT_NETWORK_TIMEOUT, intval($options["network_timeout"]));
                         ldap_set_option($this->_conn_paged, LDAP_OPT_NETWORK_TIMEOUT, intval($options["network_timeout"]));
                     }
-                    
+
                     ldap_set_option($this->_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
                     ldap_set_option($this->_conn_paged, LDAP_OPT_PROTOCOL_VERSION, 3);
                     ldap_set_option($this->_conn, LDAP_OPT_REFERRALS, 0);
@@ -296,10 +316,30 @@ class MultiotpAdLdap {
                     ldap_set_option($this->_conn, LDAP_OPT_RESTART, 1);
                     ldap_set_option($this->_conn_paged, LDAP_OPT_RESTART, 1);
 
+                    // Added 2023-01-01
+                    $this->_paging_ldap_control = false; // Will be detected further
+                    if (PHP_VERSION_ID >= 70300) {
+                      $this->_paging_legacy = false;
+                    } else {
+                      $this->_paging_legacy = true;
+                    }
+
                     //bind as a domain admin if they've set it up
                     $this->_bind = @ldap_bind($this->_conn,$this->_ad_username.$this->_account_suffix,$this->_ad_password);
                     $this->_bind_paged = @ldap_bind($this->_conn_paged,$this->_ad_username.$this->_account_suffix,$this->_ad_password);
                     if ($this->_bind) {
+                      
+                      
+                        if (PHP_VERSION_ID >= 70300) {
+                          $ldap_result = ldap_read($this->_conn, '', '(objectClass=*)', ['supportedControl']);
+                          if (in_array(LDAP_CONTROL_PAGEDRESULTS, ldap_get_entries($this->_conn, $ldap_result)[0]['supportedcontrol'])) {
+                            $this->_paging_ldap_control = true;
+                          } else {
+                            $this->_paging_ldap_control = false;
+                          }
+                        }
+
+                        // Check BaseDN access, no paging needed
                         if (FALSE !== (@ldap_search($this->_conn, $this->_base_dn, "(objectClass=user)"))) {
                             $this->_error = FALSE;
                             $this->_error_message = '';
@@ -370,6 +410,13 @@ class MultiotpAdLdap {
         return ($connected); // But it's the constructor, the result cannot be used
     }
 
+    function set_paging_size($paging_size) {
+      $this->_paging_size = $paging_size;
+    }
+
+    function get_paging_size() {
+      return ($this->_paging_size);
+    }
 
     function set_base_dn($base_dn) {
         $this->_base_dn = $base_dn;
@@ -441,9 +488,6 @@ class MultiotpAdLdap {
                 $attributes = ldap_get_attributes($linkIdentifier, $this->_entry_identifier[$id]);
                 $distinguishedname_in_attributes = FALSE;
 
-// echo "DEBUG attributes\n";
-// print_r($attributes);
-
                 for($j=0; $j<$attributes['count']; $j++) {
                     if ('distinguishedname' == strtolower($attributes[$j]))
                     {
@@ -473,14 +517,11 @@ class MultiotpAdLdap {
 		$rawData = array();
 		$rawData['count'] = 0; // To be compatible with the old data organisation (counter at the beginning)
 		$i = 0;
-		if ($result = $this->ldap_get_one_entry_raw($id, TRUE, $srch_id))
-		{
-			do
-			{
+		if ($result = $this->ldap_get_one_entry_raw($id, TRUE, $srch_id)) {
+			do {
 				$rawData[$i] = $result;
 				$i++;
-			}
-			while ($result = $this->ldap_get_one_entry_raw($id));
+			} while ($result = $this->ldap_get_one_entry_raw($id));
 		}
 		unset($this->_entry_identifier[$id]);
 		$rawData['count'] = $i; // and not count($rawData) because of the ['count'] argument
@@ -657,29 +698,35 @@ class MultiotpAdLdap {
     }
 
     // Returns an array of information for a specified group
-    function group_info($group_name,$fields=NULL){
-        if ($group_name==NULL){ return (false); }
-        if (!$this->_bind){ return (false); }
-        
+    function group_info(
+      $group_name,
+      $fields=NULL
+    ) {
+        if ($group_name==NULL) {
+          return (false);
+        }
+        if (!$this->_bind) {
+          return (false);
+        }
+
         $filter="(&(objectCategory=group)(".$this->_group_cn_identifier."=".$this->ldap_search_encode($group_name)."))";
 
-        if ($fields==NULL){ $fields=array("member",$this->_group_attribute,"cn","description","distinguishedname","objectcategory",$this->_group_cn_identifier); }
-        
-        $sr=@ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
+        if ($fields==NULL) {
+          $fields=array("member",$this->_group_attribute,"cn","description","distinguishedname","objectcategory",$this->_group_cn_identifier);
+        }
+
+        // Search info for a specific group, no paging needed
+        $sr = @ldap_search($this->_conn, $this->_base_dn, $filter, $fields);
         if (FALSE === $sr) {
             $this->_warning_message = "group_info: ldap_search error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
-            echo "DEBUG: ".$this->_warning_message."\n";
+            // echo "DEBUG: ".$this->_warning_message."\n";
         }
-        // Search: (&(objectCategory=group)(cn=gr10000))
-        // (&(objectCategory=group)(cn=gr10))
-        // PHP Warning:  ldap_search(): Search: Critical extension is unavailable in // C:\data\projects\multiotp\core\contrib\MultiotpAdLdap.php on line 591
-        // Search: (&(objectCategory=group)(cn=gr10))
         $entries = $this->ldap_get_entries_raw($sr);
 
         // DEBUG
         if (0 == count($entries)) {
             $this->_warning_message = "group_info: No entry for the specified filter $filter";
-            echo "DEBUG: ".$this->_warning_message."\n";
+            // echo "DEBUG: ".$this->_warning_message."\n";
         }
 
         return ($entries);
@@ -695,10 +742,8 @@ class MultiotpAdLdap {
         $ret_groups=array();
         $ret_data = FALSE;
 
-/*
-    echo "DEBUG GROUP is group $group in cache ?\n";
-    print_r($this->_cache_recursive_groups);
-*/
+        // echo "DEBUG GROUP is group $group in cache ?\n";
+        // print_r($this->_cache_recursive_groups);
 
         clearstatcache();
         
@@ -773,17 +818,19 @@ class MultiotpAdLdap {
         if (!array_key_exists("container",$attributes)){ return ("Missing compulsory field [container]"); }
         if (!is_array($attributes["container"])){ return ("Container attribute must be an array."); }
 
-        if (array_key_exists("password",$attributes) && !$this->_use_ssl){ 
-            // Modified by SysCo/al
-            $this->_error = TRUE;
-            $this->_error_message = 'FATAL: SSL must be configured on your webserver and enabled in the class to set passwords.';
-            exit();
+        if (array_key_exists("password",$attributes) && !$this->_use_ssl) {
+          // Modified by SysCo/al
+          $this->_error = TRUE;
+          $this->_error_message = 'FATAL: SSL must be configured on your webserver and enabled in the class to set passwords.';
+          exit();
         }
 
-        if (!array_key_exists("display_name",$attributes)){ $attributes["display_name"]=$attributes["firstname"]." ".$attributes["surname"]; }
+        if (!array_key_exists("display_name",$attributes)) {
+          $attributes["display_name"]=$attributes["firstname"]." ".$attributes["surname"];
+        }
 
         //translate the schema
-        $add=$this->adldap_schema($attributes);
+        $add = $this->adldap_schema($attributes);
         
         //additional stuff only used for adding accounts
         $add["cn"][0]=$attributes["display_name"];
@@ -814,66 +861,89 @@ class MultiotpAdLdap {
     
     // group_users($group_name)
     //	Returns an array of users that are members of a group
-    function group_users($group_name=NUL){
+    function group_users(
+      $group_name=NUL
+    ) {
+      $result = array();
+      if ($group_name==NULL) {
+        return (false);
+      }
+      if (!$this->_bind) {
+        return (false);
+      }
+
+      if ((2 == $this->_ldap_server_type) || (4 == $this->_ldap_server_type)) { // Generic LDAP or eDirectory
+        $filter = "(&(|(objectClass=posixGroup)(objectClass=groupofNames))(".$this->_group_cn_identifier."=".$this->ldap_search_encode($group_name)."))";
+      } else { // Active Directory
+        $group_account_type = "(|(samaccounttype=".ADLDAP_SECURITY_LOCAL_GROUP.")(samaccounttype=". ADLDAP_SECURITY_GLOBAL_GROUP."))";
+        $filter = "(&(objectCategory=group)".$group_account_type."(".$this->_group_cn_identifier."=".$this->ldap_search_encode($group_name)."))";
+      }
+      
+      $fields = array("member", "memberuid");
+      $paging_cookie = '';
+
+      // New paging support for PHP 7.3+, paging loop not implemented yet
+      if ($this->_paging_ldap_control) {
+        $sr = ldap_search($this->_conn, $this->_base_dn, $filter, $fields,
+          0, 0, 0, LDAP_DEREF_NEVER,
+          [['oid' => LDAP_CONTROL_PAGEDRESULTS, 'value' => ['size' => $this->_paging_size, 'cookie' => $paging_cookie]]]);
+          ldap_parse_result($this->_conn, $sr, $error_code , $matched_dn , $error_message , $referrals, $controls);
+        if (isset($controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'])) {
+          $paging_cookie = $controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'];
+        } else {
+          $paging_cookie = '';
+        }
+      } else {
+        $sr = ldap_search($this->_conn, $this->_base_dn, $filter, $fields);
+      }
+
+      if (FALSE === $sr) {
+        $this->_warning_message = "group_users: ldap_search error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
+        // echo "DEBUG: ".$this->_warning_message."\n";
+      }
+      $entries = $this->ldap_get_entries_raw($sr);
+
+      if (0 == count($entries)) {
+        $this->_warning_message = "group_users: No entry for the specified filter $filter";
+        // echo "DEBUG: ".$this->_warning_message;
+      }
+
+      if (isset($entries[0]["member"][0])) {
+        $result = $this->nice_names($entries[0]["member"]);
+        /*
+        for ($i=0; $i++; $i < $entries[0]["member"][count])
+        {
+            $result[] == ($entries[0]["member"][$i]);
+        }
+        */
+      }
+      elseif (isset($entries[0]["memberuid"][0])) {
+        $result = $this->nice_names($entries[0]["memberuid"]);
+      } else {
         $result = array();
-        if ($group_name==NULL){ return (false); }
-        if (!$this->_bind){ return (false); }
-        $filter="(&(|(objectClass=posixGroup)(objectClass=groupofNames))(".$this->_group_cn_identifier."=".$this->ldap_search_encode($group_name)."))";
-        $fields=array("member","memberuid");
-        $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
-        if (FALSE === $sr) {
-            $this->_warning_message = "group_users: ldap_search error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
-            echo "DEBUG: ".$this->_warning_message."\n";
-        }
-        $entries = $this->ldap_get_entries_raw($sr);
-
-        // DEBUG
-        if (0 == count($entries)) {
-            $this->_warning_message = "group_users: No entry for the specified filter $filter";
-            echo "DEBUG: ".$this->_warning_message;
-        }
-
-        if (isset($entries[0]["member"][0]))
-        {
-            $result = $this->nice_names($entries[0]["member"]);
-            /*
-            for ($i=0; $i++; $i < $entries[0]["member"][count])
-            {
-                $result[] == ($entries[0]["member"][$i]);
-            }
-            */
-        }
-        elseif (isset($entries[0]["memberuid"][0]))
-        {
-            $result = $this->nice_names($entries[0]["memberuid"]);
-        }
-        else
-        {
-            $result = array();
-        }
-        return ($result);
+      }
+      return ($result);
     }
 
-    
     // user_groups($user)
     //	Returns an array of groups that a user is a member off
     function user_groups($username,$recursive=NULL){
-        if ($username==NULL){ return (false); }
-        if ($recursive==NULL){ $recursive=$this->_recursive_groups; } //use the default option if they haven't set it
-        if (!$this->_bind){ return (false); }
-        
-        //search the directory for their information
-        $info=@$this->user_info($username,array($this->_group_attribute,"member","primarygroupid"));
-        
-        $groups=$this->nice_names($info[0][$this->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
+      if ($username==NULL){ return (false); }
+      if ($recursive==NULL){ $recursive=$this->_recursive_groups; } //use the default option if they haven't set it
+      if (!$this->_bind){ return (false); }
+      
+      //search the directory for their information
+      $info=@$this->user_info($username,array($this->_group_attribute,"member","primarygroupid"));
+      
+      $groups=$this->nice_names($info[0][$this->_group_attribute]); //presuming the entry returned is our guy (unique usernames)
 
-        if ($recursive){
-            foreach ($groups as $id => $group_name){
-                $extra_groups=$this->recursive_groups($group_name);
-                $groups=array_merge($groups,$extra_groups);
-            }
-        }
-        return ($groups);
+      if ($recursive){
+          foreach ($groups as $id => $group_name){
+              $extra_groups=$this->recursive_groups($group_name);
+              $groups=array_merge($groups,$extra_groups);
+          }
+      }
+      return ($groups);
     }
     
     
@@ -890,29 +960,31 @@ class MultiotpAdLdap {
 
     // New function, for enhanced Active Directory
     function user_all_groups($username, $groups_filtering = '') {
-        if ($username==NULL){ return (false); }
-        if (!$this->_bind){ return (false); }
-        $filter = "(&(objectCategory=group)(member:1.2.840.113556.1.4.1941:=".$username.")".$groups_filtering.")";
-        // $fields = array($this->_group_cn_identifier,$this->_group_attribute,"distinguishedname");
-        $fields = array("cn");
-        $sr = ldap_search($this->_conn,$this->_base_dn,$filter, $fields);
-        if (FALSE === $sr) {
-            $this->_warning_message = "user_all_groups: ldap_search error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
-            echo "DEBUG: ".$this->_warning_message."\n";
-        }
-        $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
+      if ($username==NULL){ return (false); }
+      if (!$this->_bind){ return (false); }
+      $filter = "(&(objectCategory=group)(member:1.2.840.113556.1.4.1941:=".$username.")".$groups_filtering.")";
+      // $fields = array($this->_group_cn_identifier,$this->_group_attribute,"distinguishedname");
+      $fields = array("cn");
+      // Search all groups of one user, it should not reach the paging size, no paging implemented
+      $sr = ldap_search($this->_conn, $this->_base_dn, $filter, $fields);
+      if (FALSE === $sr) {
+        $this->_warning_message = "user_all_groups: ldap_search error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
+        // echo "DEBUG: ".$this->_warning_message."\n";
+      }
+      $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
 
-//echo "DEBUG: info group_entries\n";
-//print_r($group_entries);
-        
-        $group_array = array();
-        foreach ($group_entries as $group_entry) {
-            $group_array[] = $group_entry['cn'][0];
-        }
-//echo "DEBUG: group_array\n";
-//print_r($group_array);
+      // echo "DEBUG: info group_entries\n";
+      // print_r($group_entries);
+      
+      $group_array = array();
+      foreach ($group_entries as $group_entry) {
+        $group_array[] = $group_entry['cn'][0];
+      }
 
-        return ($group_array);
+      // echo "DEBUG: group_array\n";
+      // print_r($group_array);
+
+      return ($group_array);
     }
 
 
@@ -931,129 +1003,161 @@ class MultiotpAdLdap {
 			} while ($result = $this->one_user_info());
 		}
 		$entries['count'] = $i; // and not count($entries) because of the ['count'] argument
-        return ($entries);
+      return ($entries);
     }
 
 
-	// Added 2014-07-21 by SysCo/al, enhanced 2018-07-12
-    function one_user_info($first = FALSE, $username = NULL, $fields = NULL, $group_cn_cache_only = FALSE, $groups_filtering = '', $in_groups_filtering = array())
-	{
-        $this->_warning_message = '';
-		$sr = FALSE;
-		if ($first) {
-			if ($username==NULL){ return (false); }
-			if (!$this->_bind_paged){ return (false); }
-            if  ('' == $this->_users_dn) {
-                $this->_users_dn = $this->_base_dn;
-            }
+	// Added 2014-07-21 by SysCo/al, enhanced 2018-07-12 and 2023-01-02
+    function one_user_info(
+      $first = FALSE,
+      $username = NULL,
+      $fields = NULL,
+      $group_cn_cache_only = FALSE,
+      $groups_filtering = '',
+      $in_groups_filtering = array()
+    ) {
+      $this->_warning_message = '';
+      $sr = FALSE;
+      if ($first) {
+        if ($username==NULL){
+          return (false);
+        }
+        if (!$this->_bind_paged){
+          return (false);
+        }
+        if  ('' == $this->_users_dn) {
+          $this->_users_dn = $this->_base_dn;
+        }
 
-            if (1 == $this->_ldap_server_type) { // Active Directory
-                $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$username.")".$groups_filtering.")";
-                if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","description","displayname","telephonenumber","primarygroupid","distinguishedname"); }
-            } elseif (3 == $this->_ldap_server_type) { // legacy Active Directory
-                $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$username."))";
-                if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","description","displayname","telephonenumber","primarygroupid","distinguishedname"); }
-            } else { // eDirectory (4) or Generic LDAP (2) or others
-                $filter = "(&(|(objectClass=posixAccount)(objectClass=user))(".$this->_cn_identifier."=".$username."))";
-                if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","gecos","description","displayname","telephonenumber","gidnumber","distinguishedname"); }
-            }
-			$this->_oui_paged_sr = @ldap_search($this->_conn_paged,$this->_users_dn,$filter,$fields);
-            if (4 == ldap_errno($this->_conn_paged)) {
-                $cr = @ldap_count_entries($this->_conn_paged,$this->_oui_paged_sr);
-                $this->_warning_message = "LDAP server cannot return more than $cr records.";
-            }
-            // echo "DEBUG: Error: ".ldap_errno($this->_conn_paged);
-            // $cr = ldap_count_entries($this->_conn_paged,$sr);
-            // echo $cr;
-            // echo "DEBUG: Error: ".ldap_errno($this->_conn_paged);
-		}
-		if ($one_entry = $this->ldap_get_one_entry_raw("ONE_USER", $first, $this->_oui_paged_sr, $this->_conn_paged)) {
-            // AD does not return the primary group in the ldap query, we may need to fudge it
-            // SysCo/al added a test to check if $entries[0]["primarygroupid"][0] exists
-            $add_primary_group = FALSE;
-            if ($this->_real_primarygroup) {
-                if (isset($one_entry["primarygroupid"][0])) {
-                    $pri_grp_rid = $one_entry["primarygroupid"][0];
-                    if (isset($this->_cache_group_dn[$pri_grp_rid])) {
-                        $dn_group = $this->_cache_group_dn[$pri_grp_rid];
-                        $one_entry[$this->_group_attribute][] = $dn_group;
-                        $add_primary_group = TRUE;
-                    } else {
-                        $r = ldap_read($this->_conn, $this->_base_dn, "(objectclass=*)", array("objectSid")) or exit();
-                        $data = ldap_get_entries($this->_conn, $r);
-                        if (isset($data[0]["objectsid"][0])) {
-                            $domain_sid = $data[0]["objectsid"][0];
-                            $domain_sid_s = sid2str($domain_sid);
-                            $r = ldap_search($this->_conn, $this->_base_dn, "objectSid=".$domain_sid_s."-".$pri_grp_rid, array("distinguishedname")) or exit();
-                            $data = ldap_get_entries($this->_conn, $r);
-                            if (isset($data[0]["distinguishedname"][0])) {
-                                $dn_group = $data[0]["distinguishedname"][0];
-                                $one_entry[$this->_group_attribute][] = $dn_group;
-                                $add_primary_group = TRUE;
-                                if (count($this->_cache_group_dn) < 1000) { // Don't overload the memory cache
-                                    $this->_cache_group_dn[$pri_grp_rid] = $dn_group;
-                                }
-                            }
-                        }
-                    }
-                }
+        if (1 == $this->_ldap_server_type) { // Active Directory
+          $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$username.")".$groups_filtering.")";
+          if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","description","displayname","telephonenumber","primarygroupid","distinguishedname"); }
+        } elseif (3 == $this->_ldap_server_type) { // legacy Active Directory
+          $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$username."))";
+          if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","description","displayname","telephonenumber","primarygroupid","distinguishedname"); }
+        } else { // eDirectory (4) or Generic LDAP (2) or others
+          $filter = "(&(|(objectClass=posixAccount)(objectClass=user))(".$this->_cn_identifier."=".$username."))";
+          if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","gecos","description","displayname","telephonenumber","gidnumber","distinguishedname"); }
+        }
+        if ("" != $this->_ldap_filter) {
+          $filter = $this->_ldap_filter;
+          $filter = str_replace('{cn_identifier}', $this->_cn_identifier, $filter);
+          $filter = str_replace('{username}', $username, $filter);
+          $filter = str_replace('{groups_filtering}', $groups_filtering, $filter);
+        }
+        
+        // New paging support for PHP 7.3+, old and new paging implemented outside the function
+        if ($this->_paging_ldap_control) {
+          $this->_oui_paged_sr = @ldap_search($this->_conn_paged, $this->_users_dn, $filter, $fields,
+            0, 0, 0, LDAP_DEREF_NEVER,
+            [['oid' => LDAP_CONTROL_PAGEDRESULTS, 'value' => ['size' => $this->_paging_size, 'cookie' => $this->_paging_cookie]]]);
+            ldap_parse_result($this->_conn_paged, $this->_oui_paged_sr, $error_code , $matched_dn , $error_message , $referrals, $controls);
+            if (isset($controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'])) {
+              $this->_paging_cookie = $controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'];
+          } else {
+            $this->_paging_cookie = '';
+          }
+        } else {
+          $this->_oui_paged_sr = @ldap_search($this->_conn_paged, $this->_users_dn, $filter, $fields);
+        }
+
+        if (4 == ldap_errno($this->_conn_paged)) { // 4 = LDAP_SIZELIMIT_EXCEEDED
+          $cr = @ldap_count_entries($this->_conn_paged, $this->_oui_paged_sr);
+          $this->_warning_message = "LDAP server cannot return more than $cr records.";
+        }
+        // echo "DEBUG: Error: ".ldap_errno($this->_conn_paged);
+        // $cr = ldap_count_entries($this->_conn_paged,$sr);
+        // echo $cr;
+        // echo "DEBUG: Error: ".ldap_errno($this->_conn_paged);
+      }
+      if ($one_entry = $this->ldap_get_one_entry_raw("ONE_USER", $first, $this->_oui_paged_sr, $this->_conn_paged)) {
+        // AD does not return the primary group in the ldap query, we may need to fudge it
+        // SysCo/al added a test to check if $entries[0]["primarygroupid"][0] exists
+        $add_primary_group = FALSE;
+        if ($this->_real_primarygroup) {
+          if (isset($one_entry["primarygroupid"][0])) {
+            $pri_grp_rid = $one_entry["primarygroupid"][0];
+            if (isset($this->_cache_group_dn[$pri_grp_rid])) {
+              $dn_group = $this->_cache_group_dn[$pri_grp_rid];
+              $one_entry[$this->_group_attribute][] = $dn_group;
+              $add_primary_group = TRUE;
             } else {
-                $one_entry[$this->_group_attribute][]="CN=Domain Users,CN=Users,".$this->_base_dn;
-                $add_primary_group = TRUE;
+              $r = ldap_read($this->_conn, $this->_base_dn, "(objectclass=*)", array("objectSid")) or exit();
+              $data = ldap_get_entries($this->_conn, $r);
+              if (isset($data[0]["objectsid"][0])) {
+                $domain_sid = $data[0]["objectsid"][0];
+                $domain_sid_s = sid2str($domain_sid);
+                // No paging implemented here, it's a specific object, no paging needed
+                $r = ldap_search($this->_conn, $this->_base_dn, "objectSid=".$domain_sid_s."-".$pri_grp_rid, array("distinguishedname")) or exit();
+                $data = ldap_get_entries($this->_conn, $r);
+                if (isset($data[0]["distinguishedname"][0])) {
+                  $dn_group = $data[0]["distinguishedname"][0];
+                  $one_entry[$this->_group_attribute][] = $dn_group;
+                  $add_primary_group = TRUE;
+                  if (count($this->_cache_group_dn) < 1000) { // Don't overload the memory cache
+                    $this->_cache_group_dn[$pri_grp_rid] = $dn_group;
+                  }
+                }
+              }
             }
+          }
+        } else {
+          $one_entry[$this->_group_attribute][]="CN=Domain Users,CN=Users,".$this->_base_dn;
+          $add_primary_group = TRUE;
+        }
 
-            if ($add_primary_group) {
-                @$one_entry[$this->_group_attribute]["count"]++;
+        if ($add_primary_group) {
+          @$one_entry[$this->_group_attribute]["count"]++;
+        }
+        
+        if ((1 == $this->_ldap_server_type) && ( '' != $groups_filtering)) { // Active Directory (but not legacy)
+          // Add the nested groups of the user
+          $filter = "(&(objectCategory=group)(member:1.2.840.113556.1.4.1941:=".$one_entry[$this->_cn_identifier][0].")".$groups_filtering.")";
+          $internal_fields = array("cn");
+          $group_array = array();
+          // SysCo/al added ldap_search error handling, looking for a specific info, no paging needed
+          if (FALSE !== ($sr = @ldap_search($this->_conn, $this->_base_dn, $filter, $internal_fields))) {
+            $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
+            foreach ($group_entries as $group_entry) {
+              $group_array[] = $group_entry['cn'][0];
             }
-            
-            if ((1 == $this->_ldap_server_type) && ( '' != $groups_filtering)) { // Active Directory (but not legacy)
-                // Add the nested groups of the user
-                $filter = "(&(objectCategory=group)(member:1.2.840.113556.1.4.1941:=".$one_entry[$this->_cn_identifier][0].")".$groups_filtering.")";
-                $internal_fields = array("cn");
-                $group_array = array();
-                // SysCo/al added ldap_search error handling
-                if (FALSE !== ($sr = @ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields))) {
-                    $group_entries = $this->rCountRemover(ldap_get_entries($this->_conn, $sr));
-                    foreach ($group_entries as $group_entry) {
-                        $group_array[] = $group_entry['cn'][0];
-                    }
-                }
-                foreach($group_array as $one_group) {
-                    $add_it = TRUE;
-                    foreach($this->nice_names($one_entry[$this->_group_attribute]) as $level_one_group) {
-                        if (strpos($one_group, $level_one_group) !== FALSE) {
-                            $add_it = FALSE;
-                        }
-                    }
-                    if ($add_it) {
-                        $one_entry[$this->_group_attribute][] = $one_group;
-                        @$one_entry[$this->_group_attribute]["count"]++;
-                    }
-                }
+          }
+          foreach($group_array as $one_group) {
+            $add_it = TRUE;
+            foreach($this->nice_names($one_entry[$this->_group_attribute]) as $level_one_group) {
+              if (strpos($one_group, $level_one_group) !== FALSE) {
+                $add_it = FALSE;
+              }
+            }
+            if ($add_it) {
+              $one_entry[$this->_group_attribute][] = $one_group;
+              @$one_entry[$this->_group_attribute]["count"]++;
+            }
+          }
 
-                // Adding all implicit groups if needed
-                foreach($in_groups_filtering as $one_group_filtering) {
-                    $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$one_entry[$this->_cn_identifier][0].")".$one_group_filtering['distinguishedname'].")";
-                    $internal_fields = array("cn");
-                    // SysCo/al added ldap_search error handling
-                    if (FALSE !== ($sr = @ldap_search($this->_conn,$this->_base_dn,$filter, $internal_fields))) {
-                        if (ldap_count_entries($this->_conn, $sr) > 0) {
-                            $add_it = TRUE;
-                            foreach($this->nice_names($one_entry[$this->_group_attribute]) as $level_one_group) {
-                                if (strpos($one_group_filtering['name'], $level_one_group) !== FALSE) {
-                                    $add_it = FALSE;
-                                }
-                            }
-                            if ($add_it) {
-                                $one_entry[$this->_group_attribute][] = $one_group_filtering['name'];
-                                @$one_entry[$this->_group_attribute]["count"]++;
-                            }
-                        }
-                    }
+          // Adding all implicit groups if needed
+          foreach($in_groups_filtering as $one_group_filtering) {
+            $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$one_entry[$this->_cn_identifier][0].")".$one_group_filtering['distinguishedname'].")";
+            $internal_fields = array("cn");
+            // SysCo/al added ldap_search error handling, no paging needed
+            if (FALSE !== ($sr = @ldap_search($this->_conn, $this->_base_dn, $filter, $internal_fields))) {
+              if (ldap_count_entries($this->_conn, $sr) > 0) {
+                $add_it = TRUE;
+                foreach($this->nice_names($one_entry[$this->_group_attribute]) as $level_one_group) {
+                  if (strpos($one_group_filtering['name'], $level_one_group) !== FALSE) {
+                    $add_it = FALSE;
+                  }
                 }
+                if ($add_it) {
+                  $one_entry[$this->_group_attribute][] = $one_group_filtering['name'];
+                  @$one_entry[$this->_group_attribute]["count"]++;
+                }
+              }
             }
-		}
-		return ($one_entry);
+          }
+        }
+      }
+      return ($one_entry);
     }
 
 
@@ -1067,7 +1171,8 @@ class MultiotpAdLdap {
 
         $filter = "(&(".$this->_cn_identifier."=".$username."))";
         if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","description","displayname","gecos","telephonenumber","primarygroupid"); }
-        $sr=ldap_search($this->_conn,$this->_users_dn,$filter,$fields);
+        // No paging implemented here, it's a specific object, no paging needed
+        $sr=ldap_search($this->_conn, $this->_users_dn, $filter, $fields);
         $entries = $this->ldap_get_entries_raw($sr);
         
         // AD does not return the primary group in the ldap query, we may need to fudge it
@@ -1086,6 +1191,7 @@ class MultiotpAdLdap {
                     if (isset($data[0]["objectsid"][0])) {
                         $domain_sid = $data[0]["objectsid"][0];
                         $domain_sid_s = sid2str($domain_sid);
+                        // No paging implemented here, it's a specific object, no paging needed
                         $r = ldap_search($this->_conn, $this->_base_dn, "objectSid=".$domain_sid_s."-".$pri_grp_rid, array("distinguishedname")) or exit();
                         $data = ldap_get_entries($this->_conn, $r);
                         if (isset($data[0]["distinguishedname"][0])) {
@@ -1159,66 +1265,69 @@ class MultiotpAdLdap {
     }
         
     // Set the password of a user
-    function user_password($username,$password){
-        if ($username==NULL){ return (false); }
-        if ($password==NULL){ return (false); }
-        if (!$this->_bind){ return (false); }
-        if (!$this->_use_ssl){ echo ("FATAL: SSL must be configured on your webserver and enabled in the class to set passwords."); exit(); }
-        
-        $user=$this->user_info($username,array("cn"));
-        if ($user[0]["dn"]==NULL){ return (false); }
-        $user_dn=$user[0]["dn"];
-                
-        $add=array();
-        $add["unicodePwd"][0]=$this->encode_password($password);
-        
-        $result=ldap_mod_replace($this->_conn,$user_dn,$add);
-        if ($result==false){ return (false); }
-        
-        return (true);
+    function user_password($username,$password) {
+      if ($username==NULL){ return (false); }
+      if ($password==NULL){ return (false); }
+      if (!$this->_bind){ return (false); }
+      if (!$this->_use_ssl){ echo ("FATAL: SSL must be configured on your webserver and enabled in the class to set passwords."); exit(); }
+      
+      $user=$this->user_info($username,array("cn"));
+      if ($user[0]["dn"]==NULL){ return (false); }
+      $user_dn=$user[0]["dn"];
+              
+      $add=array();
+      $add["unicodePwd"][0]=$this->encode_password($password);
+      
+      $result=ldap_mod_replace($this->_conn,$user_dn,$add);
+      if ($result==false){ return (false); }
+      
+      return (true);
     }
 
     //*****************************************************************************************************************
     // COMPUTER FUNCTIONS
 
     // Returns an array of information for a specific computer
-    function computer_info($computer_name,$fields=NULL){
-        if ($computer_name==NULL){ return (false); }
-        if (!$this->_bind){ return (false); }
+    function computer_info($computer_name,$fields=NULL) {
+      if ($computer_name==NULL){ return (false); }
+      if (!$this->_bind){ return (false); }
 
-        $filter="(&(objectClass=computer)(cn=".$computer_name."))";
-        if ($fields==NULL){ $fields=array($this->_group_attribute,"cn","displayname","dnshostname","distinguishedname","objectcategory","operatingsystem","operatingsystemservicepack","operatingsystemversion"); }
-        $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
-        $entries = $this->ldap_get_entries_raw($sr);
-        
-        return ($entries);
+      $filter="(&(objectClass=computer)(cn=".$computer_name."))";
+      if ($fields==NULL) {
+        $fields=array($this->_group_attribute,"cn","displayname","dnshostname","distinguishedname","objectcategory","operatingsystem","operatingsystemservicepack","operatingsystemversion");
+      }
+      // No paging implemented here, it's a specific object, no paging needed
+      $sr = ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
+      $entries = $this->ldap_get_entries_raw($sr);
+      
+      return ($entries);
     }
 
     // Returns all AD users
-    function all_users($include_desc = false, $search = "*", $sorted = true){
-        if (!$this->_bind){
-            return (false);
-        }
-        
-        //perform the search and grab all their details
-        $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(cn=".$search."))";
-        $fields=array($this->_cn_identifier,"displayname");
-        $sr=ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
-        $entries = $this->ldap_get_entries_raw($sr);
+    function all_users($include_desc = false, $search = "*", $sorted = true) {
+      if (!$this->_bind){
+        return (false);
+      }
+      //perform the search and grab all their details
+      $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(cn=".$search."))";
+      $fields = array($this->_cn_identifier,"displayname");
+      $sr = ldap_search($this->_conn, $this->_base_dn, $filter, $fields);
+      $entries = $this->ldap_get_entries_raw($sr);
 
-        $users_array = array();
-        for ($i=0; $i<$entries["count"]; $i++){
-            if ($include_desc && strlen($entries[$i]["displayname"][0])>0){
-                $users_array[ $entries[$i][$this->_cn_identifier][0] ] = $entries[$i]["displayname"][0];
-            } elseif ($include_desc){
-                $users_array[ $entries[$i][$this->_cn_identifier][0] ] = $entries[$i][$this->_cn_identifier][0];
-            } else {
-                array_push($users_array, $entries[$i][$this->_cn_identifier][0]);
-            }
+      $users_array = array();
+      for ($i=0; $i<$entries["count"]; $i++){
+        if ($include_desc && strlen($entries[$i]["displayname"][0])>0){
+          $users_array[ $entries[$i][$this->_cn_identifier][0] ] = $entries[$i]["displayname"][0];
+        } elseif ($include_desc){
+          $users_array[ $entries[$i][$this->_cn_identifier][0] ] = $entries[$i][$this->_cn_identifier][0];
+        } else {
+          array_push($users_array, $entries[$i][$this->_cn_identifier][0]);
         }
-        if ($sorted){ asort($users_array); }
-        return ($users_array);
+      }
+      if ($sorted){ asort($users_array); }
+      return ($users_array);
     }
+
 
     // Returns a complete list of the groups in AD
     // New implementation 2014-07-22 by SysCo/al (with paging support)
@@ -1228,126 +1337,141 @@ class MultiotpAdLdap {
                         $local_group = FALSE // $local_group switch added by SysCo/al
                        )
     {
-        $this->_warning_message = "";
-        if (!$this->_bind){ return (false); }
+      $this->_warning_message = "";
+      if (!$this->_bind) {
+        return (false);
+      }
 
-        if ((2 == $this->_ldap_server_type) || (4 == $this->_ldap_server_type)) { // Generic LDAP or eDirectory
-            $filter="(|(objectClass=posixGroup)(objectClass=groupofNames))";
-            $fields=array($this->_group_cn_identifier,"description");
-        } else { // Active Directory
-            //perform the search and grab all their details
-            if ($local_group) {
-                $group_account_type = "(|(samaccounttype=".ADLDAP_SECURITY_LOCAL_GROUP.")(samaccounttype=". ADLDAP_SECURITY_GLOBAL_GROUP."))";
-            } else {
-                $group_account_type = "(samaccounttype=".ADLDAP_SECURITY_GLOBAL_GROUP.")";
-            }
-            $filter = "(&(objectCategory=group)".$group_account_type."(cn=".$search."))";
-            $fields = array($this->_group_cn_identifier,"description");
+      if ((2 == $this->_ldap_server_type) || (4 == $this->_ldap_server_type)) { // Generic LDAP or eDirectory
+        $filter="(|(objectClass=posixGroup)(objectClass=groupofNames))";
+        $fields=array($this->_group_cn_identifier,"description");
+      } else { // Active Directory
+        //perform the search and grab all their details
+        if ($local_group) {
+          $group_account_type = "(|(samaccounttype=".ADLDAP_SECURITY_LOCAL_GROUP.")(samaccounttype=". ADLDAP_SECURITY_GLOBAL_GROUP."))";
+        } else {
+          $group_account_type = "(samaccounttype=".ADLDAP_SECURITY_GLOBAL_GROUP.")";
+        }
+        $filter = "(&(objectCategory=group)".$group_account_type."(cn=".$search."))";
+        $fields = array($this->_group_cn_identifier,"description");
+      }
+
+      $groups_array = array();
+
+      $paging_cookie = '';
+      do { // LDAP pagination loop
+        if ($this->_paging_legacy) {
+          ldap_control_paged_result($this->_conn, $this->_paging_size, false, $paging_cookie);
         }
 
-        $groups_array = array();
+        // New paging support for PHP 7.3+
+        if ($this->_paging_ldap_control) {
+          $sr = @ldap_search($this->_conn, $this->_base_dn, $filter, $fields,
+            0, 0, 0, LDAP_DEREF_NEVER,
+            [['oid' => LDAP_CONTROL_PAGEDRESULTS, 'value' => ['size' => $this->_paging_size, 'cookie' => $paging_cookie]]]);
+            ldap_parse_result($this->_conn, $sr, $error_code , $matched_dn , $error_message , $referrals, $controls);
+          if (isset($controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'])) {
+            $paging_cookie = $controls[LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'];
+          } else {
+            $paging_cookie = '';
+          }
+        } else {
+          $sr = @ldap_search($this->_conn, $this->_base_dn, $filter, $fields);
+        }
+    
+        if (4 == ldap_errno($this->_conn)) { // 4 = LDAP_SIZELIMIT_EXCEEDED
+          $cr = @ldap_count_entries($this->_conn,$sr);
+          $this->_warning_message = "LDAP server cannot return more than $cr records.";
+        }
+    
+        $entries = $this->ldap_get_entries_raw($sr);
 
-        $pageSize = 1000;
-        $page_cookie = '';
-        do {
-            if (function_exists('ldap_control_paged_result')) {
-                ldap_control_paged_result($this->_conn, $pageSize, false, $page_cookie);
+        for ($i=0; $i<$entries["count"]; $i++){
+          if ($include_desc && strlen($entries[$i]["description"][0]) > 0 ) {
+            $groups_array[ $entries[$i][$this->_group_cn_identifier][0] ] = $entries[$i]["description"][0];
+          } elseif ($include_desc){
+            if (isset($entries[$i][$this->_group_cn_identifier][0])) {
+              $groups_array[ $entries[$i][$this->_group_cn_identifier][0] ] = $entries[$i][$this->_group_cn_identifier][0];
             }
-            $sr = @ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
-        
-            if ((!function_exists('ldap_control_paged_result')) && (4 == ldap_errno($this->_conn))) {
-                $cr = @ldap_count_entries($this->_conn,$sr);
-                $this->_warning_message = "LDAP server cannot return more than $cr records.";
+          } else {
+            if (isset($entries[$i][$this->_group_cn_identifier][0])) {
+              array_push($groups_array, $entries[$i][$this->_group_cn_identifier][0]);
             }
-        
-            $entries = $this->ldap_get_entries_raw($sr);
+          }
+        }
+        if ($this->_paging_legacy) {
+          ldap_control_paged_result_response($this->_conn, $sr, $paging_cookie);
+        }
+      } while(($paging_cookie !== null) && ($paging_cookie != ''));
+      // LDAP pagination loop
+      
+      if ($this->_paging_legacy) {
+        // Reset LDAP paged result
+        ldap_control_paged_result($this->_conn, $this->_paging_size, false);
+      }
+      
+      if( $sorted ){
+        asort($groups_array);
+      }
+      
+      return ($groups_array);
 
-            for ($i=0; $i<$entries["count"]; $i++){
-                if ($include_desc && strlen($entries[$i]["description"][0]) > 0 ){
-                    $groups_array[ $entries[$i][$this->_group_cn_identifier][0] ] = $entries[$i]["description"][0];
-                } elseif ($include_desc){
-                    if (isset($entries[$i][$this->_group_cn_identifier][0])) {
-                        $groups_array[ $entries[$i][$this->_group_cn_identifier][0] ] = $entries[$i][$this->_group_cn_identifier][0];
-                    }
-                } else {
-                    if (isset($entries[$i][$this->_group_cn_identifier][0])) {
-                        array_push($groups_array, $entries[$i][$this->_group_cn_identifier][0]);
-                    }
-                }
-            }
-            if (function_exists('ldap_control_paged_result_response')) {
-                ldap_control_paged_result_response($this->_conn, $sr, $page_cookie);
-            }
-        }
-        while($page_cookie !== null && $page_cookie != '');
-        
-        if (function_exists('ldap_control_paged_result')) {
-            // Reset LDAP paged result
-            ldap_control_paged_result($this->_conn, $pageSize, false);
-        }
-        
-        if( $sorted ){
-            asort($groups_array);
-        }
-        
-        return ($groups_array);
-        
     }
 
 
     //************************************************************************************************************
     // UTILITY FUNCTIONS (not intended to be called directly but I suppose you could?)
 
-    function adldap_schema($attributes){
+    function adldap_schema($attributes) {
 
-        //ldap doesn't like NULL attributes, only set them if they have values
-        // I'd like to know how to set an LDAP attribute to NULL though, at the moment I set it to a space
-        // SysCo/al added "mobile"
-        $mod=array();
-        if ($attributes["address_city"]){ $mod["l"][0]=$attributes["address_city"]; }
-        if ($attributes["address_code"]){ $mod["postalCode"][0]=$attributes["address_code"]; }
-        //if ($attributes["address_country"]){ $mod["countryCode"][0]=$attributes["address_country"]; } // use country codes?
-        if ($attributes["address_pobox"]){ $mod["postOfficeBox"][0]=$attributes["address_pobox"]; }
-        if ($attributes["address_state"]){ $mod["st"][0]=$attributes["address_state"]; }
-        if ($attributes["address_street"]){ $mod["streetAddress"][0]=$attributes["address_street"]; }
-        if ($attributes["company"]){ $mod["company"][0]=$attributes["company"]; }
-        if ($attributes["change_password"]){ $mod["pwdLastSet"][0]=0; }
-        if ($attributes["company"]){ $mod["company"][0]=$attributes["company"]; }
-        if ($attributes["department"]){ $mod["department"][0]=$attributes["department"]; }
-        if ($attributes["description"]){ $mod["description"][0]=$attributes["description"]; }
-        if ($attributes["display_name"]){ $mod["displayName"][0]=$attributes["display_name"]; }
-        if ($attributes["email"]){ $mod["mail"][0]=$attributes["email"]; }
-        if ($attributes["expires"]){ $mod["accountExpires"][0]=$attributes["expires"]; } //unix epoch format?
-        if ($attributes["firstname"]){ $mod["givenName"][0]=$attributes["firstname"]; }
-        if ($attributes["home_directory"]){ $mod["homeDirectory"][0]=$attributes["home_directory"]; }
-        if ($attributes["home_drive"]){ $mod["homeDrive"][0]=$attributes["home_drive"]; }
-        if ($attributes["initials"]){ $mod["initials"][0]=$attributes["initials"]; }
-        if ($attributes["logon_name"]){ $mod["userPrincipalName"][0]=$attributes["logon_name"]; }
-        if ($attributes["manager"]){ $mod["manager"][0]=$attributes["manager"]; }  //UNTESTED ***Use DistinguishedName***
-        if ($attributes["office"]){ $mod["physicalDeliveryOfficeName"][0]=$attributes["office"]; }
-        if ($attributes["password"]){ $mod["unicodePwd"][0]=$this->encode_password($attributes["password"]); }
-        if ($attributes["profile_path"]){ $mod["profilepath"][0]=$attributes["profile_path"]; }
-        if ($attributes["script_path"]){ $mod["scriptPath"][0]=$attributes["script_path"]; }
-        if ($attributes["surname"]){ $mod["sn"][0]=$attributes["surname"]; }
-        if ($attributes["title"]){ $mod["title"][0]=$attributes["title"]; }
-        if ($attributes["telephone"]){ $mod["telephoneNumber"][0]=$attributes["telephone"]; }
-        if ($attributes["mobile"]){ $mod["telephoneNumber"][0]=$attributes["mobile"]; }
-        if ($attributes["web_page"]){ $mod["wWWHomePage"][0]=$attributes["web_page"]; }
-        //echo ("<pre>"); print_r($mod);
-    /*
-        // modifying a name is a bit fiddly
-        if ($attributes["firstname"] && $attributes["surname"]){
-            $mod["cn"][0]=$attributes["firstname"]." ".$attributes["surname"];
-            $mod["displayname"][0]=$attributes["firstname"]." ".$attributes["surname"];
-            $mod["name"][0]=$attributes["firstname"]." ".$attributes["surname"];
-        }
-    */
+      //ldap doesn't like NULL attributes, only set them if they have values
+      // I'd like to know how to set an LDAP attribute to NULL though, at the moment I set it to a space
+      // SysCo/al added "mobile"
+      $mod = array();
+      if ($attributes["address_city"]){ $mod["l"][0]=$attributes["address_city"]; }
+      if ($attributes["address_code"]){ $mod["postalCode"][0]=$attributes["address_code"]; }
+      //if ($attributes["address_country"]){ $mod["countryCode"][0]=$attributes["address_country"]; } // use country codes?
+      if ($attributes["address_pobox"]){ $mod["postOfficeBox"][0]=$attributes["address_pobox"]; }
+      if ($attributes["address_state"]){ $mod["st"][0]=$attributes["address_state"]; }
+      if ($attributes["address_street"]){ $mod["streetAddress"][0]=$attributes["address_street"]; }
+      if ($attributes["company"]){ $mod["company"][0]=$attributes["company"]; }
+      if ($attributes["change_password"]){ $mod["pwdLastSet"][0]=0; }
+      if ($attributes["company"]){ $mod["company"][0]=$attributes["company"]; }
+      if ($attributes["department"]){ $mod["department"][0]=$attributes["department"]; }
+      if ($attributes["description"]){ $mod["description"][0]=$attributes["description"]; }
+      if ($attributes["display_name"]){ $mod["displayName"][0]=$attributes["display_name"]; }
+      if ($attributes["email"]){ $mod["mail"][0]=$attributes["email"]; }
+      if ($attributes["expires"]){ $mod["accountExpires"][0]=$attributes["expires"]; } //unix epoch format?
+      if ($attributes["firstname"]){ $mod["givenName"][0]=$attributes["firstname"]; }
+      if ($attributes["home_directory"]){ $mod["homeDirectory"][0]=$attributes["home_directory"]; }
+      if ($attributes["home_drive"]){ $mod["homeDrive"][0]=$attributes["home_drive"]; }
+      if ($attributes["initials"]){ $mod["initials"][0]=$attributes["initials"]; }
+      if ($attributes["logon_name"]){ $mod["userPrincipalName"][0]=$attributes["logon_name"]; }
+      if ($attributes["manager"]){ $mod["manager"][0]=$attributes["manager"]; }  //UNTESTED ***Use DistinguishedName***
+      if ($attributes["office"]){ $mod["physicalDeliveryOfficeName"][0]=$attributes["office"]; }
+      if ($attributes["password"]){ $mod["unicodePwd"][0]=$this->encode_password($attributes["password"]); }
+      if ($attributes["profile_path"]){ $mod["profilepath"][0]=$attributes["profile_path"]; }
+      if ($attributes["script_path"]){ $mod["scriptPath"][0]=$attributes["script_path"]; }
+      if ($attributes["surname"]){ $mod["sn"][0]=$attributes["surname"]; }
+      if ($attributes["title"]){ $mod["title"][0]=$attributes["title"]; }
+      if ($attributes["telephone"]){ $mod["telephoneNumber"][0]=$attributes["telephone"]; }
+      if ($attributes["mobile"]){ $mod["telephoneNumber"][0]=$attributes["mobile"]; }
+      if ($attributes["web_page"]){ $mod["wWWHomePage"][0]=$attributes["web_page"]; }
+      //echo ("<pre>"); print_r($mod);
+  /*
+      // modifying a name is a bit fiddly
+      if ($attributes["firstname"] && $attributes["surname"]){
+          $mod["cn"][0]=$attributes["firstname"]." ".$attributes["surname"];
+          $mod["displayname"][0]=$attributes["firstname"]." ".$attributes["surname"];
+          $mod["name"][0]=$attributes["firstname"]." ".$attributes["surname"];
+      }
+  */
 
 
-        if (count($mod)==0){
-            return (false);
-        }
-        return ($mod);
+      if (count($mod)==0) {
+        return (false);
+      }
+      return ($mod);
     }
 
 
@@ -1364,7 +1488,7 @@ class MultiotpAdLdap {
         $r=false;
         $r_data = FALSE;
 
-		if ($this->_cache_support) {
+        if ($this->_cache_support) {
             if ("" != $this->get_cache_folder()) {
                 if (file_exists($this->get_cache_folder()."ldap_cgroup_".md5($gid).".cache")) {
                     if ((filemtime($this->get_cache_folder()."ldap_cgroup_".md5($gid).".cache") + $this->get_cache_timeout()) > time()) {
@@ -1381,7 +1505,7 @@ class MultiotpAdLdap {
                 $r_data = TRUE;
             }
         }
-		if (!$r_data) {
+        if (!$r_data) {
             if (!$cache_only) {
                 if ((2 == $this->_ldap_server_type) || (4 == $this->_ldap_server_type)) { // Generic LDAP or eDirectory
                     // http://www.rainingpackets.com/ldap-posixgroup-groupofnames/
@@ -1397,15 +1521,14 @@ class MultiotpAdLdap {
                     $fields=array("primarygrouptoken",$this->_group_cn_identifier,"distinguishedname");
                 }
                 
-                $pageSize = 1000;
-                $page_cookie = '';
-                do {
-                    if (function_exists('ldap_control_paged_result')) {
-                        ldap_control_paged_result($this->_conn, $pageSize, false, $page_cookie);
+                $paging_cookie = '';
+                do { // LDAP pagination loop
+                    if ($this->_paging_legacy) {
+                      ldap_control_paged_result($this->_conn, $this->_paging_size, false, $paging_cookie);
                     }
                     $sr = @ldap_search($this->_conn,$this->_base_dn,$filter,$fields);
                 
-                    if ((!function_exists('ldap_control_paged_result')) && (4 == ldap_errno($this->_conn))) {
+                    if (4 == ldap_errno($this->_conn)) { // 4 = LDAP_SIZELIMIT_EXCEEDED
                         $cr = @ldap_count_entries($this->_conn,$sr);
                         $this->_warning_message = "LDAP server cannot return more than $cr records.";
                     }
@@ -1446,19 +1569,17 @@ class MultiotpAdLdap {
                             $i=$entries["count"];
                         }
                     }
-                    if (function_exists('ldap_control_paged_result_response'))
-                    {
-                        ldap_control_paged_result_response($this->_conn, $sr, $page_cookie);
+                    if ($this->_paging_legacy) {
+                      ldap_control_paged_result_response($this->_conn, $sr, $paging_cookie);
                     }
-                }
-                while($page_cookie !== null && $page_cookie != '');
+                } while(($paging_cookie !== null) && ($paging_cookie != ''));
+                // LDAP pagination loop
                 
-                if (function_exists('ldap_control_paged_result'))
-                {
-                    // Reset LDAP paged result
-                    ldap_control_paged_result($this->_conn, $pageSize, false);
+                if ($this->_paging_legacy) {
+                  // Reset LDAP paged result
+                  ldap_control_paged_result($this->_conn, $this->_paging_size, false);
                 }
-    		}
+            }
         }
         return ($r);
     }

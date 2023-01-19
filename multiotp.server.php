@@ -24,20 +24,20 @@
  *    (http://httpd.apache.org/)
  *
  *
- * PHP 5.3.0 or higher is supported.
+ * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.1
- * @date      2022-11-11
+ * @version   5.9.5.5
+ * @date      2023-01-19
  * @since     2013-08-06
- * @copyright (c) 2013-2022 SysCo systemes de communication sa
+ * @copyright (c) 2013-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2022 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2023 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -349,11 +349,11 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
               $config_file = $multiotp->GetConfigFolder().date("YmdHis")."-".md5($_FILES['config_file']['tmp_name']).".cfg";
               if (move_uploaded_file($_FILES['config_file']['tmp_name'], $config_file)) {
 
-                if ($multiotp->RestoreConfiguration(array('backup_file' => $config_file, 'restore_key' => (isset($_POST['restore_config_password'])?trim($_POST['restore_config_password']):'')))) {
+                if ($multiotp->RestoreConfiguration(array('backup_file' => $config_file, 'restore_key' => (isset($_POST['restore_config_password'])?nullable_trim($_POST['restore_config_password']):'')))) {
 
                   // Clean Devices
                   foreach (explode("\t", $multiotp->GetDevicesList()) as $one_device) {
-                    if ('' != trim($one_device)) {
+                    if ('' != nullable_trim($one_device)) {
                       $multiotp->DeleteDevice($one_device);
                     }
                   }
@@ -370,7 +370,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
 
                   // Clean Groups
                   foreach (explode("\t", $multiotp->GetGroupsList()) as $one_group) {
-                    if ('' != trim($one_group)) {
+                    if ('' != nullable_trim($one_group)) {
                       $multiotp->DeleteGroup($one_group);
                     }
                   }
@@ -387,7 +387,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
 
                   // Clean Tokens
                   foreach (explode("\t", $multiotp->GetTokensList()) as $one_token) {
-                    if ('' != trim($one_token)) {
+                    if ('' != nullable_trim($one_token)) {
                       $multiotp->DeleteToken($one_token);
                     }
                   }
@@ -421,7 +421,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
                     }
                   }
                   
-                  $multiotp->RestoreConfiguration(array('backup_file' => $config_file, 'restore_key' => (isset($_POST['restore_config_password'])?trim($_POST['restore_config_password']):'')));
+                  $multiotp->RestoreConfiguration(array('backup_file' => $config_file, 'restore_key' => (isset($_POST['restore_config_password'])?nullable_trim($_POST['restore_config_password']):'')));
                   
                   $_SESSION = array();
                   $_SESSION['logged'] = FALSE;
@@ -441,7 +441,7 @@ if (FALSE !== mb_strpos($data,'<multiOTP')) {
     if (isset($_FILES['token_file']['tmp_name'])) {
         if ((isset($_SESSION['logged']) && $_SESSION['logged'])) {
             if (file_exists($_FILES['token_file']['tmp_name']) && (UPLOAD_ERR_OK == $_FILES["token_file"]["error"])) {
-                $multiotp->ImportTokensFile($_FILES['token_file']['tmp_name'], $_FILES['token_file']['name'], isset($_POST['token_password'])?trim($_POST['token_password']):'');
+                $multiotp->ImportTokensFile($_FILES['token_file']['tmp_name'], $_FILES['token_file']['name'], isset($_POST['token_password'])?nullable_trim($_POST['token_password']):'');
             }
         }
         echo "DONE";
@@ -1520,11 +1520,11 @@ EOWEBPAGE;
         $infoweb_filename = "infoweb.html";
         if (file_exists($multiotp->GetConfigFolder().$infoweb_filename)) {
             if ($infoweb_handler = @fopen($multiotp->GetConfigFolder().$infoweb_filename, "rt")) {
-                $infoweb = trim(fgets($infoweb_handler));
+                $infoweb = nullable_trim(fgets($infoweb_handler));
                 fclose($infoweb_handler);
             }
         }
-        if (trim($infoweb == "")) {
+        if (nullable_trim($infoweb == "")) {
             $infoweb = <<<EOI
 <i>
     Are you interested in additional features like automatic syncronization of AD/LDAP users, provisioning PDF automatic email distribution, API automation, HA in master-slave mode and many others, everything through an easy and fast web interface ?
@@ -1610,13 +1610,13 @@ EOI;
                             $ajax_result = $multiotp->DeleteToken($options_array[0]);
                             break;
                         case mb_strtoupper("FastCreateUser",'UTF-8'):
-                            $user              = trim((isset($options_array[0])?$options_array[0]:''));
-                            $email             = trim((isset($options_array[1])?$options_array[1]:''));
-                            $sms               = trim((isset($options_array[2])?$options_array[2]:''));
+                            $user              = nullable_trim((isset($options_array[0])?$options_array[0]:''));
+                            $email             = nullable_trim((isset($options_array[1])?$options_array[1]:''));
+                            $sms               = nullable_trim((isset($options_array[2])?$options_array[2]:''));
                             $prefix_pin_needed = intval(isset($options_array[3])?$options_array[3]:$multiotp->GetDefaultRequestPrefixPin());
                             $algorithm         = (isset($options_array[4])?$options_array[4]:"totp");
                             $pin               = (isset($options_array[5])?$options_array[5]:'');
-                            $token_serial      = trim((isset($options_array[6])?$options_array[6]:''));
+                            $token_serial      = nullable_trim((isset($options_array[6])?$options_array[6]:''));
                             if ('' != $token_serial) {
                                 $ajax_result = $multiotp->CreateUserFromToken($user, $token_serial, $email, $sms, $pin, $prefix_pin_needed);
                             }

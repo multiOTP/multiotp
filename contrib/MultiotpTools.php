@@ -18,56 +18,73 @@ if (PHP_VERSION_ID < 50207)
 }  
 
 
-if (!function_exists('fnmatch')) {
+if (!function_exists('nullable_trim')) {
+  function nullable_trim($string) {
+    return (is_null($string) ? "" : trim($string));
+  }
+}
+
+
+if (!function_exists('nullable_bin2hex')) {
+  function nullable_bin2hex($string) {
+    return (is_null($string) ? "" : bin2hex($string));
+  }
+}
+
+
+if (!function_exists('pcre_fnmatch')) {
+  function pcre_fnmatch($pattern, $string, $flags = 0) {
     define('FNM_PATHNAME', 1);
     define('FNM_NOESCAPE', 2);
     define('FNM_PERIOD', 4);
     define('FNM_CASEFOLD', 16);
-   
-    function fnmatch($pattern, $string, $flags = 0) {
-        return pcre_fnmatch($pattern, $string, $flags);
-    }
-}
 
-function pcre_fnmatch($pattern, $string, $flags = 0) {
     $modifiers = null;
     $transforms = array(
-        '\*'    => '.*',
-        '\?'    => '.',
-        '\[\!'    => '[^',
-        '\['    => '[',
-        '\]'    => ']',
-        '\.'    => '\.',
-        '\\'    => '\\\\'
+      '\*'    => '.*',
+      '\?'    => '.',
+      '\[\!'    => '[^',
+      '\['    => '[',
+      '\]'    => ']',
+      '\.'    => '\.',
+      '\\'    => '\\\\'
     );
    
     // Forward slash in string must be in pattern:
     if ($flags & FNM_PATHNAME) {
-        $transforms['\*'] = '[^/]*';
+      $transforms['\*'] = '[^/]*';
     }
    
     // Back slash should not be escaped:
     if ($flags & FNM_NOESCAPE) {
-        unset($transforms['\\']);
+      unset($transforms['\\']);
     }
    
     // Perform case insensitive match:
     if ($flags & FNM_CASEFOLD) {
-        $modifiers .= 'i';
+      $modifiers .= 'i';
     }
    
     // Period at start must be the same as pattern:
     if ($flags & FNM_PERIOD) {
-        if (strpos($string, '.') === 0 && strpos($pattern, '.') !== 0) return false;
+      if (strpos($string, '.') === 0 && strpos($pattern, '.') !== 0) return false;
     }
    
     $pattern = '#^'
-        . strtr(preg_quote($pattern, '#'), $transforms)
-        . '$#'
-        . $modifiers;
+      . strtr(preg_quote($pattern, '#'), $transforms)
+      . '$#'
+      . $modifiers;
    
     return (boolean)preg_match($pattern, $string);
+  }
 } 
+
+
+if (!function_exists('fnmatch')) {
+  function fnmatch($pattern, $string, $flags = 0) {
+    return pcre_fnmatch($pattern, $string, $flags);
+  }
+}
 
 
 /***********************************************************************
@@ -605,11 +622,15 @@ if (!function_exists('base32_decode'))
             $x = "";
             if(!in_array($input[$i], $map)) return false;
             for($j=0; $j < 8; $j++) {
-                $x .= str_pad(base_convert(@$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
+                if (!is_null(@$flippedMap[@$input[$i + $j]])) {
+                  $x .= str_pad(base_convert(@$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
+                }
             }
             $eightBits = str_split($x, 8);
             for($z = 0; $z < count($eightBits); $z++) {
-                $binaryString .= ( ($y = chr(base_convert($eightBits[$z], 2, 10))) || ord($y) == 48 ) ? $y:"";
+                if (!is_null($eightBits[$z])) {
+                  $binaryString .= ( ($y = chr(base_convert($eightBits[$z], 2, 10))) || ord($y) == 48 ) ? $y:"";
+                }
             }
         }
         return substr($binaryString, 0, $result_length);
@@ -646,12 +667,9 @@ if (!function_exists('encode_utf8_if_needed')) {
       $a = pack("H*", base_convert($char, 8, 16));
       $text = preg_replace('#(\\\\)'.$char.'#',$a,$text);
     }
-    $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
+		$encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1, WINDOWS-1252');
     if ("UTF-8" != $encoding) {
-      $text = utf8_encode($text);
-		// $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1, WINDOWS-1252');
-		// if ("UTF-8" != $encoding) {
-            // $text = mb_convert_encoding($text, "UTF-8", "UTF-8, ISO-8859-1, WINDOWS-1252");
+      $text = mb_convert_encoding($text, "UTF-8", "UTF-8, ISO-8859-1, WINDOWS-1252");
 		}
 		return $text;
 	}
@@ -667,12 +685,9 @@ if (!function_exists('decode_utf8_if_needed')) {
 	function decode_utf8_if_needed($data)
 	{
 		$text = $data;
-        $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
-        if ("UTF-8" == $encoding) {
-            $text = utf8_decode($text);
-        // $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1, WINDOWS-1252');
-		// if ("ISO-8859-1" != $encoding) {
-            // $text = mb_convert_encoding($text, "ISO-8859-1", "UTF-8, ISO-8859-1, WINDOWS-1252");
+    $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1, WINDOWS-1252');
+    if ("UTF-8" == $encoding) {
+      $text = mb_convert_encoding($text, "ISO-8859-1", "UTF-8, ISO-8859-1, WINDOWS-1252");
 		}
 		return $text;
 	}
@@ -1015,7 +1030,7 @@ if (!function_exists('html2text'))
         $Document = str_replace('*CRLF*',chr(13).chr(10),$Document);
         $Document = preg_replace('@[\r\n][ ]+@', chr(13).chr(10), $Document);
         $Document = preg_replace('@[\r\n][\r\n]+@', chr(13).chr(10).chr(13).chr(10), $Document);
-        return trim($Document);
+        return nullable_trim($Document);
     }
 }
 
@@ -1147,4 +1162,5 @@ if (!function_exists('mask2cidr'))
         return $bits;
     }
 }
+
 ?>

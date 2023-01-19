@@ -6,8 +6,8 @@ class MultiotpSms
  * @brief     SMS message using any SMS Provider.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.6.0
- * @date      2022-04-11
+ * @version   5.9.5.4
+ * @date      2022-12-31
  * @since     2018-10-09
  *
  * Predefined providers:
@@ -70,6 +70,9 @@ class MultiotpSms
  *
  * Change Log
  *
+ *   2022-12-26 5.9.5.3 SysCo/al Updated eCall API
+ *                               Updated ASPSMS API
+ *                               Enhanced payload handling
  *   2022-04-11 5.8.6.0 SysCo/al Adding telnyx provider
  *                               Adding specific header option
  *                               Adding international format request
@@ -243,7 +246,7 @@ class MultiotpSms
                 $this->header = "";
                 break;
             case 'aspsms':
-                $this->url = "http://xml1.aspsms.com:5061/xmlsvr.asp http://xml1.aspsms.com:5098/xmlsvr.asp http://xml2.aspsms.com:5061/xmlsvr.asp http://xml2.aspsms.com:5098/xmlsvr.asp";
+                $this->url = "https://xml3.aspsms.com/xmlsvr.asp https://xml4.aspsms.com/xmlsvr.asp";
                 $this->send_template = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n".
                                        "<aspsms>\r\n".
                                        "  <Userkey>%user</Userkey>\r\n".
@@ -261,13 +264,11 @@ class MultiotpSms
                 $this->status_success = "20";
                 $this->content_success = "<ErrorCode>1</ErrorCode>";
                 $this->no_double_zero = FALSE;
-                $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "HTML";
-                $this->header = "";
                 break;
             case 'aspsms-ucs2':
-                $this->url = "http://xml1.aspsms.com:5061/xmlsvr.asp http://xml1.aspsms.com:5098/xmlsvr.asp http://xml2.aspsms.com:5061/xmlsvr.asp http://xml2.aspsms.com:5098/xmlsvr.asp";
+                $this->url = "https://xml3.aspsms.com/xmlsvr.asp https://xml4.aspsms.com/xmlsvr.asp";
                 $this->send_template = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n".
                                        "<aspsms>\r\n".
                                        "  <Userkey>%user</Userkey>\r\n".
@@ -327,17 +328,16 @@ class MultiotpSms
                 $this->header = "";
                 break;
             case 'ecall':
-                $this->url = "https://www1.ecall.ch/ecallurl/ecallurl.ASP https://www2.ecall.ch/ecallurl/ecallurl.ASP";
-                $this->send_template = "WCI=Interface&Function=SendPage&AccountName=%user&AccountPassword=%pass&CallBack=%from&Address=%to&Message=%msg";
-                $this->method = "POST";
-                $this->encoding = "ISO";
+                $this->url = "https://url.ecall.ch/api/sms?username=%user&password=%pass&address=%to&message=%msg";
+                $this->send_template = "";
+                $this->method = "GET";
+                $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "0";
-                $this->no_double_zero = TRUE;
+                $this->no_double_zero = FALSE;
                 $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
                 $this->content_encoding = "URL";
-                $this->encode_ampersand = TRUE;
                 $this->header = "";
                 break;
             case 'intellisms':
@@ -828,11 +828,15 @@ class MultiotpSms
                 $output.= "Content-Length: ".strlen($payload)."\r\n";
                 $output.= "User-Agent: multiOTP SMS\r\n";
                 $output.= "Host: ".$host."\r\n";
-                $output.= "\r\n";
-                $output.= $payload;
-                $output.= "\r\n";
-                fputs($fp, $output);
 
+                $output.= "\r\n";
+
+                if (0 != strlen($payload)) {
+                  $output.= $payload;
+                  $output.= "\r\n";
+                }
+
+                fputs($fp, $output);
                 $stream_timeout = $this->timeout;
                 stream_set_blocking($fp, TRUE);
                 stream_set_timeout($fp, $stream_timeout);
@@ -894,15 +898,19 @@ class MultiotpSms
 
             if (TRUE == $this->debug) {
                 echo "DEBUG payload: $payload<br />\n)";
-                echo "DEBUG reply_status : ".$this->reply_status."\n<br />";
-                echo "DEBUG reply_content : ".$this->reply_content."\n<br />";
-                echo "DEBUG status_success : ".$this->status_success."\n<br />";
-                echo "DEBUG content_success : ".$this->content_success."\n<br />";
+                echo "DEBUG reply_status : ".$this->reply_status."<br />\n";
+                echo "DEBUG reply_content : ".$this->reply_content."<br />\n";
+                echo "DEBUG status_success : ".$this->status_success."<br />\n";
+                echo "DEBUG content_success : ".$this->content_success."<br />\n";
             }
 
             if ($result) {
                 return $result;
             }
+        }
+        if (TRUE == $this->debug) {
+            echo "DEBUG result_status: " . ($result_status ? "TRUE" : "FALSE") . "<br />\n)";
+            echo "DEBUG result_content: " . ($result_content ? "TRUE" : "FALSE") . "<br />\n)";
         }
         return $result;
     }

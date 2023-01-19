@@ -11,10 +11,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.5.1
-REM @date      2022-11-11
+REM @version   5.9.5.5
+REM @date      2023-01-19
 REM @since     2010-07-10
-REM @copyright (c) 2010-2022 SysCo systemes de communication sa
+REM @copyright (c) 2010-2023 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -38,7 +38,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2022 SysCo systemes de communication sa
+REM   Copyright (c) 2010-2023 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -114,7 +114,7 @@ IF NOT %ERRORLEVEL% == 0 (
 :NoWarning
 
 REM UTF-8 mode
-CHCP 65001
+CHCP 65001 >NUL
 
 IF EXIST "%TEMP%\multiotp_error.log" DEL "%TEMP%\multiotp_error.log" /Q
 
@@ -202,6 +202,8 @@ REM Set the backend
 ECHO.
 ECHO Backend is set to %_backend%
 %_multiotp% -config backend-type=%_backend%
+
+ECHO Initialize backend
 IF "mysql"=="%_backend%" %_multiotp% -display-log -initialize-backend
 IF "pgsql"=="%_backend%" %_multiotp% -display-log -initialize-backend
 
@@ -596,11 +598,11 @@ ECHO Check test_user2 to see if it is not a without 2FA token
 IF ERRORLEVEL 8 ECHO - KO! Error 8 checking the user test_user2 token type
 IF ERRORLEVEL 8 ECHO - KO! Error 8 checking the user test_user2 token type (%_backend%) >>"%TEMP%\multiotp_error.log"
 IF ERRORLEVEL 8 GOTO CheckIsNotWithout2FA
+IF NOT ERRORLEVEL 7 ECHO - KO! Error checking the user test_user2 token type
+IF NOT ERRORLEVEL 7 ECHO - KO! Error checking the user test_user2 token type (%_backend%) >>"%TEMP%\multiotp_error.log"
+IF NOT ERRORLEVEL 7 GOTO CheckIsNotWithout2FA
 IF ERRORLEVEL 7 ECHO - OK! Token of the user test_user2 is a without 2FA token
 IF ERRORLEVEL 7 SET /A SUCCESSES=SUCCESSES+1
-IF ERRORLEVEL 7 GOTO CheckIsNotWithout2FA
-ECHO - KO! Error checking the user test_user2 token type
-ECHO - KO! Error checking the user test_user2 token type (%_backend%) >>"%TEMP%\multiotp_error.log"
 :CheckIsNotWithout2FA
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
 
@@ -689,7 +691,7 @@ REM List of attributes to encrypt is set to default value
 
 ECHO.
 ECHO End of the CLI multiOTP tests
-IF %SUCCESSES% EQU %TOTAL_TESTS% ECHO (everything is OK so far...)
+IF %SUCCESSES% EQU %TOTAL_TESTS% ECHO (all %TOTAL_TESTS% tests are OK so far...)
 ECHO.
 
 

@@ -234,6 +234,9 @@ class MultiotpXmlParser
  *
  * Name: MultiotpXMLTag (original name: XMLTag)
  */
+
+// PHP >=8.1 specific attribute to allow dynamic properties
+#[AllowDynamicProperties]
 class MultiotpXMLTag
 {
     /**

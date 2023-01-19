@@ -127,6 +127,9 @@ define('CRYPT_RIJNDAEL_MODE_OFB', CRYPT_MODE_OFB);
  */
 class Crypt_Rijndael extends Crypt_Base
 {
+    // PHP >= 8.1
+    var $key_size = 0;
+
     /**
      * The namespace used by the cipher for its constants.
      *

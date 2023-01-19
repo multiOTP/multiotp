@@ -3,10 +3,10 @@ multiOTP open source
 multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
 multiOTP open source is OATH certified for HOTP/TOTP
 
-(c) 2010-2022 SysCo systemes de communication sa  
+(c) 2010-2023 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.5.1 (2022-11-11)
+Current build: 5.9.5.5 (2023-01-19)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -22,7 +22,7 @@ PATH/TO/FREERADIUS/LOG/VOLUME:/var/log/freeradius
 
 The **multiotp/multiotp-open-source** docker is working on Synology devices !  
 
-Binary download of the multiOTP open source Credential Provider V2 for Windows 7/8/8.1/10/2012(R2)/2016 with options like RDP only and UPN name support : https://download.multiotp.net/credential-provider/
+Binary download of the multiOTP open source Credential Provider for Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 : https://download.multiotp.net/credential-provider/
 
 [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
 *Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
@@ -101,6 +101,7 @@ TABLE OF CONTENTS
  * How to install a local only strong authentication on a Windows machine ?
  * How to install a centralized strong authentication server
    for strong authentication on Windows desktops or RDP ?
+ * LDAP filter customization
  * OpenSSL options for LDAPS
  * Compatible clients applications and devices
  * External packages used
@@ -144,6 +145,7 @@ subfolders from windows to your current multiOTP folder
 
 
 WHAT'S NEW IN THIS 5.9.x RELEASE
+- LDAP filter can be customized
 - Users without 2FA tokens don't see the second screen in the Credential Provider during logon
 - New Raspberry, Hyper-V and OVA appliances available (version 011, based on Debian 11)
 - Scratchlist can be generated from the Web GUI
@@ -151,9 +153,19 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
-```
+2023-01-19 5.9.5.5 ENH: LDAP filter can be customized using SetLdapFilter() method
+                        ({cn_identifier}, {username}, and {groups_filtering} placeholders are supported)
+                   ENH: Full PHP 8.x support (tested with 8.2.1 and 8.1.14),
+                        with backward compatibility support (7.x, >=5.4.x)
+                   ENH: Enhanced AD/LDAP paging support
+2022-12-31 5.9.5.3 ENH: Embedded Windows nginx edition updated to version 1.22.1
+                   ENH: Embedded Windows PHP edition updated to version 8.2.0
+                   ENH: PHP 8.2.x deprecated code cleaned (nullable trim, dynamic properties, PostgreSQL command without connection argument)
+                   ENH: Enhanced sms library (MultiotpSms), new eCall API implementation, new ASPSMS API implementation
+                   ENH: Better MySQL error handling
+                   ENH: Better PostgreSQL error handling
 2022-11-11 5.9.5.1 FIX: Windows nginx subfolders are now protected
-2022-11-11 5.9.5.0 ENH: It's now possible to define a special AD/LDAP group to attribute "Without2FA" token to specific users
+                   ENH: It's now possible to define a special AD/LDAP group to attribute "Without2FA" token to specific users
                    ENH: Default username and password are not displayed anymore if default password has been changed
 2022-11-04 5.9.4.0 ENH: Enhanced multiOTP Credential Provider
 2022-10-21 5.9.3.1 FIX: Better special characters support in username and password
@@ -757,17 +769,13 @@ in the radius server and provide the IP address(es) of the device(s)
 (often called NAS) and their shared Secret.
 
 If you want to have strong authentication on Windows logon, have a look at the
-open source project multiOTPCredentialProvider which is based on MultiotpCPV2RDP from
-arcadejust and MultiOneTimePassword Credential Provider from Last Squirrel IT.
-It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.  
+open source project multiOTPCredentialProvider which is based on MultiotpCPV2RDP
+from arcadejust and MultiOneTimePassword Credential Provider from Last Squirrel IT.
+It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 in 64 bits.  
 The Credential Provider does not need any RADIUS connection! It uses instead a
 local version of multiOTP which can be configured as a client of a
 centralized server (with caching support).
 (https://download.multiotp.net/credential-provider/)
-
-LSE Experts provides a commercial Radius Credential Provider which can talk
-directly with a radius server.
-(http://www.lsexperts.de)
 
 When the backend is set, it's time to create/define the tokens. You will have
 to select hardware or software token generators for your users. Currently, the
@@ -1296,10 +1304,16 @@ HOW TO CONFIGURE MULTIOTP TO SYNCHRONIZED THE USERS FROM A STANDARD LDAP ?
 15) Set the transaction time limit
     multiotp -config ldap-time-limit=30
 
-16) Activate the AD/LDAP support (0|1):
+16) (EXPERT ONLY) If needed, you can change the LDAP filter.
+    By default, the LDAP filter for standard LDAP is :
+      "(&(|(objectClass=posixAccount)(objectClass=user))({cn_identifier}={username}))"
+    You can use the following placeholders: {cn_identifier}, {username}, and {groups_filtering}
+    multiotp -config ldap-filter="(&(|(objectClass=posixAccount)(objectClass=user))({cn_identifier}={username}))"
+
+17) Activate the AD/LDAP support (0|1):
     multiotp -config ldap-activated=1
    
-17) Let's go for an AD/LDAP users synchronisation !
+18) Let's go for an AD/LDAP users synchronisation !
     (users removed or deactivated in the AD/LDAP are deactivated in multiOTP)
     multiotp -debug -display-log -ldap-users-sync
 
@@ -1351,7 +1365,7 @@ B) On the client(s)
 HOW TO INSTALL A LOCAL ONLY STRONG AUTHENTICATION ON A WINDOWS MACHINE ?
 ========================================================================
 1) Install multiOTPCredentialProvider, which contains also multiOTP inside.
-   It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.
+   It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 in 64 bits.
    (https://download.multiotp.net/credential-provider/)
 2) During the installation, specify the folder on the client where the
    multiotp.exe file and folders must be installed and configured.
@@ -1368,7 +1382,7 @@ FOR STRONG AUTHENTICATION ON WINDOWS DESKTOPS OR RDP ?
 =========================================================
 1) Install a client/server multiOTP environment like explained above.
 2) On each client, install multiOTPCredentialProvider .
-   It works with Windows 7/8/8.1/10/2012(R2)/2016 in both 32 and 64 bits.
+   It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 in 64 bits.
    (https://download.multiotp.net/credential-provider/)
 3) During the installation, specify the folder on the client where the
    multiotp.exe file and folders must be installed and configured.
@@ -1450,6 +1464,11 @@ HOW TO BUILD A RASPBERRY PI STRONG AUTHENTICATION SERVER ?
     To adapt the freeradius configuration, edit the file /etc/freeradius/clients.conf.
 
 
+LDAP FILTER CUSTOMIZATION
+=========================
+You can customize your own LDAP filter. By default, the LDAP filter is the following:
+
+
 OPENSSL OPTIONS FOR LDAPS
 =========================
 You can define how the certificate bundle is handled with the ldaptls_reqcert option.
@@ -1458,10 +1477,9 @@ You can define a custom cipher suite with the ldaptls_cipher_suite option.
 
 COMPATIBLE CLIENTS APPLICATIONS AND DEVICES
 ===========================================
-Open source multiOTPCredentialProvider, based on MultiotpCPV2RDP and mOTP-CP.
-If you want to have strong authentication on Windows logon, have a look at the
-open source multiOTPCredentialProvider.  
-It works with Windows 7/8/8.1/10/2012(R2)/2016/2019 in both 32 and 64 bits.  
+Open source project multiOTPCredentialProvider which is based on MultiotpCPV2RDP
+from arcadejust and MultiOneTimePassword Credential Provider from Last Squirrel IT.
+It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 in 64 bits.  
 The Credential Provider is using directly a local version of multiOTP which
 can be configured as a client of a centralized multiOTP server (with caching support)
 (https://github.com/multiOTP/multiOTPCredentialProvider)
@@ -1493,8 +1511,8 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     Joseph Myers, Paul Johnston, Greg Holt, Will Bond
     https://www.myersdaily.org/joseph/javascript/md5-text.html
 
-    multiOTPCredentialProvider, based on MultiotpCPV2RDP (Apache License)
-    Credential Provider (32 and 64 bits) supporting Windows 7/8/8.1/10/2012(R2)/2016
+    multiOTP Credential Provider
+    Credential Provider (64 bits) supporting Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022
     SysCo / ArcadeJust / LastSquirrelIT 
     https://github.com/multiOTP/multiOTPCredentialProvider
 
@@ -1559,8 +1577,8 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.5.1 (2022-11-11)
-(c) 2010-2022 SysCo systemes de communication sa
+multiOTP 5.9.5.5 (2023-01-19)
+(c) 2010-2023 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
 multiotp will check if the token of a user is correct, based on a specified
@@ -1760,6 +1778,7 @@ Usage:
      ldap-default-algorithm: [totp|hotp|motp|without2fa] default algorithm
                              for new LDAP/AD users
     ldap-domain-controllers: LDAP/AD domain controller(s), comma separated
+                ldap-filter: LDAP/AD filter customization (check documentation)
        ldap-group-attribute: LDAP/AD group attribute (default is memberOf)
    ldap-group-cn-identifier: LDAP/AD group cn identifier
                              (default is sAMAccountName for AD, cn for LDAP)
@@ -1775,10 +1794,10 @@ Usage:
               ldap-users-dn: LDAP/AD users DN (optional, use base-dn if empty)
                              (you can put several DN separated by semicolons)
    ldap-without2fa-in-group: Special LDAP/AD group(s) for without2fa users
-            ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS
+            ldaptls-reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS
                              server certificate checks (LDAPTLS_REQCERT)
                              'auto' means 'never' for Windows and '' for Linux
-       ldaptls_cipher_suite: ['auto'|''|...] which cipher suite is used for the
+       ldaptls-cipher-suite: ['auto'|''|...] which cipher suite is used for the
                              LDAP TLS connection (LDAPTLS_CIPHER_SUITE)
                              'auto' means '' for PHP higher than 5.x and
                              'NORMAL:!VERS-TLS1.2' for PHP 5.x and before
@@ -2074,8 +2093,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.9.5.1.zip 
-SHA256:2c108f38727b3866c3974779047960364bd96c0ba66166a010e216cc2fd5a5ab 
-SHA1:852e0cc33700d50eb0c0250abbf11c6a4c417ce4 
-MD5:fa787496fd37668a2730e19bae057d09 
+Hash verification for multiotp_5.9.5.5.zip 
+SHA256:2c74456fabb492fd290d4cd78330da99ef30e3991ec75d5f7c5235f006774f1c 
+SHA1:93e198f68850c57a7c14e5a4a72f654722c929e4 
+MD5:992e16fedf5bd654e737918aeb9de6bc 
 ``` 

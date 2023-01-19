@@ -32,20 +32,20 @@
  * For Windows, you can also use the multiotp.exe file provided, which is
  * an embedded PHP interpreter together with the result of the merge.
  *
- * PHP 5.3.0 or higher is supported.
+ * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.1
- * @date      2022-11-11
+ * @version   5.9.5.5
+ * @date      2023-01-19
  * @since     2010-06-08
- * @copyright (c) 2010-2022 SysCo systemes de communication sa
+ * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2022 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2023 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -211,7 +211,7 @@ function get_script_dir()
     // Detect the current folder, change Windows notation to universal notation if needed
     $current_folder = convert_to_unix_path(getcwd());
     $current_script_folder = convert_to_unix_path(isset($_SERVER["argv"][0])?$_SERVER["argv"][0]:'');
-    if ('' == (trim($current_script_folder))) {
+    if ('' == (nullable_trim($current_script_folder))) {
         if (isset($_SERVER['SCRIPT_FILENAME'])) {
             $current_script_folder = $_SERVER['SCRIPT_FILENAME'];
         } elseif (isset($argv[0])) {
@@ -387,8 +387,8 @@ if ($cli_mode) {
         $argv[] = __FILE__;
         $all_argv = explode(chr(0), base64_decode(isset($_POST['argv'])?$_POST['argv']:$_GET['argv']));
         foreach ($all_argv as $one_argv) {
-            if ('' != trim($one_argv)) {
-                $argv[] = trim($one_argv);
+            if ('' != nullable_trim($one_argv)) {
+                $argv[] = nullable_trim($one_argv);
             }
         }
     }
@@ -495,6 +495,9 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "mysql";
     } elseif ("-pgsql" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "pgsql";
+    } elseif ("-php-debug-on-screen" == mb_strtolower($current_arg,'UTF-8')) {
+        ini_set("error_reporting", -1);
+        ini_set("display_errors", "On");
     } elseif ("-php-version" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "php-version";
     } elseif ("-purge-lock-folder" == mb_strtolower($current_arg,'UTF-8')) {
@@ -625,7 +628,7 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         } elseif ("-server-url=" == mb_substr(mb_strtolower($current_arg,'UTF-8'),0,12)) {
             $src_array = explode("=",$current_arg,2);
             if (2 == count($src_array)) {
-                $server_url = trim(str_replace(",",";",str_replace(" ",";",clean_quotes($src_array[1]))));
+                $server_url = nullable_trim(str_replace(",",";",str_replace(" ",";",clean_quotes($src_array[1]))));
             }
         } elseif ("-server-cache-level=" == mb_substr(mb_strtolower($current_arg,'UTF-8'),0,20)) {
             $src_array = explode("=",$current_arg,2);
@@ -904,7 +907,7 @@ if (($multiotp->IsDeveloperMode())) {
     }
     $temp_radius.= '{'.$one_radius.'} ';
   }
-  $multiotp->WriteLog('Developer: *parameter(s) received, displayed between {}: '.trim($temp_radius), false, false, 8888, 'Debug', '');
+  $multiotp->WriteLog('Developer: *parameter(s) received, displayed between {}: '.nullable_trim($temp_radius), false, false, 8888, 'Debug', '');
 }
 
 
@@ -1020,7 +1023,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             } elseif  ($param_count < 2) {
                 $result = 30; // ERROR: At least one parameter is missing
             } else {
-                $backup_file = ('' != trim($all_args[2])) ? $all_args[2] : 'multiotp.cfg';
+                $backup_file = ('' != nullable_trim($all_args[2])) ? $all_args[2] : 'multiotp.cfg';
                 if (TRUE === ($multiotp->BackupConfiguration(array('backup_file'      => $backup_file,
                                                                    'encryption_key'   => $all_args[1],
                                                                    'flush_attributes' => array('admin_password_hash'))))) {
@@ -1034,7 +1037,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             if  ($param_count < 2) {
                 $result = 30; // ERROR: At least one parameter is missing
             } else {
-                $backup_file = ('' != trim($all_args[2])) ? $all_args[2] : 'multiotp.cfg';
+                $backup_file = ('' != nullable_trim($all_args[2])) ? $all_args[2] : 'multiotp.cfg';
                 if (file_exists($backup_file)) {
                     if (TRUE === ($multiotp->RestoreConfiguration(array('backup_file' => $backup_file,
                                                                         'restore_key' => $all_args[1])))) {
@@ -1776,11 +1779,11 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 $write_config_data = true;
                                 break;
                             case 'text-sms-challenge':
-                                $multiotp->SetGlobalTextSmsChallenge(trim($actual_array[1]));
+                                $multiotp->SetGlobalTextSmsChallenge(nullable_trim($actual_array[1]));
                                 $write_config_data = true;
                                 break;
                             case 'text-token-challenge':
-                                $multiotp->SetGlobalTextTokenChallenge(trim($actual_array[1]));
+                                $multiotp->SetGlobalTextTokenChallenge(nullable_trim($actual_array[1]));
                                 $write_config_data = true;
                                 break;
                             default: // Just in case we need to change additional values that have no related method
@@ -2294,6 +2297,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "     ldap-default-algorithm: [totp|hotp|motp|without2fa] default algorithm".$crlf;
                 echo "                             for new LDAP/AD users".$crlf;
                 echo "    ldap-domain-controllers: LDAP/AD domain controller(s), comma separated".$crlf;
+                echo "                ldap-filter: LDAP/AD filter customization (check documentation)".$crlf;
                 echo "       ldap-group-attribute: LDAP/AD group attribute (default is memberOf)".$crlf;
                 echo "   ldap-group-cn-identifier: LDAP/AD group cn identifier".$crlf;
                 echo "                             (default is sAMAccountName for AD, cn for LDAP)".$crlf;
@@ -2309,10 +2313,10 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "              ldap-users-dn: LDAP/AD users DN (optional, use base-dn if empty)".$crlf;
                 echo "                             (you can put several DN separated by semicolons)".$crlf;
                 echo "   ldap-without2fa-in-group: Special LDAP/AD group(s) for without2fa users".$crlf;
-                echo "            ldaptls_reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS".$crlf;
+                echo "            ldaptls-reqcert: ['auto'|'never'|''|...] how to perform the LDAP TLS".$crlf;
                 echo "                             server certificate checks (LDAPTLS_REQCERT)".$crlf;
                 echo "                             'auto' means 'never' for Windows and '' for Linux".$crlf;
-                echo "       ldaptls_cipher_suite: ['auto'|''|...] which cipher suite is used for the".$crlf;
+                echo "       ldaptls-cipher-suite: ['auto'|''|...] which cipher suite is used for the".$crlf;
                 echo "                             LDAP TLS connection (LDAPTLS_CIPHER_SUITE)".$crlf;
                 echo "                             'auto' means '' for PHP higher than 5.x and".$crlf;
                 echo "                             'NORMAL:!VERS-TLS1.2' for PHP 5.x and before".$crlf;
@@ -2616,7 +2620,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 $param_info .= $one_arg.' ';
             }
         }
-        $multiotp->WriteLog("Debug: *parameters used with command $command: ".trim($param_info), false, false, 8888, 'Debug', '');
+        $multiotp->WriteLog("Debug: *parameters used with command $command: ".nullable_trim($param_info), false, false, 8888, 'Debug', '');
     }
 
     if (20 <= $result) {
@@ -2671,7 +2675,7 @@ if ($command != "libhash") {
             $ignore_radius_array = explode(";","xxxx;yyyy");
             foreach ($multiotp->GetReplyArrayForRadius() as $one_radius_message) {
                 $ignore_attribute = false;
-                $current_attribute = trim(mb_substr($one_radius_message, 0, mb_strpos($one_radius_message, trim($multiotp->GetRadiusReplyAttributor()))));
+                $current_attribute = nullable_trim(mb_substr($one_radius_message, 0, mb_strpos($one_radius_message, nullable_trim($multiotp->GetRadiusReplyAttributor()))));
                 foreach ($ignore_radius_array as $one_ignore_attribute) {
                     if (false !== mb_strpos(mb_strtoupper($current_attribute,'UTF-8'),mb_strtoupper($one_ignore_attribute,'UTF-8'))) {
                         $ignore_attribute = true;
@@ -2684,7 +2688,7 @@ if ($command != "libhash") {
             }
         }
         if ($request_nt_key || $nt_key_only) {
-            $nt_key = trim($multiotp->GetNtKey());
+            $nt_key = nullable_trim($multiotp->GetNtKey());
             if ('' != $nt_key) {
               if ($nt_key_only) {
                 $radius_additional = "NT_KEY: ".$nt_key.$crlf;

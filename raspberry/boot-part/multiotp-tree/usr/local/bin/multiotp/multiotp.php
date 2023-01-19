@@ -14,20 +14,20 @@
  * and you will find the magic button ;-)
  *
  *
- * PHP 5.3.0 or higher is supported.
+ * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.1
- * @date      2022-11-11
+ * @version   5.9.5.5
+ * @date      2023-01-19
  * @since     2010-06-08
- * @copyright (c) 2010-2022 SysCo systemes de communication sa
+ * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2014-2022 SysCo systemes de communication sa
+ *   Copyright (c) 2014-2023 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
