@@ -20,6 +20,7 @@ class MultiotpSms
  *         nexmo: Nexmo (HTTPS), https://www.nexmo.com/
  *        nowsms: NowSMS.com (on-premises), https://www.nowsms.com/
  *      smseagle: SMSEagle (hardware gateway), https://www.smseagle.eu/
+ *    smsgateway: SMSGateway (open source on-premises), https://github.com/multiOTP/SMSGateway
  *      swisscom: Swisscom LA (REST-JSON), https://messagingproxy.swisscom.ch:4300/rest/1.0.0/
  *        telnyx: Telnyx, https://developers.telnyx.com/docs/api/v2/messaging
  *
@@ -70,15 +71,17 @@ class MultiotpSms
  *
  * Change Log
  *
+ *   2023-03-21 5.9.5.8 SysCo/al smsgateway provider added
+ *                               Specific URL can be specified in the constructor
  *   2022-12-26 5.9.5.3 SysCo/al Updated eCall API
  *                               Updated ASPSMS API
  *                               Enhanced payload handling
- *   2022-04-11 5.8.6.0 SysCo/al Adding telnyx provider
- *                               Adding specific header option
- *                               Adding international format request
- *   2021-08-26 5.8.3.0 SysCo/al Adding aspsms-ucs2 for special chars (limited to 70 caracters)
+ *   2022-04-11 5.8.6.0 SysCo/al telnyx provider added
+ *                               specific header option added
+ *                               international format request added
+ *   2021-08-26 5.8.3.0 SysCo/al aspsms-ucs2 for special chars (limited to 70 caracters) added
  *   2019-10-23 5.4.0.3 SysCo/al Define all parameters for preconfigured providers
- *   2018-11-02 5.4.0.3 SysCo/al Adding and testing preconfigured providers
+ *   2018-11-02 5.4.0.3 SysCo/al Preconfigured providers added and tested
  *   2018-10-09 5.4.0.2 SysCo/al First implementation
  */
 {
@@ -367,7 +370,9 @@ class MultiotpSms
                 $this->header = "";
                 break;
             case 'nowsms':
-                $this->url = "http://%ip:%port/?PhoneNumber=%to&Text=%msg";
+                if (empty($this->url)) {
+                  $this->url = "http://%ip:%port/?PhoneNumber=%to&Text=%msg";
+                }
                 $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
@@ -380,12 +385,29 @@ class MultiotpSms
                 $this->header = "";
                 break;
             case 'smseagle':
-                $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%user&pass=%pass&to=%to&message=%msg";
+                if (empty($this->url)) {
+                  $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%user&pass=%pass&to=%to&message=%msg";
+                }
                 $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "OK";
+                $this->no_double_zero = FALSE;
+                $this->international_format = FALSE;
+                $this->basic_auth = FALSE;
+                $this->content_encoding = "";
+                $this->header = "";
+                break;
+            case 'smsgateway':
+                if (empty($this->url)) {
+                  $this->url = "https://%ip:%port/smsgateway/index.php?id=%api_id&h=%pass&to=%to&message=%msg";
+                }
+                $this->send_template = "";
+                $this->method = "GET";
+                $this->encoding = "UTF";
+                $this->status_success = "20";
+                $this->content_success = "\"X-SMSGateway-State\" content=\"NEW\"";
                 $this->no_double_zero = FALSE;
                 $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
@@ -909,8 +931,8 @@ class MultiotpSms
             }
         }
         if (TRUE == $this->debug) {
-            echo "DEBUG result_status: " . ($result_status ? "TRUE" : "FALSE") . "<br />\n)";
-            echo "DEBUG result_content: " . ($result_content ? "TRUE" : "FALSE") . "<br />\n)";
+            echo "DEBUG result_status: " . (isset($result_status) ? ($result_status ? "TRUE" : "FALSE") : "") . "<br />\n)";
+            echo "DEBUG result_content: " . (isset($result_content) ? ($result_content ? "TRUE" : "FALSE") : "") . "<br />\n)";
         }
         return $result;
     }

@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2023 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.5.5 (2023-01-19)
+Current build: 5.9.5.7 (2023-05-04)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -153,6 +153,15 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
+```
+2023-05-04 5.9.5.7 FIX: Weekly anonymized stats date was not always updated
+                   FIX: Adding -tokenslist command in CLI mode (mas missing)
+                   FIX: Remove a debug line displaying sometimes "COMMDN:$command\n";
+                   FIX: Some minor PHP notice corrections
+                   ENH: Adding on-premises smsgateway (https://github.com/multiOTP/SMSGateway) as a new SMS provider
+                   ENH: Better warning messages when CheckUserLdapPassword failed
+                   ENH: Embedded documentation enhanced
+                   ENH: Template updated to display correct information for WITHOUT2FA tokens
 2023-01-19 5.9.5.5 ENH: LDAP filter can be customized using SetLdapFilter() method
                         ({cn_identifier}, {username}, and {groups_filtering} placeholders are supported)
                    ENH: Full PHP 8.x support (tested with 8.2.1 and 8.1.14),
@@ -580,6 +589,7 @@ CONTENT OF THE PACKAGE
 - the MSI installer of multiOTP Credential Provider for Windows 7/8/8.1/10/2012(R2)/2016
   must be downloaded separately on https://download.multiotp.net/credential-provider/
 
+```
 In the linux folder:
 - multiotp.php             : command line tool (merge of the header and the class, external files also included)
 - multiotp.class.php       : the main file, it is the class itself, external files are already included
@@ -589,16 +599,17 @@ In the linux folder:
 - test-tokens.csv          : provisioning file of test tokens
 + oath subfolder           : contains provisioning files for oath test tokens
 + templates folder         : all templates files needed to generate the provisioning pages from the web GUI
-```
+
 *******************************************************************************
 ***  FOR THESE PHP FILES, THE BACKEND IS FILE BASED AND THE CONFIG AND      ***
 ***  BACKEND FOLDERS ARE RELATIVE AND JUST BELOW THE MAIN MULTIOTP FOLDER   ***
 *******************************************************************************
 ```
 
+```
 In the raspberry folder:
 - all necessary files to be able to create your own strong authentication device using a Raspberry Pi
-```
+
 *******************************************************************************
 ***  FOR THESE PHP FILES, THE BACKEND IS SET BY DEFAULT AS FILE BASED AND   ***
 ***  THE CONFIG AND BACKEND FOLDERS DEFINED TO BE LOCATED IN /etc/multiotp/ ***
@@ -611,19 +622,21 @@ In the raspberry folder:
 *******************************************************************************
 ```
 
+```
 In the sources folder:
 - multiotp.class.php       : the main file, it is the class itself, which requires external files
 - multiotp.cli.header.php  : header file to be merged with the class for a single file command line tool
 - multiotp.server.php      : the web service file, which requires the class as external file
 - check.multiotp.class.php : PHP script to validate some multiOTP functionalities
 + contrib subfolder        : contains all external files required by the multiotp.class.php file
-```
+
 *******************************************************************************
 ***  FOR THESE PHP FILES, THE BACKEND IS FILE BASED AND THE CONFIG AND      ***
 ***  BACKEND FOLDERS ARE RELATIVE AND JUST BELOW THE MAIN MULTIOTP FOLDER   ***
 *******************************************************************************
 ```
 
+```
 In the windows folder:
 - multiotp.exe             : command line tool for Windows (digitally signed) with embedded PHP 7.x
 - multiotp.class.php       : the main file, it is the class itself, external files are already included
@@ -647,7 +660,7 @@ In the windows folder:
 + webservice subfolder     : all necessary files to be able to install a Windows multiOTP web service
                              (using Nginx as the light web server on port 8112,
                               or as a secured SSL connection (https) on port 8113)
-```
+
 *******************************************************************************
 ***  FOR THESE PHP FILES, THE BACKEND IS FILE BASED AND THE CONFIG AND      ***
 ***  BACKEND FOLDERS ARE RELATIVE AND JUST BELOW THE MAIN MULTIOTP FOLDER   ***
@@ -973,16 +986,16 @@ now be displayed (like with the same option used with ntlm_auth).
 ```
 
 2) In the configuration file called "default" in etc/raddb/sites-enabled/  
-    a) Add the multiOTP handling  
 ```
+    a) Add the multiOTP handling  
     #  
     # Handle multiOTP (https://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
 ```
 
-    b) Add the multiOTP authentication handling  
 ```
+    b) Add the multiOTP authentication handling  
     #  
     # Handle multiOTP (https://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
@@ -991,28 +1004,28 @@ now be displayed (like with the same option used with ntlm_auth).
     }  
 ```
 
-    c) Comment the first line containing only "chap"  
 ```
+    c) Comment the first line containing only "chap"  
     #chap is now handled by multiOTP  
 ```
 
-    d) Comment the first line containing only "mschap"  
 ```
+    d) Comment the first line containing only "mschap"  
     #mschap is now handled by multiOTP  
 ```
 
 3) In the configuration file called "inner-tunnel" in etc/raddb/sites-enabled/  
     
-    a) Add the multiOTP handling  
 ```
+    a) Add the multiOTP handling  
     #  
     # Handle multiOTP (https://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "pap" entry found in the file.  
     multiotp  
 ```
 
-    b) Add the multiOTP authentication handling  
 ```
+    b) Add the multiOTP authentication handling  
     #  
     # Handle multiOTP (https://www.multiotp.net/) authentication.  
     # This must be added BEFORE the first "Auth-Type PAP" entry found in the file.  
@@ -1021,13 +1034,13 @@ now be displayed (like with the same option used with ntlm_auth).
     }  
 ```
 
-    c) Comment the first line containing only "chap"  
 ```
+    c) Comment the first line containing only "chap"  
     #chap is now handled by multiOTP  
 ```
 
-    d) Comment the first line containing only "mschap"  
 ```
+    d) Comment the first line containing only "mschap"  
     #mschap is now handled by multiOTP  
 ```
 
@@ -1072,10 +1085,10 @@ now be displayed (like with the same option used with ntlm_auth).
 
 Some values can go back to FreeRADIUS:
 
-a) Set the right format options for FreeRADIUS:  
+ * Set the right format options for FreeRADIUS:  
    multiotp -config radius-reply-attributor=" += " radius-reply-separator=","
    
-b) Set multiOTP to send back to FreeRADIUS the group of the authenticated user:  
+ * Set multiOTP to send back to FreeRADIUS the group of the authenticated user:  
    multiotp -config group-attribute="Filter-Id"  
 
 
@@ -1577,7 +1590,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.5.5 (2023-01-19)
+multiOTP 5.9.5.7 (2023-05-04)
 (c) 2010-2023 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1698,8 +1711,8 @@ Usage:
  multiotp user [-chap-id=0x..] -chap-challenge=0x... -chap-password=0x...
    (the first byte of the chap-password value can contain the chap-id value)
 
- multiotp -fastcreate user [pin] (create a Google Auth compatible token)
- multiotp -fastcreatenopin user [pin] (create a user without a prefix PIN)
+ multiotp -fastcreate user [pin] (create a TOTP compatible token)
+ multiotp -fastcreatenopin user (create a user without a prefix PIN)
  multiotp -fastecreatewithpin user [pin] (create a user with a prefix PIN)
  multiotp -createga user base32_seed [pin] (create Google Auth user with TOTP)
  multiotp -create user algo seed pin digits [pos|interval]
@@ -1808,7 +1821,7 @@ Usage:
      radius-reply-separator: [,|:|;|cr|crlf] returned attributes separator
                              ('crlf' for TekRADIUS, ',' for FreeRADIUS)
           self-registration: [1|0] enable/disable self-registration of tokens
-         server-cache-level: [1|0] enable/allow cache from server to client
+         server-cache-level: [1|0] enable/disable cache from server to client
       server-cache-lifetime: lifetime in seconds of the cached information
               server-secret: shared secret used for client/server operation
              server-timeout: timeout value for the connection to the server
@@ -1871,7 +1884,7 @@ Custom SMS provider only
 
  multiotp -set user option1=value1 option2=value2 ... optionN=valueN
   options are  email: update the email of the user
-         cache-level: [1|0] enable/allow cache for this user on the client
+         cache-level: [1|0] enable/disable cache for this user on the client
       cache-lifetime: set/update lifetime in seconds of cached information
          description: set a description to the user, used for example during
                       the QRcode generation as the description of the account
@@ -1903,7 +1916,7 @@ Authentication parameters:
 
 Client/server inline parameters:
 
- -server-cache-level=[1|0] enable/allow cache from server to client
+ -server-cache-level=[1|0] enable/disable cache from server to client
  -server-secret=shared secret used for client/server operation
  -server-timeout=timeout value for the connection to the server
  -server-url=full url of the server(s) for client/server mode

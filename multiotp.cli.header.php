@@ -35,8 +35,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.5
- * @date      2023-01-19
+ * @version   5.9.5.7
+ * @date      2023-05-04
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -432,6 +432,8 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "create";
     } elseif ("-createga" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "createga";
+    } elseif ("-customfunction" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "customfunction";
     } elseif ("-custominfo" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "custominfo";
     } elseif ("-default-dialin-ip-mask" == mb_strtolower($current_arg,'UTF-8')) {
@@ -522,6 +524,8 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "set";
     } elseif ("-showlog" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "showlog";
+    } elseif ("-tokenslist" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "tokenslist";
     } elseif ("-unlock" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "unlock";
     } elseif ("-update" == mb_strtolower($current_arg,'UTF-8')) {
@@ -701,7 +705,6 @@ for ($i = ($param_count+1); $i <= $all_args_size; $i++) {
     $all_args[$i] = '';
 }
 
-
 // if not enough parameters, display error message
 //  and indicate how to display the help page
 if (($param_count < 1) &&
@@ -709,6 +712,7 @@ if (($param_count < 1) &&
     ($command != "call-method") &&
     ($command != "checkpam") &&
     ($command != "clearlog") &&
+    ($command != "customfunction") &&
     ($command != "custominfo") &&
     ($command != "network-info") &&
     ($command != "help") &&
@@ -1025,8 +1029,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             } else {
                 $backup_file = ('' != nullable_trim($all_args[2])) ? $all_args[2] : 'multiotp.cfg';
                 if (TRUE === ($multiotp->BackupConfiguration(array('backup_file'      => $backup_file,
-                                                                   'encryption_key'   => $all_args[1],
-                                                                   'flush_attributes' => array('admin_password_hash'))))) {
+                                                                   'encryption_key'   => $all_args[1])))) {
                   $result = 19; // INFO: Requested operation successfully done
                 } else {
                   $result = 99; // ERROR
@@ -2098,10 +2101,19 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             break;
         case "phpinfo":
             phpinfo();
+            $result = 19;
             break;
         case "libhash":
             echo $multiotp->GetLibraryHash($all_args[1], $all_args[2]).$crlf;
             $result = 19;
+            break;
+        case "customfunction":
+            if (method_exists($multiotp, 'CustomFunction')) {
+              echo $multiotp->CustomFunction($all_args[1], $all_args[2]).$crlf;
+              $result = 19;
+            } else {
+              $result = 99;
+            }
             break;
         case "custominfo":
             echo $multiotp->GetCustomInfo().$crlf;
@@ -2116,14 +2128,17 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             $result = 30;
             echo $multiotp->GetClassName()." ".$multiotp->GetVersion()." (".$multiotp->GetDate().")";
             if (!$no_php_info) {
-                if (PHP_MAJOR_VERSION > 4) {
-                    echo ", running with PHP ".phpversion();
-                }
-                if ($multiotp->GetCliProxyMode()) {
-                    echo " (CLI proxy mode)";
-                } else {
-                    echo " (CLI mode)";
-                }
+              if (PHP_MAJOR_VERSION > 4) {
+                echo ", running with PHP ".phpversion();
+              }
+              if (is64bitPHP()) {
+                echo " [64 bits]";
+              }
+              if ($multiotp->GetCliProxyMode()) {
+                echo " (CLI proxy mode)";
+              } else {
+                echo " (CLI mode)";
+              }
             }
             echo $crlf;
             echo $multiotp->GetCopyright().$crlf;
@@ -2216,8 +2231,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo " multiotp user [-chap-id=0x..] -chap-challenge=0x... -chap-password=0x...".$crlf;
                 echo "   (the first byte of the chap-password value can contain the chap-id value)".$crlf;
                 echo $crlf;
-                echo " multiotp -fastcreate user [pin] (create a Google Auth compatible token)".$crlf;
-                echo " multiotp -fastcreatenopin user [pin] (create a user without a prefix PIN)".$crlf;
+                echo " multiotp -fastcreate user [pin] (create a TOTP compatible token)".$crlf;
+                echo " multiotp -fastcreatenopin user (create a user without a prefix PIN)".$crlf;
                 echo " multiotp -fastecreatewithpin user [pin] (create a user with a prefix PIN)".$crlf;
                 echo " multiotp -createga user base32_seed [pin] (create Google Auth user with TOTP)".$crlf;
                 echo " multiotp -create user algo seed pin digits [pos|interval]".$crlf;
@@ -2327,7 +2342,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "     radius-reply-separator: [,|:|;|cr|crlf] returned attributes separator".$crlf;
                 echo "                             ('crlf' for TekRADIUS, ',' for FreeRADIUS)".$crlf;
                 echo "          self-registration: [1|0] enable/disable self-registration of tokens".$crlf;
-                echo "         server-cache-level: [1|0] enable/allow cache from server to client".$crlf;
+                echo "         server-cache-level: [1|0] enable/disable cache from server to client".$crlf;
                 echo "      server-cache-lifetime: lifetime in seconds of the cached information".$crlf;
                 echo "              server-secret: shared secret used for client/server operation".$crlf;
                 echo "             server-timeout: timeout value for the connection to the server".$crlf;
@@ -2390,7 +2405,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo " multiotp -set user option1=value1 option2=value2 ... optionN=valueN".$crlf;
                 echo "  options are  email: update the email of the user".$crlf;
-                echo "         cache-level: [1|0] enable/allow cache for this user on the client".$crlf;
+                echo "         cache-level: [1|0] enable/disable cache for this user on the client".$crlf;
                 echo "      cache-lifetime: set/update lifetime in seconds of cached information".$crlf;
                 echo "         description: set a description to the user, used for example during".$crlf;
                 echo "                      the QRcode generation as the description of the account".$crlf;
@@ -2422,7 +2437,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo "Client/server inline parameters:".$crlf;
                 echo $crlf;
-                echo " -server-cache-level=[1|0] enable/allow cache from server to client".$crlf;
+                echo " -server-cache-level=[1|0] enable/disable cache from server to client".$crlf;
                 echo " -server-secret=shared secret used for client/server operation".$crlf;
                 echo " -server-timeout=timeout value for the connection to the server".$crlf;
                 echo " -server-url=full url of the server(s) for client/server mode".$crlf;

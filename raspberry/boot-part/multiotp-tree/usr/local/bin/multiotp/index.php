@@ -27,8 +27,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.5
- * @date      2023-01-19
+ * @version   5.9.5.7
+ * @date      2023-05-04
  * @since     2013-08-06
  * @copyright (c) 2013-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -161,8 +161,8 @@ if (!class_exists('Multiotp')) {
  *  - mOTP (http://motp.sourceforge.net)
  *  - OATH/HOTP or OATH/TOTP, base32/hex/raw seed, QRcode provisioning
  *    (FreeOTP, Google Authenticator, ...)
- *  - SMS tokens (using Afilnet, aspsms, Clickatell, eCall, IntelliSMS, Nexmo,
- *      NowSMS, SMSEagle, Swisscom LA REST, Telnyx, any custom provider, your own script)
+ *  - SMS tokens (using Afilnet, aspsms, Clickatell, eCall, IntelliSMS, Nexmo, NowSMS, 
+ *      SMSEagle, SMSGateway, Swisscom LA REST, Telnyx, any custom provider, your own script)
  *  - TAN (emergency scratch passwords)
  *
  * This class can be used as is in your own PHP project, but it can also be
@@ -192,8 +192,8 @@ if (!class_exists('Multiotp')) {
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.5
- * @date      2023-01-19
+ * @version   5.9.5.7
+ * @date      2023-05-04
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -397,8 +397,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.5
- * @date      2023-01-19
+ * @version   5.9.5.7
+ * @date      2023-05-04
  * @since     2010-07-18
  */
 {
@@ -513,8 +513,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.5.5
-   * @date      2023-01-19
+   * @version   5.9.5.7
+   * @date      2023-05-04
    * @since     2010-07-18
    */
   function __construct(
@@ -538,11 +538,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.5.5'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.5.7'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = nullable_trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2023-01-19'; // You should update the date with the date of your changes
+        $temp_date = '@date      2023-05-04'; // You should update the date with the date of your changes
         $this->_date = nullable_trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMyBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -1145,6 +1145,7 @@ class Multiotp
                                           array("nexmo", "Nexmo (HTTPS)", "https://www.nexmo.com/", "api_id,password"),
                                           array("nowsms", "NowSMS.com (on-premises gateway)", "https://www.nowsms.com/", "ip,port,username,password"),
                                           array("smseagle", "SMSEagle (hardware gateway)", "https://www.smseagle.eu/", "ip,port,username,password"),
+                                          array("smsgateway", "SMSGateway (open source gateway)", "https://github.com/multiOTP/SMSGateway", "ip,port,api_id,password"),
                                           array("swisscom", "Swisscom LA (REST-JSON)", "https://messagingproxy.swisscom.ch:4300/rest/1.0.0/", "api_id,username,password"),
                                           array("telnyx", "Telnyx", "https://developers.telnyx.com/docs/api/v2/messaging", "api_id"),
                                           array("custom", "Custom provider", "")
@@ -2033,7 +2034,7 @@ class Multiotp
       }
       $clean_raw_folder = str_replace($this->GetConfigFolder(), "--config-@-folder--", $raw_folder);
 
-      if ('*CLEAR*' == $encryption_key) {
+      if (('*CLEAR*' == $encryption_key) || ('*UNENC*' == $encryption_key)) {
           $encryption_key = '';
       } elseif ('' == $encryption_key) {
           $encryption_key = $this->GetEncryptionKey();
@@ -2826,7 +2827,7 @@ class Multiotp
   function UpdateAnonymousStatLastUpdate()
   {
       $this->_config_data['anonymous_stat_last_update'] = time();
-      $this->WriteConfigData();
+      $this->WriteConfigData(array("force_write_needed" => TRUE));
   }
 
 
@@ -2952,7 +2953,9 @@ class Multiotp
     $result = TRUE;
 
     // Configuration
-    $content = $this->WriteConfigData($bc_array);
+    $config_bc_array = $bc_array;
+    $config_bc_array["return_content"] = TRUE; // Force returning the result
+    $content = $this->WriteConfigData($config_bc_array);
     $result = $result && ($content !== FALSE);
     $backup_content.= (is_bool($content)?"":$content);
 
@@ -3055,7 +3058,7 @@ class Multiotp
       $rename_files = array();
     }
 
-    if ('*CLEAR*' == $restore_key) {
+    if (('*CLEAR*' == $restore_key) || ('*UNENC*' == $restore_key)) {
         $restore_key = '';
     } elseif ('' == $restore_key) {
         $restore_key = $this->GetEncryptionKey();
@@ -5753,6 +5756,10 @@ class Multiotp
         if ($this->GetVerboseFlag()) {
           $this->WriteLog("Debug: **New configuration value to backup for $key: '$value' (was '$old_value' before)", FALSE, FALSE, 8888, 'Debug', '');
         }
+      }
+      
+      if (true === (isset($write_config_data_array['force_write_needed']) ? $write_config_data_array['force_write_needed'] : false)) {
+        $write_needed = true;
       }
       
       if ($write_needed) {
@@ -8536,7 +8543,7 @@ class Multiotp
   function CalculateControlHash(
       $value_to_hash
   ) {
-      return strtoupper(md5("CaLcUlAtE".$value_to_hash."cOnTrOlHaSh")); // ! THIS NON-MB strtoupper must stay as is !
+      return strtoupper(md5("CaLcUlAtE".$value_to_hash."cOnTrOlHaSh")); // DEV WARNING ! THIS NON-MB strtoupper must stay as is !
   }
 
 
@@ -8737,7 +8744,7 @@ class Multiotp
               } elseif (('totp' == mb_strtolower($algorithm,'UTF-8')) || ('motp' == mb_strtolower($algorithm,'UTF-8'))) {
                   $next_event = 0;
                   $time_interval = ((-1 == $time_interval_or_next_event)?30:$time_interval_or_next_event);
-                  if ("motp" == mb_strtolower($algorithm,'UTF-8')) {
+                  if ('motp' == mb_strtolower($algorithm,'UTF-8')) {
                       // $the_seed = (('' == $seed)?mb_substr(md5(date("YmdHis").mt_rand(100000,999999)),0,16):$seed);
                       $time_interval = 10;
                       if ((mb_strlen($the_pin) < 4) || (0 == intval($the_pin))) {
@@ -9484,7 +9491,7 @@ class Multiotp
                           $email = '',
                           $sms = '',
                           $prefix_pin_needed = -1,
-                          $algorithm = "totp",
+                          $algorithm = 'totp',
                           $activated=1,
                           $description = "",
                           $group = "*DEFAULT*",
@@ -9549,10 +9556,10 @@ class Multiotp
 
               $seed = mb_substr(md5(date("YmdHis").mt_rand(100000,999999)),0,20).mb_substr(md5(mt_rand(100000,999999).date("YmdHis")),0,20);
 
-              if ("totp" == mb_strtolower($algorithm,'UTF-8'))
+              if ('totp' == mb_strtolower($algorithm,'UTF-8'))
               {
                   $time_interval = 30;
-              } elseif ("motp" == mb_strtolower($algorithm,'UTF-8')) {
+              } elseif ('motp' == mb_strtolower($algorithm,'UTF-8')) {
                   $seed = mb_substr($seed,0,16);
                   $time_interval = 10;
                   if ((mb_strlen($the_pin) < 4) || (0 == intval($the_pin)))
@@ -11990,7 +11997,7 @@ class Multiotp
 
   function IsUserRequestLdapPasswordEnabled()
   {
-      return (1 == ($this->_user_data['request_ldap_pwd']));
+      return (1 == (isset($this->_user_data['request_ldap_pwd']) ? $this->_user_data['request_ldap_pwd'] : 0));
   }
 
 
@@ -12203,7 +12210,8 @@ class Multiotp
       if($user != '') {
           $this->SetUser($user);
       }
-      return $this->_user_data['user_pin'];
+      return (isset($this->_user_data['user_pin']) ? $this->_user_data['user_pin'] : '');
+
   }
 
 
@@ -12270,7 +12278,7 @@ class Multiotp
 
   function GetUserTokenTimeInterval()
   {
-      return $this->_user_data['time_interval'];
+      return (isset($this->_user_data['time_interval']) ? $this->_user_data['time_interval'] : 0);
   }
 
 
@@ -12322,7 +12330,7 @@ class Multiotp
 
   function GetUserTokenLastEvent()
   {
-      return intval($this->_user_data['last_event']);
+      return (isset($this->_user_data['last_event']) ? $this->_user_data['last_event'] : 0);
   }
 
 
@@ -12697,7 +12705,7 @@ class Multiotp
           } else {
               $next_event = 0;
               $time_interval = ((-1 == $time_interval_or_next_event)?30:$time_interval_or_next_event);
-              if ("motp" == mb_strtolower($algorithm,'UTF-8')) {
+              if ('motp' == mb_strtolower($algorithm,'UTF-8')) {
                   $the_seed = (('' == $seed)?mb_substr(md5(date("YmdHis").mt_rand(100000,999999)),0,16):$seed);
                   $time_interval = 10;
               }
@@ -17045,6 +17053,17 @@ class Multiotp
                               $ldap_check_passed = FALSE;
                               $ldap_to_check = '!LDAP_FALSE!';
                               $this->ResetUserLdapHashCache();
+                              if ($this->GetVerboseFlag()) {
+                                  $this->WriteLog("Debug: *user LDAP password false, hash cache cleared", FALSE, FALSE, 8888, 'Debug', '');
+                              }
+                          }
+                      } else { // If the LdapHash cache is disabled
+                          $ldap_check_passed = FALSE;
+                          $ldap_to_check = '!LDAP_FALSE!';
+                          $this->ResetUserLdapHashCache();
+                          if ($this->IsLdapServerReachable()) {
+                              $this->WriteLog("Error: User $real_user LDAP password false", FALSE, FALSE, 99, 'User');
+                          } else {
                               $this->WriteLog("Error: User $real_user verification failed, unreachable LDAP/AD server(s)", FALSE, FALSE, 99, 'User');
                           }
                       }
@@ -17131,6 +17150,17 @@ class Multiotp
                               $ldap_check_passed = FALSE;
                               $ldap_to_check = '!LDAP_FALSE!';
                               $this->ResetUserLdapHashCache();
+                              if ($this->GetVerboseFlag()) {
+                                  $this->WriteLog("Debug: *user LDAP password false, hash cache cleared", FALSE, FALSE, 8888, 'Debug', '');
+                              }
+                          }
+                      } else { // If the LdapHash cache is disabled
+                          $ldap_check_passed = FALSE;
+                          $ldap_to_check = '!LDAP_FALSE!';
+                          $this->ResetUserLdapHashCache();
+                          if ($this->IsLdapServerReachable()) {
+                              $this->WriteLog("Error: User $real_user LDAP password false", FALSE, FALSE, 99, 'User');
+                          } else {
                               $this->WriteLog("Error: User $real_user verification failed, unreachable LDAP/AD server(s)", FALSE, FALSE, 99, 'User');
                           }
                       }
@@ -17221,6 +17251,17 @@ class Multiotp
                               $ldap_check_passed = FALSE;
                               $ldap_to_check = '!LDAP_FALSE!';
                               $this->ResetUserLdapHashCache();
+                              if ($this->GetVerboseFlag()) {
+                                  $this->WriteLog("Debug: *user LDAP password false, hash cache cleared", FALSE, FALSE, 8888, 'Debug', '');
+                              }
+                          }
+                      } else { // If the LdapHash cache is disabled
+                          $ldap_check_passed = FALSE;
+                          $ldap_to_check = '!LDAP_FALSE!';
+                          $this->ResetUserLdapHashCache();
+                          if ($this->IsLdapServerReachable()) {
+                              $this->WriteLog("Error: User $real_user LDAP password false", FALSE, FALSE, 99, 'User');
+                          } else {
                               $this->WriteLog("Error: User $real_user verification failed, unreachable LDAP/AD server(s)", FALSE, FALSE, 99, 'User');
                           }
                       }
@@ -17311,6 +17352,15 @@ class Multiotp
                               if ($this->GetVerboseFlag()) {
                                   $this->WriteLog("Debug: *user LDAP password false, hash cache cleared", FALSE, FALSE, 8888, 'Debug', '');
                               }
+                          }
+                      } else { // If the LdapHash cache is disabled
+                          $ldap_check_passed = FALSE;
+                          $ldap_to_check = '!LDAP_FALSE!';
+                          $this->ResetUserLdapHashCache();
+                          if ($this->IsLdapServerReachable()) {
+                              $this->WriteLog("Error: User $real_user LDAP password false", FALSE, FALSE, 99, 'User');
+                          } else {
+                              $this->WriteLog("Error: User $real_user verification failed, unreachable LDAP/AD server(s)", FALSE, FALSE, 99, 'User');
                           }
                       }
                   }
@@ -17520,6 +17570,15 @@ class Multiotp
                                   if ($this->GetVerboseFlag()) {
                                       $this->WriteLog("Debug: *user LDAP password false, hash cache cleared", FALSE, FALSE, 8888, 'Debug', '');
                                   }
+                              }
+                          } else { // If the LdapHash cache is disabled
+                              $ldap_check_passed = FALSE;
+                              $ldap_to_check = '!LDAP_FALSE!';
+                              $this->ResetUserLdapHashCache();
+                              if ($this->IsLdapServerReachable()) {
+                                  $this->WriteLog("Error: User $real_user LDAP password false", FALSE, FALSE, 99, 'User');
+                              } else {
+                                  $this->WriteLog("Error: User $real_user verification failed, unreachable LDAP/AD server(s)", FALSE, FALSE, 99, 'User');
                               }
                           }
                       }
@@ -18211,6 +18270,15 @@ class Multiotp
                                           $this->WriteLog("Debug: *user LDAP password false, hash cache cleared", FALSE, FALSE, 8888, 'Debug', '');
                                       }
                                   }
+                              } else { // If the LdapHash cache is disabled
+                                  $ldap_check_passed = FALSE;
+                                  $ldap_to_check = '!LDAP_FALSE!';
+                                  $this->ResetUserLdapHashCache();
+                                  if ($this->IsLdapServerReachable()) {
+                                      $this->WriteLog("Error: User $real_user LDAP password false", FALSE, FALSE, 99, 'User');
+                                  } else {
+                                      $this->WriteLog("Error: User $real_user verification failed, unreachable LDAP/AD server(s)", FALSE, FALSE, 99, 'User');
+                                  }
                               }
                           }
                       }
@@ -18883,7 +18951,7 @@ class Multiotp
                           $digits = intval($line_array[11]);
                           $next_event = $interval_or_event;
                           $time_interval = 0;
-                      } elseif ("yubicootp" == $algorithm) {
+                      } elseif ('yubicootp' == $algorithm) {
                           $private_id = nullable_trim($line_array[4]);
                           if ("000000000000" == $private_id) {
                               $private_id = "";
@@ -18968,7 +19036,7 @@ class Multiotp
                       } else {
                           $next_event = 0;
                           $time_interval = $interval_or_event;
-                          if ("motp" == $algorithm) {
+                          if ('motp' == $algorithm) {
                               $time_interval = 10;
                           }
                       }
@@ -22305,6 +22373,7 @@ class MultiotpSms
  *         nexmo: Nexmo (HTTPS), https://www.nexmo.com/
  *        nowsms: NowSMS.com (on-premises), https://www.nowsms.com/
  *      smseagle: SMSEagle (hardware gateway), https://www.smseagle.eu/
+ *    smsgateway: SMSGateway (open source on-premises), https://github.com/multiOTP/SMSGateway
  *      swisscom: Swisscom LA (REST-JSON), https://messagingproxy.swisscom.ch:4300/rest/1.0.0/
  *        telnyx: Telnyx, https://developers.telnyx.com/docs/api/v2/messaging
  *
@@ -22355,15 +22424,17 @@ class MultiotpSms
  *
  * Change Log
  *
+ *   2023-03-21 5.9.5.8 SysCo/al smsgateway provider added
+ *                               Specific URL can be specified in the constructor
  *   2022-12-26 5.9.5.3 SysCo/al Updated eCall API
  *                               Updated ASPSMS API
  *                               Enhanced payload handling
- *   2022-04-11 5.8.6.0 SysCo/al Adding telnyx provider
- *                               Adding specific header option
- *                               Adding international format request
- *   2021-08-26 5.8.3.0 SysCo/al Adding aspsms-ucs2 for special chars (limited to 70 caracters)
+ *   2022-04-11 5.8.6.0 SysCo/al telnyx provider added
+ *                               specific header option added
+ *                               international format request added
+ *   2021-08-26 5.8.3.0 SysCo/al aspsms-ucs2 for special chars (limited to 70 caracters) added
  *   2019-10-23 5.4.0.3 SysCo/al Define all parameters for preconfigured providers
- *   2018-11-02 5.4.0.3 SysCo/al Adding and testing preconfigured providers
+ *   2018-11-02 5.4.0.3 SysCo/al Preconfigured providers added and tested
  *   2018-10-09 5.4.0.2 SysCo/al First implementation
  */
 {
@@ -22652,7 +22723,9 @@ class MultiotpSms
                 $this->header = "";
                 break;
             case 'nowsms':
-                $this->url = "http://%ip:%port/?PhoneNumber=%to&Text=%msg";
+                if (empty($this->url)) {
+                  $this->url = "http://%ip:%port/?PhoneNumber=%to&Text=%msg";
+                }
                 $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
@@ -22665,12 +22738,29 @@ class MultiotpSms
                 $this->header = "";
                 break;
             case 'smseagle':
-                $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%user&pass=%pass&to=%to&message=%msg";
+                if (empty($this->url)) {
+                  $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%user&pass=%pass&to=%to&message=%msg";
+                }
                 $this->send_template = "";
                 $this->method = "GET";
                 $this->encoding = "UTF";
                 $this->status_success = "20";
                 $this->content_success = "OK";
+                $this->no_double_zero = FALSE;
+                $this->international_format = FALSE;
+                $this->basic_auth = FALSE;
+                $this->content_encoding = "";
+                $this->header = "";
+                break;
+            case 'smsgateway':
+                if (empty($this->url)) {
+                  $this->url = "https://%ip:%port/smsgateway/index.php?id=%api_id&h=%pass&to=%to&message=%msg";
+                }
+                $this->send_template = "";
+                $this->method = "GET";
+                $this->encoding = "UTF";
+                $this->status_success = "20";
+                $this->content_success = "\"X-SMSGateway-State\" content=\"NEW\"";
                 $this->no_double_zero = FALSE;
                 $this->international_format = FALSE;
                 $this->basic_auth = FALSE;
@@ -23194,8 +23284,8 @@ class MultiotpSms
             }
         }
         if (TRUE == $this->debug) {
-            echo "DEBUG result_status: " . ($result_status ? "TRUE" : "FALSE") . "<br />\n)";
-            echo "DEBUG result_content: " . ($result_content ? "TRUE" : "FALSE") . "<br />\n)";
+            echo "DEBUG result_status: " . (isset($result_status) ? ($result_status ? "TRUE" : "FALSE") : "") . "<br />\n)";
+            echo "DEBUG result_content: " . (isset($result_content) ? ($result_content ? "TRUE" : "FALSE") : "") . "<br />\n)";
         }
         return $result;
     }
@@ -23286,6 +23376,13 @@ if (!function_exists('pcre_fnmatch')) {
 if (!function_exists('fnmatch')) {
   function fnmatch($pattern, $string, $flags = 0) {
     return pcre_fnmatch($pattern, $string, $flags);
+  }
+}
+
+
+if (!function_exists('is64bitPHP')) {
+  function is64bitPHP() {
+    return strstr(php_uname("m"), '64') == '64';
   }
 }
 

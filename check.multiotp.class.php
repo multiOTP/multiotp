@@ -22,8 +22,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.5
- * @date      2023-01-19
+ * @version   5.9.5.7
+ * @date      2023-05-04
  * @since     2013-07-10
  * @copyright (c) 2013-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -123,15 +123,15 @@ set_time_limit(3600);
 $first_time = time();
 
 if ((!isset($GLOBALS['minima'])) && isset($_GET['minima'])) {
-    $GLOBALS['minima'] = $_GET['minima'];
+    $GLOBALS['minima'] = isset($_GET['minima']);
 }
 
 if ((!isset($GLOBALS['keeplog'])) && isset($_GET['keeplog'])) {
-    $GLOBALS['keeplog'] = $_GET['keeplog'];
+    $GLOBALS['keeplog'] = isset($_GET['keeplog']);
 }
 
 if ((!isset($GLOBALS['noresume'])) && isset($_GET['noresume'])) {
-    $GLOBALS['noresume'] = $_GET['noresume'];
+    $GLOBALS['noresume'] = isset($_GET['noresume']);
 }
 
 $test_mail = isset($GLOBALS['test_mail'])?$GLOBALS['test_mail']:'';

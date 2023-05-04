@@ -87,6 +87,13 @@ if (!function_exists('fnmatch')) {
 }
 
 
+if (!function_exists('is64bitPHP')) {
+  function is64bitPHP() {
+    return strstr(php_uname("m"), '64') == '64';
+  }
+}
+
+
 /***********************************************************************
  * Name: ram_total_space
  * Short description: return total RAM in Bytes.
