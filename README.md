@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2023 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.5.7 (2023-05-04)
+Current build: 5.9.6.1 (2023-05-10)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -154,14 +154,17 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2023-05-10 5.9.6.1 FIX: Automated concurrent access for the same user with "Without2FA" token could corrupt the user file
+                   FIX: Any files backend operation is now secured with explicit lock mechanism
+                   ENH: Template updated to print bigger QRcode for "MOTP-XML" tokens
 2023-05-04 5.9.5.7 FIX: Weekly anonymized stats date was not always updated
-                   FIX: Adding -tokenslist command in CLI mode (mas missing)
+                   FIX: Adding -tokenslist command in CLI mode (was in the documentation, but was missing)
                    FIX: Remove a debug line displaying sometimes "COMMDN:$command\n";
                    FIX: Some minor PHP notice corrections
+                   FIX: Template updated to display correct information for "Without2FA" tokens
                    ENH: Adding on-premises smsgateway (https://github.com/multiOTP/SMSGateway) as a new SMS provider
                    ENH: Better warning messages when CheckUserLdapPassword failed
                    ENH: Embedded documentation enhanced
-                   ENH: Template updated to display correct information for WITHOUT2FA tokens
 2023-01-19 5.9.5.5 ENH: LDAP filter can be customized using SetLdapFilter() method
                         ({cn_identifier}, {username}, and {groups_filtering} placeholders are supported)
                    ENH: Full PHP 8.x support (tested with 8.2.1 and 8.1.14),
@@ -1590,7 +1593,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.5.7 (2023-05-04)
+multiOTP 5.9.6.1 (2023-05-10)
 (c) 2010-2023 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -2106,8 +2109,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.9.5.7.zip 
-SHA256:6a6c67577ca841121425ddb4af111f709c7ca635c79f41280ce0756ddaafeeb2 
-SHA1:0bfd98195d547f529228f675599d48fb6d21d417 
-MD5:0301cd0c94874db396dc03b1d10b90fc 
+Hash verification for multiotp_5.9.6.1.zip 
+SHA256:136725420e72d4dc5af1b64b084be7028338aead437a022ac803c77d71623891 
+SHA1:240355ceef9c4b23aff11984039c1de93a45f04b 
+MD5:569863c9532db4b6224b243526af2117 
 ``` 

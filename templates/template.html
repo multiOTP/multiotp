@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-  <!-- Scratch template (multilingual en/fr) 5.9.5.7 and above -->
+  <!-- Scratch template (multilingual en/fr) 5.9.6.1 and above -->
   <!-- Please save this file in UTF-8 format (without BOM) -->
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -202,7 +202,17 @@
 
           <table class="application">
             <tr>
+              <!-- {/IfMultiotpUserAlgorithm="TOTP,HOTP,MOTP"} -->
+
+              <!-- {IfMultiotpUserAlgorithm="TOTP,HOTP"} -->
               <td>{MultiotpQrCodeUserToken account=MultiotpUserDescription width=250 height=250}</td>
+              <!-- {/IfMultiotpUserAlgorithm="TOTP,HOTP"} -->
+
+              <!-- {IfMultiotpUserAlgorithm="MOTP"} -->
+              <td>{MultiotpQrCodeUserToken account=MultiotpUserDescription width=500 height=500}</td>
+              <!-- {/IfMultiotpUserAlgorithm="MOTP"} -->
+
+              <!-- {IfMultiotpUserAlgorithm="TOTP,HOTP,MOTP"} -->
             </tr>
             <tr>
               <td class="account">{MultiotpUserDescription}</td>
@@ -319,7 +329,17 @@
 
           <table class="application">
             <tr>
+              <!-- {/IfMultiotpUserAlgorithm="TOTP,HOTP,MOTP"} -->
+
+              <!-- {IfMultiotpUserAlgorithm="TOTP,HOTP"} -->
               <td>{MultiotpQrCodeUserToken account=MultiotpUserDescription width=250 height=250}</td>
+              <!-- {/IfMultiotpUserAlgorithm="TOTP,HOTP"} -->
+
+              <!-- {IfMultiotpUserAlgorithm="MOTP"} -->
+              <td>{MultiotpQrCodeUserToken account=MultiotpUserDescription width=500 height=500}</td>
+              <!-- {/IfMultiotpUserAlgorithm="MOTP"} -->
+
+              <!-- {IfMultiotpUserAlgorithm="TOTP,HOTP,MOTP"} -->
             </tr>
             <tr>
               <td class="account">{MultiotpUserDescription}</td>

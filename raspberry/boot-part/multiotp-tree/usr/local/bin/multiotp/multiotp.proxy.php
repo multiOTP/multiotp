@@ -36,8 +36,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.7
- * @date      2023-05-04
+ * @version   5.9.6.1
+ * @date      2023-05-10
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -276,8 +276,8 @@ if (!isset($multiotp)) {
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.7
- * @date      2023-05-04
+ * @version   5.9.6.1
+ * @date      2023-05-10
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -481,8 +481,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.7
- * @date      2023-05-04
+ * @version   5.9.6.1
+ * @date      2023-05-10
  * @since     2010-07-18
  */
 {
@@ -597,8 +597,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.5.7
-   * @date      2023-05-04
+   * @version   5.9.6.1
+   * @date      2023-05-10
    * @since     2010-07-18
    */
   function __construct(
@@ -622,11 +622,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.5.7'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.6.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = nullable_trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2023-05-04'; // You should update the date with the date of your changes
+        $temp_date = '@date      2023-05-10'; // You should update the date with the date of your changes
         $this->_date = nullable_trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMyBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -1205,6 +1205,7 @@ class Multiotp
       if (("" == $encryption_key) || ('MuLtIoTpEnCrYpTiOn' == $encryption_key) || ('DefaultCliEncryptionKey' == $encryption_key)) {
           if (("" != $this->GetEncryptionKeyFullPath()) && file_exists($this->GetEncryptionKeyFullPath())) {
               if ($encryption_key_file_handler = @fopen($this->GetEncryptionKeyFullPath(), "rt")) {
+                  flock($encryption_key_file_handler, LOCK_SH);
                   $temp_encryption_key = nullable_trim(fgets($encryption_key_file_handler));
                   if ("" != $temp_encryption_key) {
                       $this->SetEncryptionKey($temp_encryption_key, false);
@@ -1840,6 +1841,7 @@ class Multiotp
   ) {
     if (file_exists(__FILE__)) {
       if ($me_handler = @fopen(__FILE__, "rt")) {
+        flock($me_handler, LOCK_SH);
         $content = "";
         while (!feof($me_handler)) {
           $content.= fgets($me_handler);
@@ -2207,16 +2209,13 @@ class Multiotp
                 }
 
                 if ($backup_format) {
-                  $file_handler = @fopen($folder.$filename,"ab+");
-                  if (FALSE === $file_handler) {
-                    usleep(500000); // Wait 0.5 seconds before retry to have more chance to do the job
-                    $file_handler = @fopen($folder.$filename,"ab+");
+                  if ($file_handler = @fopen($folder.$filename,"ab+")) {
+                    flock($file_handler, LOCK_EX);
                   }
                 } else {
-                  $file_handler = @fopen($folder.$filename, "wt"); // was wt
-                  if (FALSE === $file_handler) {
-                    usleep(500000); // Wait 0.5 seconds before retry to have more chance to do the job
-                    $file_handler = @fopen($folder.$filename, "wt"); // was wt
+                  if ($file_handler = @fopen($folder.$filename, "ct")) { // was wt, need ftruncate after flock now
+                    flock($file_handler, LOCK_EX);
+                    ftruncate($file_handler, 0);
                   }
                 }
               } else {
@@ -2260,6 +2259,7 @@ class Multiotp
                 if (($backup_format) && ('' != $raw_file)) {
                   $key = "raw_data";
                   if ($raw_fn = @fopen($raw_folder.$raw_file, "rb")) {
+                    flock($raw_fn, LOCK_SH);
                     while(!feof($raw_fn))
                     {
                       $line.= mb_strtolower($key,'UTF-8');
@@ -2663,6 +2663,7 @@ class Multiotp
           $cache_filename = 'cache.ini'; // File exists in v3 format only, we don't need any conversion
           if (file_exists($this->GetCacheFolder().$cache_filename)) {
               if ($file_handler = @fopen($this->GetCacheFolder().$cache_filename, "rt")) {
+                  flock($file_handler, LOCK_SH);
                   $first_line = nullable_trim(fgets($file_handler));
                   
                   while (!feof($file_handler)) {
@@ -2962,9 +2963,11 @@ class Multiotp
           if ($infoweb_stop > $infoweb_start) {
               $infoweb = mb_substr($result_stats, $infoweb_start, ($infoweb_stop - $infoweb_start));
               $infoweb_filename = "infoweb.html";
-              if ($infoweb_handler = @fopen($multiotp->GetConfigFolder().$infoweb_filename, "wt")) {
-                  fwrite($write, $infoweb);
-                  fclose($write);
+              if ($infoweb_handler = @fopen($multiotp->GetConfigFolder().$infoweb_filename, "ct")) { // was wt, need ftruncate after flock now
+                  flock($infoweb_handler, LOCK_EX);
+                  ftruncate($infoweb_handler, 0);
+                  fwrite($infoweb_handler, $infoweb);
+                  fclose($infoweb_handler);
                   if ('' != $this->GetLinuxFileMode()) {
                       @chmod($multiotp->GetConfigFolder().$infoweb_filename, octdec($this->GetLinuxFileMode()));
                   }
@@ -3160,6 +3163,7 @@ class Multiotp
     if (file_exists($backup_file)) {
 
       if ($backup_handler = @fopen($backup_file, "rt")) {
+        flock($backup_handler, LOCK_SH);
         $first_line = TRUE;
         $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($backup_handler)));
 
@@ -3267,7 +3271,10 @@ class Multiotp
                       }
                     }
                     if (file_exists($item)) {
-                      if (!($file_handler = @fopen($item.$id_value, "wb"))) {
+                      if ($file_handler = @fopen($item.$id_value, "cb")) { // was wb, need ftruncate after flock now
+                        flock($file_handler, LOCK_EX);
+                        ftruncate($file_handler, 0);
+                      } else {
                         if ($this->GetVerboseFlag()) {
                           $this->WriteLog("Info: *File ".$id_value." cannot be created", FALSE, FALSE, 8888, 'System', '');
                         }
@@ -3833,34 +3840,35 @@ class Multiotp
                   //pg_close($log_link);
               }
           } else {
-              if (!file_exists($this->GetLogFolder())) {
-                  @mkdir(
-                      $this->GetLogFolder(),
-                      ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
-                      true //recursive
-                  );
-              }
-              $file_created = (!file_exists($this->GetLogFolder().$this->GetLogFileName()));
-              if ($log_file_handle = @fopen($this->GetLogFolder().$this->GetLogFileName(),"ab+")) {
+            if (!file_exists($this->GetLogFolder())) {
+              @mkdir(
+                $this->GetLogFolder(),
+                ('' != $this->GetLinuxFolderMode()) ? octdec($this->GetLinuxFolderMode()) : 0777,
+                true //recursive
+              );
+            }
+            $file_created = (!file_exists($this->GetLogFolder().$this->GetLogFileName()));
+            if ($log_file_handle = @fopen($this->GetLogFolder().$this->GetLogFileName(),"ab+")) {
+              flock($log_file_handle, LOCK_EX);
+              if ($this->GetVerboseFlag()) {
+                if (!$this->GetLogHeaderWritten()) {
+                  fwrite($log_file_handle,str_repeat("=",40)."\n");
+                  fwrite($log_file_handle,'multiotp '.$this->GetVersion()."\n");
                   if ($this->GetVerboseFlag()) {
-                      if (!$this->GetLogHeaderWritten()) {
-                          fwrite($log_file_handle,str_repeat("=",40)."\n");
-                          fwrite($log_file_handle,'multiotp '.$this->GetVersion()."\n");
-                          if ($this->GetVerboseFlag()) {
-                              fwrite($log_file_handle,'Your script is running from '.$this->GetScriptFolder()."\n");
-                          }
-                      }
-                      $this->SetLogHeaderWritten(TRUE);
+                    fwrite($log_file_handle,'Your script is running from '.$this->GetScriptFolder()."\n");
                   }
-                  
-                  fwrite($log_file_handle,$logfile_content."\n");
-                  fclose($log_file_handle);
-                  if ($file_created && ("" != $this->GetLinuxFileMode())) {
-                      @chmod($this->GetLogFolder().$this->GetLogFileName(), octdec($this->GetLinuxFileMode()));
-                  }
-              } elseif ($this->GetVerboseFlag()) {
-                  echo "ERROR: Log file ".$this->GetLogFolder().$this->GetLogFileName()." cannot be written.\n";
+                }
+                $this->SetLogHeaderWritten(TRUE);
               }
+              
+              fwrite($log_file_handle,$logfile_content."\n");
+              fclose($log_file_handle);
+              if ($file_created && ("" != $this->GetLinuxFileMode())) {
+                  @chmod($this->GetLogFolder().$this->GetLogFileName(), octdec($this->GetLinuxFileMode()));
+              }
+            } elseif ($this->GetVerboseFlag()) {
+              echo "ERROR: Log file ".$this->GetLogFolder().$this->GetLogFileName()." cannot be written.\n";
+            }
           }
       }
   }
@@ -3914,14 +3922,15 @@ class Multiotp
           }
           //pg_close($log_link);
       } elseif (file_exists($this->GetLogFolder().$this->GetLogFileName())) {
-          if ($log_file_handle = @fopen($this->GetLogFolder().$this->GetLogFileName(),"r")) {
-              while (!feof($log_file_handle)) {
-                  if ($as_result) {
-                      $result.= nullable_trim(fgets($log_file_handle))."\n";
-                  }
-              }
-              fclose($log_file_handle);
+        if ($log_file_handle = @fopen($this->GetLogFolder().$this->GetLogFileName(),"r")) {
+          flock($log_file_handle, LOCK_SH);
+          while (!feof($log_file_handle)) {
+            if ($as_result) {
+              $result.= nullable_trim(fgets($log_file_handle))."\n";
+            }
           }
+          fclose($log_file_handle);
+        }
       }
       if (false !== $result) {
           if (!$as_result) {
@@ -4548,102 +4557,107 @@ class Multiotp
 
       $result = false;
       if ('' != $ip) {
-          $resolv_file = "/etc/resolv.conf";
-          $resolv_tmp  = sys_get_temp_dir()."/multiotp_resolv_tmp";
-          if (!($write = @fopen($resolv_tmp, "wt"))) {
-              if ($this->GetVerboseFlag()) {
-                  $this->WriteLog("Error: *Temporary DNS information cannot be created", FALSE, FALSE, 8888, 'System', '');
-              }
-          } else {
-              $domain_name = $this->GetDomainName();
-              if ('' != $domain_name) {
-                  fwrite($write, "domain ".$domain_name."\n");
-                  fwrite($write, "search ".$domain_name."\n");
-              }
-              if ('' != $dns1) {
-                  fwrite($write, "nameserver ".$dns1."\n");
-              }
-              if ('' != $dns2) {
-                  fwrite($write, "nameserver ".$dns2."\n");
-              }
-              fclose($write);
-              if ('' != $this->GetLinuxFileMode()) {
-                  @chmod($resolv_tmp, octdec($this->GetLinuxFileMode()));
-              }
+        $resolv_file = "/etc/resolv.conf";
+        $resolv_tmp  = sys_get_temp_dir()."/multiotp_resolv_tmp";
+        if ($write = @fopen($resolv_tmp, "ct")) { // was wt, need ftruncate after flock now
+          flock($write, LOCK_EX);
+          ftruncate($write, 0);
+          $domain_name = $this->GetDomainName();
+          if ('' != $domain_name) {
+              fwrite($write, "domain ".$domain_name."\n");
+              fwrite($write, "search ".$domain_name."\n");
+          }
+          if ('' != $dns1) {
+              fwrite($write, "nameserver ".$dns1."\n");
+          }
+          if ('' != $dns2) {
+              fwrite($write, "nameserver ".$dns2."\n");
+          }
+          fclose($write);
+          if ('' != $this->GetLinuxFileMode()) {
+              @chmod($resolv_tmp, octdec($this->GetLinuxFileMode()));
+          }
 
-              // Do not change the DNS servers in demo mode!
-              if (!$this->IsDemoMode()) {
-                  if (mb_strtolower(mb_substr(PHP_OS, 0, 3),'UTF-8') !== 'win') { // Currently only for non-windows machine
-                      exec("sudo cp -f ".$resolv_tmp." ".$resolv_file, $output);
-                  }
+          // Do not change the DNS servers in demo mode!
+          if (!$this->IsDemoMode()) {
+              if (mb_strtolower(mb_substr(PHP_OS, 0, 3),'UTF-8') !== 'win') { // Currently only for non-windows machine
+                  exec("sudo cp -f ".$resolv_tmp." ".$resolv_file, $output);
               }
           }
+        } else {
+          if ($this->GetVerboseFlag()) {
+              $this->WriteLog("Error: *Temporary DNS information cannot be created", FALSE, FALSE, 8888, 'System', '');
+          }
+        }
       }
 
       $interfaces_file = "/etc/network/interfaces";
       $interfaces_tmp  = sys_get_temp_dir()."/multiotp_interfaces_tmp";
       if (file_exists($interfaces_file)) {
-          if (!($read = @fopen($interfaces_file, "rt"))) {
-              if ($this->GetVerboseFlag()) {
-                  $this->WriteLog("Error: *Interface configuration cannot be accessed", FALSE, FALSE, 8888, 'System', '');
+        if ($read = @fopen($interfaces_file, "rt")) {
+          flock($read, LOCK_SH);
+          if ($write = @fopen($interfaces_tmp, "ct")) { // was wt, need ftruncate after flock now
+            flock($write, LOCK_EX);
+            ftruncate($write, 0);
+            $direct_write = true;
+            $inet_eth0 = false;
+            while(!feof($read)) {
+              // "iface", "mapping", "auto",  "allow-" and "source" eth0 (iface eth0)
+              $one_line = fgets($read);
+              if (preg_match("/^iface\seth0(.*)/", $one_line)) {
+                $direct_write = false;
+                $inet_eth0    = true;
+                if ('' != $ip) {
+                  fwrite($write, "iface eth0 inet static\n");
+                  fwrite($write, "\taddress ".$ip."\n");
+                  fwrite($write, "\tnetmask ".$mask."\n");
+                  fwrite($write, "\tgateway ".$gateway."\n");
+                  fwrite($write, "\n");
+                } else {
+                  fwrite($write, "iface eth0 inet dhcp\n");
+                  fwrite($write, "\n");
+                }
+              } elseif ((0 === mb_strpos(nullable_trim($one_line),"allow-")) || 
+                        (0 === mb_strpos(nullable_trim($one_line),"auto")) || 
+                        (0 === mb_strpos(nullable_trim($one_line),"iface")) || 
+                        (0 === mb_strpos(nullable_trim($one_line),"mapping")) || 
+                        (0 === mb_strpos(nullable_trim($one_line),"source"))) {
+                $direct_write = true;
               }
-          } else {
-              if (!($write = @fopen($interfaces_tmp, "wt"))) {
-                  if ($this->GetVerboseFlag()) {
-                      $this->WriteLog("Error: *Temporary interface configuration cannot be created", FALSE, FALSE, 8888, 'System', '');
-                  }
-              } else {
-                  $direct_write = true;
-                  $inet_eth0 = false;
-                  while(!feof($read)) {
-                  // "iface", "mapping", "auto",  "allow-" and "source" eth0 (iface eth0)
-                      $one_line = fgets($read);
-                      if (preg_match("/^iface\seth0(.*)/", $one_line)) {
-                          $direct_write = false;
-                          $inet_eth0    = true;
-                          if ('' != $ip) {
-                              fwrite($write, "iface eth0 inet static\n");
-                              fwrite($write, "\taddress ".$ip."\n");
-                              fwrite($write, "\tnetmask ".$mask."\n");
-                              fwrite($write, "\tgateway ".$gateway."\n");
-                              fwrite($write, "\n");
-                          } else {
-                              fwrite($write, "iface eth0 inet dhcp\n");
-                              fwrite($write, "\n");
-                          }
-                      } elseif ((0 === mb_strpos(nullable_trim($one_line),"allow-")) || 
-                                (0 === mb_strpos(nullable_trim($one_line),"auto")) || 
-                                (0 === mb_strpos(nullable_trim($one_line),"iface")) || 
-                                (0 === mb_strpos(nullable_trim($one_line),"mapping")) || 
-                                (0 === mb_strpos(nullable_trim($one_line),"source"))) {
-                          $direct_write = true;
-                      }
-                      if ($direct_write) {
-                          fwrite($write, $one_line); // $one_line includes \n
-                      }
-                  }
-                  fclose($read);
-                  fclose($write);
-                  if ('' != $this->GetLinuxFileMode()) {
-                      @chmod($interfaces_tmp, octdec($this->GetLinuxFileMode()));
-                  }
+              if ($direct_write) {
+                fwrite($write, $one_line); // $one_line includes \n
+              }
+            }
+            fclose($write);
+            if ('' != $this->GetLinuxFileMode()) {
+                @chmod($interfaces_tmp, octdec($this->GetLinuxFileMode()));
+            }
 
-                  // Do not change the IP in demo mode!
-                  if (!$this->IsDemoMode()) {
-                      exec("sudo cp -f ".$interfaces_tmp." ".$interfaces_file, $output);
-                      $result = true;
-                      if ($if_down_up) {
-                          exec("sudo /sbin/ifdown eth0 > /dev/null 2>&1", $output);
-                          sleep(1);
-                          exec("sudo /sbin/ifup eth0 > /dev/null 2>&1", $output);
-                      }
-                  }
+            // Do not change the IP in demo mode!
+            if (!$this->IsDemoMode()) {
+                exec("sudo cp -f ".$interfaces_tmp." ".$interfaces_file, $output);
+                $result = true;
+                if ($if_down_up) {
+                    exec("sudo /sbin/ifdown eth0 > /dev/null 2>&1", $output);
+                    sleep(1);
+                    exec("sudo /sbin/ifup eth0 > /dev/null 2>&1", $output);
+                }
+            }
+          } else {
+              if ($this->GetVerboseFlag()) {
+                  $this->WriteLog("Error: *Temporary interface configuration cannot be created", FALSE, FALSE, 8888, 'System', '');
               }
           }
-      } else {
+          fclose($read);
+        } else {
           if ($this->GetVerboseFlag()) {
-              $this->WriteLog("Error: *Interface configuration file cannot be found", FALSE, FALSE, 8888, 'System', '');
+            $this->WriteLog("Error: *Interface configuration cannot be accessed", FALSE, FALSE, 8888, 'System', '');
           }
+        }
+      } else {
+        if ($this->GetVerboseFlag()) {
+          $this->WriteLog("Error: *Interface configuration file cannot be found", FALSE, FALSE, 8888, 'System', '');
+        }
       }
       return $result;
   }
@@ -4707,6 +4721,7 @@ class Multiotp
           ("" != $this->GetHashSaltFullPath()) &&
           file_exists($this->GetHashSaltFullPath())) {
           if ($hash_salt_file_handler = @fopen($this->GetHashSaltFullPath(), "rt")) {
+              flock($hash_salt_file_handler, LOCK_SH);
               $temp = nullable_trim(fgets($hash_salt_file_handler));
               if ("" != $temp) {
                   $salt = $temp;
@@ -5442,39 +5457,40 @@ class Multiotp
       $config_filename = 'multiotp.ini'; // File exists in v3 format only, we don't need any conversion
       if (file_exists($this->GetConfigFolder(false, !$encryption_only).$config_filename))
       {
-          if ($file_handler = @fopen($this->GetConfigFolder(false, !$encryption_only).$config_filename, "rt")) {
-              $first_line = nullable_trim(fgets($file_handler));
-              
-              while (!feof($file_handler))
+        if ($file_handler = @fopen($this->GetConfigFolder(false, !$encryption_only).$config_filename, "rt")) {
+          flock($file_handler, LOCK_SH);
+          $first_line = nullable_trim(fgets($file_handler));
+          
+          while (!feof($file_handler))
+          {
+            $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($file_handler)));
+            $line_array = explode("=",$line,2);
+            if (('#' != mb_substr($line, 0, 1)) && (';' != mb_substr($line, 0, 1)) && ("" != nullable_trim($line)) && (isset($line_array[1])))
+            {
+              if (":" == mb_substr($line_array[0], -1))
               {
-                  $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($file_handler)));
-                  $line_array = explode("=",$line,2);
-                  if (('#' != mb_substr($line, 0, 1)) && (';' != mb_substr($line, 0, 1)) && ("" != nullable_trim($line)) && (isset($line_array[1])))
-                  {
-                      if (":" == mb_substr($line_array[0], -1))
-                      {
-                          $line_array[0] = mb_substr($line_array[0], 0, mb_strlen($line_array[0]) -1);
-                          $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$encryption_key);
-                          $local_encryption_check = $this->_encryption_check;
-                      }
-                      $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
-                      if ("" != $line_array[0])
-                      {
-                          $this->_config_data[mb_strtolower($line_array[0],'UTF-8')] = $line_array[1];
-                      }
-                  }
+                $line_array[0] = mb_substr($line_array[0], 0, mb_strlen($line_array[0]) -1);
+                $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$encryption_key);
+                $local_encryption_check = $this->_encryption_check;
               }
-              fclose($file_handler);
-              $result = TRUE;
-              if (("" != $this->_config_data['encryption_hash']) && (!$encryption_only) && ($local_encryption_check)) {
-                  if ($this->_config_data['encryption_hash'] != $this->CalculateControlHash($encryption_key))
-                  {
-                      $this->_config_data['encryption_hash'] = "ERROR";
-                      $this->WriteLog("Error: the configuration encryption key is not matching", FALSE, FALSE, 33, 'System', '', 3);
-                      $result = FALSE;
-                  }
+              $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
+              if ("" != $line_array[0])
+              {
+                $this->_config_data[mb_strtolower($line_array[0],'UTF-8')] = $line_array[1];
               }
+            }
           }
+          fclose($file_handler);
+          $result = TRUE;
+          if (("" != $this->_config_data['encryption_hash']) && (!$encryption_only) && ($local_encryption_check)) {
+            if ($this->_config_data['encryption_hash'] != $this->CalculateControlHash($encryption_key))
+            {
+              $this->_config_data['encryption_hash'] = "ERROR";
+              $this->WriteLog("Error: the configuration encryption key is not matching", FALSE, FALSE, 33, 'System', '', 3);
+              $result = FALSE;
+            }
+          }
+        }
       }
 
       if (!$encryption_only)
@@ -5674,24 +5690,25 @@ class Multiotp
       
       // First, we read the stat file if the backend is files or when migration is enabled
       if (('files' == $this->GetBackendType()) || ($this->GetMigrationFromFile())) {
-          $stat_filename = 'stat.ini'; // File exists in v3 format only, we don't need any conversion
-          if (file_exists($this->GetConfigFolder().$stat_filename)) {
-              if ($file_handler = @fopen($this->GetConfigFolder().$stat_filename, "rt")) {
-                  $first_line = nullable_trim(fgets($file_handler));
-                  
-                  while (!feof($file_handler)) {
-                      $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($file_handler)));
-                      $line_array = explode("=",$line,2);
-                      if (('#' != mb_substr($line, 0, 1)) && (';' != mb_substr($line, 0, 1)) && ("" != nullable_trim($line)) && (isset($line_array[1]))) {
-                          if ("" != $line_array[0]) {
-                              $this->_stat_data[mb_strtolower($line_array[0],'UTF-8')] = $line_array[1];
-                          }
-                      }
-                  }
-                  fclose($file_handler);
-                  $result = TRUE;
+        $stat_filename = 'stat.ini'; // File exists in v3 format only, we don't need any conversion
+        if (file_exists($this->GetConfigFolder().$stat_filename)) {
+          if ($file_handler = @fopen($this->GetConfigFolder().$stat_filename, "rt")) {
+            flock($file_handler, LOCK_SH);
+            $first_line = nullable_trim(fgets($file_handler));
+            
+            while (!feof($file_handler)) {
+              $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($file_handler)));
+              $line_array = explode("=",$line,2);
+              if (('#' != mb_substr($line, 0, 1)) && (';' != mb_substr($line, 0, 1)) && ("" != nullable_trim($line)) && (isset($line_array[1]))) {
+                if ("" != $line_array[0]) {
+                  $this->_stat_data[mb_strtolower($line_array[0],'UTF-8')] = $line_array[1];
+                }
               }
+            }
+            fclose($file_handler);
+            $result = TRUE;
           }
+        }
       }
       
       // And now, we override the values if another backend type is defined
@@ -6075,20 +6092,19 @@ class Multiotp
   ) {
       $uptime = '';
       if (file_exists('/proc/uptime')) {
-          $file = @fopen('/proc/uptime', 'r');
-          if ($file) {
-              $data = @fread($file, 128);
-              if ($data !== false) {
-                  $upsecs = (int)mb_substr($data, 0, mb_strpos($data, ' '));
-                  $days = floor($upsecs/60/60/24);
-                  $hours = $upsecs/60/60%24;
-                  $minutes = $upsecs/60%60;
-                  $seconds = $upsecs%60;
-                  // $uptime = Array ( 'days' => $days, 'hours' => $hours, 'minutes' => $minutes, 'seconds' => $seconds );
-                  $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
-              }
-              fclose($file);
+        if ($file = @fopen('/proc/uptime', 'r')) {
+          $data = @fread($file, 128);
+          if ($data !== false) {
+            $upsecs = (int)mb_substr($data, 0, mb_strpos($data, ' '));
+            $days = floor($upsecs/60/60/24);
+            $hours = $upsecs/60/60%24;
+            $minutes = $upsecs/60%60;
+            $seconds = $upsecs%60;
+            // $uptime = Array ( 'days' => $days, 'hours' => $hours, 'minutes' => $minutes, 'seconds' => $seconds );
+            $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
           }
+          fclose($file);
+        }
       }
       else
       {
@@ -9252,8 +9268,14 @@ class Multiotp
                             $url_display_name = $descr;
                           }
                       }
-                      $url = $this->GetUserTokenUrlLink($user, $url_display_name, $qrcode_format);
-                      $html = str_replace($item, "<a id=\"QrCodeUserToken\" href=\"".$url."\" target=\"blank\"><img border=\"0\" width=\"".$w."\" height=\"".$h."\" src=\"data:image/png;base64,".base64_encode($this->qrcode($url, 'binary'))."\"></a>", $html);
+                      $qrdata = $this->GetUserTokenUrlLink($user, $url_display_name, $qrcode_format);
+                      $url    = $qrdata;
+                      $target = "blank";
+                      if (FALSE !== strpos($qrdata, "<?xml")) {
+                        $url    = "#QrCodeUserToken";
+                        $target = "_self";
+                      }
+                      $html = str_replace($item, "<a id=\"QrCodeUserToken\" href=\"".$url."\" target=\"$target\"><img border=\"0\" width=\"".$w."\" height=\"".$h."\" src=\"data:image/png;base64,".base64_encode($this->qrcode($qrdata, 'binary'))."\"></a>", $html);
                   }
               }
           }
@@ -10228,46 +10250,59 @@ class Multiotp
               $temp_user_array['multi_account'] = 0;
               $temp_user_array['time_interval'] = 0;
 
-              if ($file_handler = @fopen($this->GetUsersFolder().$user_filename, "rt")) {
-                  $first_line = nullable_trim(fgets($file_handler));
-                  $v3 = (false !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format-v3"));
-                  
-                  // First version format support
-                  if (false === mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format")) {
-                      $temp_user_array['algorithm']          = $first_line;
-                      $temp_user_array['token_seed']         = nullable_trim(fgets($file_handler));
-                      $temp_user_array['user_pin']           = nullable_trim(fgets($file_handler));
-                      $temp_user_array['number_of_digits']   = nullable_trim(fgets($file_handler));
-                      $temp_user_array['last_event']         = intval(nullable_trim(fgets($file_handler))) - 1;
-                      $temp_user_array['request_prefix_pin'] = intval(nullable_trim(fgets($file_handler)));
-                      $temp_user_array['last_login']         = intval(nullable_trim(fgets($file_handler)));
-                      $temp_user_array['error_counter']      = intval(nullable_trim(fgets($file_handler)));
-                      $temp_user_array['locked']             = intval(nullable_trim(fgets($file_handler)));
-                  } else {
-                      while (!feof($file_handler)) {
-                          $line = nullable_trim(fgets($file_handler));
-                          $line_array = explode("=",$line,2);
-                          if ($v3) { // v3 format, only tags followed by := instead of = are encrypted
-                              if (":" == mb_substr($line_array[0], -1)) {
-                                  $line_array[0] = mb_substr($line_array[0], 0, mb_strlen($line_array[0]) -1);
-                                  $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
-                                  $local_encryption_check = $this->_encryption_check;
-                              }
-                          } else { // v2 format, only defined tags are encrypted
-                              if ((FALSE !== mb_strpos(mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8'), mb_strtolower('*'.$line_array[0].'*','UTF-8'))) || ("*all*" == mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8'))) {
-                                  $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
-                                  $local_encryption_check = $this->_encryption_check;
-                              }
-                          }
-                          $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
-                          if ('' != nullable_trim($line_array[0])) {
-                              $temp_user_array[mb_strtolower($line_array[0],'UTF-8')] = $line_array[1];
-                          }
-                      }
-                  }
-                  fclose($file_handler);
-                  $result = true;
-              }
+              $trial_count   = 0;
+              $trial_limit   = 5;
+              $trial_step_ms = 100; 
+              while ((!$result) && ($trial_count < $trial_limit)) {
+                if ($trial_count > 0) {
+                  $this->WriteLog("Error: database file ".$this->GetUsersFolder().$user_filename." for user ".$array_user." cannot be read (concurrent access)", FALSE, FALSE, 39, 'System', '');
+                }
+                usleep ($trial_step_ms * $trial_count * 1000);
+                $trial_count++;
+                if ($file_handler = @fopen($this->GetUsersFolder().$user_filename, "rt")) {
+                    flock($file_handler, LOCK_SH);
+                    $first_line = nullable_trim(fgets($file_handler));
+                    $v3 = (false !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format-v3"));
+                    
+                    // First version format support
+                    if (false === mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format")) {
+                        $temp_user_array['algorithm']          = $first_line;
+                        $temp_user_array['token_seed']         = nullable_trim(fgets($file_handler));
+                        $temp_user_array['user_pin']           = nullable_trim(fgets($file_handler));
+                        $temp_user_array['number_of_digits']   = nullable_trim(fgets($file_handler));
+                        $temp_user_array['last_event']         = intval(nullable_trim(fgets($file_handler))) - 1;
+                        $temp_user_array['request_prefix_pin'] = intval(nullable_trim(fgets($file_handler)));
+                        $temp_user_array['last_login']         = intval(nullable_trim(fgets($file_handler)));
+                        $temp_user_array['error_counter']      = intval(nullable_trim(fgets($file_handler)));
+                        $temp_user_array['locked']             = intval(nullable_trim(fgets($file_handler)));
+                    } else {
+                        while (!feof($file_handler)) {
+                            $line = nullable_trim(fgets($file_handler));
+                            $line_array = explode("=",$line,2);
+                            if ($v3) { // v3 format, only tags followed by := instead of = are encrypted
+                                if (":" == mb_substr($line_array[0], -1)) {
+                                    $line_array[0] = mb_substr($line_array[0], 0, mb_strlen($line_array[0]) -1);
+                                    $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
+                                    $local_encryption_check = $this->_encryption_check;
+                                }
+                            } else { // v2 format, only defined tags are encrypted
+                                if ((FALSE !== mb_strpos(mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8'), mb_strtolower('*'.$line_array[0].'*','UTF-8'))) || ("*all*" == mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8'))) {
+                                    $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
+                                    $local_encryption_check = $this->_encryption_check;
+                                }
+                            }
+                            $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
+                            if ('' != nullable_trim($line_array[0])) {
+                                $temp_user_array[mb_strtolower($line_array[0],'UTF-8')] = $line_array[1];
+                            }
+                        }
+                    }
+                    fclose($file_handler);
+                    $result = true;
+                } else {
+                  $this->WriteLog("Error: database file ".$this->GetUsersFolder().$user_filename." for user ".$array_user." cannot be read", FALSE, FALSE, 39, 'System', '');
+                }
+              } // while
               if (('' != $temp_user_array['encryption_hash']) && ($local_encryption_check)) {
                   if ($temp_user_array['encryption_hash'] != $this->CalculateControlHash($this->GetEncryptionKey())) {
                       $temp_user_array['encryption_hash'] = "ERROR";
@@ -10410,7 +10445,7 @@ class Multiotp
                   }
                   break;
               default:
-              // Nothing to do if the backend type is unknown
+              // Nothing to do if the backend type is "file" or unknown
                   break;
           }
       }
@@ -10663,85 +10698,85 @@ class Multiotp
                   $users_count = 0;
                   if ($users_handle = @opendir($this->GetUsersFolder()))
                   {
-                      while ($file = readdir($users_handle))
+                    while ($file = readdir($users_handle))
+                    {
+                      $error_counter = 0;
+                      $last_error = 0;
+                      $desactivated = FALSE;
+                      $locked = FALSE;
+                      if ((mb_substr($file, -3) == ".db") && ($file != '.db'))
                       {
-                          $error_counter = 0;
-                          $last_error = 0;
-                          $desactivated = FALSE;
-                          $locked = FALSE;
-                          if ((mb_substr($file, -3) == ".db") && ($file != '.db'))
+                        $current_user = $this->DecodeFileId(mb_substr($file,0,-3));
+                        if ($file_handler = @fopen($this->GetUsersFolder().$file, "rt")) {
+                          flock($file_handler, LOCK_SH);
+                          $first_line = nullable_trim(fgets($file_handler));
+                          $v3 = (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format-v3"));
+                          if (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format")) // Format V3
                           {
-                              $current_user = $this->DecodeFileId(mb_substr($file,0,-3));
-                              if ($file_handler = @fopen($this->GetUsersFolder().$file, "rt")) {
-                                  $first_line = nullable_trim(fgets($file_handler));
-                                  $v3 = (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format-v3"));
-                                  if (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format")) // Format V3
-                                  {
-                                      while (!feof($file_handler))
-                                      {
-                                          $line = nullable_trim(fgets($file_handler));
-                                          $line_array = explode("=",$line,2);
-                                          if ($v3) {
-                                              // v3 format, only tags followed by := instead of = are encrypted
-                                              if (":" == mb_substr($line_array[0], -1))
-                                              {
-                                                  $line_array[0] = mb_substr($line_array[0], 0, mb_strlen($line_array[0]) -1);
-                                                  $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
-                                                  $local_encryption_check = $this->_encryption_check;
-                                              }
-                                          } else {
-                                              // v2 format, only defined tags are encrypted
-                                              if ((FALSE !== mb_strpos(mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8'), mb_strtolower('*'.$line_array[0].'*','UTF-8'))) || ("*all*" == mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8')))
-                                              {
-                                                  $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
-                                                  $local_encryption_check = $this->_encryption_check;
-                                              }
-                                          }
-                                          $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
-                                          if ('error_counter' == nullable_trim($line_array[0]))
-                                          {
-                                              $error_counter = intval($line_array[1]);
-                                          }
-                                          if ('last_error' == nullable_trim($line_array[0]))
-                                          {
-                                              $last_error = $line_array[1];
-                                          }
-                                          if ('desactivated' == nullable_trim($line_array[0]))
-                                          {
-                                              if (1 == (isset($line_array[1])?$line_array[1]:0))
-                                              {
-                                                  $desactivated = TRUE;
-                                              }
-                                          }
-                                          if ('locked' == nullable_trim($line_array[0]))
-                                          {
-                                              if (1 == (isset($line_array[1])?$line_array[1]:0))
-                                              {
-                                                  $locked = TRUE;
-                                              }
-                                          }
-                                      }
-                                  }
-                                  fclose($file_handler);
-                                  $users_count++;
-                                  
-                                  $now_epoch = time();
-                                  if (($error_counter >= $this->GetMaxDelayedFailures()) && ($now_epoch < ($last_error + $this->GetMaxDelayedTime()))) {
-                                      $delayed_time = ($last_error + $this->GetMaxDelayedTime()) - $now_epoch;
-                                      $delayed_finished = $last_error + $this->GetMaxDelayedTime();
-                                      if (!$locked)
-                                      {
-                                          $delayed_users_list.= (('' != $delayed_users_list)?"\t":'').$current_user.'|'.$delayed_finished;
-                                          $delayed_users_count++;
-                                      }
-                                  }
+                            while (!feof($file_handler))
+                            {
+                              $line = nullable_trim(fgets($file_handler));
+                              $line_array = explode("=",$line,2);
+                              if ($v3) {
+                                // v3 format, only tags followed by := instead of = are encrypted
+                                if (":" == mb_substr($line_array[0], -1))
+                                {
+                                  $line_array[0] = mb_substr($line_array[0], 0, mb_strlen($line_array[0]) -1);
+                                  $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
+                                  $local_encryption_check = $this->_encryption_check;
+                                }
+                              } else {
+                                // v2 format, only defined tags are encrypted
+                                if ((FALSE !== mb_strpos(mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8'), mb_strtolower('*'.$line_array[0].'*','UTF-8'))) || ("*all*" == mb_strtolower($this->GetAttributesToEncrypt(),'UTF-8'))) {
+                                  $line_array[1] = $this->Decrypt($line_array[0],$line_array[1],$this->GetEncryptionKey());
+                                  $local_encryption_check = $this->_encryption_check;
+                                }
                               }
+                              $line_array[1] = str_replace("<<CRLF>>",chr(10),isset($line_array[1]) ? $line_array[1] : '');
+                              if ('error_counter' == nullable_trim($line_array[0]))
+                              {
+                                $error_counter = intval($line_array[1]);
+                              }
+                              if ('last_error' == nullable_trim($line_array[0]))
+                              {
+                                $last_error = $line_array[1];
+                              }
+                              if ('desactivated' == nullable_trim($line_array[0]))
+                              {
+                                if (1 == (isset($line_array[1])?$line_array[1]:0))
+                                {
+                                  $desactivated = TRUE;
+                                }
+                              }
+                              if ('locked' == nullable_trim($line_array[0]))
+                              {
+                                if (1 == (isset($line_array[1])?$line_array[1]:0))
+                                {
+                                  $locked = TRUE;
+                                }
+                              }
+                            }
                           }
-                          if (($limit > 0) && ($delayed_users_count >= $limit)) {
-                              break;
+                          fclose($file_handler);
+                          $users_count++;
+                          
+                          $now_epoch = time();
+                          if (($error_counter >= $this->GetMaxDelayedFailures()) && ($now_epoch < ($last_error + $this->GetMaxDelayedTime()))) {
+                            $delayed_time = ($last_error + $this->GetMaxDelayedTime()) - $now_epoch;
+                            $delayed_finished = $last_error + $this->GetMaxDelayedTime();
+                            if (!$locked)
+                            {
+                                $delayed_users_list.= (('' != $delayed_users_list)?"\t":'').$current_user.'|'.$delayed_finished;
+                                $delayed_users_count++;
+                            }
                           }
+                        }
                       }
-                      closedir($users_handle);
+                      if (($limit > 0) && ($delayed_users_count >= $limit)) {
+                        break;
+                      }
+                    }
+                    closedir($users_handle);
                   }
           }
       }
@@ -10828,6 +10863,7 @@ class Multiotp
                               {
                                   $current_user = $this->DecodeFileId(mb_substr($file,0,-3));
                                   if ($file_handler = @fopen($this->GetUsersFolder().$file, "rt")) {
+                                      flock($file_handler, LOCK_SH);
                                       $first_line = nullable_trim(fgets($file_handler));
                                       $v3 = (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format-v3"));
                                       if (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format")) // Format V3
@@ -10984,6 +11020,7 @@ class Multiotp
                               if ((mb_substr($file, -3) == ".db") && ($file != '.db')) {
                                   $current_user = $this->DecodeFileId(mb_substr($file,0,-3));
                                   if ($file_handler = @fopen($this->GetUsersFolder().$file, "rt")) {
+                                      flock($file_handler, LOCK_SH);
                                       $first_line = nullable_trim(fgets($file_handler));
                                       $v3 = (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format-v3"));
                                       if (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format")) { // Format V3
@@ -11133,6 +11170,7 @@ class Multiotp
                           if ((mb_substr($file, -3) == ".db") && ($file != '.db')) {
                               $current_user = $this->DecodeFileId(mb_substr($file,0,-3));
                               if ($file_handler = @fopen($this->GetUsersFolder().$file, "rt")) {
+                                  flock($file_handler, LOCK_SH);
                                   $first_line = nullable_trim(fgets($file_handler));
                                   $v3 = (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format-v3"));
                                   if (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format")) { // Format V3
@@ -11268,6 +11306,7 @@ class Multiotp
                               if ((mb_substr($file, -3) == ".db") && ($file != '.db')) {
                                   $current_user = $this->DecodeFileId(mb_substr($file,0,-3));
                                   if ($file_handler = @fopen($this->GetUsersFolder().$file, "rt")) {
+                                      flock($file_handler, LOCK_SH);
                                       $first_line = nullable_trim(fgets($file_handler));
                                       $v3 = (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format-v3"));
                                       if (FALSE !== mb_strpos(mb_strtolower($first_line,'UTF-8'),"multiotp-database-format")) {
@@ -13908,6 +13947,7 @@ class Multiotp
               }
           } else {
               if ($file_handler = @fopen($this->GetTokensFolder().$token_filename, "rt")) {
+                  flock($file_handler, LOCK_SH);
                   $first_line = nullable_trim(fgets($file_handler));
                   
                   while (!feof($file_handler)) {
@@ -15107,8 +15147,9 @@ class Multiotp
           $start_sync_time = time();
 
           $last_touch = time();
-          if ($lock_handle = @fopen($ldap_sync_file_lock, "wt")) {
-              // $additional_info = "started for ".gmdate("H:i:s", time()-$start_sync_time);
+          if ($lock_handle = @fopen($ldap_sync_file_lock, "ct")) { // was wt, need ftruncate after flock now
+              flock($lock_handle, LOCK_EX);
+              ftruncate($lock_handle, 0);
               $additional_info = "started at ".date("H:i:s", $start_sync_time);
               if ($this->GetVerboseFlag()) {
                   $additional_info.= " / Memory used: ".(intval(10*memory_get_usage()/(1024*1024))/10)."MB / Peak: ".(intval(10*memory_get_peak_usage()/(1024*1024))/10)."MB";
@@ -15273,7 +15314,9 @@ class Multiotp
                           // We also touch the sync lock every half of the lock time limit, or at each info_interval
                           if ((($last_touch + ($this->GetLockTime() / 2)) <= time()) || (($last_touch + $info_interval) <= time())) {
                               $last_touch = time();
-                              if ($lock_handle = @fopen($ldap_sync_file_lock, "wt")) {
+                              if ($lock_handle = @fopen($ldap_sync_file_lock, "ct")) { // was wt, need ftruncate after flock now
+                                  flock($lock_handle, LOCK_EX);
+                                  ftruncate($lock_handle, 0);
                                   $additional_info = "started at ".date("H:i:s", $start_sync_time);
                                   $additional_info.= ", LDAP account #".($ldap_total_counter+1)." at ".date("H:i:s");
                                   if ($this->GetVerboseFlag()) {
@@ -15716,7 +15759,9 @@ class Multiotp
                       //   and we check also if we have to stop now
                       if (($last_touch + ($this->GetLockTime() / 2)) <= time()) {
                           $last_touch = time();
-                          if ($lock_handle = @fopen($ldap_sync_file_lock, "wt")) {
+                          if ($lock_handle = @fopen($ldap_sync_file_lock, "ct")) { // was wt, need ftruncate after flock now
+                              flock($lock_handle, LOCK_EX);
+                              ftruncate($lock_handle, 0);
                               $additional_info = "started at ".date("H:i:s", $start_sync_time);
                               $additional_info.= ", internal account #".($internal_users_loop+1)." at ".date("H:i:s");
                               if ($this->GetVerboseFlag()) {
@@ -18993,6 +19038,7 @@ class Multiotp
       } else {
           //Get the document loaded into a variable
           if ($file_handler = @fopen($yubikey_file, "rt")) {
+              flock($file_handler, LOCK_SH);
 
               $yubikey_class = new MultiotpYubikey();
               
@@ -19098,6 +19144,7 @@ class Multiotp
       } else {
           //Get the document loaded into a variable
           if ($file_handler = @fopen($csv_file, "rt")) {
+              flock($file_handler, LOCK_SH);
               while (!feof($file_handler)) {
                   $line = nullable_trim(fgets($file_handler));
 
@@ -19387,6 +19434,7 @@ class Multiotp
           
           //Get the document loaded into a variable
           if ($file_handler = @fopen($data_file, "rt")) {
+              flock($file_handler, LOCK_SH);
 
               $line = nullable_trim(fgets($file_handler));
               
@@ -19494,6 +19542,7 @@ class Multiotp
           
           //Get the document loaded into a variable
           if ($file_handler = @fopen($data_file, "rt")) {
+              flock($file_handler, LOCK_SH);
           
               $line = nullable_trim(fgets($file_handler));
               
@@ -19768,36 +19817,40 @@ class Multiotp
       $filename = strtolower($hostname.".db");
 
       if (file_exists($alternate_file)) {
-          // Extract the alternate password
-          $file_handler = fopen($alternate_file, "rt");
+        // Extract the alternate password
+        if ($file_handler = @fopen($alternate_file, "rt")) {
+          flock($file_handler, LOCK_SH);
           while (!feof($file_handler)) {
-              $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($file_handler)));
-              $line_array = explode("=",$line,2);
-              if (('#' != substr($line, 0, 1)) && (';' != substr($line, 0, 1)) && ("" != nullable_trim($line)) && (isset($line_array[1]))) {
-                  if ("radius_secret" == $line_array[0]) {
-                      $result['alternate_password'] = $line_array[1];
-                      break;
-                  }
+            $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($file_handler)));
+            $line_array = explode("=",$line,2);
+            if (('#' != substr($line, 0, 1)) && (';' != substr($line, 0, 1)) && ("" != nullable_trim($line)) && (isset($line_array[1]))) {
+              if ("radius_secret" == $line_array[0]) {
+                $result['alternate_password'] = $line_array[1];
+                break;
               }
+            }
           }
           fclose($file_handler);
+        }
       }
 
       if (file_exists($this->GetDdnsFolder().$filename)) {
-          $result["exists"] = TRUE;
-          $file_handler = fopen($this->GetDdnsFolder().$filename, "rt");
+        $result["exists"] = TRUE;
+        if ($file_handler = @fopen($this->GetDdnsFolder().$filename, "rt")) {
+          flock($file_handler, LOCK_SH);
           $first_line = nullable_trim(fgets($file_handler));
           
           while (!feof($file_handler)) {
-              $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($file_handler)));
-              $line_array = explode("=",$line,2);
-              if (('#' != substr($line, 0, 1)) && (';' != substr($line, 0, 1)) && ("" != nullable_trim($line)) && (isset($line_array[1]))) {
-                  if ("" != $line_array[0]) {
-                      $result[strtolower($line_array[0])] = $line_array[1];
-                  }
+            $line = str_replace(chr(10), "", str_replace(chr(13), "", fgets($file_handler)));
+            $line_array = explode("=",$line,2);
+            if (('#' != substr($line, 0, 1)) && (';' != substr($line, 0, 1)) && ("" != nullable_trim($line)) && (isset($line_array[1]))) {
+              if ("" != $line_array[0]) {
+                $result[strtolower($line_array[0])] = $line_array[1];
               }
+            }
           }
           fclose($file_handler);
+        }
       } elseif ($result['alternate_password'] != '') {
           $result["exists"] = true;
           $result["username"] = substr($hostname, 0, strpos($hostname.'.', '.'));
@@ -19862,6 +19915,7 @@ class Multiotp
               }
           } else {
               if ($file_handler = @fopen($this->GetDevicesFolder().$device_filename, "rt")) {
+                  flock($file_handler, LOCK_SH);
                   $first_line = nullable_trim(fgets($file_handler));
                   
                   while (!feof($file_handler)) {
@@ -20680,6 +20734,7 @@ class Multiotp
               }
           } else {
               if ($file_handler = @fopen($this->GetGroupsFolder().$group_filename, "rt")) {
+                  flock($file_handler, LOCK_SH);
                   $first_line = nullable_trim(fgets($file_handler));
                   
                   while (!feof($file_handler)) {
