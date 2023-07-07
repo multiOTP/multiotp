@@ -36,8 +36,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.1
- * @date      2023-05-10
+ * @version   5.9.6.5
+ * @date      2023-07-07
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -276,8 +276,8 @@ if (!isset($multiotp)) {
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.1
- * @date      2023-05-10
+ * @version   5.9.6.5
+ * @date      2023-07-07
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -481,8 +481,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.1
- * @date      2023-05-10
+ * @version   5.9.6.5
+ * @date      2023-07-07
  * @since     2010-07-18
  */
 {
@@ -597,8 +597,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.6.1
-   * @date      2023-05-10
+   * @version   5.9.6.5
+   * @date      2023-07-07
    * @since     2010-07-18
    */
   function __construct(
@@ -622,11 +622,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.6.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.6.5'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = nullable_trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2023-05-10'; // You should update the date with the date of your changes
+        $temp_date = '@date      2023-07-07'; // You should update the date with the date of your changes
         $this->_date = nullable_trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMyBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -2955,7 +2955,7 @@ class Multiotp
       $encoded_stats_value = urlencode(base64_encode($rsa->encrypt(json_encode($stats_array))));
       $result_stats = $this->PostHttpDataXmlRequest($encoded_stats_value, "http://stats.multiotp.net/", 5);
       // if (FALSE !== mb_strpos($result_stats, "OK")) {
-      // We have to upgrade the anonymous last update even if the answer id not correct, because we could be offline
+      // We have to upgrade the anonymous last update even if the answer is not correct, because we could be offline
 
       if ((FALSE !== mb_strpos($result_stats, "<infoweb>")) && (FALSE !== mb_strpos($result_stats, "</infoweb>"))) {
           $infoweb_start = mb_strpos($result_stats, "<infoweb>") + mb_strlen("<infoweb>");
@@ -3888,9 +3888,7 @@ class Multiotp
                       $result = FALSE;
                   } else {
                       while ($aRow = $rResult->fetch_assoc()) {
-                          if ($as_result) {
-                              $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
-                          }
+                        $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
                       }                         
                   }
               } elseif (!($rResult = mysql_query($sQuery, $this->_mysql_database_link))) {
@@ -3898,9 +3896,7 @@ class Multiotp
                   $result = FALSE;
               } else {
                   while ($aRow = mysql_fetch_assoc($rResult)) {
-                      if ($as_result) {
-                          $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
-                      }
+                    $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
                   }                         
               }
           }
@@ -3914,9 +3910,7 @@ class Multiotp
                   $result = FALSE;
               } else {
                   while ($aRow = pg_fetch_assoc($rResult)) {
-                      if ($as_result) {
-                          $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
-                      }
+                    $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
                   }                         
               }
           }
@@ -3925,9 +3919,7 @@ class Multiotp
         if ($log_file_handle = @fopen($this->GetLogFolder().$this->GetLogFileName(),"r")) {
           flock($log_file_handle, LOCK_SH);
           while (!feof($log_file_handle)) {
-            if ($as_result) {
-              $result.= nullable_trim(fgets($log_file_handle))."\n";
-            }
+            $result.= nullable_trim(fgets($log_file_handle))."\n";
           }
           fclose($log_file_handle);
         }
@@ -6364,6 +6356,22 @@ class Multiotp
   }
 
 
+  function GenerateNTMLv2(
+    $account,
+    $password,
+    $domain = "",
+    $client_challenge = "",
+    $server_challenge = ""
+  ) {
+    $unicode_password= iconv ( 'UTF-8', 'UTF-16LE', $password );
+
+    $NTLM_Key = mhash ( MHASH_MD4, $unicode_password);
+    $NTLM_Hash = mhash ( MHASH_MD5, iconv ( 'UTF-8', 'UTF-16LE', strtoupper ( $account ) . $domain ), $NTLM_Key );
+    $NTLM_Chal_Hash = mhash ( MHASH_MD5, pack ( "H*", $server_challenge . $client_challenge ), $NTLM_Hash );
+
+    return strtoupper ( bin2hex ( $NTLM_Chal_Hash ) );
+  }
+
   function SetState(
       $value
   ) {
@@ -8516,7 +8524,7 @@ class Multiotp
 
 
   function CalculateMsChap2Response(
-      $user,
+      $account,
       $secret,
       $domain = "",
       $hex_mschap_challenge = '',
@@ -8558,7 +8566,7 @@ class Multiotp
       /*
       $kr = hash_hmac('md5',
                       pack('H*',hash('md4', $hash)),
-                      $this->Convert2Unicode(strtoupper($user).$domain)
+                      $this->Convert2Unicode(strtoupper($account).$domain)
                      ); // ! THIS NON-MB strtoupper must stay as is !
                      
       $nt_response_sig = hash_hmac('md5',
@@ -8580,7 +8588,7 @@ class Multiotp
       }
       else
       {
-          $challenge = substr(pack('H*',hash('sha1', $peer_challenge.$mschap_challenge.$user)), 0, 8);
+          $challenge = substr(pack('H*',hash('sha1', $peer_challenge.$mschap_challenge.$account)), 0, 8);
       }
 
       $hash = substr($hash.str_repeat("\0",21), 0, 21);
@@ -8610,13 +8618,13 @@ class Multiotp
 
 
   function CheckMsChap2Response(
-      $user,
+      $account,
       $secret,
       $domain = '',
       $hex_mschap_challenge = '',
       $hex_mschap2_response = ''
   ) {
-      $result = $this->CalculateMsChap2Response($user, $secret, $domain, $hex_mschap_challenge, $hex_mschap2_response);
+      $result = $this->CalculateMsChap2Response($account, $secret, $domain, $hex_mschap_challenge, $hex_mschap2_response);
       
       return ($this->GetMsChap2Response() == strtolower($result));
   }
@@ -22027,6 +22035,7 @@ EOL;
   }
 
 
+  // The XmlServer is called from the client side using PostHttpDataXmlRequest function
   function XmlServer($data)
   {
       // $this->WriteLog("Info: Host received the following request: $data", FALSE, FALSE, 8888, 'Debug', '');

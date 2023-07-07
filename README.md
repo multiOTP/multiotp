@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2023 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.6.1 (2023-05-10)
+Current build: 5.9.6.5 (2023-07-07)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -154,6 +154,8 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2023-07-07 5.9.6.5 FIX: Better Raspberry Pi support
+                   FIX: ShowLog() method (used by -showlog option) was buggy
 2023-05-10 5.9.6.1 FIX: Automated concurrent access for the same user with "Without2FA" token could corrupt the user file
                    FIX: Any files backend operation is now secured with explicit lock mechanism
                    ENH: Template updated to print bigger QRcode for "MOTP-XML" tokens
@@ -1593,7 +1595,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.6.1 (2023-05-10)
+multiOTP 5.9.6.5 (2023-07-07)
 (c) 2010-2023 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -2109,8 +2111,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.9.6.1.zip 
-SHA256:136725420e72d4dc5af1b64b084be7028338aead437a022ac803c77d71623891 
-SHA1:240355ceef9c4b23aff11984039c1de93a45f04b 
-MD5:569863c9532db4b6224b243526af2117 
+Hash verification for multiotp_5.9.6.5.zip 
+SHA256:c17f48e035340f33055d2d786f9a9ed44cea1ba8dbc81dbc3788d46501c51465 
+SHA1:1d1d7550198b9d480d646e2c1c29f2e67ac64d69 
+MD5:a51547307b18456dd971a8deab303dfe 
 ``` 

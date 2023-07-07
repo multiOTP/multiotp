@@ -8,8 +8,8 @@
 # https://www.multiotp.net/
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.6.1
-# @date      2023-05-10
+# @version   5.9.6.5
+# @date      2023-07-07
 # @since     2013-09-22
 # @copyright (c) 2013-2023 SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
@@ -38,7 +38,7 @@
 # 2013-09-22 4.0.9.0 SysCo/al Initial release
 ##########################################################################
 
-TEMPVERSION="@version   5.9.6.1"
+TEMPVERSION="@version   5.9.6.5"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
