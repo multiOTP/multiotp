@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2023 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.6.5 (2023-07-07)
+Current build: 5.9.6.7 (2023-09-22)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -99,8 +99,9 @@ TABLE OF CONTENTS
  * How to configure multiOTP to use the client/server feature ?
  * How to build a Raspberry Pi strong authentication server ?
  * How to install a local only strong authentication on a Windows machine ?
- * How to install a centralized strong authentication server
-   for strong authentication on Windows desktops or RDP ?
+ * How to install a centralized 2FA server for Windows desktops or RDP login ?
+ * Same Windows generic account with multiple two-factor authentication accounts
+ * Using multiOTP on Linux for SSH login
  * LDAP filter customization
  * OpenSSL options for LDAPS
  * Compatible clients applications and devices
@@ -154,6 +155,11 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2023-09-22 5.9.6.7 ENH: Documentation updated for "Configuring multiOTP with FreeRADIUS 3.x under Linux"
+                   ENH: Without2FA tokens cannot be used for multi_account connection
+                   ENH: Added documentation for SSH login with multiOTP
+2023-08-09 5.9.6.6 FIX: Prefix PIN information was sometimes missing on the provisioning info
+                   ENH: New Raspberry Pi distribution binary
 2023-07-07 5.9.6.5 FIX: Better Raspberry Pi support
                    FIX: ShowLog() method (used by -showlog option) was buggy
 2023-05-10 5.9.6.1 FIX: Automated concurrent access for the same user with "Without2FA" token could corrupt the user file
@@ -410,7 +416,8 @@ CHANGE LOG OF RELEASED VERSIONS
                    For _user_data, default values are now extracted from the definition array
                    QRcode generation for mOTP (motp://[SITENAME]:[USERNAME]?secret=[SECRET-KEY])
 2015-07-15 4.3.2.5 Calling multiotp CLI without parameter returns now error code 30 (instead of 19)
-2015-06-24 4.3.2.4 multi_account automatic support
+2015-06-24 4.3.2.4 multi_account automatic support (multi_account is activated when
+                    "multi_account" is set as description of the account (also with AD/LDAP sync)
                    Scratch password generation (UTF)
 2015-06-10 4.3.2.3 Enhancements for the Dev(Talks): demo
 2015-06-09 4.3.2.2 Empty users are refused
@@ -1109,7 +1116,7 @@ Before starting or asking for help
 - Make sure the otp script is executable chmod +x /path/to/multiotp.php
 - Verify multiotp is setup correctly by calling the script from the commandline with the appropriate arguments
 
-1) Create 'raddb/modules/multiotp' and add the following, this will create a new instance of the exec module:
+1) Create '/etc/freeradius/3.0/mods-available/multiotp' and add the following, this will create a new instance of the exec module:
 ```
 # Exec module instance for multiOTP
 # Replace '/path/to' with the actual path to the multiotp.php file
@@ -1117,12 +1124,17 @@ exec multiotp {
         wait = yes
         input_pairs = request
         output_pairs = reply
-        program = "/path/to/multiotp.php %{User-Name} %{User-Password} -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"
+		program = "/path/to/multiotp.php -base-dir='/path/to/multiotp/' '%{User-Name}' '%{User-Password}' -src='%{Packet-Src-IP-Address}' -tag='%{Client-Shortname}' -mac='%{Called-Station-Id}' -calling-ip='%{Framed-IP-Address}' -calling-mac='%{Calling-Station-Id}' -chap-challenge='%{CHAP-Challenge}' -chap-password='%{CHAP-Password}' -ms-chap-challenge='%{MS-CHAP-Challenge}' -ms-chap-response='%{MS-CHAP-Response}' -ms-chap2-response='%{MS-CHAP2-Response}' -state='%{State}'"		
         shell_escape = yes
 }
 ```
 
-2) Copy module/mschap to module/multiotpmschap. Change the following line in multiotpmschap:
+2) Enable multiotp module by creating a symbolic link
+```
+ln -s /etc/freeradius/3.0/mods-available/multiotp /etc/freeradius/3.0/mods-enabled/multiotp
+```
+
+3) Copy /etc/freeradius/3.0/mods-available/mschap to /etc/freeradius/3.0/mods-available/multiotpmschap. Change the following line in multiotpmschap:
 ```
 "mschap {"
 ```
@@ -1133,77 +1145,142 @@ to
 
 Also change ntlm_auth variable:
 ```
-ntlm_auth = "/path/to/multiotp.php %{User-Name} %{User-Password} -nt-key-only -src=%{Packet-Src-IP-Address} -chap-challenge=%{CHAP-Challenge} -chap-password=%{CHAP-Password} -ms-chap-challenge=%{MS-CHAP-Challenge} -ms-chap-response=%{MS-CHAP-Response} -ms-chap2-response=%{MS-CHAP2-Response}"
+ntlm_auth = "/path/to/multiotp.php -base-dir='/path/to/multiotp/' '%{User-Name}' '%{User-Password}' -nt-key-only -src='%{Packet-Src-IP-Address}' -tag='%{Client-Shortname}' -mac='%{Called-Station-Id}' -calling-ip='%{Framed-IP-Address}' -calling-mac='%{Calling-Station-Id}' -chap-challenge='%{CHAP-Challenge}' -chap-password='%{CHAP-Password}' -ms-chap-challenge='%{MS-CHAP-Challenge}' -ms-chap-response='%{MS-CHAP-Response}' -ms-chap2-response='%{MS-CHAP2-Response}' -state='%{State}'"
 ```
 
-3) Edit 'raddb/policy.conf' and add the following to override the authorize method of the exec module: (or add a new multiotp file in the policy.d folder)
-policy {
+4) Enable multiotpmschap module by creating a symbolic link
 ```
-    # Change to a specific prefix if you want to deal with normal PAP authentication as well as OTP
-    # e.g. "multiotp_prefix = 'otp:'"
-    multiotp_prefix = ''
-    multiotp.authorize {
-        # This test force multiOTP for any MS-CHAP(v2) attempt
-        if (control:Auth-Type == MS-CHAP) {
-            update control {
-                Auth-Type := multiotpmschap
-            }
-        }
-        # This test force multiOTP for any MS-CHAP(v2) attempt
-        elsif (control:Auth-Type == mschap) {
-            update control {
-                Auth-Type := multiotpmschap
-            }
-        }
-        # This test force multiOTP for any CHAP attempt
-        elsif (control:Auth-Type == chap) {
-            update control {
-                Auth-Type := multiotp
-            }
-        }
-        # This test is for decimal OTP code only, otherwise you will have to change it
-        #  elsif (!control:Auth-Type && User-Password =~ /^${policy.multiotp_prefix}([0-9]{10})$/) {
-        #
-        # Use this simple test for non decimal only OTP code: elsif (!control:Auth-Type) {
-        #
-        # This test force multiOTP for any other attempt like PAP
-        elsif (!control:Auth-Type) {
-            update control {
-                Auth-Type := multiotp
-            }
+ln -s /etc/freeradius/3.0/mods-available/multiotpmschap /etc/freeradius/3.0/mods-enabled/multiotpmschap
+```
+
+5) Edit /etc/freeradius/3.0/mods-available/perl file. Change the following line :
+```
+filename =
+```
+to
+```
+filename = /path/to/multiotp/scripts/multiotp.pl
+```
+
+Since 5.8.3.0 and FreeRADIUS 3.0.18, set the perl flags to -U
+```
+perl_flags = "-U"
+```
+
+6) Enable perl module by creating a symbolic link
+```
+ln -s /etc/freeradius/3.0/mods-available/perl /etc/freeradius/3.0/mods-enabled/perl
+```
+
+7)If necessary change multiOTP path in the multiOTP perl file scripts/multiotp.pl
+```
+my $output=`/usr/local/bin/multiotp/multiotp.php -base-dir='/usr/local/bin/multiotp/' "$multiotp_
+```
+to
+
+```
+my $output=`/path/to/multiotp.php -base-dir='/path/to/multiotp/' "$multiotp_
+```
+
+
+7) Create /etc/freeradius/3.0/policy.d/multiotp file and add the following to override the authorize method of the exec module:
+```
+# Change to a specific prefix if you want to deal with normal PAP authentication as well as OTP
+# e.g. "multiotp_prefix = 'otp:'"
+multiotp_prefix = ''
+multiotp.authorize {
+   # This test force multiOTP for any MS-CHAP(v2),CHAP and PAP attempt
+    if (control:Auth-Type == mschap) {
+          update control {
+                  Auth-Type := multiotpmschap
+          }
+    }
+    elsif (control:Auth-Type == chap) {
+          update control {
+                  Auth-Type := multiotp
+          }
+    }
+    elsif (!control:Auth-Type) {
+        update control {
+            Auth-Type := multiotp
         }
     }
 }
 ```
 
-4) Edit your virtual server file, the default for the outer server is 'raddb/sites-available/default'
-
-5) Add a call to multiotp before the pap module in authorize:
+8) Enable files and add perl just after files, in the authorize section of /etc/freeradius/3.0/sites-available/default. Add the following lines:
+...
+    files
 ```
-authorize {
-    ...
+    perl #multiotp
+    if (ok || updated) { #multiotp
+        update control { #multiotp
+           Auth-Type := Perl #multiotp
+           Client-Shortname = "%{Client-Shortname}" #multiotp
+           Packet-Src-IP-Address = "%{Packet-Src-IP-Address}" #multiotp
+        } #multiotp
+    } #multiotp
+```
+
+After logintime add the following line :
+...
+	expiration
+	logintime
+```
     # Handle multiotp authentication
     multiotp
-
-    # Handle other PAP authentication
-    pap
-    ...
-}
 ```
 
-6) Create the multiotp sub-section in authenticate:
-```
+9) Add a call to multiotp before the pap module in authenticate section of /etc/freeradius/3.0/sites-available/default. Add the following lines:
+...
 authenticate {
+```
+Auth-Type multiotp {
+    multiotp
+} #multiotp
+Auth-Type multiotpmschap {
+    multiotpmschap
+} #multiotpmschap
+Auth-Type Perl { #multiotp
+    perl #multiotp
+} #multiotp
+```
+
+10) Add a call to perl in accounting section of /etc/freeradius/3.0/sites-available/default. Add the following lines:
+...
+accounting {
+```
+    perl #multiotp
+```
+
+11) Enable multiotp, in the authorize section of /etc/freeradius/3.0/sites-available/inner-tunnel. Add the following lines:
+
+After logintime add the following line :
+...
+	expiration
+	logintime
+```
+    # Handle multiotp authentication
+    multiotp
+```
+
+...
+authenticate {
+```
     Auth-Type multiotp {
         multiotp
-    }
+    } #multiotp
     Auth-Type multiotpmschap {
         multiotpmschap
-    }
-}
+    } #multiotpmschap
+    Auth-Type Perl { #multiotp
+        perl #multiotp
+    } #multiotp
+	
 ```
 
-7) Start the server up in debug mode radiusd -X and test authentication
+
+12) Start the server up in debug mode radiusd -X and test authentication
 
 
 HOW TO CONFIGURE MULTIOTP TO SYNCHRONIZED THE USERS FROM AN ACTIVE DIRECTORY ?
@@ -1395,9 +1472,8 @@ HOW TO INSTALL A LOCAL ONLY STRONG AUTHENTICATION ON A WINDOWS MACHINE ?
 7) To disable the Credential Provider, uninstall it from Windows,
    or execute multiOTPCredentialProvider-unregister.reg
 
-HOW TO INSTALL A CENTRALIZED STRONG AUTHENTICATION SERVER
-FOR STRONG AUTHENTICATION ON WINDOWS DESKTOPS OR RDP ?
-=========================================================
+HOW TO INSTALL A CENTRALIZED 2FA SERVER FOR WINDOWS DESKTOPS OR RDP LOGIN ?
+===========================================================================
 1) Install a client/server multiOTP environment like explained above.
 2) On each client, install multiOTPCredentialProvider .
    It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 in 64 bits.
@@ -1410,6 +1486,63 @@ FOR STRONG AUTHENTICATION ON WINDOWS DESKTOPS OR RDP ?
 7) If the test is successful, the Credential Provider is installed.
 8) To disable the Credential Provider, uninstall it from Windows,
    or execute multiOTPCredentialProvider-unregister.reg
+
+
+SAME WINDOWS GENERIC ACCOUNT WITH MULTIPLE TWO-FACTOR AUTHENTICATION ACCOUNTS 
+=============================================================================
+If you have to share the same generic Windows account, but you still need
+2FA authentication for each user (like for a specific industrial computer in a
+24/7/365 process), you can do the following configuration:
+1) Create (or sync with AD/LDAP) a multiOTP account for the generic account
+2) In multiOTP, set the description of the generic account to "multi_account"
+   (if the account is synced by AD/LDAP, put the description in the AD/LDAP)
+3) Create (or sync with AD/LDAP) the accounts of each users
+4) On the login screen of the computer, use the following credentials:
+   - Account : generic Windows account
+   - Password : password of the generic Windows account
+   - OTP : [username of the specific user][space][OTP code of the specific user]
+
+
+USING MULTIOTP ON LINUX FOR SSH LOGIN
+=====================================
+0) Configure OpenSSH and PAM
+   Configure your OpenSSH server to request the PassCode (PinCode+OTP)
+   to the radius server. For this purpose we will use a radius PAM agent.
+
+1) PAM configuration for OpenSSH server:
+   Edit the file /etc/pam.d/sshd with this configuration.
+   Comment the username/password line and add the PAM library.
+   Be sure you have the PAM radius library.
+```
+   #auth required pam_stack.so service=system-auth
+   auth required /lib/security/pam_radius_auth.so
+```
+
+2) Specify the Radius Server.
+   Create and edit a file called server in /etc/raddb
+   with the Radius IP,port and the shared secret key.
+```
+   #Server[:port]  shared_secret      timeout (s)
+   127.0.0.1       secret             1
+   10.1.23.1:1812  myfirstpass        6
+```
+
+3) OpenSSH server (radiusd daemon) configuration:
+   Edit /etc/sshd/sshd_config and be sure PAM is
+   enabled and keyboard-interactive AuthN support.
+```
+   UsePAM yes
+   PasswordAuthentication no
+   ChallengeResponseAuthentication yes
+```
+
+4) Stop and start the OpenSSH server
+```
+   /etc/init.d/sshd stop
+   /etc/init.d/sshd start
+```
+
+5) You are now ready to test your login SSH with an software OTP :-)
 
 
 HOW TO BUILD A RASPBERRY PI STRONG AUTHENTICATION SERVER ?
@@ -1484,7 +1617,9 @@ HOW TO BUILD A RASPBERRY PI STRONG AUTHENTICATION SERVER ?
 
 LDAP FILTER CUSTOMIZATION
 =========================
-You can customize your own LDAP filter. By default, the LDAP filter is the following:
+You can customize your own LDAP filter. By default, the LDAP filter is empty.
+In the LDAP filter, you can use the following placeholders:
+  {cn_identifier}, {username}, {groups_filtering}
 
 
 OPENSSL OPTIONS FOR LDAPS
@@ -1595,7 +1730,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.6.5 (2023-07-07)
+multiOTP 5.9.6.7 (2023-09-22)
 (c) 2010-2023 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1693,6 +1828,7 @@ Return codes:
 82 ERROR: User not allowed for this device 
 88 ERROR: Device is not defined as a HA slave 
 89 ERROR: Device is not defined as a HA master 
+91 ERROR: Authentication failed (without2fa token not authorized here) 
 92 ERROR: Authentication failed (bad password) 
 93 ERROR: Authentication failed (time based token probably out of sync) 
 94 ERROR: API request error 

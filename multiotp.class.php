@@ -72,8 +72,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.5
- * @date      2023-07-07
+ * @version   5.9.6.7
+ * @date      2023-09-22
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -277,8 +277,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.5
- * @date      2023-07-07
+ * @version   5.9.6.7
+ * @date      2023-09-22
  * @since     2010-07-18
  */
 {
@@ -393,8 +393,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.6.5
-   * @date      2023-07-07
+   * @version   5.9.6.7
+   * @date      2023-09-22
    * @since     2010-07-18
    */
   function __construct(
@@ -418,11 +418,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.6.5'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.6.7'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = nullable_trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2023-07-07'; // You should update the date with the date of your changes
+        $temp_date = '@date      2023-09-22'; // You should update the date with the date of your changes
         $this->_date = nullable_trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMyBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -1740,6 +1740,7 @@ class Multiotp
     $this->_errors_text[88] = "ERROR: Device is not defined as a HA slave";
     $this->_errors_text[89] = "ERROR: Device is not defined as a HA master";
 
+    $this->_errors_text[91] = "ERROR: Authentication failed (without2fa token not authorized here)";
     $this->_errors_text[92] = "ERROR: Authentication failed (bad password)";
     $this->_errors_text[93] = "ERROR: Authentication failed (time based token probably out of sync)";
     $this->_errors_text[94] = "ERROR: API request error";
@@ -8932,13 +8933,13 @@ class Multiotp
       }
 
       // Simplify current algorithm info
-      $html = preg_replace('/IfMultiotpUserAlgorithm="[BCHIMOPTUY,]*'.mb_strtoupper($this->GetUserAlgorithm(),'UTF-8').'[BCHIMOPTUY,]*"}/i', 'IfMultiotpUserAlgorithm="'.mb_strtoupper($this->GetUserAlgorithm(),'UTF-8').'"}', $html);
+      $html = preg_replace('/IfMultiotpUserAlgorithm="[2ABCFHIMOPTUWY,]*'.mb_strtoupper($this->GetUserAlgorithm(),'UTF-8').'[2ABCFHIMOPTUWY,]*"}/i', 'IfMultiotpUserAlgorithm="'.mb_strtoupper($this->GetUserAlgorithm(),'UTF-8').'"}', $html);
 
       // Clean other algorithms info
       foreach (explode("\t",$this->GetAlgorithmsList()) as $algorithm_one) {
           if (mb_strtoupper($algorithm_one,'UTF-8') != mb_strtoupper($this->GetUserAlgorithm(),'UTF-8')) {
-              $html = preg_replace('/<!--\s*\{\/IfMultiotpUserAlgorithm="[BCHIMOPTUY,]*'.mb_strtoupper($algorithm_one,'UTF-8').'[BCHIMOPTUY,]*"\}\s*-->/i', ' -- {/IfMultiotpUserAlgorithm="DELETE"} -->', $html);
-              $html = preg_replace('/<!--\s*\{IfMultiotpUserAlgorithm="[BCHIMOPTUY,]*'.mb_strtoupper($algorithm_one,'UTF-8').'[BCHIMOPTUY,]*"\}\s*-->/i', '<!-- {IfMultiotpUserAlgorithm="DELETE"} -- ', $html);
+              $html = preg_replace('/<!--\s*\{\/IfMultiotpUserAlgorithm="[2ABCFHIMOPTUWY,]*'.mb_strtoupper($algorithm_one,'UTF-8').'[2ABCFHIMOPTUWY,]*"\}\s*-->/i', ' -- {/IfMultiotpUserAlgorithm="DELETE"} -->', $html);
+              $html = preg_replace('/<!--\s*\{IfMultiotpUserAlgorithm="[2ABCFHIMOPTUWY,]*'.mb_strtoupper($algorithm_one,'UTF-8').'[2ABCFHIMOPTUWY,]*"\}\s*-->/i', '<!-- {IfMultiotpUserAlgorithm="DELETE"} -- ', $html);
           }
       }
 
@@ -11531,17 +11532,40 @@ class Multiotp
 
 
   function SetUserMultiAccount(
-      $value
+      $first_param,
+      $second_param = "*-*"
   ) {
-      $this->_user_data['multi_account'] = $value;
-      return TRUE;
+      $result = TRUE;
+      $data = 0;
+      if ($second_param == "*-*") {
+          $data = $first_param;
+      } else {
+          $result = $this->SetUser($first_param);
+          $data = $second_param;
+      }
+      $this->_user_data['multi_account'] = $data;
+
+      return $result;
   }
 
 
-  function GetUserMultiAccount()
-  {
-      return $this->_user_data['multi_account'];
+  function GetUserMultiAccount(
+      $user = ''
+  ) {
+      if ($user != '') {
+          $this->SetUser($user);
+      }
+      return intval(isset($this->_user_data['multi_account']) ? $this->_user_data['multi_account'] : 0);
   }
+  
+
+  function IsUserMultiAccount(
+      $user = ''
+  ) {
+      return (1 == ($this->GetUserMultiAccount($user)));
+  }
+  
+
 
 
   function SetUserAttribute(
@@ -16703,20 +16727,21 @@ class Multiotp
       }
       
       if ($this->IsGlobalChallengeResponse()) {
-          $challenge_response_enabled = 1;
-          $sms_challenge_enabled = ($this->IsGlobalSmsChallenge() ? 1:0);
-          $text_sms_challenge = $this->GetGlobalTextSmsChallenge();
-          $text_token_challenge = $this->GetGlobalTextTokenChallenge();
+        $challenge_response_enabled = 1;
+        $sms_challenge_enabled = ($this->IsGlobalSmsChallenge() ? 1:0);
+        $text_sms_challenge = $this->GetGlobalTextSmsChallenge();
+        $text_token_challenge = $this->GetGlobalTextTokenChallenge();
       }
   
       $state = nullable_trim($this->GetState());
       if ('' == $state) {
-          $state = "multiOTP".mb_substr(md5($this->GetEncryptionKey().time().mt_rand(100000,999999)),0,24);
+        $state = "multiOTP".mb_substr(md5($this->GetEncryptionKey().time().mt_rand(100000,999999)),0,24);
       }
 
       $cache_result_enabled = false;
       $disable_error_counter = false;
       $force_no_prefix_pin = false;
+      $multi_account_enabled = false;
       
       $supplemental_login_info = "";
 
@@ -16765,7 +16790,8 @@ class Multiotp
           // For multi-account definition, we are also looking on the server(s) if any
           if ($this->ReadUserData($real_user)) {
               // multi account works only if authentication is done with PAP
-              if (1 == intval($this->GetUserMultiAccount())) {
+              if ($this->IsUserMultiAccount()) {
+                  $multi_account_enabled = true;
                   $pos = strrpos($input_to_check, " ");
                   if ($pos !== FALSE) {
                       $real_user = mb_substr($input_to_check,0,$pos);
@@ -16825,7 +16851,8 @@ class Multiotp
           $result = 99; // Unknown error
 
           // multi account works only if authentication is done with PAP
-          if (1 == intval($this->GetUserMultiAccount())) {
+          if ($this->IsUserMultiAccount()) {
+              $multi_account_enabled = true;
               $pos = strrpos($input_to_check, " ");
               if ($pos !== FALSE) {
                   $real_user = mb_substr($input_to_check,0,$pos);
@@ -17952,9 +17979,16 @@ class Multiotp
                       }
                       break;
                   case 'without2fa';
+                      // NO without2fa token as multi_account authentication
+                      if ($multi_account_enabled) {
+                        $result = 91;
+                        $this->WriteLog("Error: authentication failed".$supplemental_login_info." for user ".$real_user." (without2fa token not authorized here)", FALSE, FALSE, $result, 'User');
+                        return $result;
+                      }
+
                       $result = 92; // ERROR: Authentication failed (bad password)
                       if ($input_is_empty) {
-                          $input_to_check = '';
+                        $input_to_check = '';
                       }
 
                       $bad_precheck = FALSE;
