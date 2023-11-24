@@ -8,12 +8,14 @@
 # https://www.multiotp.net/
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.6.7
-# @date      2023-09-22
+# @version   5.9.7.0
+# @date      2023-11-23
 # @since     2013-09-22
 # @copyright (c) 2013-2023 SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
+# 2023-11-23 5.9.7.0 SysCo/al Update Raspberry Pi detection 
+# 2023-10-11 5.9.6.8 SysCo/al Add Debian Bookworm 12.0 support
 # 2022-05-26 5.9.0.3 SysCo/al ssue with /run/php when a Docker container is restarted
 # 2022-05-08 5.8.8.4 SysCo/al Better docker support (also for Synology)
 # 2022-05-08 5.8.8.1 SysCo/al Add Raspberry Pi Bullseye 11.0 support
@@ -38,7 +40,7 @@
 # 2013-09-22 4.0.9.0 SysCo/al Initial release
 ##########################################################################
 
-TEMPVERSION="@version   5.9.6.7"
+TEMPVERSION="@version   5.9.7.0"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
@@ -72,7 +74,7 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 SOURCEDIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
-# OS ID and version
+# OS ID and version (2023-11-20)
 # Architecture (for example x86_64)
 OSID=$(cat /etc/os-release | grep "^ID=" | awk -F'=' '{print $2}')
 OSVERSION=$(cat /etc/os-release | grep "VERSION_ID=" | awk -F'"' '{print $2}')
@@ -85,6 +87,7 @@ PHPINSTALLPREFIX="php"
 PHPINSTALLPREFIXVERSION="php7.3"
 PHPMODULEPREFIX="php/7.3"
 PHPMAJORVERSION="7"
+SQLITEVERSION="sqlite3"
 VMRELEASENUMBER="010"
 if [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     BACKENDDB="mysql"
@@ -94,6 +97,7 @@ if [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     PHPINSTALLPREFIXVERSION="php5"
     PHPMODULEPREFIX="php5"
     PHPMAJORVERSION="5"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="007"
 elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "8" ]]; then
     BACKENDDB="mysql"
@@ -103,6 +107,7 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "8" ]]; then
     PHPINSTALLPREFIXVERSION="php5"
     PHPMODULEPREFIX="php5"
     PHPMAJORVERSION="5"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="007"
 elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "9" ]]; then
     BACKENDDB="mysql"
@@ -112,6 +117,7 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "9" ]]; then
     PHPINSTALLPREFIXVERSION="php7.0"
     PHPMODULEPREFIX="php/7.0"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="008"
 elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "10" ]]; then
     BACKENDDB="mariadb"
@@ -121,6 +127,7 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "10" ]]; then
     PHPINSTALLPREFIXVERSION="php7.3"
     PHPMODULEPREFIX="php/7.3"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite3"
     VMRELEASENUMBER="010"
 elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "11" ]]; then
     BACKENDDB="mariadb"
@@ -130,7 +137,18 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "11" ]]; then
     PHPINSTALLPREFIXVERSION="php7.4"
     PHPMODULEPREFIX="php/7.4"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite3"
     VMRELEASENUMBER="011"
+elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "12" ]]; then
+    BACKENDDB="mariadb"
+    PHPFPM="php8.2-fpm"
+    PHPFPMSED="php\/php8.2-fpm"
+    PHPINSTALLPREFIX="php"
+    PHPINSTALLPREFIXVERSION="php8.2"
+    PHPMODULEPREFIX="php/8.2"
+    PHPMAJORVERSION="8"
+    SQLITEVERSION="sqlite3"
+    VMRELEASENUMBER="012"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     BACKENDDB="mysql"
     PHPFPM="php5-fpm"
@@ -139,6 +157,7 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     PHPINSTALLPREFIXVERSION="php5"
     PHPMODULEPREFIX="php5"
     PHPMAJORVERSION="5"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="007"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "8" ]]; then
     BACKENDDB="mysql"
@@ -148,6 +167,7 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "8" ]]; then
     PHPINSTALLPREFIXVERSION="php5"
     PHPMODULEPREFIX="php5"
     PHPMAJORVERSION="5"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="007"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "9" ]]; then
     BACKENDDB="mysql"
@@ -157,6 +177,7 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "9" ]]; then
     PHPINSTALLPREFIXVERSION="php7.0"
     PHPMODULEPREFIX="php/7.0"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite"
     VMRELEASENUMBER="008"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "10" ]]; then
     BACKENDDB="mariadb"
@@ -166,6 +187,7 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "10" ]]; then
     PHPINSTALLPREFIXVERSION="php7.3"
     PHPMODULEPREFIX="php/7.3"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite3"
     VMRELEASENUMBER="010"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "11" ]]; then
     BACKENDDB="mariadb"
@@ -175,27 +197,39 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "11" ]]; then
     PHPINSTALLPREFIXVERSION="php7.4"
     PHPMODULEPREFIX="php/7.4"
     PHPMAJORVERSION="7"
+    SQLITEVERSION="sqlite3"
     VMRELEASENUMBER="011"
+elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "12" ]]; then
+    BACKENDDB="mariadb"
+    PHPFPM="php8.2-fpm"
+    PHPFPMSED="php\/php8.2-fpm"
+    PHPINSTALLPREFIX="php"
+    PHPINSTALLPREFIXVERSION="php8.2"
+    PHPMODULEPREFIX="php/8.2"
+    PHPMAJORVERSION="8"
+    SQLITEVERSION="sqlite3"
+    VMRELEASENUMBER="012"
 fi
+# End of OS ID and version (2023-11-20)
 
 
-# Early docker detection
-if grep -q docker /proc/1/cgroup; then 
-    TYPE="DOCKER"
-fi
-
-if grep -q docker /proc/self/cgroup; then 
-    TYPE="DOCKER"
-fi
-
-if [ -f /.dockerenv ]; then
-    TYPE="DOCKER"
-fi
-
+# Early docker detection (2023-11-20)
 UNAME=$(uname -a)
 if [[ "${UNAME}" == *docker* ]]; then
+    # Docker
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/1/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/self/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif [ -f /.dockerenv ]; then
+    FAMILY="VAP"
     TYPE="DOCKER"
 fi
+# End of early docker detection (2023-11-20)
 
 
 if [ $# -ge 1 ]; then
@@ -216,37 +250,80 @@ if [[ "${TYPE}" == "DOCKER" ]]; then
 fi
 
 
-# Hardware detection
+# Hardware detection (2023-11-20)
 FAMILY=""
 UNAME=$(uname -a)
 MODEL=$(cat /proc/cpuinfo | grep "Model" | awk -F': ' '{print $2}')
-if [[ "${MODEL}" == *"Raspberry Pi 4 Model B"* ]]; then
+if [[ "${UNAME}" == *docker* ]]; then
+    # Docker
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/1/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/self/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif [ -f /.dockerenv ]; then
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif [[ "${MODEL}" == *"Raspberry Pi 5"* ]]; then
+    # Raspberry Pi 5
+    FAMILY="RPI"
+    TYPE="RP5"
+elif [[ "${MODEL}" == *"Raspberry Pi 4"* ]]; then
     # Raspberry Pi 4
     FAMILY="RPI"
     TYPE="RP4"
-elif [[ "${UNAME}" == *armv8* ]]; then
+elif [[ "${MODEL}" == *"Raspberry Pi 3 Model B Plus"* ]]; then
+    # Raspberry Pi 3 B+
+    FAMILY="RPI"
+    TYPE="RP3+"
+elif [[ "${MODEL}" == *"Raspberry Pi 3"* ]]; then
+    # Raspberry Pi 3
+    FAMILY="RPI"
+    TYPE="RP3"
+elif [[ "${MODEL}" == *"Raspberry Pi 2"* ]]; then
+    # Raspberry Pi 2
+    FAMILY="RPI"
+    TYPE="RP2"
+elif [[ "${MODEL}" == *"Raspberry Pi"* ]]; then
+    # Raspberry Pi generic
+    FAMILY="RPI"
+    TYPE="RP"
+elif [[ "${UNAME}" == *armv8* ]] || [[ "${UNAME}" == *aarch64* ]]; then
     HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
-    if [[ "${HARDWARE}" == *BCM27* ]]; then
-        # Raspberry Pi 3 B
-        FAMILY="RPI"
-        TYPE="RP3"
-    elif [[ "${HARDWARE}" == *BCM28* ]]; then
-        # Raspberry Pi 3 B+
-        FAMILY="RPI"
-        TYPE="RP3B+"
-    else
-        # Nothing else yet !
-        FAMILY="RPI"
-        TYPE="RP3"
-    fi
-elif [[ "${UNAME}" == *armv7l* ]]; then
-    HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
-    if [[ "${HARDWARE}" == *BCM27* ]]; then
+    if [[ "${HARDWARE}" == *BCM27* ]] || [[ "${HARDWARE}" == *BCM28* ]]; then
         LSCPU=$(/usr/bin/lscpu | grep "CPU max MHz" | awk -F': ' '{print $2}')
         if [[ "${LSCPU}" == *1500* ]]; then
             # Raspberry Pi 4
             FAMILY="RPI"
             TYPE="RP4"
+        elif [[ "${LSCPU}" == *1400* ]]; then
+            # Raspberry Pi 3 B+
+            FAMILY="RPI"
+            TYPE="RP3+"
+        else
+            # Raspberry Pi 3
+            FAMILY="RPI"
+            TYPE="RP3"
+        fi
+    else
+        FAMILY="ARM"
+        TYPE="ARM"
+    fi
+elif [[ "${UNAME}" == *armv7l* ]]; then
+    HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
+    if [[ "${HARDWARE}" == *BCM27* ]] || [[ "${HARDWARE}" == *BCM28* ]]; then
+        LSCPU=$(/usr/bin/lscpu | grep "CPU max MHz" | awk -F': ' '{print $2}')
+        if [[ "${LSCPU}" == *1500* ]]; then
+            # Raspberry Pi 4
+            FAMILY="RPI"
+            TYPE="RP4"
+        elif [[ "${LSCPU}" == *1400* ]]; then
+            # Raspberry Pi 3 B+
+            FAMILY="RPI"
+            TYPE="RP3+"
         elif [[ "${LSCPU}" == *1200* ]]; then
             # Raspberry Pi 3
             FAMILY="RPI"
@@ -256,10 +333,6 @@ elif [[ "${UNAME}" == *armv7l* ]]; then
             FAMILY="RPI"
             TYPE="RP2"
         fi
-    elif [[ "${HARDWARE}" == *BCM28* ]]; then
-        # Raspberry Pi 3 B+
-        FAMILY="RPI"
-        TYPE="RP3B+"
     else
         # Beaglebone Black or similar
         FAMILY="ARM"
@@ -273,19 +346,6 @@ elif [[ "${UNAME}" == *armv6l* ]]; then
     # Raspberry Pi B/B+
     FAMILY="RPI"
     TYPE="RPI"
-elif [[ "${UNAME}" == *docker* ]]; then
-    # Docker
-    FAMILY="VAP"
-    TYPE="DOCKER"
-elif grep -q docker /proc/1/cgroup; then 
-    FAMILY="VAP"
-    TYPE="DOCKER"
-elif grep -q docker /proc/self/cgroup; then 
-    FAMILY="VAP"
-    TYPE="DOCKER"
-elif [ -f /.dockerenv ]; then
-    FAMILY="VAP"
-    TYPE="DOCKER"
 else
     # others (Virtual Appliance)
     FAMILY="VAP"
@@ -304,6 +364,7 @@ else
         TYPE="VB"
     fi
 fi
+# End of hardware detection (2023-11-20)
 
 
 if [[ "${FAMILY}" == "RPI" ]]; then

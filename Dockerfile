@@ -1,7 +1,7 @@
 ##########################################################################
 #
 # @file   Dockerfile
-# @brief  multiOTP open source docker image creator (based on Debian 8)
+# @brief  multiOTP open source docker image creator
 # 
 # multiOTP package - Strong two-factor authentication open source package
 # https://www\.multiOTP.net/
@@ -15,8 +15,8 @@
 # Please check https://www\.multiOTP.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.6.7
-# @date      2023-09-22
+# @version   5.9.7.0
+# @date      2023-11-23
 # @since     2013-11-29
 # @copyright (c) 2013-2023 SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
@@ -24,8 +24,9 @@
 # docker build .
 # docker run -v [PATH/TO/MULTIOTP/DATA/VOLUME]:/etc/multiotp -v [PATH/TO/FREERADIUS/CONFIG/VOLUME]:/etc/freeradius -v [PATH/TO/MULTIOTP/LOG/VOLUME]:/var/log/multiotp -v [PATH/TO/FREERADIUS/LOG/VOLUME]:/var/log/freeradius -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d xxxxxxxxxxxx
 #
+# 2023-10-11 5.9.6.8 SysCo/al Debian Bookworm 12.0 support
 # 2022-05-08 5.8.8.4 SysCo/al Better docker support (also for Synology)
-# 2022-05-08 5.8.8.1 SysCo/al Add Raspberry Pi Bullseye 11.0 support
+# 2022-05-08 5.8.8.1 SysCo/al Raspberry Pi Bullseye 11.0 support
 # 2021-09-14 5.8.3.0 SysCo/al Debian Bullseye 11.0 support
 # 2021-05-19 5.8.2.3 SysCo/al Added php-bcmath
 # 2021-03-25 5.8.1.9 SysCo/al Remove apt-offline, which is not used
@@ -35,18 +36,18 @@
 # 2018-03-20 5.1.1.2 SysCo/al Initial public Dockerfile release
 ##########################################################################
 
-FROM debian:11
-ENV DEBIAN 11
+FROM debian:12
+ENV DEBIAN 12
 ENV PHPINSTALLPREFIX php
-ENV PHPINSTALLPREFIXVERSION php7.4
-ENV PHPVERSION 7.4
+ENV PHPINSTALLPREFIXVERSION php8.2
+ENV PHPVERSION 8.2
 ENV SQLITEVERSION sqlite3
 
 MAINTAINER Andre Liechti <andre.liechti@multiotp.net>
 LABEL Description="multiOTP open source, running on Debian ${DEBIAN} with PHP${PHPVERSION}." \
       License="LGPL-3.0" \
       Usage="docker run -v [PATH/TO/MULTIOTP/DATA/VOLUME]:/etc/multiotp -v [PATH/TO/FREERADIUS/CONFIG/VOLUME]:/etc/freeradius -v [PATH/TO/MULTIOTP/LOG/VOLUME]:/var/log/multiotp -v [PATH/TO/FREERADIUS/LOG/VOLUME]:/var/log/freeradius -p [HOST WWW PORT NUMBER]:80 -p [HOST SSL PORT NUMBER]:443 -p [HOST RADIUS-AUTH PORT NUMBER]:1812/udp -p [HOST RADIUS-ACCNT PORT NUMBER]:1813/udp -d multiotp-open-source" \
-      Version="5.9.6.7"
+      Version="5.9.7.0"
 
 ARG DEBIAN_FRONTEND=noninteractive
 

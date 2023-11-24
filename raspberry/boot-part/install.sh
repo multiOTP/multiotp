@@ -16,12 +16,14 @@
 # Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.6.7
-# @date      2023-09-22
+# @version   5.9.7.0
+# @date      2023-11-23
 # @since     2013-11-29
 # @copyright (c) 2013-2022 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
+# 2023-11-23 5.9.7.0 SysCo/al Update Raspberry Pi detection 
+# 2023-10-11 5.9.6.8 SysCo/al Add initial Debian Bookworm 12.0 support
 # 2022-06-17 5.9.1.0 SysCo/al Option -request-nt-key replaced by -nt-key-only for MSCHAP for FreeRADIUS 3.x
 # 2022-05-08 5.8.8.4 SysCo/al Better docker support (also for Synology)
 # 2022-05-08 5.8.8.1 SysCo/al Add Raspberry Pi Bullseye 11.0 support
@@ -69,7 +71,7 @@ SSH_ROOT_LOGIN="1"
 DEFAULT_IP="192.168.1.44"
 REBOOT_AT_THE_END="1"
 
-TEMPVERSION="@version   5.9.6.7"
+TEMPVERSION="@version   5.9.7.0"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
@@ -92,7 +94,7 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 SOURCEDIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
-# OS ID and version
+# OS ID and version (2023-11-20)
 # Architecture (for example x86_64)
 OSID=$(cat /etc/os-release | grep "^ID=" | awk -F'=' '{print $2}')
 OSVERSION=$(cat /etc/os-release | grep "VERSION_ID=" | awk -F'"' '{print $2}')
@@ -157,6 +159,16 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "11" ]]; then
     PHPMAJORVERSION="7"
     SQLITEVERSION="sqlite3"
     VMRELEASENUMBER="011"
+elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "12" ]]; then
+    BACKENDDB="mariadb"
+    PHPFPM="php8.2-fpm"
+    PHPFPMSED="php\/php8.2-fpm"
+    PHPINSTALLPREFIX="php"
+    PHPINSTALLPREFIXVERSION="php8.2"
+    PHPMODULEPREFIX="php/8.2"
+    PHPMAJORVERSION="8"
+    SQLITEVERSION="sqlite3"
+    VMRELEASENUMBER="012"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "7" ]]; then
     BACKENDDB="mysql"
     PHPFPM="php5-fpm"
@@ -207,26 +219,37 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "11" ]]; then
     PHPMAJORVERSION="7"
     SQLITEVERSION="sqlite3"
     VMRELEASENUMBER="011"
+elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "12" ]]; then
+    BACKENDDB="mariadb"
+    PHPFPM="php8.2-fpm"
+    PHPFPMSED="php\/php8.2-fpm"
+    PHPINSTALLPREFIX="php"
+    PHPINSTALLPREFIXVERSION="php8.2"
+    PHPMODULEPREFIX="php/8.2"
+    PHPMAJORVERSION="8"
+    SQLITEVERSION="sqlite3"
+    VMRELEASENUMBER="012"
 fi
+# End of OS ID and version (2023-11-20)
 
 
-# Early docker detection
-if grep -q docker /proc/1/cgroup; then 
-    TYPE="DOCKER"
-fi
-
-if grep -q docker /proc/self/cgroup; then 
-    TYPE="DOCKER"
-fi
-
-if [ -f /.dockerenv ]; then
-    TYPE="DOCKER"
-fi
-
+# Early docker detection (2023-11-20)
 UNAME=$(uname -a)
 if [[ "${UNAME}" == *docker* ]]; then
+    # Docker
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/1/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/self/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif [ -f /.dockerenv ]; then
+    FAMILY="VAP"
     TYPE="DOCKER"
 fi
+# End of early docker detection (2023-11-20)
 
 
 if [[ "${TYPE}" != "DOCKER" ]]; then
@@ -265,29 +288,81 @@ if [[ "${TYPE}" == "DOCKER" ]]; then
 fi
 
 
-# Hardware detection
+# Hardware detection (2023-11-20)
 FAMILY=""
 UNAME=$(uname -a)
-if [[ "${UNAME}" == *armv8* ]]; then
+MODEL=$(cat /proc/cpuinfo | grep "Model" | awk -F': ' '{print $2}')
+if [[ "${UNAME}" == *docker* ]]; then
+    # Docker
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/1/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/self/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif [ -f /.dockerenv ]; then
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif [[ "${MODEL}" == *"Raspberry Pi 5"* ]]; then
+    # Raspberry Pi 5
+    FAMILY="RPI"
+    TYPE="RP5"
+elif [[ "${MODEL}" == *"Raspberry Pi 4"* ]]; then
+    # Raspberry Pi 4
+    FAMILY="RPI"
+    TYPE="RP4"
+elif [[ "${MODEL}" == *"Raspberry Pi 3 Model B Plus"* ]]; then
+    # Raspberry Pi 3 B+
+    FAMILY="RPI"
+    TYPE="RP3+"
+elif [[ "${MODEL}" == *"Raspberry Pi 3"* ]]; then
+    # Raspberry Pi 3
+    FAMILY="RPI"
+    TYPE="RP3"
+elif [[ "${MODEL}" == *"Raspberry Pi 2"* ]]; then
+    # Raspberry Pi 2
+    FAMILY="RPI"
+    TYPE="RP2"
+elif [[ "${MODEL}" == *"Raspberry Pi"* ]]; then
+    # Raspberry Pi generic
+    FAMILY="RPI"
+    TYPE="RP"
+elif [[ "${UNAME}" == *armv8* ]] || [[ "${UNAME}" == *aarch64* ]]; then
     HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
-    if [[ "${HARDWARE}" == *BCM27* ]]; then
-        # Raspberry Pi 3 B
-        FAMILY="RPI"
-        TYPE="RP3"
-    elif [[ "${HARDWARE}" == *BCM28* ]]; then
-        # Raspberry Pi 3 B+
-        FAMILY="RPI"
-        TYPE="RP3B+"
+    if [[ "${HARDWARE}" == *BCM27* ]] || [[ "${HARDWARE}" == *BCM28* ]]; then
+        LSCPU=$(/usr/bin/lscpu | grep "CPU max MHz" | awk -F': ' '{print $2}')
+        if [[ "${LSCPU}" == *1500* ]]; then
+            # Raspberry Pi 4
+            FAMILY="RPI"
+            TYPE="RP4"
+        elif [[ "${LSCPU}" == *1400* ]]; then
+            # Raspberry Pi 3 B+
+            FAMILY="RPI"
+            TYPE="RP3+"
+        else
+            # Raspberry Pi 3
+            FAMILY="RPI"
+            TYPE="RP3"
+        fi
     else
-        # Nothing else yet !
-        FAMILY="RPI"
-        TYPE="RP3"
+        FAMILY="ARM"
+        TYPE="ARM"
     fi
 elif [[ "${UNAME}" == *armv7l* ]]; then
     HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
-    if [[ "${HARDWARE}" == *BCM27* ]]; then
+    if [[ "${HARDWARE}" == *BCM27* ]] || [[ "${HARDWARE}" == *BCM28* ]]; then
         LSCPU=$(/usr/bin/lscpu | grep "CPU max MHz" | awk -F': ' '{print $2}')
-        if [[ "${LSCPU}" == *1200* ]]; then
+        if [[ "${LSCPU}" == *1500* ]]; then
+            # Raspberry Pi 4
+            FAMILY="RPI"
+            TYPE="RP4"
+        elif [[ "${LSCPU}" == *1400* ]]; then
+            # Raspberry Pi 3 B+
+            FAMILY="RPI"
+            TYPE="RP3+"
+        elif [[ "${LSCPU}" == *1200* ]]; then
             # Raspberry Pi 3
             FAMILY="RPI"
             TYPE="RP3"
@@ -296,10 +371,6 @@ elif [[ "${UNAME}" == *armv7l* ]]; then
             FAMILY="RPI"
             TYPE="RP2"
         fi
-    elif [[ "${HARDWARE}" == *BCM28* ]]; then
-        # Raspberry Pi 3 B+
-        FAMILY="RPI"
-        TYPE="RP3B+"
     else
         # Beaglebone Black or similar
         FAMILY="ARM"
@@ -313,19 +384,6 @@ elif [[ "${UNAME}" == *armv6l* ]]; then
     # Raspberry Pi B/B+
     FAMILY="RPI"
     TYPE="RPI"
-elif [[ "${UNAME}" == *docker* ]]; then
-    # Docker
-    FAMILY="VAP"
-    TYPE="DOCKER"
-elif grep -q docker /proc/1/cgroup; then 
-    FAMILY="VAP"
-    TYPE="DOCKER"
-elif grep -q docker /proc/self/cgroup; then 
-    FAMILY="VAP"
-    TYPE="DOCKER"
-elif [ -f /.dockerenv ]; then
-    FAMILY="VAP"
-    TYPE="DOCKER"
 else
     # others (Virtual Appliance)
     FAMILY="VAP"
@@ -344,6 +402,7 @@ else
         TYPE="VB"
     fi
 fi
+# End of hardware detection (2023-11-20)
 
 
 # Stop some services if they are existing
@@ -490,8 +549,8 @@ if [[ "${TYPE}" != "DOCKER" ]]; then
     apt-get -y install ${PHPINSTALLPREFIX}-ldap
     apt-get -y install ${PHPINSTALLPREFIXVERSION}-${SQLITEVERSION}
     
-    # mcrypt is removed in PHP 7.2 (Debian 10 integrates PHP 7.3, Debian 11 integrates PHP 7.4)
-    if [[ "${OSVERSION}" != "10" ]] && [[ "${OSVERSION}" != "11" ]]; then
+    # mcrypt is removed in PHP 7.2 (Debian 10+ integrates PHP 7.3+)
+    if [[ "${OSVERSION}" != "10" ]] && [[ "${OSVERSION}" != "11" ]] && [[ "${OSVERSION}" != "12" ]]; then
         apt-get -y install ${PHPINSTALLPREFIX}-mcrypt
     fi
 fi
@@ -622,9 +681,9 @@ fi
 
 
 # 5.4.1.2
-# For Strech/Buster/Bullseye, reactivate traditional eth0 support (except for Raspbian)
+# For Strech+, reactivate traditional eth0 support (except for Raspbian)
 # https://unix.stackexchange.com/questions/396382/how-can-i-show-the-old-eth0-names-and-also-rename-network-interfaces-in-debian-9
-if [[ "${OSID}" == "debian" ]] && ( [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSION}" == "10" ]] || [[ "${OSVERSION}" == "11" ]] ); then
+if [[ "${OSID}" == "debian" ]] && ( [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSION}" == "10" ]] || [[ "${OSVERSION}" == "11" ]] || [[ "${OSVERSION}" == "12" ]] ); then
     IFNAME=$(ifconfig | grep -o -E '(^e[a-zA-Z0-9]*)')
     if [[ "${IFNAME}" != "eth0" ]]; then
         sed -i 's/.*GRUB_CMDLINE_LINUX=.*/GRUB_CMDLINE_LINUX="net.ifnames=0 biosdevname=0"/' /etc/default/grub
@@ -633,8 +692,8 @@ if [[ "${OSID}" == "debian" ]] && ( [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSI
 fi
 
 
-# 5.4.1.8 Disable the dhcpcd service if we are in the Debian Stretch/Buster/Bullseye distribution
-if [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSION}" == "10" ]] || [[ "${OSVERSION}" == "11" ]]; then
+# 5.4.1.8 Disable the dhcpcd service if we are in the Debian Stretch+ distribution
+if [[ "${OSVERSION}" == "9" ]] || [[ "${OSVERSION}" == "10" ]] || [[ "${OSVERSION}" == "11" ]] || [[ "${OSVERSION}" == "12" ]]; then
     systemctl stop dhcpcd.service
     systemctl disable dhcpcd.service
 fi
@@ -986,8 +1045,13 @@ if [[ "${FAMILY}" == "RPI" ]]; then
         sed -i '/#MULTIOTP#/i # multiOTP - beginning of specific configuration' /boot/config.txt
         sed -i '/#MULTIOTP#/i #' /boot/config.txt
         sed -i '/dtparam=i2c_arm=/d' /boot/config.txt
-        sed -i '/#MULTIOTP#/i Enable I2C (for RTC clock support)' /boot/config.txt
+        sed -i '/#MULTIOTP#/i # Enable I2C (for RTC clock support)' /boot/config.txt
         sed -i '/#MULTIOTP#/i dtparam=i2c_arm=on' /boot/config.txt
+        sed -i '/#MULTIOTP#/i #' /boot/config.txt
+        # Disable default 64-bit kernel on Pi 4 (https://github.com/raspberrypi/firmware/issues/1795)
+        sed -i '/arm_64bit=/d' /boot/config.txt
+        sed -i '/#MULTIOTP#/i # Disable default 64-bit kernel on Pi 4' /boot/config.txt
+        sed -i '/#MULTIOTP#/i arm_64bit=0' /boot/config.txt
         sed -i '/#MULTIOTP#/i #' /boot/config.txt
         sed -i '/gpu_mem=/d' /boot/config.txt
         sed -i '/#MULTIOTP#/i # GPU memory in megabyte. Sets the memory split between the ARM and GPU' /boot/config.txt

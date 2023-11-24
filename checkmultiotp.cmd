@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.6.7
-REM @date      2023-09-22
+REM @version   5.9.7.0
+REM @date      2023-11-23
 REM @since     2010-07-10
 REM @copyright (c) 2010-2023 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -154,10 +154,10 @@ SET _backend=files
 IF "%_check_backend%"=="" SET _check_backend=
 IF NOT "%_check_backend%"=="" SET _backend=%_check_backend%
 
-REM Detection of the script folder
-SET _check_dir=%~d0%~p0
-SET _radius_dir=%~d0%~p0radius\
-SET _tools_dir=%~d0%~p0tools\
+REM Detection of the script folder IN SHORT PATH NOTATION
+SET _check_dir=%~d0%~sp0
+SET _radius_dir=%_check_dir%radius\
+SET _tools_dir=%_check_dir%tools\
 IF NOT EXIST %_radius_dir%bin SET _radius_dir=%~d0%~p0..\radius\
 IF NOT EXIST %_tools_dir%wget.exe SET _tools_dir=%~d0%~p0..\tools\
 

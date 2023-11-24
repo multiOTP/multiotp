@@ -72,8 +72,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.7
- * @date      2023-09-22
+ * @version   5.9.7.0
+ * @date      2023-11-23
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -277,8 +277,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.7
- * @date      2023-09-22
+ * @version   5.9.7.0
+ * @date      2023-11-23
  * @since     2010-07-18
  */
 {
@@ -393,8 +393,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.6.7
-   * @date      2023-09-22
+   * @version   5.9.7.0
+   * @date      2023-11-23
    * @since     2010-07-18
    */
   function __construct(
@@ -418,11 +418,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.6.7'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.7.0'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = nullable_trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2023-09-22'; // You should update the date with the date of your changes
+        $temp_date = '@date      2023-11-23'; // You should update the date with the date of your changes
         $this->_date = nullable_trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMyBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -602,7 +602,7 @@ class Multiotp
           'ldap_recursive_cache_only'   => "int(1) DEFAULT 0",
           'ldap_recursive_groups'       => "int(1) DEFAULT 1",
           'ldap_server_password'        => "TEXT DEFAULT ''",
-          // Default type 1 is Active Directory, 2 for Generic LDAP, 3 for legacy Active Directory
+          // Default type 1 is Active Directory, 2 for Generic LDAP, 3 for legacy Active Directory, 4 for eDirectory, 5 for Microsoft Entra ID (Azure AD)
           'ldap_server_type'            => "int(10) DEFAULT 1",
           'ldap_ssl'                    => "int(1) DEFAULT 0",
           'ldap_synced_user_attribute'  => "TEXT DEFAULT ''",
@@ -1601,7 +1601,7 @@ class Multiotp
 
 
   function SetUserLanguage($value) {
-    $this->_user_data['language'] = nullable_trim($value);
+    $this->_user_data['language'] = mb_strtolower(nullable_trim($value),'UTF-8');
   }
 
 
@@ -1615,7 +1615,7 @@ class Multiotp
 
 
   function SetLanguage($value) {
-    $this->_config_data['language'] = nullable_trim($value);
+    $this->_config_data['language'] = mb_strtolower(nullable_trim($value),'UTF-8');
   }
 
 
@@ -2923,11 +2923,11 @@ class Multiotp
   function RestoreConfiguration(
     $rc_array = array()
   ) {
-    $backup_file       = isset($rc_array['backup_file'])       ? $rc_array['backup_file'] : '';
-    $restore_key       = isset($rc_array['restore_key'])       ? $rc_array['restore_key'] : '';
-    $ignore_attributes = isset($rc_array['ignore_attributes']) ? $rc_array['ignore_attributes'] : array();
-    $ignore_files      = isset($rc_array['ignore_files'])      ? $rc_array['ignore_files'] : array();
-    $rename_files      = isset($rc_array['rename_files'])      ? $rc_array['rename_files'] : array();
+    $backup_file       = isset($rc_array['backup_file'])       ? $rc_array['backup_file']              : '';
+    $restore_key       = isset($rc_array['restore_key'])       ? $rc_array['restore_key']              : '';
+    $ignore_attributes = isset($rc_array['ignore_attributes']) ? $rc_array['ignore_attributes']        : array();
+    $ignore_files      = isset($rc_array['ignore_files'])      ? $rc_array['ignore_files']             : array();
+    $rename_files      = isset($rc_array['rename_files'])      ? $rc_array['rename_files']             : array();
     $update_config     = isset($rc_array['update_config'])     ? (TRUE === $rc_array['update_config']) : FALSE;
     $ignore_config     = isset($rc_array['ignore_config'])     ? (TRUE === $rc_array['ignore_config']) : FALSE;
     $automatically     = isset($rc_array['automatically'])     ? (TRUE === $rc_array['automatically']) : FALSE;
@@ -2936,16 +2936,20 @@ class Multiotp
     if (!is_array($ignore_attributes)) {
       $ignore_attributes = array('multiotp-database-format', 'actual_version', 'anonymous_');
     } else {
-      $ignore_attributes = array_merge($ignore_attributes, array('multiotp-database-format', 'actual_version', 'anonymous_'));
+      $ignore_attributes = array_merge($ignore_attributes,
+                                       array('multiotp-database-format',
+                                             'actual_version',
+                                             'anonymous_'
+                                            ));
     }
     if (!is_array($rename_files)) {
       $rename_files = array();
     }
 
     if (('*CLEAR*' == $restore_key) || ('*UNENC*' == $restore_key)) {
-        $restore_key = '';
+      $restore_key = '';
     } elseif ('' == $restore_key) {
-        $restore_key = $this->GetEncryptionKey();
+      $restore_key = $this->GetEncryptionKey();
     }
 
     $type = '';
@@ -3526,11 +3530,11 @@ class Multiotp
       $logfile_content = $log_datetime."\t".$severity_txt."\t".$user_log."\t".$category_log."\t".str_replace("\n", $this->IsDebugViaHtml()?"<br />":"; ", $log_text)."\t".$local_only."\t".$this->GetCreateHost();
 
       if (($this->GetDisplayLogFlag()) && (!$hide_on_display) && (!$this->GetNoDisplayLogFlag())) {
-          $display_text = "\nLOG ".$log_datetime.' '.$severity_txt.' '.(("" == $user_log)?"":'(user '.$user_log.') ').$category_log.' '.$log_text."\n";
-          if ($this->IsDebugViaHtml()) {
-              $display_text = str_replace("\n","<br />\n", htmlentities($display_text));
-          }
-          echo $display_text;
+        $display_text = "\nLOG ".$log_datetime.' '.$severity_txt.' '.(("" == $user_log)?"":'(user '.$user_log.') ').$category_log.' '.$log_text."\n";
+        if ($this->IsDebugViaHtml()) {
+          $display_text = str_replace("\n","<br />\n", htmlentities($display_text));
+        }
+        echo $display_text;
       }
 
       if (("" != nullable_trim($this->GetSysLogServer())) && (!$this->IsSysLogServerBad()) && (!$no_syslog)) {
@@ -3557,9 +3561,9 @@ class Multiotp
                   // Do an asynchronous SysLog if possible (Linux)
                   $cli_command = "";
                   if (file_exists('/bin/nc')) {
-                      // https://nelsonslog.wordpress.com/2013/04/19/faking-out-remote-syslog-via-netcat/
-                      $cli_command = "echo \"<$syslog_severity_facility>$syslog_timestamp $syslog_hostname $syslog_process: $syslog_fqdn $syslog_ip_from $syslog_content\" | /bin/nc $syslog_server -u $syslog_port -w $syslog_timeout > /dev/null 2>&1";
-                      exec("nohup $cli_command &", $output);
+                    // https://nelsonslog.wordpress.com/2013/04/19/faking-out-remote-syslog-via-netcat/
+                    $cli_command = "echo \"<$syslog_severity_facility>$syslog_timestamp $syslog_hostname $syslog_process: $syslog_fqdn $syslog_ip_from $syslog_content\" | /bin/nc $syslog_server -u $syslog_port -w $syslog_timeout > /dev/null 2>&1";
+                    exec("nohup $cli_command &", $output);
                   }
 
                   // Otherwise, or in the verbose mode also, PHP SysLog class
@@ -3671,8 +3675,9 @@ class Multiotp
   }
 
 
+  // ShowLog($as_result = FALSE) : $as_result : don't echo the log content, only return it
   function ShowLog(
-      $as_result = FALSE
+    $as_result = FALSE
   ) {
       $result = "";
       if ('mysql' == $this->GetBackendType()) {
@@ -3722,12 +3727,12 @@ class Multiotp
         }
       }
       if (false !== $result) {
-          if (!$as_result) {
-              echo $result;
-              return true;
-          } else {
-              return $result;
-          }
+        if (!$as_result) {
+          echo $result;
+          return true;
+        } else {
+          return $result;
+        }
       } else {
         return $result;
       }
@@ -4690,13 +4695,23 @@ class Multiotp
   }
 
 
+  function EnableDeveloperMode() {
+    $this->_config_data['developer_mode'] = 0;
+  }
+
+
+  function DisableDeveloperMode() {
+    $this->_config_data['developer_mode'] = 1;
+  }
+
+
   function GetDeveloperMode() {
-      return $this->_config_data['developer_mode'];
+    return $this->_config_data['developer_mode'];
   }
 
 
   function IsDeveloperMode() {
-      return (1 == intval($this->_config_data['developer_mode']));
+    return (1 == intval($this->_config_data['developer_mode']));
   }
 
 
@@ -5229,7 +5244,7 @@ class Multiotp
       $encryption_key_param = ''
   ) {
       $result = FALSE;
-
+      
       $encryption_key = $encryption_key_param ;
 
       if ('' == $encryption_key) {
@@ -5282,18 +5297,14 @@ class Multiotp
         }
       }
 
-      if (!$encryption_only)
-      {
-          if ($this->_initialize_backend)
-          {
+      if (!$encryption_only) {
+          if ($this->_initialize_backend) {
               $this->SetBackendTypeValidated("", FALSE);
               $this->WriteConfigData();
           }
           // And now, we override the values if another backend type is defined
-          if ($this->GetBackendTypeValidated())
-          {
-              switch ($this->GetBackendType())
-              {
+          if ($this->GetBackendTypeValidated()) {
+              switch ($this->GetBackendType()) {
                   case 'mysql':
                       if ($this->OpenMysqlDatabase())
                       {
@@ -5447,20 +5458,22 @@ class Multiotp
           
           $array_to_parse = $this->_sql_tables_schema['stat'];
           foreach ($array_to_parse as $stat_key => $stat_format) {
-              $pos = mb_strpos(mb_strtoupper($stat_format,'UTF-8'), 'DEFAULT');
-              $default_value = "";
-              if ($pos !== FALSE) {
-                  $default_value = nullable_trim(mb_substr($stat_format, $pos + mb_strlen("DEFAULT")));
-                  if (("'" == mb_substr($default_value,0,1)) && ("'" == mb_substr($default_value,-1))) {
-                      $default_value = mb_substr($default_value,1,-1);
-                  }
+            $pos = mb_strpos(mb_strtoupper($stat_format,'UTF-8'), 'DEFAULT');
+            $default_value = "";
+            if ($pos !== FALSE) {
+              $default_value = nullable_trim(mb_substr($stat_format, $pos + mb_strlen("DEFAULT")));
+              if (("'" == mb_substr($default_value,0,1)) && ("'" == mb_substr($default_value,-1))) {
+                $default_value = mb_substr($default_value,1,-1);
               }
-              if (isset($this->_stat_data[$stat_key]) && ($this->_stat_data[$stat_key] != $default_value)) {
-                  $this->_config_data[$stat_key] == $this->_stat_data[$stat_key];
+            }
+            if (isset($this->_stat_data[$stat_key]) && ($this->_stat_data[$stat_key] != $default_value)) {
+              $this->_config_data[$stat_key] = $this->_stat_data[$stat_key];
+              if ($this->GetVerboseFlag()) {
+                $this->WriteLog("Debug: **ReadConfigData, stat value for $stat_key was " . $this->_stat_data[$stat_key], FALSE, FALSE, 8888, 'System', '');
               }
+            }
           }
       }
-
       return $result;
   }
 
@@ -5687,6 +5700,13 @@ class Multiotp
           if (('last_sync_update' != $stat_key) && ('last_sync_update_host' != $stat_key) && ('last_update' != $stat_key) && ('last_update_host' != $stat_key) && ('create_time' != $stat_key) && ('create_host' != $stat_key) && ($stat_key == $key)) {
             $this->_stat_data[$stat_key] = $this->_config_data[$key];
             $old_value = (isset($this->_stat_data_read[$key]) ? $this->_stat_data_read[$key] : "");
+            
+            if ($this->GetVerboseFlag()) {
+              if ('available_firmware_version' == $key) {
+                $this->WriteLog("Debug: **WriteStatData, stat value for $key: '$value' (was '$old_value' before)", FALSE, FALSE, 8888, 'Debug', '');
+              }
+            }
+
             if ($value != $old_value) {
               $write_needed = true;
               if ($this->GetVerboseFlag()) {
@@ -5879,45 +5899,43 @@ class Multiotp
   function GetUptime(
       $text_output = true
   ) {
-      $uptime = '';
-      if (file_exists('/proc/uptime')) {
-        if ($file = @fopen('/proc/uptime', 'r')) {
-          $data = @fread($file, 128);
-          if ($data !== false) {
-            $upsecs = (int)mb_substr($data, 0, mb_strpos($data, ' '));
-            $days = floor($upsecs/60/60/24);
-            $hours = $upsecs/60/60%24;
-            $minutes = $upsecs/60%60;
-            $seconds = $upsecs%60;
-            // $uptime = Array ( 'days' => $days, 'hours' => $hours, 'minutes' => $minutes, 'seconds' => $seconds );
-            $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
-          }
-          fclose($file);
+    $uptime = '';
+    if (file_exists('/proc/uptime')) {
+      if ($file = @fopen('/proc/uptime', 'r')) {
+        $data = @fread($file, 128);
+        if ($data !== false) {
+          $upsecs = (int)mb_substr($data, 0, mb_strpos($data, ' '));
+          $days = floor($upsecs/60/60/24);
+          $hours = $upsecs/60/60%24;
+          $minutes = $upsecs/60%60;
+          $seconds = $upsecs%60;
+          // $uptime = Array ( 'days' => $days, 'hours' => $hours, 'minutes' => $minutes, 'seconds' => $seconds );
+          $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
         }
+        fclose($file);
       }
-      else
-      {
-          $pagefile = 'C:\pagefile.sys';
-          if (!is_file($pagefile)) {
-              $pagefile = 'D:\pagefile.sys';
-              if (!is_file($pagefile)) {
-                  $pagefile = '';
-              }
-          }
-          if ('' != $pagefile) {
-              $gettime = (time() - filemtime($pagefile));
-              $upsecs = $gettime;
-              $days = floor($gettime / (24 * 3600));
-              $gettime = $gettime - ($days * (24 * 3600));
-              $hours = floor($gettime / (3600));
-              $gettime = $gettime - ($hours * (3600));
-              $minutes = floor($gettime / (60));
-              $gettime = $gettime - ($minutes * 60);
-              $seconds = $gettime; - ($seconds * 1);
-              $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
-          }
-      }
-      return ($text_output?$uptime:$upsecs);
+    } else {
+        $pagefile = 'C:\pagefile.sys';
+        if (!is_file($pagefile)) {
+            $pagefile = 'D:\pagefile.sys';
+            if (!is_file($pagefile)) {
+                $pagefile = '';
+            }
+        }
+        if ('' != $pagefile) {
+            $gettime = (time() - filemtime($pagefile));
+            $upsecs = $gettime;
+            $days = floor($gettime / (24 * 3600));
+            $gettime = $gettime - ($days * (24 * 3600));
+            $hours = floor($gettime / (3600));
+            $gettime = $gettime - ($hours * (3600));
+            $minutes = floor($gettime / (60));
+            $gettime = $gettime - ($minutes * 60);
+            $seconds = $gettime; - ($seconds * 1);
+            $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
+        }
+    }
+    return ($text_output ? $uptime : $upsecs);
   }
 
 
@@ -6471,13 +6489,13 @@ class Multiotp
   function SetDefaultAlgorithm(
       $value
   ) {
-      $this->_config_data['default_algorithm'] = ((intval($value) > 0)?1:0);
+      $this->_config_data['default_algorithm'] = mb_strtolower($value,'UTF-8');
   }
 
 
   function GetDefaultAlgorithm()
   {
-      return $this->_config_data['default_algorithm'];
+      return mb_strtolower($this->_config_data['default_algorithm'],'UTF-8');
   }
 
 
@@ -6715,14 +6733,14 @@ class Multiotp
       $value
   ) {
       if ($this->IsValidAlgorithm($value)) {
-        $this->_config_data['ldap_default_algorithm'] = $value;
+        $this->_config_data['ldap_default_algorithm'] = mb_strtolower($value,'UTF-8');
       }
   }
 
 
   function GetLdapDefaultAlgorithm()
   {
-      return $this->_config_data['ldap_default_algorithm'];
+      return mb_strtolower($this->_config_data['ldap_default_algorithm'],'UTF-8');
   }
 
 
@@ -7017,6 +7035,10 @@ class Multiotp
           $this->SetLdapCnIdentifier('uid');
           $this->SetLdapGroupAttribute("groupMembership");
           $this->SetLdapGroupCnIdentifier('cn');
+      } elseif (5 == $value) { // Microsoft Entra ID /* TODO : implement Microsoft Entra ID */
+          $this->SetLdapCnIdentifier('');
+          $this->SetLdapGroupAttribute("");
+          $this->SetLdapGroupCnIdentifier('');
       } else { // Generic LDAP or eDirectory
           $this->SetLdapCnIdentifier('uid');
           $this->SetLdapGroupAttribute("memberOf");
@@ -7049,7 +7071,7 @@ class Multiotp
   function SetLdapFilter(
       $value = ''
   ) {
-      $this->_config_data['ldap_filter'] = trim($value);
+      $this->_config_data['ldap_filter'] = nullable_trim($value);
   }
 
 
@@ -10293,6 +10315,10 @@ class Multiotp
             $result = false;
           }
       }
+
+
+      // We force the algorithm to be ALWAYS in lowercase
+      $temp_user_array['algorithm'] = mb_strtolower($temp_user_array['algorithm'],'UTF-8');
 
       $now_epoch = time();
       $temp_user_array['delayed_account'] = (($temp_user_array['error_counter'] >= $this->GetMaxDelayedFailures()) && ($now_epoch < ((isset($temp_user_array['last_error']) ? $temp_user_array['last_error'] : 0) + $this->GetMaxDelayedTime())));
@@ -15785,12 +15811,12 @@ class Multiotp
                 if (@ldap_bind($ldapconn, ($this->GetLdapBindDn().$this->GetLdapAccountSuffix()), ($this->GetLdapServerPassword()))) {
                   /*
                   if ($this->GetVerboseFlag()) {
-                      echo "DEBUG\n";
-                      if (ldap_get_option($ldapconn, LDAP_OPT_DIAGNOSTIC_MESSAGE, $extended_error)) {
-                          echo "Error Binding to LDAP: $extended_error";
-                      } else {
-                          echo "Error Binding to LDAP: No additional information is available.";
-                      }
+                    echo "DEBUG\n";
+                    if (ldap_get_option($ldapconn, LDAP_OPT_DIAGNOSTIC_MESSAGE, $extended_error)) {
+                      echo "Error Binding to LDAP: $extended_error";
+                    } else {
+                      echo "Error Binding to LDAP: No additional information is available.";
+                    }
                   }
                   */
                   $result = TRUE;
@@ -17649,16 +17675,16 @@ class Multiotp
                           }
                       } while (($check_step < $max_steps) && (90 <= $result));
                       if ($display_status) {
-                          echo "\r\n";
+                        echo "\r\n";
                       }
                       if (90 <= $result) {
-                          if ($this->CompareUserLastFailedCredential(nullable_trim($input.' '.$input_sync))) {
-                              $disable_error_counter = true;
-                          }
-                          if (!$disable_error_counter) {
-                              $this->SetUserErrorCounter($error_counter+1);
-                          }
-                          $this->SetUserTokenLastError($now_epoch);
+                        if ($this->CompareUserLastFailedCredential(nullable_trim($input.' '.$input_sync))) {
+                          $disable_error_counter = true;
+                        }
+                        if (!$disable_error_counter) {
+                          $this->SetUserErrorCounter($error_counter+1);
+                        }
+                        $this->SetUserTokenLastError($now_epoch);
                       }
                       break;
                   case 'hotp';
@@ -17756,16 +17782,16 @@ class Multiotp
                           }
                       } while (($check_step < $max_steps) && ((90 <= $result)));
                       if ($display_status) {
-                          echo "\r\n";
+                        echo "\r\n";
                       }
                       if (90 <= $result) {
-                          if ($this->CompareUserLastFailedCredential(nullable_trim($input.' '.$input_sync))) {
-                              $disable_error_counter = true;
-                          }
-                          if (!$disable_error_counter) {
-                              $this->SetUserErrorCounter($error_counter+1);
-                          }
-                          $this->SetUserTokenLastError($now_epoch);
+                        if ($this->CompareUserLastFailedCredential(nullable_trim($input.' '.$input_sync))) {
+                          $disable_error_counter = true;
+                        }
+                        if (!$disable_error_counter) {
+                          $this->SetUserErrorCounter($error_counter+1);
+                        }
+                        $this->SetUserTokenLastError($now_epoch);
                       }
                       break;
                   case 'yubicootp';
@@ -17921,7 +17947,7 @@ class Multiotp
                           }
                       } while (($check_step < $max_steps) && (90 <= $result));
                       if ($display_status) {
-                          echo "\r\n";
+                        echo "\r\n";
                       }
                       if (90 <= $result) {
                           
@@ -21086,78 +21112,158 @@ class Multiotp
   }
 
 
-  function GetHardwareType()
-  {
-      $type = "unknown";
-      $os_running = php_uname();
-      // Is it potentially a Raspberry Pi 2 or a BeagleBone Black ?
-      if (false !== mb_strpos(mb_strtolower($os_running,'UTF-8'), 'armv8')) {
-          $type = 'RP3'; // Raspberry Pi 3 (BCM2709)
-          $hardware = '';
-          exec("cat /proc/cpuinfo | grep --color=never -i Hardware", $output);
-          foreach ($output as $line) {
-            $line.= "  ";
-            if (preg_match("/^Hardware\s*:\s*(.*)/", $line)) {
-              preg_match_all("/^Hardware\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
-              if (isset($result_array[0][1])) {
-                $hardware = mb_strtoupper(nullable_trim($result_array[0][1]),'UTF-8');
-                break;
-              }
-            }
+  function GetHardwareType(
+    $return_array = false
+  ) {
+    $os_running = str_replace(' '. $this->GetSystemName(), '', php_uname());
+
+    // Hardware detection (2023-11-23)
+    $type       = 'unknown';
+    $family     = 'unknown';
+    $model      = 'unknown';
+    $hardware   = 'unknown';
+    $cpu_speed  = 'unknown';
+    $os_running = isset($os_running) ? $os_running : php_uname();
+
+    // Is it a Windows platform (for development only) ?
+    if (mb_strtolower(mb_substr(PHP_OS, 0, 3),'UTF-8') === 'win') {
+      $type   = 'DVP';
+      $family = 'WIN';
+      $model  = 'Windows device';
+    } else {
+      $model  = 'Linux device';
+      exec("cat /proc/cpuinfo | grep --color=never -i Model", $output);
+      foreach ($output as $line) {
+        $line.= "  ";
+        if (preg_match("/^Model\s*:\s*(.*)/", $line)) {
+          preg_match_all("/^Model\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+          if (isset($result_array[0][1])) {
+            $model = nullable_trim($result_array[0][1]);
+            break;
           }
-          if (FALSE !== mb_strpos(mb_strtolower($hardware,'UTF-8'), 'bcm28')) {
-            $type = 'RP3+'; // Raspberry Pi 3B+
+        }
+      }
+      exec("cat /proc/cpuinfo | grep --color=never -i Hardware", $output);
+      foreach ($output as $line) {
+        $line.= "  ";
+        if (preg_match("/^Hardware\s*:\s*(.*)/", $line)) {
+          preg_match_all("/^Hardware\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+          if (isset($result_array[0][1])) {
+            $hardware = nullable_trim($result_array[0][1]);
+            break;
           }
-      } elseif (FALSE !== mb_strpos(mb_strtolower($os_running,'UTF-8'), 'armv7l')) {
-        $hardware = '';
-        exec("cat /proc/cpuinfo | grep --color=never -i Hardware", $output);
+        }
+      }
+      if ('' == $hardware) {
+        exec("cat /proc/cpuinfo | grep --color=never -i \"model name\"", $output);
         foreach ($output as $line) {
           $line.= "  ";
-          if (preg_match("/^Hardware\s*:\s*(.*)/", $line)) {
-            preg_match_all("/^Hardware\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+          if (preg_match("/^model name\s*:\s*(.*)/", $line)) {
+            preg_match_all("/^model name\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
             if (isset($result_array[0][1])) {
-              $hardware = mb_strtoupper(nullable_trim($result_array[0][1]),'UTF-8');
+              $hardware = nullable_trim($result_array[0][1]);
               break;
             }
           }
         }
-        if (FALSE !== mb_strpos(mb_strtolower($hardware,'UTF-8'), 'bcm27')) {
-                  // Raspberry Pi (BCM 2709)
-                  $lscpu = '';
-                  exec("/usr/bin/lscpu | grep --color=never -i \"CPU max MHz\"", $output);
-                  foreach ($output as $line) {
-                      $line.= "  ";
-                      if (preg_match("/^CPU max MHz\s*:\s*(.*)/", $line)) {
-                          preg_match_all("/^CPU max MHz\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
-                          if (isset($result_array[0][1])) {
-                              $lscpu = mb_strtoupper(nullable_trim($result_array[0][1]),'UTF-8');
-                              break;
-                          }
-                      }
-                  }
-                  if (false !== mb_strpos(mb_strtolower($lscpu,'UTF-8'), '1500')) {
-                      $type = 'RP4'; // Raspberry Pi 4 B
-                  } elseif (false !== mb_strpos(mb_strtolower($lscpu,'UTF-8'), '1200')) {
-                      $type = 'RP3'; // Raspberry Pi 3
-                  } else {
-                      $type = 'RP2'; // Raspberry Pi 2
-                  }
-        } elseif (FALSE !== mb_strpos(mb_strtolower($hardware,'UTF-8'), 'bcm28')) {
-          $type = 'RP3+'; // Raspberry Pi 3B+
+      }
+      exec("/usr/bin/lscpu | grep --color=never -i MHz", $output);
+      foreach ($output as $line) {
+        $line.= "  ";
+        if (preg_match("/^CPU max MHz\s*:\s*(.*)/", $line)) {
+          preg_match_all("/^CPU max MHz\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+          if (isset($result_array[0][1])) {
+            $cpu_speed = intval(nullable_trim($result_array[0][1]));
+            break;
+          }
+        }
+      }
+      if ('' == $cpu_speed) {
+        foreach ($output as $line) {
+          $line.= "  ";
+          if (preg_match("/^cpu MHz\s*:\s*(.*)/", $line)) {
+            preg_match_all("/^cpu MHz\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+            if (isset($result_array[0][1])) {
+              $cpu_speed = intval(nullable_trim($result_array[0][1]));
+              break;
+            }
+          }
+        }
+      }
+      if (false !== mb_stripos($model,'Raspberry Pi 5')) {
+        $type = 'RP5';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi 4')) {
+        $type = 'RP4';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi 3 Model B Plus')) {
+        $type = 'RP3+';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi 3')) {
+        $type = 'RP3';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi 2')) {
+        $type = 'RP2';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi')) {
+        $type = 'RP';
+        $family = 'RPI';
+      } elseif ((false !== mb_stripos($os_running, 'armv8')) || (FALSE !== mb_stripos($os_running, 'aarch64'))) {
+        if ((FALSE !== mb_stripos($hardware, 'bcm27')) || (FALSE !== mb_stripos($hardware, 'bcm28'))) {
+          if (false !== mb_stripos($cpu_speed, '1500')) {
+            $type = 'RP4';
+            $family = 'RPI';
+          } elseif (false !== mb_stripos($cpu_speed, '1400')) {
+            $type = 'RP3+';
+            $family = 'RPI';
+          } else {
+            $type = 'RP3';
+            $family = 'RPI';
+          }
+        } else {
+            $type = 'ARM';
+            $family = 'ARM';
+        }
+      } elseif (FALSE !== mb_stripos($os_running, 'armv7l')) {
+        if ((FALSE !== mb_stripos($hardware, 'bcm27')) || (FALSE !== mb_stripos($hardware, 'bcm28'))) {
+          if (false !== mb_stripos($cpu_speed, '1500')) {
+            $type = 'RP4';
+            $family = 'RPI';
+          } elseif (false !== mb_stripos($cpu_speed, '1400')) {
+            $type = 'RP3+';
+            $family = 'RPI';
+          } elseif (false !== mb_stripos($cpu_speed, '1200')) {
+            $type = 'RP3';
+            $family = 'RPI';
+          } else {
+            $type = 'RP2';
+            $family = 'RPI';
+          }
         } else {
           $type = 'BBB'; // Beaglebone Black (Generic AM33XX and others)
+          $family = 'ARM';
         }
-      // Is it potentially a Raspberry Pi B/B+ ?
-      } elseif (FALSE !== mb_strpos(mb_strtolower($os_running,'UTF-8'), 'armv6l')) {
+      } elseif (FALSE !== mb_stripos($os_running, 'armv6l')) {
           $type = 'RPI';
-      // Is it potentially a Windows development platform ?
-      } elseif (mb_strtolower(mb_substr(PHP_OS, 0, 3),'UTF-8') === 'win') {
-          $type = "DVP";
+          $family = 'RPI';
       // Is it a virtual appliance and/or a Linux Debian edition
-      } elseif (FALSE !== mb_strpos(mb_strtolower($os_running,'UTF-8'), 'debian')) {
+      } elseif (FALSE !== mb_stripos($os_running, 'debian')) {
           $type = 'VAP';
+          $family = 'VAP';
       }
+    }
+    // End of hardware detection (2023-11-23)
+
+    if ($return_array) {
+      return array("type"       => $type,
+                   "family"     => $family,
+                   "model"      => $model,
+                   "hardware"   => $hardware,
+                   "cpu_speed"  => $cpu_speed,
+                   "os_running" => $os_running);
+    } else {
       return $type;
+    }
   }
 
 
@@ -22192,14 +22298,14 @@ EOL;
           
           $server_password = md5($command_name.$this->GetServerSecret($remote_ip).$server_challenge);
           
-      }elseif ($this->GetVerboseFlag()) {
+      } elseif ($this->GetVerboseFlag()) {
           $this->WriteLog("Info: *Server received the following request: $data", FALSE, FALSE, 8888, 'Server-Client', '');
       }
       
       $error_description = $this->GetErrorText($error_code);
       
       if ($this->GetVerboseFlag()) {
-          $this->WriteLog("Info: *Server secret used for command ".$command_name." with error code result ".$error_code.": ".$this->GetServerSecret($remote_ip), FALSE, FALSE, 8888, 'Server-Client', '');
+        $this->WriteLog("Info: *Server secret used for command ".$command_name." with error code result ".$error_code.": ".$this->GetServerSecret($remote_ip), FALSE, FALSE, 8888, 'Server-Client', '');
       }
       
       $xml_data = str_replace('*Command*', $command_name, $xml_data);
@@ -22220,9 +22326,8 @@ EOL;
       header("Content-type: text/xml");
 
       if ($this->_xml_dump_in_log) {
-          $this->WriteLog("Info: Server sent the following answer: $xml_data", FALSE, FALSE, 8888, 'Debug', '');
+        $this->WriteLog("Info: Server sent the following answer: $xml_data", FALSE, FALSE, 8888, 'Debug', '');
       }
-
       echo $xml_data;
   }
 

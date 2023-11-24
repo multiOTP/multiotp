@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2023 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.6.7 (2023-09-22)
+Current build: 5.9.7.0 (2023-11-23)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -100,6 +100,7 @@ TABLE OF CONTENTS
  * How to build a Raspberry Pi strong authentication server ?
  * How to install a local only strong authentication on a Windows machine ?
  * How to install a centralized 2FA server for Windows desktops or RDP login ?
+ * Adding 2FA with multiOTP to the Remote Desktop Web Access (RDWeb) on Windows
  * Same Windows generic account with multiple two-factor authentication accounts
  * Using multiOTP on Linux for SSH login
  * LDAP filter customization
@@ -151,13 +152,22 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 - New Raspberry, Hyper-V and OVA appliances available (version 011, based on Debian 11)
 - Scratchlist can be generated from the Web GUI
 - {MultiOtpDisplayName} (AD/LDAP DisplayName) can be used in templates
+- New open source on-premises SMS provider support (https://github.com/multiOTP/SMSGateway)
+
 
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2023-11-23 5.9.7.0 FIX: Better Windows nginx configuration support (path backslashes replaced by slashes)
+                   ENH: Embedded Windows nginx edition updated to version 1.24.0
+                   ENH: Embedded Windows PHP edition updated to version 8.2.13
+                   ENH: Better hardware/model detection
+                   ENH: Documentation enhanced with instructions for RDWeb on Windows
+                   ENH: Upgrade of some internal tools
+2023-10-12 5.9.6.9 ENH: Better internal configuration organization
 2023-09-22 5.9.6.7 ENH: Documentation updated for "Configuring multiOTP with FreeRADIUS 3.x under Linux"
                    ENH: Without2FA tokens cannot be used for multi_account connection
-                   ENH: Added documentation for SSH login with multiOTP
+                   ENH: Added documentation for Linux SSH login with multiOTP using PAM
 2023-08-09 5.9.6.6 FIX: Prefix PIN information was sometimes missing on the provisioning info
                    ENH: New Raspberry Pi distribution binary
 2023-07-07 5.9.6.5 FIX: Better Raspberry Pi support
@@ -170,6 +180,7 @@ CHANGE LOG OF RELEASED VERSIONS
                    FIX: Remove a debug line displaying sometimes "COMMDN:$command\n";
                    FIX: Some minor PHP notice corrections
                    FIX: Template updated to display correct information for "Without2FA" tokens
+                   FIX: Enhanced backup process, some configuration may be missing in the backup depending the initial firmware version
                    ENH: Adding on-premises smsgateway (https://github.com/multiOTP/SMSGateway) as a new SMS provider
                    ENH: Better warning messages when CheckUserLdapPassword failed
                    ENH: Embedded documentation enhanced
@@ -1488,6 +1499,162 @@ HOW TO INSTALL A CENTRALIZED 2FA SERVER FOR WINDOWS DESKTOPS OR RDP LOGIN ?
    or execute multiOTPCredentialProvider-unregister.reg
 
 
+ADDING 2FA WITH MULTIOTP TO THE REMOTE DESKTOP WEB ACCESS (RDWEB) ON WINDOWS
+============================================================================
+For these instructions, we assume that multiOTP is installed in the
+folder C:\multiOTP
+After Remote Desktop Web Access installation, RDWeb files are stored in the
+folder C:\Windows\Web\RDWeb\
+
+1) Edit the file C:\Windows\Web\RDWeb\Web.config, and add three lines right after
+   the appSettings block like this:
+```
+   <?xml version="1.0"?>
+   <configuration>
+       <appSettings>
+           <!-- multiOTP addon begin -->
+           <add key="MultiOTPPathAndName" value="C:\\multiOTP\\multiotp.exe" />
+           <add key="OTPUsernameRegex" value="^[0-9a-zA-Z]*$" />
+           <add key="OTPRegex" value="^[0-9]{6}$" />
+           <!-- multiOTP addon end -->
+           ...
+```
+
+2) Edit the file C:\Windows\Web\RDWeb\Pages\en-US\login.aspx (en-US is for the
+   american english version of the page), and add three lines here:
+```
+   ...
+   <% @Import Namespace="System.Web.Security.AntiXss" %>
+   <!-- multiOTP addon begin -->
+   <% @Import Namespace="System.Diagnostics" %>
+   <% @Import Namespace="System.Text.RegularExpressions" %>
+   <% @Import Namespace="System.Configuration" %>
+   <!-- multiOTP addon end -->
+   <script language="C#" runat=server>
+   ...
+```
+
+3) Always in the same file login.aspx, add this line after Localizable Text:
+```
+   ...
+   // Localizable Text
+   //
+   // multiOTP addon begin
+  const string L_OTPLabel_Text = "OTP:";
+   // multiOTP addon end
+   const string L_DomainUserNameLabel_Text = "Domain\\user name:";
+   ...
+```
+
+4) Always in the same file login.aspx, at the end of the LoginPageLoadAsync()
+   method, add this line:
+```
+   ...
+       // multiOTP addon begin
+       if ( Request.Form["UserOTP"] != null ) Session["UserOTP"] = (string)Request.Form["UserOTP"];	
+       // multiOTP addon end
+   }
+
+   //
+   // Special case to handle 'ServerConfigChanged' error from Response's Location header.
+   //
+   try
+   ...
+```
+
+5) Always in the same file login.aspx, replace the method
+   SafeRedirect(strReturnUrlPage); with the following lines:
+```
+   ...
+   if ( HttpContext.Current.User.Identity.IsAuthenticated == true )
+   {
+       // multiOTP addon begin
+       string strOTPUsername = HttpContext.Current.User.Identity.Name;
+       if (strOTPUsername.Split('\\').Length > 1) strOTPUsername = strOTPUsername.Split('\\')[1];
+       if (strOTPUsername.Split('@').Length > 0) strOTPUsername = strOTPUsername.Split('@')[0];
+
+       bool bOTPAuthenticated = false;
+
+       if (Session["UserOTP"] != null)
+       {
+         string strOTP = (string)Session["UserOTP"];
+         if (!string.IsNullOrEmpty(strOTP) && Regex.Match(strOTP,ConfigurationManager.AppSettings["OTPRegex"]).Success && !string.IsNullOrEmpty(strOTPUsername) && Regex.Match(strOTPUsername,ConfigurationManager.AppSettings["OTPUsernameRegex"]).Success)
+         {
+           ProcessStartInfo oOTPStartInfo = new ProcessStartInfo();
+           oOTPStartInfo.FileName = ConfigurationManager.AppSettings["MultiOTPPathAndName"];
+           oOTPStartInfo.Arguments = strOTPUsername + " " + strOTP;
+           oOTPStartInfo.CreateNoWindow = true;
+           oOTPStartInfo.UseShellExecute = true;
+           Process oOTP = Process.Start(oOTPStartInfo);
+           oOTP.WaitForExit();
+           bOTPAuthenticated = (oOTP.ExitCode == 0);
+         }
+       }
+
+       if(bOTPAuthenticated)
+       {
+         if (String.IsNullOrEmpty(strReturnUrlPage))
+           Response.Redirect("default.aspx");
+         else
+           SafeRedirect(strReturnUrlPage);
+       }
+       else
+       {
+         FormsAuthentication.SignOut(); 
+         bFailedLogon = true;
+         if (bFailedAuthorization) bFailedAuthorization = false; 
+       }
+       // multiOTP addon end
+       // multiOTP remove begin
+       // SafeRedirect(strReturnUrlPage);
+       // multiOTP remove end
+   }
+   ...
+```
+
+6) Always in the same file login.aspx, after the "UserPass" input, add the
+   following lines:
+```
+   ...
+           <label><input id="UserPass" name="UserPass" type="password" class="textInputField" runat="server" size="25" autocomplete="off" /></label>
+           </td>
+       </tr>
+       </table>
+   </td>
+   </tr>
+
+   <!-- multiOTP addon begin -->
+   <tr>
+     <td>
+       <table width="300" border="0" cellpadding="0" cellspacing="0">
+         <tr>
+           <td width="130" align="right"><%=L_OTPLabel_Text%></td>
+           <td width="7"></td>
+           <td align="right">
+             <label><input id="UserOTP" name="UserOTP" type="password" class="textInputField" runat="server" size="23" autocomplete="off" /></label>
+           </td>
+         </tr>
+       </table>
+     </td>
+   </tr>
+   <!-- multiOTP addon end -->
+   ...
+```
+
+7) Be sure that that the RDWeb Application Pool Account has read/write access
+   to the installed multiOTP folder and subfolder (C:\multiOTP)
+
+8) In order to have some logs, you will have to enable the log option in the
+   multiotp.ini (C:\multiOTP\config\multiotp.ini):
+```
+   ...
+   log=1
+   ...
+```
+
+9) Be sure to restart IIS on your Windows RDWeb server
+
+
 SAME WINDOWS GENERIC ACCOUNT WITH MULTIPLE TWO-FACTOR AUTHENTICATION ACCOUNTS 
 =============================================================================
 If you have to share the same generic Windows account, but you still need
@@ -1730,7 +1897,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.6.7 (2023-09-22)
+multiOTP 5.9.7.0 (2023-11-23)
 (c) 2010-2023 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1739,9 +1906,9 @@ algorithm (currently Mobile-OTP (http://motp.sf.net), OATH/HOTP (RFC 4226)
 and OATH/TOTP (RFC 6238) are implemented). PSKC format supported (RFC 6030).
 Supported encryption methods are PAP and CHAP.
 Yubico OTP format supported (44 bytes long, with prefixed serial number).
-SMS-code are supported (current providers: aspsms,clickatell,clickatell2,
-                        intellisms,nexmo,nowsms,smseagle,swisscom,telnyx,
-                        custom,exec).
+SMS-code are supported (current providers: afilnet,aspsms,clickatell,
+                        clickatell2,ecall,intellisms,nexmo,nowsms,smseagle,
+                        smsgateway,swisscom,telnyx,custom,exec).
 Specific SMS sender program supported by specifying exec as SMS provider.
 
 Google Authenticator base32_seed tokens must be of n*8 characters.
@@ -2104,6 +2271,12 @@ Special commands:
    This will delete the .cache files in the AD/LDAP cache folder.
    .cache files are used to speed up the AD/LDAP synchronizsation process.
    They are valid by default for 60 minutes.
+
+ multiotp -log-error "log information"
+   This will write "log information" error in the default log storage.
+
+ multiotp -log-info "log information"
+   This will write "log information" info in the default log storage.
 
 
 Other parameters:

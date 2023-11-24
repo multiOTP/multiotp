@@ -35,8 +35,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.7
- * @date      2023-09-22
+ * @version   5.9.7.0
+ * @date      2023-11-23
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -456,6 +456,8 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "fastcreatenopin";
     } elseif ("-fastcreatewithpin" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "fastcreatewithpin";
+    } elseif ("-hardware" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "hardware";
     } elseif ("-help" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "help";
     } elseif ("-import" == mb_strtolower($current_arg,'UTF-8')) {
@@ -542,6 +544,10 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "version";
     } elseif ("-version-only" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "version-only";
+    } elseif ("-log-error" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "log-error";
+    } elseif ("-log-info" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "log-info";
     } else {
         // The current argument is not a command
         $not_a_command = TRUE;
@@ -714,22 +720,23 @@ if (($param_count < 1) &&
     ($command != "clearlog") &&
     ($command != "customfunction") &&
     ($command != "custominfo") &&
-    ($command != "network-info") &&
+    ($command != "hardware") &&
     ($command != "help") &&
     ($command != "initialize-backend") &&
     ($command != "ldap-check") &&
     ($command != "ldap-users-list") &&
     ($command != "ldap-users-sync") &&
     ($command != "libhash") &&
+    ($command != "lockeduserslist") &&
+    ($command != "network-info") &&
+    ($command != "php-version") &&
     ($command != "phpinfo") &&
+    ($command != "purge-ldap-cache-folder") &&
+    ($command != "purge-lock-folder") &&
     ($command != "showlog") &&
     ($command != "tokenslist")&&
     ($command != "userslist") &&
-    ($command != "lockeduserslist") &&
     ($command != "version") &&
-    ($command != "php-version") &&
-    ($command != "purge-ldap-cache-folder") &&
-    ($command != "purge-lock-folder") &&
     ($command != "version-only"))
 {
     $command = "noparam";
@@ -775,9 +782,12 @@ if (false === mb_strpos(getcwd(), '/')) {
   $config_folder = '';
 }
 
-if (($command == "libhash") || ($command == "help") || ($command == "version") || ($command == "php-version")) {
+if (($command == "libhash") || ($command == "help") || ($command == "hardware") || ($command == "version") || ($command == "php-version")) {
   if (!isset($multiotp)) {
     $multiotp = new Multiotp('DefaultCliEncryptionKey', false, $folder_path, $config_folder);
+    if ($verbose_log) {
+      $multiotp->EnableVerboseLog();
+    }
     $multiotp->SetCredentialProviderMode($cp_mode);
     $multiotp->SetCliMode($cli_mode);
     $multiotp->SetCliProxyMode(!$cli_mode); // The CLI proxy mode is *NOT* the CLI mode
@@ -785,6 +795,9 @@ if (($command == "libhash") || ($command == "help") || ($command == "version") |
 } else {
   if (!isset($multiotp)) {
     $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path, $config_folder);
+    if ($verbose_log) {
+      $multiotp->EnableVerboseLog();
+    }
     $multiotp->SetCredentialProviderMode($cp_mode);
     $multiotp->SetCliMode($cli_mode);
     $multiotp->SetCliProxyMode(!$cli_mode); // The CLI proxy mode is *NOT* the CLI mode
@@ -868,17 +881,18 @@ if (($multiotp->IsDeveloperMode())) {
 
 
 // Initialize multiOTP options
+
 if ($enable_log) {
-    $multiotp->EnableLog();
+  $multiotp->EnableLog();
 }
 if ($verbose_log) {
-    $multiotp->EnableVerboseLog();
+  $multiotp->EnableVerboseLog();
 }
 if ($display_log) {
-    $multiotp->EnableDisplayLog();
+  $multiotp->EnableDisplayLog();
 }
 if ($keep_local) {
-    $multiotp->EnableKeepLocal();
+  $multiotp->EnableKeepLocal();
 }
 
 
@@ -997,6 +1011,30 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 }
             }
             break;
+        case "hardware":
+            $version_info = $multiotp->GetClassName()." ".$multiotp->GetVersion()." (".$multiotp->GetDate().")";
+            $hardware_array = $multiotp->GetHardwareType(true);
+            if ($multiotp->GetCliProxyMode()) {
+                $version_info.= " [CLI PROXY]";
+            } elseif ($multiotp->GetCliMode()) {
+                $version_info.= " [CLI]";
+            }
+            if ($multiotp->GetCredentialProviderMode()) {
+                $version_info.= " [CP]";
+            }
+            $hardware_info = "      Version: " . $version_info . $crlf;
+            $hardware_info.= "  Detailed OS: " . $hardware_array['os_running'] . $crlf;
+            $hardware_info.= "         Type: " . $hardware_array['type'] . $crlf;
+            $hardware_info.= "       Family: " . $hardware_array['family'] . $crlf;
+            $hardware_info.= "        Model: " . $hardware_array['model'] . $crlf;
+            $hardware_info.= "     Hardware: " . $hardware_array['hardware'] . $crlf;
+            $hardware_info.= "    CPU speed: " . $hardware_array['cpu_speed'] . $crlf;
+            $hardware_info.= "       Uptime: " . $multiotp->GetUptime() . $crlf;
+      
+            $hardware_info.= $crlf;
+            echo $hardware_info;
+            $result = 19;
+            break;
         case "version":
             $version_info = $multiotp->GetClassName()." ".$multiotp->GetVersion()." (".$multiotp->GetDate().")";
             if ($multiotp->GetCliProxyMode()) {
@@ -1055,7 +1093,13 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             break;
         case "call-method";
             if (method_exists($multiotp, $call_method)) {
-                if ('' != $all_args[4]) {
+                if ('' != $all_args[7]) {
+                  $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3], $all_args[4], $all_args[5], $all_args[6], $all_args[7]);
+                } elseif ('' != $all_args[6]) {
+                  $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3], $all_args[4], $all_args[5], $all_args[6]);
+                } elseif ('' != $all_args[5]) {
+                  $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3], $all_args[4], $all_args[5]);
+                } elseif ('' != $all_args[4]) {
                   $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3], $all_args[4]);
                 } elseif ('' != $all_args[3]) {
                   $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3]);
@@ -2060,6 +2104,14 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             $multiotp->ClearLog();
             $result = 19;
             break;
+        case "log-error":
+            $multiotp->WriteLog("Error: " . $all_args[1], FALSE, FALSE, 39, 'System', '', 3);
+            $result = 19;
+            break;
+        case "log-info":
+            $multiotp->WriteLog("Info: " . $all_args[1], FALSE, FALSE, 19, 'System', '', 6);
+            $result = 19;
+            break;
         case "ldap-check":
             $result = (($multiotp->CheckLdapAuthentication()) ? 19 : 99);
             break;
@@ -2181,9 +2233,9 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "and OATH/TOTP (RFC 6238) are implemented). PSKC format supported (RFC 6030).".$crlf;
                 echo "Supported encryption methods are PAP and CHAP.".$crlf;
                 echo "Yubico OTP format supported (44 bytes long, with prefixed serial number).".$crlf;
-                echo "SMS-code are supported (current providers: aspsms,clickatell,clickatell2,".$crlf;
-                echo "                        intellisms,nexmo,nowsms,smseagle,swisscom,telnyx,".$crlf;
-                echo "                        custom,exec).".$crlf;
+                echo "SMS-code are supported (current providers: afilnet,aspsms,clickatell,".$crlf;
+                echo "                        clickatell2,ecall,intellisms,nexmo,nowsms,smseagle,".$crlf;
+                echo "                        smsgateway,swisscom,telnyx,custom,exec).".$crlf;
                 echo "Specific SMS sender program supported by specifying exec as SMS provider.".$crlf;
                 echo $crlf;
                 echo "Google Authenticator base32_seed tokens must be of n*8 characters.".$crlf;
@@ -2484,6 +2536,12 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "   This will delete the .cache files in the AD/LDAP cache folder.".$crlf;
                 echo "   .cache files are used to speed up the AD/LDAP synchronizsation process.".$crlf;
                 echo "   They are valid by default for 60 minutes.".$crlf;
+                echo $crlf;
+                echo " multiotp -log-error \"log information\"".$crlf;
+                echo "   This will write \"log information\" error in the default log storage.".$crlf;
+                echo $crlf;
+                echo " multiotp -log-info \"log information\"".$crlf;
+                echo "   This will write \"log information\" info in the default log storage.".$crlf;
                 echo $crlf;
                 echo $crlf;
                 echo "Other parameters:".$crlf;

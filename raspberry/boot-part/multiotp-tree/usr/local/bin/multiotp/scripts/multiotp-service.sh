@@ -16,51 +16,92 @@
 # Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.6.7
-# @date      2023-09-22
+# @version   5.9.7.0
+# @date      2023-11-23
 # @since     2013-11-29
 # @copyright (c) 2013-2021 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
 ##########################################################################################
 
-
-# Hardware detection
-
 is_running_in_container() {
   awk -F: '$3 ~ /^\/$/{ c=1 } END { exit c }' /proc/self/cgroup
 }
 
+# Hardware detection (2023-11-20)
 FAMILY=""
 UNAME=$(uname -a)
 MODEL=$(cat /proc/cpuinfo | grep "Model" | awk -F': ' '{print $2}')
-if [[ "${MODEL}" == *"Raspberry Pi 4 Model B"* ]]; then
+if [[ "${UNAME}" == *docker* ]]; then
+    # Docker
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/1/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif grep -q docker /proc/self/cgroup; then 
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif [ -f /.dockerenv ]; then
+    FAMILY="VAP"
+    TYPE="DOCKER"
+elif [[ "${MODEL}" == *"Raspberry Pi 5"* ]]; then
+    # Raspberry Pi 5
+    FAMILY="RPI"
+    TYPE="RP5"
+elif [[ "${MODEL}" == *"Raspberry Pi 4"* ]]; then
     # Raspberry Pi 4
     FAMILY="RPI"
     TYPE="RP4"
-elif [[ "${UNAME}" == *armv8* ]]; then
+elif [[ "${MODEL}" == *"Raspberry Pi 3 Model B Plus"* ]]; then
+    # Raspberry Pi 3 B+
+    FAMILY="RPI"
+    TYPE="RP3+"
+elif [[ "${MODEL}" == *"Raspberry Pi 3"* ]]; then
+    # Raspberry Pi 3
+    FAMILY="RPI"
+    TYPE="RP3"
+elif [[ "${MODEL}" == *"Raspberry Pi 2"* ]]; then
+    # Raspberry Pi 2
+    FAMILY="RPI"
+    TYPE="RP2"
+elif [[ "${MODEL}" == *"Raspberry Pi"* ]]; then
+    # Raspberry Pi generic
+    FAMILY="RPI"
+    TYPE="RP"
+elif [[ "${UNAME}" == *armv8* ]] || [[ "${UNAME}" == *aarch64* ]]; then
     HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
-    if [[ "${HARDWARE}" == *BCM27* ]]; then
-        # Raspberry Pi 3 B
-        FAMILY="RPI"
-        TYPE="RP3"
-    elif [[ "${HARDWARE}" == *BCM28* ]]; then
-        # Raspberry Pi 3 B+
-        FAMILY="RPI"
-        TYPE="RP3B+"
-    else
-        # Nothing else yet !
-        FAMILY="RPI"
-        TYPE="RP3"
-    fi
-elif [[ "${UNAME}" == *armv7l* ]]; then
-    HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
-    if [[ "${HARDWARE}" == *BCM27* ]]; then
+    if [[ "${HARDWARE}" == *BCM27* ]] || [[ "${HARDWARE}" == *BCM28* ]]; then
         LSCPU=$(/usr/bin/lscpu | grep "CPU max MHz" | awk -F': ' '{print $2}')
         if [[ "${LSCPU}" == *1500* ]]; then
             # Raspberry Pi 4
             FAMILY="RPI"
             TYPE="RP4"
+        elif [[ "${LSCPU}" == *1400* ]]; then
+            # Raspberry Pi 3 B+
+            FAMILY="RPI"
+            TYPE="RP3+"
+        else
+            # Raspberry Pi 3
+            FAMILY="RPI"
+            TYPE="RP3"
+        fi
+    else
+        FAMILY="ARM"
+        TYPE="ARM"
+    fi
+elif [[ "${UNAME}" == *armv7l* ]]; then
+    HARDWARE=$(cat /proc/cpuinfo | grep "Hardware" | awk -F': ' '{print $2}')
+    if [[ "${HARDWARE}" == *BCM27* ]] || [[ "${HARDWARE}" == *BCM28* ]]; then
+        LSCPU=$(/usr/bin/lscpu | grep "CPU max MHz" | awk -F': ' '{print $2}')
+        if [[ "${LSCPU}" == *1500* ]]; then
+            # Raspberry Pi 4
+            FAMILY="RPI"
+            TYPE="RP4"
+        elif [[ "${LSCPU}" == *1400* ]]; then
+            # Raspberry Pi 3 B+
+            FAMILY="RPI"
+            TYPE="RP3+"
         elif [[ "${LSCPU}" == *1200* ]]; then
             # Raspberry Pi 3
             FAMILY="RPI"
@@ -70,10 +111,6 @@ elif [[ "${UNAME}" == *armv7l* ]]; then
             FAMILY="RPI"
             TYPE="RP2"
         fi
-    elif [[ "${HARDWARE}" == *BCM28* ]]; then
-        # Raspberry Pi 3 B+
-        FAMILY="RPI"
-        TYPE="RP3B+"
     else
         # Beaglebone Black or similar
         FAMILY="ARM"
@@ -87,19 +124,6 @@ elif [[ "${UNAME}" == *armv6l* ]]; then
     # Raspberry Pi B/B+
     FAMILY="RPI"
     TYPE="RPI"
-elif [[ "${UNAME}" == *docker* ]]; then
-    # Docker
-    FAMILY="VAP"
-    TYPE="DOCKER"
-elif grep -q docker /proc/1/cgroup; then 
-    FAMILY="VAP"
-    TYPE="DOCKER"
-elif grep -q docker /proc/self/cgroup; then 
-    FAMILY="VAP"
-    TYPE="DOCKER"
-elif [ -f /.dockerenv ]; then
-    FAMILY="VAP"
-    TYPE="DOCKER"
 else
     # others (Virtual Appliance)
     FAMILY="VAP"
@@ -118,6 +142,7 @@ else
         TYPE="VB"
     fi
 fi
+# End of hardware detection (2023-11-20)
 
 
 if [ $# -ge 1 ]; then

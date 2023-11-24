@@ -22,8 +22,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.7
- * @date      2023-09-22
+ * @version   5.9.7.0
+ * @date      2023-11-23
  * @since     2013-07-10
  * @copyright (c) 2013-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -122,27 +122,39 @@ set_time_limit(3600);
 
 $first_time = time();
 
-if ((!isset($GLOBALS['minima'])) && isset($_GET['minima'])) {
+if (!isset($GLOBALS['minima'])) {
+  if (isset($_GET['minima'])) {
     $GLOBALS['minima'] = isset($_GET['minima']);
+  } else {
+    $GLOBALS['minima'] = false;
+  }
 }
 
-if ((!isset($GLOBALS['keeplog'])) && isset($_GET['keeplog'])) {
+if (!isset($GLOBALS['keeplog'])) {
+  if (isset($_GET['keeplog'])) {
     $GLOBALS['keeplog'] = isset($_GET['keeplog']);
+  } else {
+    $GLOBALS['keeplog'] = false;
+  }
 }
 
-if ((!isset($GLOBALS['noresume'])) && isset($_GET['noresume'])) {
+if (!isset($GLOBALS['noresume'])) {
+  if (isset($_GET['noresume'])) {
     $GLOBALS['noresume'] = isset($_GET['noresume']);
+  } else {
+    $GLOBALS['noresume'] = false;
+  }
 }
 
 $test_mail = isset($GLOBALS['test_mail'])?$GLOBALS['test_mail']:'';
 
 if (!function_exists('echo_full')) {
-    function echo_full($to_display) {
-        if (!$GLOBALS['minima']) {
-            @ob_end_flush();
-            echo $to_display;
-        }
+  function echo_full($to_display) {
+    if (!$GLOBALS['minima']) {
+      @ob_end_flush();
+      echo $to_display;
     }
+  }
 }
 
 require_once('multiotp.class.php');
