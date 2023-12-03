@@ -16,8 +16,8 @@
 # Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.9.7.0
-# @date      2023-11-23
+# @version   5.9.7.1
+# @date      2023-12-03
 # @since     2013-11-29
 # @copyright (c) 2013-2022 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
@@ -71,7 +71,7 @@ SSH_ROOT_LOGIN="1"
 DEFAULT_IP="192.168.1.44"
 REBOOT_AT_THE_END="1"
 
-TEMPVERSION="@version   5.9.7.0"
+TEMPVERSION="@version   5.9.7.1"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}

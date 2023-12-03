@@ -11,8 +11,8 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.7.0
-REM @date      2023-11-23
+REM @version   5.9.7.1
+REM @date      2023-12-03
 REM @since     2010-07-10
 REM @copyright (c) 2010-2023 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
@@ -493,7 +493,7 @@ IF ERRORLEVEL 1 ECHO - KO! multiOTP web service is not responding correctly on h
 IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check"
 IF ERRORLEVEL 1 TYPE "%TEMP%\multiOTPwebservice.check" (%_backend%) >>"%TEMP%\multiotp_error.log"
 SET /A TOTAL_TESTS=TOTAL_TESTS+1
-DEL "%TEMP%\multiOTPwebservice.check" /Q
+ DEL "%TEMP%\multiOTPwebservice.check" /Q
 DEL "%TEMP%\multiOTPwebservice.ready" /Q
 
 ECHO.

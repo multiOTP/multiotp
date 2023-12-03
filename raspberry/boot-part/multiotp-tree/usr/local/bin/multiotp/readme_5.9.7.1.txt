@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2023 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.7.0 (2023-11-23)
+Current build: 5.9.7.1 (2023-12-03)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -158,6 +158,15 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2023-12-03 5.9.7.1 FIX: Command line number of parameters detection corrected
+                   ENH: It's now possible to define the number of digits for new created PIN
+                        (multiotp -config default-pin-digits=n)
+                   ENH: It's now possible to generate the HTML provisioning file by command line
+                        (multiotp -htmlinfo username /full/path/to/username.html or
+                         multiotp -htmlinfo /full/path/to/folder/ to generate files for all users)
+                   ENH: Embedded Windows nginx edition updated to version 1.25.3
+                   ENH: Embedded Windows internal tools updated (wget 1.21.4 and fart 1.99d)
+                   ENH: Embedded Windows freeradius is now launched using NSSM (instead of SRVANY)
 2023-11-23 5.9.7.0 FIX: Better Windows nginx configuration support (path backslashes replaced by slashes)
                    ENH: Embedded Windows nginx edition updated to version 1.24.0
                    ENH: Embedded Windows PHP edition updated to version 8.2.13
@@ -1897,7 +1906,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.7.0 (2023-11-23)
+multiOTP 5.9.7.1 (2023-12-03)
 (c) 2010-2023 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
@@ -1973,6 +1982,7 @@ Return codes:
 43 ERROR: SQL entry cannot be updated 
 50 ERROR: QRcode not created 
 51 ERROR: UrlLink not created (no provisionable client for this protocol) 
+52 ERROR: HTML info not created 
 58 ERROR: File is missing 
 59 ERROR: Bad restore configuration password 
 60 ERROR: No information on where to send SMS code 
@@ -2053,6 +2063,8 @@ Usage:
 
  multiotp -qrcode user png_file_name.png (only for TOTP and HOTP)
  multiotp -urllink user (only for TOTP and HOTP, generate provisioning URL)
+ multiotp -htmlinfo user htlm_file_name.html (create file for one user) or 
+ multiotp -htmlinfo htlm_file_folder (to create all files)
 
  multiotp -scratchlist user (generate & display scratch passwords for the user)
 
@@ -2085,6 +2097,7 @@ Usage:
                              (code result are also displayed on the console)
                debug-prefix: add a prefix when using the debug mode
                              (for example 'Reply-Message := ' for FreeRADIUS)
+         default-pin-digits: [4-32] set the default amount of PIN digits
  default-request-prefix-pin: [0|1] prefix PIN enabled/disabled by default
    default-request-ldap-pwd: [0|1] LDAP/AD password enabled/disabled by default
                 display-log: [0|1] enable/disable log display on the console
@@ -2140,6 +2153,7 @@ Usage:
                  sms-api-id: SMS API id (if any, give your REST/XML API id)
                              with exec as provider, define the script to call
                                (available variables: %from, %to, %msg)
+                 sms-digits: [6-32] set the default amount of SMS digits
                      sms-ip: IP address of the SMS server (for inhouse server)
       sms-challenge-enabled: [0|1] enable/disable SMS challenge
                 sms-message: SMS message to display before the OTP

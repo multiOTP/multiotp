@@ -5,7 +5,7 @@ multiOTP open source is a strong two-factor authentication device
 (c) 2010-2023 SysCo systemes de communication sa
 https://www.multiotp.net/
 
-Current build: 5.9.7.0 (2023-11-23)
+Current build: 5.9.7.1 (2023-12-03)
 
 Check the readme file of the multiOTP open source edition for more information.
 
