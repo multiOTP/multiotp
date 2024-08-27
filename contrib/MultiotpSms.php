@@ -6,8 +6,8 @@ class MultiotpSms
  * @brief     SMS message using any SMS Provider.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.7.0
- * @date      2023-11-21
+ * @version   5.9.8.0
+ * @date      2024-08-26
  * @since     2018-10-09
  *
  * Predefined providers:
@@ -21,6 +21,8 @@ class MultiotpSms
  *        nowsms: NowSMS.com (on-premises), https://www.nowsms.com/
  *      smseagle: SMSEagle (hardware gateway), https://www.smseagle.eu/
  *    smsgateway: SMSGateway (open source on-premises), https://github.com/multiOTP/SMSGateway
+ *        spryng: Spryng (REST API), https://www.spryng.be
+ *  spryngsimple: Spryng (Simple API), https://www.spryng.be
  *      swisscom: Swisscom LA (REST-JSON), https://messagingproxy.swisscom.ch:4300/rest/1.0.0/
  *        telnyx: Telnyx, https://developers.telnyx.com/docs/api/v2/messaging
  *
@@ -71,6 +73,7 @@ class MultiotpSms
  *
  * Change Log
  *
+ *   2024-08-26 5.9.8.0 SysCo/al default_values added (for example: "ip=xxxx;port=yyy")
  *   2023-11-21 5.9.7.0 SysCo/al Cleaned code
  *   2023-03-21 5.9.5.8 SysCo/al smsgateway provider added
  *                               Specific URL can be specified in the constructor
@@ -109,6 +112,7 @@ class MultiotpSms
   var $basic_auth;
   var $content_encoding;
   var $header;
+  var $default_values;
   
   // Timeout
   var $timeout;
@@ -124,7 +128,15 @@ class MultiotpSms
   var $reply_content;
 
 
-  function __construct(
+    function setProperty($property, $value) {
+      $this->$property = $value;
+    }
+
+    function getProperty($property) {
+      return $this->$property;
+    }
+
+    function __construct(
     $config_array = array()
   ) {
     $this->resetValues();
@@ -151,6 +163,7 @@ class MultiotpSms
     if (isset($config_array['debug'])) { $this->debug = (TRUE == $config_array['debug']); }
     if (isset($config_array['timeout'])) { $this->timeout = intval($config_array['timeout']); }
     if (isset($config_array['encode_ampersand'])) { $this->encode_ampersand = (TRUE == $config_array['encode_ampersand']); }
+    if (isset($config_array['default_values'])) { $this->default_values = $config_array['default_values']; }
     if ($this->timeout < 1) {
       $this->timeout = 5;
     }
@@ -420,6 +433,44 @@ class MultiotpSms
         $this->content_encoding = "";
         $this->header = "";
         break;
+      case 'spryng':
+        $this->url = "https://rest.spryngsms.com/v1/messages";
+        $this->send_template = "{\n".
+                               "  \"body\": \"%msg\",\n".
+                               "  \"encoding\": \"auto\",\n".
+                               "  \"originator\": \"%from\",\n".
+                               "  \"recipients\": [\n".
+                               "    \"%to\"\n".
+                               "  ],\n".
+                               "  \"route\": \"%ip\"\n".
+                               "}";
+        $this->method = "POST-JSON";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "";
+        $this->no_double_zero = TRUE;
+        $this->international_format = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "QUOTES";
+        $this->header = "Authorization: Bearer %api_id\r\n";
+        $this->default_values = "ip=business";
+        break;
+
+      case 'spryngsimple':
+        $this->url = "https://rest.spryngsms.com/api/simple/message?=null";
+        $this->send_template = "route=%ip&username=%user&secret=%pass&sender=%from&destination=%to&body=%msg";
+        $this->method = "POST";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "";
+        $this->no_double_zero = TRUE;
+        $this->international_format = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "";
+        $this->header = "";
+        $this->default_values = "ip=business";
+        break;
+
       case 'swisscom':
         $this->url = "https://messagingproxy.swisscom.ch:4300/rest/1.0.0/submit_sm/%api_id";
         $this->send_template = "{\n".
@@ -733,6 +784,13 @@ class MultiotpSms
     
     if ($this->encode_ampersand) {
       $payload_msg = str_replace('&', '%26', $payload_msg);
+    }
+    
+    foreach (explode(";",$this->default_values) as $one_default_value_array) {
+      list($key, $value) = explode('=', $one_default_value_array);
+      if ("" == trim($this->getProperty($key))) {
+        $this->setProperty($key, $value);
+      }
     }
 
     $payload = str_replace('%ip',       $this->ip,                                    $payload);

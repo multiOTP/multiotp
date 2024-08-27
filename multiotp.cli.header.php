@@ -35,17 +35,17 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.7.1
- * @date      2023-12-03
+ * @version   5.9.8.0
+ * @date      2024-08-26
  * @since     2010-06-08
- * @copyright (c) 2010-2023 SysCo systemes de communication sa
+ * @copyright (c) 2010-2024 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
  *
  *//*
  *
  * LICENCE
  *
- *   Copyright (c) 2010-2023 SysCo systemes de communication sa
+ *   Copyright (c) 2010-2024 SysCo systemes de communication sa
  *   SysCo (tm) is a trademark of SysCo systemes de communication sa
  *   (http://www.sysco.ch)
  *   All rights reserved.
@@ -77,6 +77,8 @@
  *
  *   0 OK: Token accepted
  *
+ *   7 INFO: INFO: User requires a token
+ *   8 INFO: INFO: User can be authenticated without a token (WITHOUT2FA)
  *   9 INFO: Access Challenge returned back to the client
  *  10 INFO: Access Challenge returned back to the client
  *
@@ -119,6 +121,7 @@
  *
  *  50 ERROR: QRcode not created
  *  51 ERROR: UrlLink not created (no provisionable client for this protocol)
+ *  52 ERROR: HTML info not created
  *  58 ERROR: File is missing
  *  59 ERROR: Bad restore configuration password
  *
@@ -127,11 +130,16 @@
  *  62 ERROR: SMS provider not supported
  *  63 ERROR: This SMS code has expired
  *  64 ERROR: Cannot resent an SMS code right now
+ *  65 ERROR: ERROR: SMS code request not allowed
+ *  66 ERROR: ERROR: Email code request not allowed
+ *  67 ERROR: ERROR: No information on where to send Email code
+ *  68 ERROR: ERROR: Email code request received, but an error occurred during transmission
  *  69 ERROR: Failed to send email
  *
  *  70 ERROR: Server authentication error
  *  71 ERROR: Server request is not correctly formatted
  *  72 ERROR: Server answer is not correctly formatted
+ *  73 ERROR: ERROR: Email SMTP server not defined
  *  79 ERROR: AD/LDAP connection error
  *
  *  80 ERROR: Server cache error
@@ -140,6 +148,8 @@
  *  88 ERROR: Device is not defined as a HA slave
  *  89 ERROR: Device is not defined as a HA master
  *
+ *  91 ERROR: ERROR: Authentication failed (without2fa token not authorized here)
+ *  92 ERROR: ERROR: Authentication failed (bad password)
  *  93 ERROR: Authentication failed (time based token probably out of sync)
  *  94 ERROR: API request error
  *  95 ERROR: API authentication failed
@@ -311,13 +321,13 @@ if ($cli_mode) {
     }
 
     // Be sure that STDIN, STDOUT and STDERR are defined correctly for command line edition
-    if (!defined('STDIN')) {
+    if (!constant_defined('STDIN')) {
         define('STDIN', @fopen('php://stdin', 'r'));
     }
-    if (!defined('STDOUT')) {
+    if (!constant_defined('STDOUT')) {
         define('STDOUT', @fopen('php://stdout', 'w'));
     }
-    if (!defined('STDERR')) {
+    if (!constant_defined('STDERR')) {
         define('STDERR', @fopen('php://stderr', 'w'));
     }
 }
@@ -1592,6 +1602,10 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 $multiotp->SetGroupAttribute($actual_array[1]);
                                 $write_config_data = true;
                                 break;
+                            case 'ignore-no-prefix-cp':
+                                $multiotp->SetIgnoreNoPrefixCredentialProvider(intval($actual_array[1]));
+                                $write_config_data = true;
+                                break;
                             case 'issuer':
                                 $multiotp->SetIssuer($actual_array[1]);
                                 $write_config_data = true;
@@ -1674,6 +1688,10 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 break;
                             case 'log':
                                 $multiotp->SetLogOption(intval($actual_array[1]));
+                                $write_config_data = true;
+                                break;
+                            case 'log-forced-in-file':
+                                $multiotp->SetLogForcedInFile(intval($actual_array[1]));
                                 $write_config_data = true;
                                 break;
                             case 'multiple-groups':
@@ -2412,6 +2430,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                display-log: [0|1] enable/disable log display on the console".$crlf;
                 echo "            group-attribute: attribute to return for the group membership".$crlf;
                 echo "                             (for example 'Filter-Id' for FreeRADIUS)".$crlf;
+                echo "        ignore-no-prefix-cp: [0|1] Disable 'no prefix' for Credential Provider".$crlf;
                 echo "                     issuer: default name of the issuer of the (soft) token".$crlf;
                 echo "        ldap-account-suffix: LDAP/AD account suffix".$crlf;
                 echo "             ldap-activated: [0|1] enable/disable LDAP/AD support".$crlf;
@@ -2445,6 +2464,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                             'auto' means '' for PHP higher than 5.x and".$crlf;
                 echo "                             'NORMAL:!VERS-TLS1.2' for PHP 5.x and before".$crlf;
                 echo "                        log: [0|1] enable/disable log permanently".$crlf;
+                echo "         log-forced-in-file: [0|1] enable/disable log always in file (no DB)".$crlf;
                 echo "            multiple-groups: [0|1] enable/disable multiple groups per user".$crlf;
                 echo "    radius-reply-attributor: [ += |=] how to attribute a value".$crlf;
                 echo "                             ('=' for TekRADIUS, ' += ' for FreeRADIUS)".$crlf;

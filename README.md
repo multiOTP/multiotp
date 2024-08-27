@@ -3,10 +3,10 @@ multiOTP open source
 multiOTP open source is a GNU LGPL implementation of a strong two-factor authentication PHP class  
 multiOTP open source is OATH certified for HOTP/TOTP
 
-(c) 2010-2023 SysCo systemes de communication sa  
+(c) 2010-2024 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.9.7.1 (2023-12-03)
+Current build: 5.9.8.0 (2024-08-26)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image)
 
@@ -158,6 +158,16 @@ WHAT'S NEW IN THIS 5.9.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2024-08-26 5.9.8.0 FIX: Database backend setup and initialization was not working well with some PHP version
+                   ENH: New option to force writing logs only in file (even if the backend is a database)
+                   ENH: Spryng SMS provider support
+                   ENH: PHP 8.2.x deprecated code cleaned (null for string parameters)
+2024-05-03 5.9.7.2 FIX: without2fa token can be now correctly converted to TOTP with default 30 seconds time interval
+                   FIX: Without2fa tokens with prefix pin where not working with CHAP/MSCHAP/MSCHAPv2
+                   FIX: Windows: radiusd.conf and clients.conf files removed from the distribution
+                        (they are created automatically when installing the services using radius_install.cmd)
+                   ENH: Windows: -debug option removed from the radius module launcher
+                   ENH: By design, Credential Provider check request don't wait any prefix. This behavior can now be overwrited.
 2023-12-03 5.9.7.1 FIX: Command line number of parameters detection corrected
                    ENH: It's now possible to define the number of digits for new created PIN
                         (multiotp -config default-pin-digits=n)
@@ -1906,8 +1916,8 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.9.7.1 (2023-12-03)
-(c) 2010-2023 SysCo systemes de communication sa
+multiOTP 5.9.8.0 (2024-08-26)
+(c) 2010-2024 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 
 multiotp will check if the token of a user is correct, based on a specified
@@ -2103,6 +2113,7 @@ Usage:
                 display-log: [0|1] enable/disable log display on the console
             group-attribute: attribute to return for the group membership
                              (for example 'Filter-Id' for FreeRADIUS)
+        ignore-no-prefix-cp: [0|1] Disable 'no prefix' for Credential Provider
                      issuer: default name of the issuer of the (soft) token
         ldap-account-suffix: LDAP/AD account suffix
              ldap-activated: [0|1] enable/disable LDAP/AD support
@@ -2136,6 +2147,7 @@ Usage:
                              'auto' means '' for PHP higher than 5.x and
                              'NORMAL:!VERS-TLS1.2' for PHP 5.x and before
                         log: [0|1] enable/disable log permanently
+         log-forced-in-file: [0|1] enable/disable log always in file (no DB)
             multiple-groups: [0|1] enable/disable multiple groups per user
     radius-reply-attributor: [ += |=] how to attribute a value
                              ('=' for TekRADIUS, ' += ' for FreeRADIUS)
@@ -2434,8 +2446,8 @@ Visit https://forum.multiotp.net/ for additional support
 ``` 
  
 ``` 
-Hash verification for multiotp_5.9.7.1.zip 
-SHA256:1c20cc31c707245c9fd55a71c7e4d9204eae6a20eaba87099ffc62caf19ca59b 
-SHA1:e3ab1db6c0b62cc2afb2866117b13fe2506a1727 
-MD5:0cc3b0df1d5b760c53f7beade835817f 
+Hash verification for multiotp_5.9.8.0.zip 
+SHA256:13cfaad7da594014c106faec4a934d12d720ce92820b21816e6f0d5d4e1231e4 
+SHA1:9df76683482959dab99c2688332e7eaa3b4033b7 
+MD5:1d73c1f2c102b3243b1b21025cb412f5 
 ``` 

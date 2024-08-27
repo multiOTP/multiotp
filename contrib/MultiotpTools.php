@@ -4,7 +4,23 @@
  * Check PHP version and define version constant if needed
  *   (PHP_VERSION_ID is natively available only for PHP >= 5.2.7)
  ****************************************************************/
-if (!defined('PHP_VERSION_ID'))
+if (!function_exists('constant_defined')) {
+  function constant_defined(
+    $constant_name
+  ) {
+    $result = false;
+    foreach (get_defined_constants() as $key=>$value) {
+      if (strtoupper($key) == strtoupper($constant_name)) {
+        $result = true;
+        break;
+      }
+    }
+    return $result;
+  }
+}
+
+
+if (!constant_defined('PHP_VERSION_ID'))
 {
     $version = explode('.', PHP_VERSION);
     define('PHP_VERSION_ID', ($version[0] * 10000 + $version[1] * 100 + $version[2]));
@@ -19,21 +35,29 @@ if (PHP_VERSION_ID < 50207)
 
 
 if (!function_exists('nullable_trim')) {
-  function nullable_trim($string) {
+  function nullable_trim(
+    $string
+  ) {
     return (is_null($string) ? "" : trim($string));
   }
 }
 
 
 if (!function_exists('nullable_bin2hex')) {
-  function nullable_bin2hex($string) {
+  function nullable_bin2hex(
+    $string
+  ) {
     return (is_null($string) ? "" : bin2hex($string));
   }
 }
 
 
 if (!function_exists('pcre_fnmatch')) {
-  function pcre_fnmatch($pattern, $string, $flags = 0) {
+  function pcre_fnmatch(
+    $pattern,
+    $string,
+    $flags = 0
+  ) {
     define('FNM_PATHNAME', 1);
     define('FNM_NOESCAPE', 2);
     define('FNM_PERIOD', 4);
@@ -81,7 +105,11 @@ if (!function_exists('pcre_fnmatch')) {
 
 
 if (!function_exists('fnmatch')) {
-  function fnmatch($pattern, $string, $flags = 0) {
+  function fnmatch(
+    $pattern,
+    $string,
+    $flags = 0)
+  {
     return pcre_fnmatch($pattern, $string, $flags);
   }
 }

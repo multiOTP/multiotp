@@ -78,14 +78,30 @@
 */
 
 // Added by SysCo/al
-if (!defined('PHP_VERSION_ID'))
+if (!function_exists('constant_defined')) {
+  function constant_defined(
+    $constant_name
+  ) {
+    $result = false;
+    foreach (get_defined_constants() as $key=>$value) {
+      if (strtoupper($key) == strtoupper($constant_name)) {
+        $result = true;
+        break;
+      }
+    }
+    return $result;
+  }
+}
+
+
+if (!constant_defined('PHP_VERSION_ID'))
 {
     $version = explode('.', PHP_VERSION);
     define('PHP_VERSION_ID', ($version[0] * 10000 + $version[1] * 100 + $version[2]));
 }
 putenv('LDAPTLS_REQCERT=never');
 
-if (!defined('LDAP_OPT_DIAGNOSTIC_MESSAGE')) {
+if (!constant_defined('LDAP_OPT_DIAGNOSTIC_MESSAGE')) {
     define ('LDAP_OPT_DIAGNOSTIC_MESSAGE', 0x0032);
 }
 

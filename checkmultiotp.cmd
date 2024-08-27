@@ -11,10 +11,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10/2019
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.7.1
-REM @date      2023-12-03
+REM @version   5.9.8.0
+REM @date      2024-08-26
 REM @since     2010-07-10
-REM @copyright (c) 2010-2023 SysCo systemes de communication sa
+REM @copyright (c) 2010-2024 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -38,7 +38,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2010-2023 SysCo systemes de communication sa
+REM   Copyright (c) 2010-2024 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -177,7 +177,6 @@ SET TOTAL_TESTS=0
 REM SET initial backend to files
 %_multiotp% -config backend-type=files
 
-
 ECHO multiotp functionalities and HOTP implementation check
 ECHO (RFC 4226, http://www.ietf.org/rfc/rfc4226.txt)
 ECHO ------------------------------------------------------
@@ -202,6 +201,7 @@ REM Set the backend
 ECHO.
 ECHO Backend is set to %_backend%
 %_multiotp% -config backend-type=%_backend%
+%_multiotp% -config log-forced-in-file=0
 
 ECHO Initialize backend
 IF "mysql"=="%_backend%" %_multiotp% -display-log -initialize-backend

@@ -9,10 +9,10 @@ REM
 REM Windows batch file for Windows 2K/XP/2003/7/2008/8/2012/10
 REM
 REM @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-REM @version   5.9.7.1
-REM @date      2023-12-03
+REM @version   5.9.8.0
+REM @date      2024-08-26
 REM @since     2013-08-20
-REM @copyright (c) 2013-2023 SysCo systemes de communication sa
+REM @copyright (c) 2013-2024 SysCo systemes de communication sa
 REM @copyright GNU Lesser General Public License
 REM
 REM
@@ -31,7 +31,7 @@ REM
 REM
 REM Licence
 REM
-REM   Copyright (c) 2013-2023 SysCo systemes de communication sa
+REM   Copyright (c) 2013-2024 SysCo systemes de communication sa
 REM   SysCo (tm) is a trademark of SysCo systemes de communication sa
 REM   (http://www.sysco.ch/)
 REM   All rights reserved.
@@ -47,6 +47,7 @@ REM
 REM
 REM Change Log
 REM
+REM   2024-05-03 5.9.7.2 SysCo/al -debug option removed from the Windows radius module launcher
 REM   2023-11-23 5.9.7.0 SysCo/al Space in installation path supported
 REM   2020-12-11 5.8.0.6 SysCo/al Do an automatic "Run as administrator" if needed
 REM                               Don't delete the _radius_multiotp_folder_alternate environment variable
@@ -122,7 +123,7 @@ ECHO exec multiotp {>>"%_radius_folder%radius\etc\raddb\modules\multiotp"
 ECHO         wait = yes>>"%_radius_folder%radius\etc\raddb\modules\multiotp"
 ECHO         input_pairs = request>>"%_radius_folder%radius\etc\raddb\modules\multiotp"
 ECHO         output_pairs = reply>>"%_radius_folder%radius\etc\raddb\modules\multiotp"
-ECHO         program = "%_radius_multiotp% **"-base-dir=%_radius_multiotp_folder%**" -keep-local -log -debug **"%%{User-Name}**" **"%%{User-Password}**" -src=%%{Packet-Src-IP-Address} -chap-challenge=%%{CHAP-Challenge} -chap-password=%%{CHAP-Password} -ms-chap-challenge=%%{MS-CHAP-Challenge} -ms-chap-response=%%{MS-CHAP-Response} -ms-chap2-response=%%{MS-CHAP2-Response}">>"%_radius_folder%radius\etc\raddb\modules\multiotp"
+ECHO         program = "%_radius_multiotp% **"-base-dir=%_radius_multiotp_folder%**" -keep-local -log **"%%{User-Name}**" **"%%{User-Password}**" -src=%%{Packet-Src-IP-Address} -chap-challenge=%%{CHAP-Challenge} -chap-password=%%{CHAP-Password} -ms-chap-challenge=%%{MS-CHAP-Challenge} -ms-chap-response=%%{MS-CHAP-Response} -ms-chap2-response=%%{MS-CHAP2-Response}">>"%_radius_folder%radius\etc\raddb\modules\multiotp"
 ECHO         shell_escape = yes>>"%_radius_folder%radius\etc\raddb\modules\multiotp"
 ECHO }>>"%_radius_folder%radius\etc\raddb\modules\multiotp"
 
