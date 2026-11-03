@@ -16,12 +16,14 @@
 # Please check https://www.multiotp.net/ and you will find the magic button ;-)
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.10.2.2
-# @date      2026-04-03
+# @version   5.10.4.2
+# @date      2026-10-31
 # @since     2013-11-29
 # @copyright (c) 2013-2022 by SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License
 #
+# 2026-10-30 5.10.4.1 SysCo/al Update 013 to 013.07 / 013.07u
+# 2026-09-03 5.10.3.0 SysCo/al "root/debian/ubuntu" password is now multiotp
 # 2026-03-06 5.10.2.0 SysCo/al Add initial AWS and Ubuntu support
 # 2025-10-31 5.10.0.2 SysCo/al Additional cleaning for Debian Trixie 13.0 support
 # 2025-10-16 5.9.9.3 SysCo/al Add Debian Trixie 13.0 support
@@ -61,9 +63,9 @@
 
 # Default configuration options
 LINUX_USER="debian"
-LINUX_PASSWORD="raspberry"
+LINUX_PASSWORD="multiotp"
 PI_PASSWORD="raspberry"
-ROOT_PASSWORD="raspberry"
+ROOT_PASSWORD="multiotp"
 MYSQL_PASSWORD="fJKGeztDF3456DvB"
 MULTIOTP_SQL_PASSWORD="dfh45AReTZTxsdR"
 SLAP_PASSWORD="rtzewrpiZRT753"
@@ -76,7 +78,7 @@ SSH_ROOT_LOGIN="1"
 DEFAULT_IP="192.168.1.44"
 REBOOT_AT_THE_END="1"
 
-TEMPVERSION="@version   5.10.2.2"
+TEMPVERSION="@version   5.10.4.2"
 MULTIOTPVERSION="$(echo -e "${TEMPVERSION:8}" | tr -d '[[:space:]]')"
 IFS='.' read -ra MULTIOTPVERSIONARRAY <<< "$MULTIOTPVERSION"
 MULTIOTPMAJORVERSION=${MULTIOTPVERSIONARRAY[0]}
@@ -166,7 +168,7 @@ PHPINSTALLPREFIXVERSION="php8.4"
 PHPMODULEPREFIX="php/8.4"
 PHPMAJORVERSION="8"
 SQLITEVERSION="sqlite3"
-VMRELEASENUMBER="013"
+VMRELEASENUMBER="013.07"
 if [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "7" ]]; then
   BACKENDDB="mysql"
   PHPFPM="php5-fpm"
@@ -236,7 +238,7 @@ elif [[ "${OSID}" == "debian" ]] && [[ "${OSVERSION}" == "13" ]]; then
   PHPMODULEPREFIX="php/8.4"
   PHPMAJORVERSION="8"
   SQLITEVERSION="sqlite3"
-  VMRELEASENUMBER="013"
+  VMRELEASENUMBER="013.07"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "7" ]]; then
   BACKENDDB="mysql"
   PHPFPM="php5-fpm"
@@ -297,16 +299,6 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "12" ]]; then
   PHPMAJORVERSION="8"
   SQLITEVERSION="sqlite3"
   VMRELEASENUMBER="012"
-elif [[ "${OSID}" == "ubuntu" ]] && [[ "${OSVERSION}" == "24" ]]; then
-  BACKENDDB="mariadb"
-  PHPFPM="php8.3-fpm"
-  PHPFPMSED="php\/php8.3-fpm"
-  PHPINSTALLPREFIX="php"
-  PHPINSTALLPREFIXVERSION="php8.3"
-  PHPMODULEPREFIX="php/8.3"
-  PHPMAJORVERSION="8"
-  SQLITEVERSION="sqlite3"
-  VMRELEASENUMBER="013u"
 elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "13" ]]; then
   BACKENDDB="mariadb"
   PHPFPM="php8.4-fpm"
@@ -316,7 +308,27 @@ elif [[ "${OSID}" == "raspbian" ]] && [[ "${OSVERSION}" == "13" ]]; then
   PHPMODULEPREFIX="php/8.4"
   PHPMAJORVERSION="8"
   SQLITEVERSION="sqlite3"
-  VMRELEASENUMBER="013"
+  VMRELEASENUMBER="013.07"
+elif [[ "${OSID}" == "ubuntu" ]] && [[ "${OSVERSION}" == "24" ]]; then
+  BACKENDDB="mariadb"
+  PHPFPM="php8.3-fpm"
+  PHPFPMSED="php\/php8.3-fpm"
+  PHPINSTALLPREFIX="php"
+  PHPINSTALLPREFIXVERSION="php8.3"
+  PHPMODULEPREFIX="php/8.3"
+  PHPMAJORVERSION="8"
+  SQLITEVERSION="sqlite3"
+  VMRELEASENUMBER="013.07u"
+elif [[ "${OSID}" == "ubuntu" ]] && [[ "${OSVERSION}" == "26" ]]; then
+  BACKENDDB="mariadb"
+  PHPFPM="php8.5-fpm"
+  PHPFPMSED="php\/php8.5-fpm"
+  PHPINSTALLPREFIX="php"
+  PHPINSTALLPREFIXVERSION="php8.5"
+  PHPMODULEPREFIX="php/8.5"
+  PHPMAJORVERSION="8"
+  SQLITEVERSION="sqlite3"
+  VMRELEASENUMBER="013.07u"
 fi
 # End of OS ID and version ((2026-01-29))
 
@@ -622,6 +634,7 @@ if [[ "${TYPE}" != "DOCKER" ]]; then
   apt-get -y install apt-zip
   apt-get -y install build-essential
   apt-get -y install bzip2
+  apt-get -y install cron
   apt-get -y install dselect
   apt-get -y install freeradius
   apt-get -y install iptables-persistent
@@ -1706,6 +1719,7 @@ echo "Source directory: ${SOURCEDIR}"
 # Check the error log
 # tail -n 1000 -f /var/log/nginx/error.log
 
+apt autoremove --purge
 
 # Remove this file
 if [[ "${DEBUGMODE}" != "TRUE" ]]; then

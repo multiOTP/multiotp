@@ -72,8 +72,8 @@
  * PHP 7.4 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.10.2.2
- * @date      2026-04-03
+ * @version   5.10.4.2
+ * @date      2026-10-31
  * @since     2010-06-08
  * @copyright (c) 2010-2026 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -271,7 +271,11 @@
  *   Please check the readme file for the whole change log since 2010
  *********************************************************************/
 
+define("_MULTIOTP_MINIMAL_APPLIANCE_SECURITY_", "013.07");
+
+define("_MULTIOTP_DEFAULT_ITEMS_PER_PAGE_", 25);
 define("_MULTIOTP_DEFAULT_PUSH_TIMEOUT_", 20);
+define("_MULTIOTP_DEFAULT_TOKEN_SEED_TYPE_", "hex");
 define("_MULTIOTP_DEFAULT_TOTP_INTERVAL_", 30);
 define("_MULTIOTP_DEFAULT_GUI_TIMEOUT_", 10 * 60);
 define("_MULTIOTP_PUSH_TIMEOUT_CODE_", "PUSH_TIMEOUT");
@@ -282,6 +286,8 @@ define("_MULTIOTP_DEFAULT_SYSLOG_FACILITY_", 18);// 18 = local2
 define("_MULTIOTP_DEFAULT_SYSLOG_SEVERITY_LEVEL_", 5); // 5 = notice
 define("_MULTIOTP_DEFAULT_SYSLOG_TIMEOUT_", 3);
 define("_MULTIOTP_DEFAULT_HASH_SALT_", "AjaxH@shS@lt");
+
+define("_MULTIOTP_TOKEN_SEED_HEX_TYPE_", "hex");
 
 define("_MULTIOTP_AUTH_OK_", 0);
 define("_MULTIOTP_INFO__1_", 1);
@@ -395,8 +401,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.10.2.2
- * @date      2026-04-03
+ * @version   5.10.4.2
+ * @date      2026-10-31
  * @since     2010-07-18
  */
 {
@@ -409,7 +415,7 @@ class Multiotp
   var $_website;                  // Website dedicated to this LGPL library, please don't change it !
 
   var $_base_dir;                 // Specific base directory
-  var $_valid_algorithms;         // String containing valid algorithms to be used, separated by *, like *mOTP*HOTP*TOTP*YubicoOTP*without2FA*
+  var $_valid_algorithms_array;   // Array containing valid algorithms to be used;
   var $_attributes_to_encrypt;    // Attributes of the data to encrypt
   var $_encryption_key;           // Symetric data encryption key
   var $_source_tag;               // Source tag of the request (for a shared installation for example)
@@ -518,8 +524,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.10.2.2
-   * @date      2026-04-03
+   * @version   5.10.4.2
+   * @date      2026-10-31
    * @since     2010-07-18
    */
   function __construct(
@@ -529,7 +535,7 @@ class Multiotp
       $config_dir = "",
       $no_init = false
   ) {
-      
+
       // Internal encoding set to UTF-8
       mb_internal_encoding("UTF-8");
       
@@ -543,11 +549,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.10.2.2'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.10.4.2'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = nullable_trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2026-04-03'; // You should update the date with the date of your changes
+        $temp_date = '@date      2026-10-31'; // You should update the date with the date of your changes
         $this->_date = nullable_trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyNiBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -556,7 +562,16 @@ class Multiotp
       $this->_anonymous_stat_interval = 604800; // Stat interval: 7 * 24 * 60 * 60 = 604800 = 1 week
       
       $this->_log_header_written    = FALSE; // Flag indicating if the header has already been written in the log file or not
-      $this->_valid_algorithms      = '*mOTP*HOTP*TOTP*YubicoOTP*without2FA*'; // Supported algorithms, don't change it (unless you have added the handling of a new algorithm ;-)
+      
+      // Supported algorithms, don't change it (unless you have added the handling of a new algorithm ;-)
+      // id MUST BE lowercase only !!!
+      $this->_valid_algorithms_array = [["id" => "motp",       "name" => "mOTP",       "soft_token" => true],
+                                        ["id" => "hotp",       "name" => "HOTP",       "soft_token" => true],
+                                        ["id" => "totp",       "name" => "TOTP",       "soft_token" => true],
+                                        ["id" => "yubicootp",  "name" => "YubicoOTP",  "soft_token" => false],
+                                        ["id" => "without2fa", "name" => "without2FA", "soft_token" => true],
+                                       ];
+      
       $this->_attributes_to_encrypt = '*admin_password_hash*challenge*device_secret*email_otp*ldap_hash_cache*ldap_server_password*scratch_passwords*seed_password*server_secret*sms_api_id*sms_otp*sms_password*sms_userkey*smtp_password*sql_password*token_seed*user_pin*'; // This default list of attributes can be changed using SetAttributesToEncrypt(). Each attribute must be between "*".
       
       $this->_no_display_log = false; // No log on display (if runing as a web server for example)
@@ -627,8 +642,9 @@ class Multiotp
                                  'users'
                                 );
 
-      // int() is for mysql and replaced by numeric() for pgSQL
-      // datetime is for MySQL and replaced by timestamp for pgSQL
+      // int() is for MariaDB/MySQL and replaced by numeric() for pgSQL
+      // bigint() is for MariaDB/MySQL and replaced by numeric() for pgSQL
+      // datetime is for MariaDB/MySQL and replaced by timestamp for pgSQL
 
       $this->_sql_tables_schema['cache']   = array(
           'active_users_count'      => "int(10) DEFAULT -1",
@@ -673,6 +689,7 @@ class Multiotp
           'create_host'                 => "TEXT DEFAULT ''",
           'create_time'                 => "int(10) DEFAULT 0",
           // Debug mode (to enable it permanently)
+          'current_host'                => "TEXT DEFAULT ''",
           'debug'                       => "int(1) DEFAULT 0",
           'default_2fa_digits'          => "int(10) DEFAULT 6",
           'default_algorithm'           => "TEXT DEFAULT 'totp'",
@@ -769,6 +786,7 @@ class Multiotp
           'radius_reply_attributor'     => "TEXT DEFAULT ' += '",
           'radius_reply_separator_hex'  => "TEXT DEFAULT '".nullable_bin2hex(',')."'",
           'radius_tag_prefix'           => "TEXT DEFAULT ''",
+          'restored_host'               => "TEXT DEFAULT ''",
           'scratch_passwords_digits'    => "int(10) DEFAULT 6",
           'scratch_passwords_amount'    => "int(10) DEFAULT 10",
           'self_registration'           => "int(1) DEFAULT 1",
@@ -955,7 +973,7 @@ class Multiotp
           'issuer'                  => "TEXT DEFAULT ''",
           'key_algorithm'           => "TEXT DEFAULT ''",
           'last_error'              => "int(10) DEFAULT 0",
-          'last_event'              => "int(10) DEFAULT -1",
+          'last_event'              => "bigint(20) DEFAULT -1",
           'last_login'              => "int(10) DEFAULT 0",
           'last_sync_update'        => "int(10) DEFAULT 0",
           'last_sync_update_host'   => "TEXT DEFAULT ''",
@@ -1012,7 +1030,7 @@ class Multiotp
           // Last error login
           'last_error'              => "int(10) DEFAULT 0",
           // Last successful event
-          'last_event'              => "int(10) DEFAULT -1",
+          'last_event'              => "bigint(20) DEFAULT -1",
           // Last successful login
           'last_failed_credential'  => "TEXT DEFAULT ''",
           'last_failed_time'        => "int(10) DEFAULT 0",
@@ -2605,7 +2623,7 @@ class Multiotp
                       $row_type = "";
                       foreach ($this->_sql_tables_schema[$table] as $valid_key => $valid_format) {
                           $row_type = "";
-                          if ((mb_strtolower(mb_substr($valid_format, 0, 4),'UTF-8') == "int(") || (mb_strtolower(mb_substr($valid_format, 0, 8),'UTF-8') == "numeric(")) {
+                          if ((mb_strtolower(mb_substr($valid_format, 0, 4),'UTF-8') == "int(") || (mb_strtolower(mb_substr($valid_format, 0, 7),'UTF-8') == "bigint(") || (mb_strtolower(mb_substr($valid_format, 0, 8),'UTF-8') == "numeric(")) {
                             $row_type = "int";
                           } elseif ((mb_strtolower(mb_substr($valid_format, 0, 8),'UTF-8') == "datetime") || (mb_strtolower(mb_substr($valid_format, 0, 9),'UTF-8') == "timestamp")) {
                             $row_type = "datetime";
@@ -2781,7 +2799,7 @@ class Multiotp
                       $row_type = "";
                       foreach ($this->_sql_tables_schema[$table] as $valid_key => $valid_format) {
                           $row_type = "";
-                          if ((mb_strtolower(mb_substr($valid_format, 0, 4),'UTF-8') == "int(") || (mb_strtolower(mb_substr($valid_format, 0, 8),'UTF-8') == "numeric(")) {
+                          if ((mb_strtolower(mb_substr($valid_format, 0, 4),'UTF-8') == "int(") || (mb_strtolower(mb_substr($valid_format, 0, 7),'UTF-8') == "bigint(") || (mb_strtolower(mb_substr($valid_format, 0, 8),'UTF-8') == "numeric(")) {
                             $row_type = "int";
                           } elseif ((mb_strtolower(mb_substr($valid_format, 0, 8),'UTF-8') == "datetime") || (mb_strtolower(mb_substr($valid_format, 0, 9),'UTF-8') == "timestamp")) {
                             $row_type = "datetime";
@@ -3472,10 +3490,10 @@ class Multiotp
     $ignore_attributes = isset($rc_array['ignore_attributes']) ? $rc_array['ignore_attributes']        : [];
     $ignore_files      = isset($rc_array['ignore_files'])      ? $rc_array['ignore_files']             : [];
     $rename_files      = isset($rc_array['rename_files'])      ? $rc_array['rename_files']             : [];
-    $update_config     = isset($rc_array['update_config'])     ? (TRUE === $rc_array['update_config']) : FALSE;
-    $ignore_config     = isset($rc_array['ignore_config'])     ? (TRUE === $rc_array['ignore_config']) : FALSE;
-    $automatically     = isset($rc_array['automatically'])     ? (TRUE === $rc_array['automatically']) : FALSE;
-    $sync_process      = isset($rc_array['sync_process'])      ? (TRUE === $rc_array['sync_process'])  : FALSE;
+    $update_config     = isset($rc_array['update_config'])     ? (true === $rc_array['update_config']) : false;
+    $ignore_config     = isset($rc_array['ignore_config'])     ? (true === $rc_array['ignore_config']) : false;
+    $automatically     = isset($rc_array['automatically'])     ? (true === $rc_array['automatically']) : false;
+    $sync_process      = isset($rc_array['sync_process'])      ? (true === $rc_array['sync_process'])  : false;
 
     if (!is_array($ignore_attributes)) {
       $ignore_attributes = array('multiotp-database-format', 'actual_version', 'anonymous_');
@@ -3521,6 +3539,8 @@ class Multiotp
             $result = FALSE;
           }
         }
+
+        $this->_config_data["restored_host"] = "";
 
         while ((!feof($backup_handler)) && $result) {
           if ($first_line) {
@@ -3778,8 +3798,16 @@ class Multiotp
                 } elseif ('data' == $type) {
                   switch ($item) {
                     case 'Configuration':
-                      if (!$ignore_config) {
-                        $this->_config_data[$key] = $value;
+                      if ((!$sync_process) && ("current_host" == $key)) {
+                          $this->_config_data["restored_host"] = $value;
+                      } else {
+                        if ((!$sync_process) && ("create_host" == $key) && (empty($this->_config_data["restored_host"]))) {
+                          $this->_config_data["restored_host"] = $value;
+                        }
+                        // create_host can be restored, also by sync, but current_host and restored_host cannot. 
+                        if ((!$ignore_config) && (!("current_host" == $key)) && (!("restored_host" == $key))) {
+                          $this->_config_data[$key] = $value;
+                        }
                       }
                       break;
                     case 'Ddns':
@@ -4856,6 +4884,7 @@ class Multiotp
     $dns     = [];
     $dns[0]  = "";
     $dns[1]  = "";
+    $mac     = "";
     $interface_name = "";
     $fixed_gateway = false;
     
@@ -4903,6 +4932,20 @@ class Multiotp
             } elseif ('0.0.0.0' != $temp) {
               $ip = $temp;
               $next_is_mask = true;
+            }
+          }
+        }
+      }
+      // Extract Mac address(es)
+      foreach ($output as $line) {
+        $line.= "  ";
+        if (preg_match("/.*[^:\-]+(..[:\-]..[:\-]..[:\-]..[:\-]..[:\-]..)[^:\-]+/", $line)) {
+          $result_array = [];
+          preg_match_all("/[^:\-]+(..[:\-]..[:\-]..[:\-]..[:\-]..[:\-]..)/", $line, $result_array, PREG_SET_ORDER);
+          if (isset($result_array[0][1])) {
+            $temp = mb_strtolower(str_replace("-",":",nullable_trim($result_array[0][1])),'UTF-8');
+            if (17 == mb_strlen($temp)) {
+              $mac.= mb_strtoupper((('' != $mac)?",":'').$temp,'UTF-8');
             }
           }
         }
@@ -4971,17 +5014,17 @@ class Multiotp
         $mask       = $resultArray[4]; // 255.255.255.0
         $gateway    = $resultArray[5]; // 192.168.1.1
         $dns_list   = $resultArray[6]; // 1.1.1.1,8.8.8.8
-        $mac        = $resultArray[7]; // 12:34:56:78:90:ab
+        $mac        = $resultArray[7]; // 12:34:56:78:90:ab (comma separated if multiple)
         
         $dns_parts = explode(',', $dns_list, 3);
         $dns[0] = $dns_parts[0] ?? '';
         $dns[1] = $dns_parts[1] ?? '';
       }
     }
-    $network_info = $mode."\t".$ip."\t".$mask."\t".$gateway."\t".$dns[0]."\t".$dns[1]."\t";
+    $network_info = $mode."\t".$ip."\t".$mask."\t".$gateway."\t".$dns[0]."\t".$dns[1]."\t".$mac."\t";
     $network_array = explode("\t",$network_info);
     
-    for ($i=count($network_array); $i <= 5; $i++) {
+    for ($i=count($network_array); $i <= 6; $i++) {
       $network_array[$i] = "";
     }
     return $network_array;
@@ -5795,7 +5838,9 @@ class Multiotp
                       foreach ($this->_sql_tables_schema[$sql_table] as $valid_key => $valid_format) {
                           $row_format = $valid_format;
                           $row_default = NULL;
-                          if (mb_strtolower(mb_substr($row_format, 0, 4),'UTF-8') == "int(") {
+                          if (mb_strtolower(mb_substr($row_format, 0, 4),'UTF-8') == "bigint(") {
+                            $row_format = str_ireplace("bigint(", "numeric(", $row_format);
+                          } elseif (mb_strtolower(mb_substr($row_format, 0, 4),'UTF-8') == "int(") {
                             $row_format = str_ireplace("int(", "numeric(", $row_format);
                           } elseif (mb_strtolower(mb_substr($row_format, 0, 8),'UTF-8') == "datetime") {
                             $row_format = str_ireplace("datetime", "timestamp", $row_format);
@@ -6053,7 +6098,7 @@ class Multiotp
           
           // ReadStatData automatically
           $this->ReadStatData();
-          
+
           $array_to_parse = $this->_sql_tables_schema['stat'];
           foreach ($array_to_parse as $stat_key => $stat_format) {
             $pos = mb_strpos(mb_strtoupper($stat_format,'UTF-8'), 'DEFAULT');
@@ -6213,6 +6258,7 @@ class Multiotp
       $write_config_data_array = [],
       $force_file = false
   ) {
+      $this->_config_data['current_host'] = $this->GetCreateHost();
       if ($this->IsDeveloperMode()) {
         $backtrace = version_compare(PHP_VERSION, '5.3.6', '>=') ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) : debug_backtrace();
         foreach ($backtrace as $one_backtrace) {
@@ -9011,17 +9057,11 @@ class Multiotp
   }
 
 
+  // Updated 2026-08-27
   function Convert2Unicode(
-      $value
+    $value
   ) {
-      $unicode = "";
-      $string = (string) $value;
-      for ($i = 0; $i < mb_strlen($string); $i++)
-      {
-          $asc = ord($string[$i]) << 8;
-          $unicode .= sprintf("%X", $asc);
-      }
-      return pack('H*', $unicode);
+    return mb_convert_encoding($value, 'UTF-16LE', 'UTF-8');
   }
 
 
@@ -9079,17 +9119,20 @@ class Multiotp
   }
 
 
+  // Updated 2026-08-27
   function NtPasswordHash(
-      $clear
+    $clear
   ) {
-      return pack('H*',hash('md4', $this->Convert2Unicode($clear)));
+    $utf16Win = mb_convert_encoding($clear, 'UTF-16LE', 'UTF-8');
+    return hash('md4', $utf16Win, true);
   }
 
 
+  // Updated 2026-08-27
   function NtPasswordHashHash(
-      $hash
+    $hash
   ) {
-      return pack('H*',hash('md4', $hash));
+    return hash('md4', $hash, true);
   }
 
 
@@ -11315,6 +11358,13 @@ class Multiotp
             $this->_user_data['push_gateway'] = $this->GetPushGateway(true);
             $this->_user_data['push_enable_date'] = time();
           }
+        } elseif ((1 == $this->_user_data['push_enabled']) && ($this->IsPushActivated()) && (!empty(nullable_trim(isset($this->_user_data['mouid']) ? $this->_user_data['mouid'] : "")))) {
+          if (empty(isset($this->_user_data['mosid']) ? $this->_user_data['mosid'] : "")) {
+            $this->_user_data['mosid'] = $this->GetPushId();
+          }
+          if (empty(isset($this->_user_data['push_gateway']) ? $this->_user_data['push_gateway'] : "")) {
+            $this->_user_data['push_gateway'] = $this->GetPushGateway(true);
+          }
         }
 
         $result = $this->WriteData(array_merge(array('item'               => 'User',
@@ -12375,10 +12425,9 @@ class Multiotp
     $in_array = false
   ) {
     $result = [];
-    $algorithms_array = explode("*",$this->_valid_algorithms);
-    foreach ($algorithms_array as $algorithm_one) {
-      if (!empty(nullable_trim($algorithm_one))) {
-        $result[] = nullable_trim($algorithm_one);
+    foreach ($this->_valid_algorithms_array as $algorithm_one) {
+      if (!empty(nullable_trim($algorithm_one['name']))) {
+        $result[] = nullable_trim($algorithm_one['name']);
       }
     }
     return ($in_array ? $result : implode("\t", $result));
@@ -12388,7 +12437,7 @@ class Multiotp
   function IsValidAlgorithm(
       $algo_to_check
   ) {
-      return (FALSE !== mb_strpos(mb_strtolower($this->_valid_algorithms,'UTF-8'), mb_strtolower('*'.$algo_to_check.'*','UTF-8')));
+      return in_array(mb_strtolower($algo_to_check,'UTF-8'), array_column($this->_valid_algorithms_array, 'id'), true);
   }
 
 
@@ -12446,7 +12495,7 @@ class Multiotp
       }
       $digits = $this->GetScratchPasswordsDigits();
 
-      $seed = hex2bin(md5('sCratchP@sswordS'.$this->GetUser().bigdec2hex((time()-mktime(1,1,1,1,1,2000)).mt_rand(10000,99999))));
+      $seed_bin = hex2bin(md5('sCratchP@sswordS'.$this->GetUser().bigdec2hex((time()-mktime(1,1,1,1,1,2000)).mt_rand(10000,99999))));
 
       $scratch_loop = $this->GetScratchPasswordsAmount();
       if (($scratch_loop * (1+$digits) * 2.5) > 65535) {
@@ -12460,7 +12509,7 @@ class Multiotp
       $passwords_list = "";
 
       for ($i=0; $i<$scratch_loop; $i++) {
-          $one_password = $this->GenerateOathHotp($seed,$i,$digits);
+          $one_password = $this->GenerateOathHotp($seed_bin,$i,$digits);
           $scratch_passwords.= (("" != $scratch_passwords)?",":"").$one_password;
           $passwords_list.= (("" != $passwords_list)?"\t":"").$one_password;
       }
@@ -14692,20 +14741,36 @@ class Multiotp
 
 
   function DeleteToken(
-      $token = "",
-      $no_error_info = FALSE
+      $function_array = "",
+      $no_error_info = false
   ) {
+      if (is_array($function_array)) {
+          $token = isset($function_array['id'])?$function_array['id']:"";
+          $no_error_info = isset($function_array['no_error_info'])?$function_array['no_error_info']:false;
+          $return_array = isset($function_array['return_array'])?$function_array['return_array']:true;
+      } else { // backward compatibility
+          $token = $function_array;
+          $return_array = false;
+      }
+
+      $result_array = [
+                       "error_code" => _MULTIOTP_DATA_UPDATE_ERROR_,
+                       "result"     => false,
+                      ];
+      
       $the_token = mb_strtolower($token,'UTF-8');
       if ("" != $the_token) {
           $this->SetToken($the_token);
       }
       
-      $result = FALSE;
+      $result = false;
       
       // First, we delete the token file if the backend is files or when migration is enabled
       if (('files' == $this->GetBackendType()) || ($this->GetMigrationFromFile())) {
           $token_filename = $this->GetToken().'.db';
           if (!file_exists($this->GetTokensFolder().$token_filename)) {
+              $result_array = ["error_code" => _MULTIOTP_TOKEN_MISSING_,
+                               "result"     => false];
               if ($this->GetVerboseFlag()) {
                   $this->WriteLog("Error: *Unable to delete token ".$this->GetToken().", the tokens database file ".$this->GetTokensFolder().$token_filename." does not exist", FALSE, FALSE, _MULTIOTP_TOKEN_MISSING_, 'Token',  "");
               } else {
@@ -14714,10 +14779,14 @@ class Multiotp
           } else {
               $result = unlink($this->GetTokensFolder().$token_filename);
               if ($result) {
+                  $result_array = ["error_code" => _MULTIOTP_OPERATION_DONE_,
+                                   "result"     => true];
                   if ($this->GetVerboseFlag()) {
                       $this->WriteLog("Info: *Token ".$this->GetToken()." successfully deleted", FALSE, FALSE, _MULTIOTP_OPERATION_DONE_, 'Token', "");
                   }
               } else {
+                  $result_array = ["error_code" => _MULTIOTP_DATA_UPDATE_ERROR_,
+                                   "result"     => false];
                   $this->WriteLog("Error: Unable to delete token ".$this->GetToken(), FALSE, FALSE, _MULTIOTP_DATA_UPDATE_ERROR_, 'Token',  "");
               }
           }
@@ -14733,6 +14802,8 @@ class Multiotp
 
                           if (is_object($this->_mysqli)) {
                               if (!($rResult = $this->_mysqli->query($sQuery))) {
+                                  $result_array = ["error_code" => _MULTIOTP_DATA_UPDATE_ERROR_,
+                                                   "result"     => false];
                                   if (!$no_error_info) {
                                       $this->WriteLog("Error: Could not delete token ".$this->GetToken().": ".nullable_trim($this->_mysqli->error), FALSE, FALSE, _MULTIOTP_DATA_UPDATE_ERROR_, 'Token', "");
                                   }
@@ -14740,6 +14811,8 @@ class Multiotp
                                   $num_rows = $this->_mysqli->affected_rows;
                               }
                           } elseif (!($rResult = mysql_query($sQuery, $this->_mysql_database_link))) {
+                              $result_array = ["error_code" => _MULTIOTP_DATA_UPDATE_ERROR_,
+                                               "result"     => false];
                               if (!$no_error_info) {
                                   $this->WriteLog("Error: Could not delete token ".$this->GetToken().": ".mysql_error(), FALSE, FALSE, _MULTIOTP_DATA_UPDATE_ERROR_, 'Token', "");
                               }
@@ -14748,10 +14821,14 @@ class Multiotp
                           }
                           
                           if (0 == $num_rows) {
+                              $result_array = ["error_code" => _MULTIOTP_TOKEN_MISSING_,
+                                               "result"     => false];
                               if (!$no_error_info) {
                                   $this->WriteLog("Error: Could not delete token ".$this->GetToken().". Token does not exist", FALSE, FALSE, _MULTIOTP_TOKEN_MISSING_, 'Token', "");
                               }
                           } else {
+                              $result_array = ["error_code" => _MULTIOTP_OPERATION_DONE_,
+                                               "result"     => true];
                               if ($this->GetVerboseFlag()) {
                                   $this->WriteLog("Info: *token ".$this->GetToken()." successfully deleted", FALSE, FALSE, _MULTIOTP_OPERATION_DONE_, 'Token', "");
                               }
@@ -14767,6 +14844,8 @@ class Multiotp
                           $sQuery  = "DELETE FROM \"".$this->_config_data['sql_schema']."\".\"".$this->_config_data['sql_tokens_table']."\" WHERE \"token_id\" = '".$token_escaped."'";
 
                           if (!($rResult = pg_query($this->_pgsql_database_link, $sQuery))) {
+                              $result_array = ["error_code" => _MULTIOTP_DATA_UPDATE_ERROR_,
+                                               "result"     => false];
                               if (!$no_error_info) {
                                   $this->WriteLog("Error: Could not delete token ".$this->GetToken().": ".pg_last_error($this->_pgsql_database_link), FALSE, FALSE, _MULTIOTP_DATA_UPDATE_ERROR_, 'Token', "");
                               }
@@ -14775,10 +14854,14 @@ class Multiotp
                           }
                           
                           if (0 == $num_rows) {
+                              $result_array = ["error_code" => _MULTIOTP_TOKEN_MISSING_,
+                                               "result"     => false];
                               if (!$no_error_info) {
                                   $this->WriteLog("Error: Could not delete token ".$this->GetToken().". Token does not exist", FALSE, FALSE, _MULTIOTP_TOKEN_MISSING_, 'Token', "");
                               }
                           } else {
+                              $result_array = ["error_code" => _MULTIOTP_OPERATION_DONE_,
+                                               "result"     => true];
                               if ($this->GetVerboseFlag()) {
                                   $this->WriteLog("Info: *token ".$this->GetToken()." successfully deleted", FALSE, FALSE, _MULTIOTP_OPERATION_DONE_, 'Token', "");
                               }
@@ -14799,7 +14882,7 @@ class Multiotp
                              TRUE,
                              "DeleteToken");
       }
-      return $result;
+      return ($return_array ? $result_array : $result);
   }
 
 
@@ -15260,7 +15343,9 @@ class Multiotp
                                                                   $this->GetLdapFieldsArray(),
                                                                   $this->IsLdapCacheOn(),
                                                                   $groups_filtering,
-                                                                  $in_groups_filtering
+                                                                  $in_groups_filtering,
+                                                                  $this->GetLdapInGroup(true),
+                                                                  $recursive_prefix
                                                                  );
 
                       if ($ldap_connection->IsError()) {
@@ -15456,7 +15541,15 @@ class Multiotp
                                   }
                               }
                           } // if ($account != "")
-                      } while (($one_user = $ldap_connection->one_user_info(FALSE, NULL, NULL, FALSE, $groups_filtering, $in_groups_filtering))); // $group_cn_cache_only = TRUE before
+                      } while (($one_user = $ldap_connection->one_user_info(FALSE,
+                                                                            NULL,
+                                                                            NULL,
+                                                                            FALSE,
+                                                                            $groups_filtering,
+                                                                            $in_groups_filtering,
+                                                                            $this->GetLdapInGroup(true),
+                                                                            $recursive_prefix
+                                                                           ))); // $group_cn_cache_only = TRUE before
                       // Loop of LDAP parsing and synchronization
 
                       if ($ldap_connection->_paging_legacy) {
@@ -15621,7 +15714,9 @@ class Multiotp
                                                                   $this->GetLdapFieldsArray(),
                                                                   $this->IsLdapCacheOn(),
                                                                   $groups_filtering,
-                                                                  $in_groups_filtering
+                                                                  $in_groups_filtering,
+                                                                  $this->GetLdapInGroup(true),
+                                                                  $recursive_prefix
                                                                  );
 
                       if ($ldap_connection->IsError()) {
@@ -15854,7 +15949,15 @@ class Multiotp
                                   }
                               }
                           } // if ($account != "")
-                      } while (($one_user = $ldap_connection->one_user_info(FALSE, NULL, NULL, FALSE, $groups_filtering, $in_groups_filtering))); // $group_cn_cache_only = TRUE before
+                      } while (($one_user = $ldap_connection->one_user_info(FALSE,
+                                                                            NULL,
+                                                                            NULL,
+                                                                            FALSE,
+                                                                            $groups_filtering,
+                                                                            $in_groups_filtering,
+                                                                            $this->GetLdapInGroup(true),
+                                                                            $recursive_prefix
+                                                                           ))); // $group_cn_cache_only = TRUE before
                       // Loop of LDAP parsing and synchronization
 
                       if ($ldap_connection->_paging_legacy) {
@@ -16181,7 +16284,9 @@ class Multiotp
                                                                   $this->GetLdapFieldsArray(),
                                                                   $this->IsLdapCacheOn(),
                                                                   $groups_filtering,
-                                                                  $in_groups_filtering
+                                                                  $in_groups_filtering,
+                                                                  $this->GetLdapInGroup(true),
+                                                                  $recursive_prefix
                                                                  );
 
                       if ($ldap_connection->IsError()) {
@@ -16660,7 +16765,15 @@ class Multiotp
                                   }
                               }
                           } // if ($account != "")
-                      } while ((!$ldap_sync_stop) && ($one_user = $ldap_connection->one_user_info(FALSE, NULL, NULL, FALSE, $groups_filtering, $in_groups_filtering))); // $group_cn_cache_only = TRUE before
+                      } while ((!$ldap_sync_stop) && ($one_user = $ldap_connection->one_user_info(FALSE,
+                                                                                                  NULL,
+                                                                                                  NULL,
+                                                                                                  FALSE,
+                                                                                                  $groups_filtering,
+                                                                                                  $in_groups_filtering,
+                                                                                                  $this->GetLdapInGroup(true),
+                                                                                                  $recursive_prefix
+                                                                                                 ))); // $group_cn_cache_only = TRUE before
                       // Loop of LDAP parsing and synchronization
 
                       if ($ldap_connection->_paging_legacy) {
@@ -17945,6 +18058,7 @@ class Multiotp
           $sms_challenge_enabled = intval(isset($input_array['sms_challenge_enabled'])?$input_array['sms_challenge_enabled']:0);
           $text_sms_challenge = isset($input_array['text_sms_challenge'])?$input_array['text_sms_challenge']:"";
           $text_token_challenge = isset($input_array['text_token_challenge'])?$input_array['text_token_challenge']:"";
+          $display_full_debug = isset($input_array['display_full_debug'])?$input_array['display_full_debug']:FALSE;
       } else {
           $input = $input_array; // backward compatibility
           $input_sync = $input_sync_param;
@@ -17960,6 +18074,7 @@ class Multiotp
           $sms_challenge_enabled = 0;
           $text_sms_challenge = "";
           $text_token_challenge = "";
+          $display_full_debug = FALSE;
       }
       
       if ($this->IsGlobalChallengeResponse()) {
@@ -18901,6 +19016,20 @@ class Multiotp
                   }
               }
 
+              // For debug pupose only //
+              if ($display_full_debug) {
+                echo "Seed: $seed\r\n";
+                echo "Delta time: $delta_time\r\n";
+                echo "Time interval: $time_interval\r\n";
+                echo "Token algo suite: $token_algo_suite\r\n";
+                echo "Interval: $interval\r\n";
+                echo "last_event (HOTP): $last_event\r\n";
+                echo "now_steps (TOTP): $now_steps\r\n";
+                echo "step_window: $step_window\r\n";
+                echo "prefix_pin: $prefix_pin\r\n";
+                echo "\r\n";
+              }
+
               switch (mb_strtolower($algorithm,'UTF-8')) {
                   case 'motp':
                       if (("" == $input_sync) && (!$resync_enc_pass)) {
@@ -19152,6 +19281,13 @@ class Multiotp
                       do {
                           $additional_step = (1 - (2 * ($check_step % 2))) * intval($check_step/2);
                           $pure_calculated_token = $this->GenerateOathHotp($seed_bin,$last_event+$additional_step,$digits,$token_algo_suite);
+                          
+                          // For debug pupose only //
+                          if ($display_full_debug) {
+                            echo $last_event+$additional_step . " : $pure_calculated_token";
+                            echo "\r\n";
+                          }
+
                           $calculated_token = $pure_calculated_token;
                           if (($need_prefix) && ($input_to_check != "") && ($this->IsUserRequestLdapPasswordEnabled())) {
                               $code_confirmed_without_pin = $calculated_token;
@@ -20198,14 +20334,14 @@ class Multiotp
           for ($tries = 0; $tries < 3; $tries++) {
               if ("" == $cipher_array['KeyDerivationMethodAlgorithm']) {
                   $cipher_aes->setKey($passphrase);
-                  $Secret = (mb_substr($cipher_aes->decrypt(base64_decode($cipher_value)),16));
+                  $Secret = (substr($cipher_aes->decrypt(base64_decode($cipher_value)),16));
                   if ("" == $Secret) {
                       $cipher_aes->setKey(hex2bin(preg_replace("/[^A-Fa-f0-9]/", "", $passphrase)));
-                      $Secret = (mb_substr($cipher_aes->decrypt(base64_decode($cipher_value)),16));
+                      $Secret = (substr($cipher_aes->decrypt(base64_decode($cipher_value)),16));
                   }
               } elseif ('pkcs5' == $cipher_array['KeyDerivationMethodAlgorithm']) {
                   $cipher_aes->setPassword($passphrase, 'pbkdf2', 'sha1', $cipher_array['Salt'], $cipher_array['IterationCount'], $cipher_array['KeyLength']);
-                  $Secret = (mb_substr($cipher_aes->decrypt(base64_decode($cipher_value)),16));
+                  $Secret = (substr($cipher_aes->decrypt(base64_decode($cipher_value)),16));
               }
               if ("" != $Secret) {
                   break;
@@ -20213,7 +20349,7 @@ class Multiotp
                   $passphrase = nullable_trim($passphrase);
               } elseif (1 == $tries) {
                   if ((0 === mb_strpos($passphrase, '0x')) && (0 == (mb_strlen($passphrase) % 2))) {
-                      $passphrase = hex2bin(mb_substr($passphrase, 2));
+                      $passphrase = hex2bin(substr($passphrase, 2));
                   }
               }
           }
@@ -20719,11 +20855,11 @@ class Multiotp
             }
 
             if ("" != $algorithm) {
-              $this->SetToken($esn);
+              $this->SetToken($pubIdTxt);
               $this->SetTokenPrivateId($private_id);
               $this->SetTokenDescription(nullable_trim("$manufacturer $esn ($timestampLocal)"));
               $this->SetTokenManufacturer($manufacturer);
-              $this->SetTokenSerialNumber($esn);
+              $this->SetTokenSerialNumber($pubIdTxt);
               $this->SetTokenSeed($seed);
               $this->SetTokenAlgorithm($algorithm);
               $this->SetUserTokenAlgoSuite($token_algo_suite);
@@ -24397,7 +24533,7 @@ EOL;
     if ($page < 1) {
       $page = 1;
     }
-    $itemsPerPage = intval(isset($data_array['itemsPerPage'])?$data_array['itemsPerPage']:25);
+    $itemsPerPage = intval(isset($data_array['itemsPerPage'])?$data_array['itemsPerPage']:_MULTIOTP_DEFAULT_ITEMS_PER_PAGE_);
     if ($itemsPerPage < 10) {
       $itemsPerPage = 10;
     }
@@ -24703,7 +24839,7 @@ EOL;
     if ($page < 1) {
       $page = 1;
     }
-    $itemsPerPage = intval(isset($data_array['itemsPerPage']) ? $data_array['itemsPerPage'] : 25);
+    $itemsPerPage = intval(isset($data_array['itemsPerPage']) ? $data_array['itemsPerPage'] : _MULTIOTP_DEFAULT_ITEMS_PER_PAGE_);
     if ($itemsPerPage < 10) {
       $itemsPerPage = 10;
     }
@@ -25203,7 +25339,10 @@ EOL;
    *** API/VUEJS pre-auth ***
    **************************
    **************************/
-  function ApiVueJsPreAuth($hash_salt = ""): void {
+  function ApiVueJsPreAuth(
+    $hash_salt = "",
+    $data = ""
+  ): void {
     $params = session_get_cookie_params();
     $cookie_secure = (!$this->IsDebugOption()) && (!$this->IsDeveloperMode() && ('DVP' != $this->GetHardwareType()));
     $cookie_httponly = true;
@@ -25213,6 +25352,23 @@ EOL;
       $params["path"], $params["domain"],
       $cookie_secure, $cookie_httponly
     );
+
+    // Restore session id
+    if (!empty($data)) {
+      $data_array = json_decode($data, true);
+      $sid = $data_array['sid'] ?? null;
+      if ($sid && preg_match('/^[a-zA-Z0-9,-]{1,128}$/', $sid)) {
+        session_id($sid);
+      }
+    }
+
+    // Restore session id if sent by POST (for example from a form)
+    if (empty($sid)) {
+      $sid = $_POST['sid'] ?? null;
+      if ($sid && preg_match('/^[a-zA-Z0-9,-]{1,128}$/', $sid)) {
+        session_id($sid);
+      }
+    }
 
     $previous_session_name = session_name("cookid");
     session_start();
@@ -25282,6 +25438,13 @@ EOL;
     $http = ["status" => 200, "message" => "OK"];
     $answer = ["status" => true, "level" => "success", "message" => "OK"];
     $data_array = json_decode($data, true);
+    if (empty($data_array["c"])) {
+      foreach ($_POST as $key => $value) {
+        if (empty($data_array[$key])) {
+          $data_array[$key] = $value;
+        }
+      }
+    }
     $c = (!empty($data_array["c"])) ? $data_array["c"] : "";
 
     // Always available commands
@@ -25335,6 +25498,9 @@ EOL;
           }
         }
     }
+
+    // Push session id
+    $answer["sid"] = session_id();
     if ($as_result) {
       return json_encode($answer);
     } else {

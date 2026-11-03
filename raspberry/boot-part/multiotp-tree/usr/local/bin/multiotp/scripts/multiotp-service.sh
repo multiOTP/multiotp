@@ -25,8 +25,8 @@
 #  stop-multiotp
 #
 # @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-# @version   5.10.2.2
-# @date      2026-04-03
+# @version   5.10.4.2
+# @date      2026-10-31
 # @since     2013-11-29
 # @copyright (c) 2013-2026 SysCo systemes de communication sa
 # @copyright GNU Lesser General Public License

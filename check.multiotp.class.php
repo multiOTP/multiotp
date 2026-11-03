@@ -22,8 +22,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.10.2.2
- * @date      2026-04-03
+ * @version   5.10.4.2
+ * @date      2026-10-31
  * @since     2013-07-10
  * @copyright (c) 2013-2026 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -1683,8 +1683,8 @@ foreach ($backend_array as $backend) {
     $yubikey_array = explode("\t", $list);
     $yubikey_found = 0;
     foreach($yubikey_array as $yubikey_one) {
-      if ((FALSE !== mb_strpos(mb_strtolower($yubikey_one), mb_strtolower('2604031'))) ||
-          (FALSE !== mb_strpos(mb_strtolower($yubikey_one), mb_strtolower('2604032')))) {
+      if ((FALSE !== mb_strpos(mb_strtolower($yubikey_one), mb_strtolower('vvccccdtvkiu'))) ||
+          (FALSE !== mb_strpos(mb_strtolower($yubikey_one), mb_strtolower('vvgdctvftcrt')))) {
         echo_full((($yubikey_found > 0) ? ", " : "") . $yubikey_one);
         $multiotp->DeleteToken($yubikey_one);
         $yubikey_found++;
@@ -1718,12 +1718,12 @@ foreach ($backend_array as $backend) {
 
     
     //====================================================================
-    // TEST: Rename token ZZ0100000000 to ZZ0100000001
+    // TEST: Rename token ZZ0100000000 to ZZ0100000009
     $tests++;
-    echo_full($b_on."Rename token ZZ0100000000 to ZZ0100000001".$b_off.$crlf);
+    echo_full($b_on."Rename token ZZ0100000000 to ZZ0100000009".$b_off.$crlf);
     $multiotp->SetToken('ZZ0100000000');
-    if ($multiotp->RenameCurrentToken('ZZ0100000001')) {
-        echo_full("- ".$ok_on.'OK!'.$ok_off." Token ZZ0100000000 successfully renamed to ZZ0100000001".$crlf);
+    if ($multiotp->RenameCurrentToken('ZZ0100000009')) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Token ZZ0100000000 successfully renamed to ZZ0100000009".$crlf);
         $successes++;
     } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Unable to rename the token ZZ0100000000".$crlf);
@@ -1733,44 +1733,44 @@ foreach ($backend_array as $backend) {
 
 
     //=======================================
-    // Check if the token ZZ0100000001 exists
+    // Check if the token ZZ0100000009 exists
     $tests++;
-    echo_full($b_on."Check if the token ZZ0100000001 exists".$b_off.$crlf);
-    if ($multiotp->CheckTokenExists('ZZ0100000001')) {
-        echo_full("- ".$ok_on.'OK!'.$ok_off." Token ZZ0100000001 exists".$crlf);
+    echo_full($b_on."Check if the token ZZ0100000009 exists".$b_off.$crlf);
+    if ($multiotp->CheckTokenExists('ZZ0100000009')) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Token ZZ0100000009 exists".$crlf);
         $successes++;
     } else {
-        echo_full("- ".$ko_on.'KO!'.$ko_off." Token ZZ0100000001 is missing".$crlf);
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Token ZZ0100000009 is missing".$crlf);
     }
     echo_full($crlf);
 
 
     //====================================================================
-    // TEST: WriteTokenData / ReadTokenData with ZZ0100000001
+    // TEST: WriteTokenData / ReadTokenData with ZZ0100000009
     $tests++;
-    echo_full($b_on."Write/Read information concerning token ZZ0100000001".$b_off.$crlf);
+    echo_full($b_on."Write/Read information concerning token ZZ0100000009".$b_off.$crlf);
     $test_value = 'tEStToKeN';
-    $multiotp->ReadTokenData('ZZ0100000001');
+    $multiotp->ReadTokenData('ZZ0100000009');
     $multiotp->SetTokenDescription($test_value);
     $multiotp->WriteTokenData();
     $multiotp->SetTokenDescription('');
-    $multiotp->ReadTokenData('ZZ0100000001');
+    $multiotp->ReadTokenData('ZZ0100000009');
 
     if ($test_value == $multiotp->GetTokenDescription()) {
-        echo_full("- ".$ok_on.'OK!'.$ok_off." Write/Read information concerning token ZZ0100000001 successfully done".$crlf);
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Write/Read information concerning token ZZ0100000009 successfully done".$crlf);
         $successes++;
     } else {
-        echo_full("- ".$ko_on.'KO!'.$ko_off." Write/Read information concerning token ZZ0100000001 failed".$crlf);
+        echo_full("- ".$ko_on.'KO!'.$ko_off." Write/Read information concerning token ZZ0100000009 failed".$crlf);
     }
     echo_full($crlf);
 
 
     //====================================================================
-    // TEST: Delete tokens ZZ0000000000 and ZZ0100000001
+    // TEST: Delete tokens ZZ0000000000 and ZZ0100000009
     $tests++;
-    echo_full($b_on."Delete tokens ZZ0000000000 and ZZ0100000001".$b_off.$crlf);
-    if (($multiotp->DeleteToken('ZZ0000000000')) && ($multiotp->DeleteToken('ZZ0100000001')) && (!$multiotp->CheckTokenExists('ZZ0100000001'))) {
-        echo_full("- ".$ok_on.'OK!'.$ok_off." Tokens ZZ0000000000 and ZZ0100000001 successfully deleted".$crlf);
+    echo_full($b_on."Delete tokens ZZ0000000000 and ZZ0100000009".$b_off.$crlf);
+    if (($multiotp->DeleteToken('ZZ0000000000')) && ($multiotp->DeleteToken('ZZ0100000009')) && (!$multiotp->CheckTokenExists('ZZ0100000009'))) {
+        echo_full("- ".$ok_on.'OK!'.$ok_off." Tokens ZZ0000000000 and ZZ0100000009 successfully deleted".$crlf);
         $successes++;
     } else {
         echo_full("- ".$ko_on.'KO!'.$ko_off." Failed during tokens deletion".$crlf);

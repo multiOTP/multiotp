@@ -27,8 +27,8 @@
  * PHP 7.4 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.10.2.2
- * @date      2026-04-03
+ * @version   5.10.4.2
+ * @date      2026-10-31
  * @since     2013-08-06
  * @copyright (c) 2013-2026 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -1227,6 +1227,9 @@ exit();
         <br />
         $class_name $class_version $class_date
         <br />
+        <hr />
+        <i>This is the <b>last legacy web</b> interface version. - Next release will integrate <b>VueJS</b> interface.</i>
+        <hr />
         <!-- div id="custom_info">
             <br />
             <span class="custom_logo_white">Dev</span><span class="custom_logo_red">(</span><span class="custom_logo_white">Talks</span><span class="custom_logo_red">)</span><span class="custom_logo_white">: Edition</span>

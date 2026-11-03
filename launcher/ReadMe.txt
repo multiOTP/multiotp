@@ -15,8 +15,8 @@ The multiOTP C++ launcher is simply used to launch PHP
 and run multiotp.windows.php with the provided arguments.
 
 @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-@version   5.10.2.2
-@date      2026-04-03
+@version   5.10.4.2
+@date      2026-10-31
 @since     2016-12-08
 @copyright (c) 2010-2026 SysCo systemes de communication sa
 @copyright GNU Lesser General Public License

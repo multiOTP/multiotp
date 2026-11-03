@@ -6,7 +6,7 @@ multiOTP open source is OATH certified for HOTP/TOTP
 (c) 2010-2026 SysCo systemes de communication sa  
 https://www.multiotp.net/
 
-Current build: 5.10.2.2 (2026-04-03)
+Current build: 5.10.4.2 (2026-10-31)
 
 Binary download: https://download.multiotp.net/ (including virtual appliance image, docker and full release notes)
 
@@ -21,6 +21,10 @@ PATH/TO/FREERADIUS/LOG/VOLUME:/var/log/freeradius
 **A Dockerfile is included in the distribution ZIP file**
 
 The **multiotp/multiotp-open-source** docker is working on Synology devices !  
+
+If you want to regularly synchronize AD/LDAP users with multiOTP on a Synology,
+do something like this in the Task Scheduler GUI:
+  docker exec multiotp-open-source /usr/local/bin/multiotp/multiotp.php -ldap-users-sync
 
 It's strongly recommended to read the whole README file.  
 That said, if you're in a hurry: the default RADIUS secret for subnet 0.0.0.0/0 is `myfirstpass`.
@@ -49,12 +53,13 @@ multiOTP Enterprise, which are commercial editions of ready to use virtual
 appliances including more features like:
  - Full Web GUI interface
  - Automated provisioning of new account (based on Active Directory)
+ - Free virtual appliance (VMware/OVA, Proxmox, Hyper-V)
+ - Free lifetime one user licence (to make tests without limits)
  - High Availability master-slave support (Enterprise Edition)
  - Push token using free multiOTP token App (Enterprise Edition)
  - Web API support (Enterprise Edition)
- - free virtual appliances available, including a free lifetime one user licence
- - online demo of the full Web GUI interface
  - ...
+Online demo of multiOTP Enterprise: https://demo.multiotp.com (admin / livedemo)
 
 
 The multiOTP class supports currently the following algorithms and RFC's:
@@ -81,7 +86,6 @@ For more PHP classes, have a look on [PHPclasses.org](http://syscoal.users.phpcl
 TABLE OF CONTENTS
 =================
  * Donations and sponsoring
- * Wishlist for future releases
  * How can I upgrade from a previous version ?
  * What's new in the releases
  * Change Log of released version
@@ -90,7 +94,7 @@ TABLE OF CONTENTS
  * How can I create myself the different versions ?
  * When and how can I use this package ?
  * What is the prefix PIN option ?
- * How the lockout of an account is working ?
+ * How does account lockout work ?
  * How to self-unlock an account ?
  * How to debug ?
  * How to install the multiOTP web service under Windows ?
@@ -103,12 +107,15 @@ TABLE OF CONTENTS
  * How to configure multiOTP to synchronized the users from an Active Directory ?
  * How to configure multiOTP to synchronized the users from a standard LDAP ?
  * How to configure multiOTP to use the client/server feature ?
- * How to build a Raspberry Pi strong authentication server ?
  * How to install a local only strong authentication on a Windows machine ?
  * How to install a centralized 2FA server for Windows desktops or RDP login ?
  * Adding 2FA with multiOTP to the Remote Desktop Web Access (RDWeb) on Windows
+ * Free multiOTP Credential Provider
+ * Free multiOTP token app
+ * Self-registration of hardware tokens
  * Same Windows generic account with multiple two-factor authentication accounts
  * Using multiOTP on Linux for SSH login
+ * How to build a Raspberry Pi strong authentication server ?
  * LDAP filter customization
  * OpenSSL options for LDAPS
  * Compatible clients applications and devices
@@ -162,6 +169,20 @@ WHAT'S NEW IN THIS 5.10.x RELEASE
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2026-10-31 5.10.4.2 FIX: New virtual appliance 013-07 (kernel 6.12.113) with PHP2Shell and CVE-2026-98432 fixes
+                    FIX: Updated embedded Windows PHP edition to version 8.5.12 x64
+                    FIX: Fixed DecodeCipherValue() method randomly failing with multibyte values
+                    ENH: Updated embedded Windows nginx edition to version 1.31.8
+                    ENH: Moved valid token algorithms into an array with extended information
+                    ENH: Added bigint support for MariaDB/MySQL backend
+                    ENH: Rewrote Convert2Unicode() method using native conversion
+                    ENH: Rewrote NtPasswordHash() and NtPasswordHashHash() methods
+                    ENH: Enhanced DeleteToken() method to return an array result
+                    ENH: Enhanced CheckToken() method to return additional debug info
+                    ENH: Enhanced API for VueJS 
+                    ENH: Enhanced AD/LDAP groups support
+2026-10-28 5.10.3.0 ENH: New virtual appliance 013 for Proxmox and OVA
+2026-04-04 5.10.2.3 ENH: Import of "Yubico CSV" use now public ID as serial number, as for traditional format
 2026-04-03 5.10.2.2 FIX: Hardware token import was not always working correctly for 013 appliances
                     FIX: PHP 8.x incompatibility issue in SMTP library (Thanks to @dexkuz)
                     ENH: PHP 8.x deprecated code cleaned
@@ -605,7 +626,7 @@ CHANGE LOG OF RELEASED VERSIONS
                    Basic web interface
                    Self-registration of hardware tokens is now possible
                     PAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
-                    [serial number][OTP] instead of [OTP]. If user has a prefix PIN, type [serial number][PIN][OTP])
+                    [serial number][OTP] instead of [OTP]. If user has a prefix PIN, type [serial number][PIN][OTP]
                     PAP/CHAP mode: if self-registration is enabled, a user can register a non-attributed token by typing
                     [username:serialnumber] as the username and the [OTP] in the password field.
                     If user has a prefix PIN, [PIN][OTP] must be typed in the password field
@@ -898,7 +919,7 @@ in the radius server and provide the IP address(es) of the device(s)
 If you want to have strong authentication on Windows logon, have a look at the
 open source project multiOTPCredentialProvider which is based on MultiotpCPV2RDP
 from arcadejust and MultiOneTimePassword Credential Provider from Last Squirrel IT.
-It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 in 64 bits.  
+It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022/2025 in 64 bits.  
 The Credential Provider does not need any RADIUS connection! It uses instead a
 local version of multiOTP which can be configured as a client of a
 centralized server (with caching support).
@@ -960,7 +981,7 @@ Provisioning will be done simply by flashing a QRcode.
     - YubiKey Neo-N
     
 The YubiKey CSV import is based on the .CSV created by :
-- the legacy Yubikey Personalization Tools (YubiKey traditional format log file)
+- the legacy Yubikey Personalization Tools (Yubikey traditional format log file)
   which is the following lines in a file called for example **yubico_log.csv**:
 
   ```
@@ -1013,8 +1034,8 @@ To create a user quickly with a requested prefix PIN:
 multiotp -fastcreatewithpin my_user
 
 
-HOW THE LOCKOUT OF AN ACCOUNT IS WORKING ?
-==========================================
+HOW DOES ACCOUNT LOCKOUT WORK ?
+===============================
 To prevent brute-force attack, an account is temporary locked for 300 seconds
 after 3 unsuccessful trials.  
 After 6 unsuccessful trials, the account is definitely locked.  
@@ -1619,7 +1640,7 @@ B) On the client(s)
 HOW TO INSTALL A LOCAL ONLY STRONG AUTHENTICATION ON A WINDOWS MACHINE ?
 ========================================================================
 1) Install multiOTPCredentialProvider, which contains also multiOTP inside.
-   It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 in 64 bits.
+   It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022/2025 in 64 bits.
    (https://download.multiotp.net/credential-provider/)
 2) During the installation, specify the folder on the client where the
    multiotp.exe file and folders must be installed and configured.
@@ -1635,7 +1656,7 @@ HOW TO INSTALL A CENTRALIZED 2FA SERVER FOR WINDOWS DESKTOPS OR RDP LOGIN ?
 ===========================================================================
 1) Install a client/server multiOTP environment like explained above.
 2) On each client, install multiOTPCredentialProvider .
-   It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 in 64 bits.
+   It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022/2025 in 64 bits.
    (https://download.multiotp.net/credential-provider/)
 3) During the installation, specify the folder on the client where the
    multiotp.exe file and folders must be installed and configured.
@@ -1803,6 +1824,33 @@ folder C:\Windows\Web\RDWeb\
 9) Be sure to restart IIS on your Windows RDWeb server
 
 
+FREE MULTIOTP CREDENTIAL PROVIDER
+=================================
+multiOTP Credential Provider is a compatible open source Credential Provider
+for Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022/2025 in 64 bits, with caching
+support option (for offline connection), RDP only 2FA, and some other options.
+To download it: https://github.com/multiOTP/multiOTPCredentialProvider
+
+
+FREE MULTIOTP TOKEN APP
+=======================
+multiOTP token is a free and open source application for Android and iOS, with
+TOTP and MOTP token support, QRcode provisioning and import/export option.
+Push support with Enterprise subscription is also available.
+The app is available on both Google Play and Apple Store, and the source code
+is available on https://github.com/multiOTP/multiOTP-token
+
+
+SELF-REGISTRATION OF HARDWARE TOKENS
+====================================
+PAP mode: a user can register a non-attributed token by typing
+[serial number][OTP] instead of [OTP].
+If user has a prefix PIN, type [serial number][PIN][OTP]
+PAP/CHAP mode: a user can register a non-attributed token by typing
+[username:serialnumber] as the username and the [OTP] in the password field.
+If user has a prefix PIN, [PIN][OTP] must be typed in the password field.
+
+
 SAME WINDOWS GENERIC ACCOUNT WITH MULTIPLE TWO-FACTOR AUTHENTICATION ACCOUNTS 
 =============================================================================
 If you have to share the same generic Windows account, but you still need
@@ -1857,7 +1905,7 @@ USING MULTIOTP ON LINUX FOR SSH LOGIN
    /etc/init.d/sshd start
 ```
 
-5) You are now ready to test your login SSH with an software OTP :-)
+5) You are now ready to test your login SSH with a software OTP :-)
 
 
 HOW TO BUILD A RASPBERRY PI STRONG AUTHENTICATION SERVER ?
@@ -1947,7 +1995,7 @@ COMPATIBLE CLIENTS APPLICATIONS AND DEVICES
 ===========================================
 Open source project multiOTPCredentialProvider which is based on MultiotpCPV2RDP
 from arcadejust and MultiOneTimePassword Credential Provider from Last Squirrel IT.
-It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022 in 64 bits.  
+It works with Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022/2025 in 64 bits.  
 The Credential Provider is using directly a local version of multiOTP which
 can be configured as a client of a centralized multiOTP server (with caching support)
 (https://github.com/multiOTP/multiOTPCredentialProvider)
@@ -1980,7 +2028,7 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     https://www.myersdaily.org/joseph/javascript/md5-text.html
 
     multiOTP Credential Provider
-    Credential Provider (64 bits) supporting Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022
+    Credential Provider (64 bits) supporting Windows 7/8/8.1/10/11/2012(R2)/2016/2019/2022/2025
     SysCo / ArcadeJust / LastSquirrelIT 
     https://github.com/multiOTP/multiOTPCredentialProvider
 
@@ -2031,7 +2079,7 @@ EXTERNAL PACKAGES AND SOFTWARE USED
     Tanase Laurentiu Iulian
     http://xpertmailer.sourceforge.net/
 
-    The source files can be downloaded at https://download.multiOTP.net/multiotp.zip
+    The source files can be downloaded at https://download.multiOTP.net/
 ```
 
  
@@ -2045,7 +2093,7 @@ MULTIOTP COMMAND LINE TOOL
 ==========================
 
 ``` 
-multiOTP 5.10.2.2 (2026-04-03)
+multiOTP 5.10.4.2 (2026-10-31)
 (c) 2010-2026 SysCo systemes de communication sa
 http://www.multiOTP.net   (you can try the [Donate] button ;-)
 

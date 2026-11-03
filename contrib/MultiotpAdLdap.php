@@ -199,6 +199,7 @@ class MultiotpAdLdap {
     var $_bind;
     var $_bind_paged;
     var $_cache_group_dn; // Added 2014-07-21 by SysCo/al
+    var $_cache_group_rid; // Added 2026-07-21 by SysCo/al
     var $_cache_recursive_groups; // Added 2014-07-21 by SysCo/al
     var $_cache_support; // Added 2014-07-21 by SysCo/al
     var $_entry_identifier; // Added 2014-07-21 by SysCo/al
@@ -232,6 +233,7 @@ class MultiotpAdLdap {
         $this->_account_suffix = ''; // Added by SysCo/al
         $this->_base_dn = ''; // Added by SysCo/al
         $this->_cache_group_dn = array(); // Added 2014-07-21 by SysCo/al
+        $this->_cache_group_rid = array(); // Added 2026-07-21 by SysCo/al
         $this->_cache_recursive_groups = array(); // Added 2014-07-21 by SysCo/al
         $this->_cache_support = TRUE; // Added 2014-07-21 by SysCo/al
         $this->_entry_identifier = array(); // Added 2014-07-21 by SysCo/al
@@ -1010,33 +1012,89 @@ class MultiotpAdLdap {
     }
 
 
-	// Added by SysCo/al
-	// New implementation 2014-07-21 by SysCo/al
+    // Added by SysCo/al
+    // New implementation 2014-07-21 by SysCo/al
     // Returns an array of information for filtered users
     function users_info($username=NULL, $fields=NULL, $groups_filtering = '')
-	{
-		$entries = array();
-		$entries['count'] = 0; // To be compatible with the old data organisation (counter at the beginning)
-		$i = 0;
-		if ($result = $this->one_user_info(TRUE, $username, $fields, FALSE, $groups_filtering)) {
-			do {
-				$entries[$i] = $result;
-				$i++;
-			} while ($result = $this->one_user_info());
-		}
-		$entries['count'] = $i; // and not count($entries) because of the ['count'] argument
+    {
+      $entries = array();
+      $entries['count'] = 0; // To be compatible with the old data organisation (counter at the beginning)
+      $i = 0;
+      if ($result = $this->one_user_info(TRUE, $username, $fields, FALSE, $groups_filtering)) {
+        do {
+          $entries[$i] = $result;
+          $i++;
+        } while ($result = $this->one_user_info());
+      }
+      $entries['count'] = $i; // and not count($entries) because of the ['count'] argument
       return ($entries);
     }
 
 
-	// Added 2014-07-21 by SysCo/al, enhanced 2018-07-12 and 2023-01-02
+    // Added by SysCo/al
+    // Recursively walks the "member" attribute of a group to find all
+    // nested group objects (direct + indirect), by descending the tree
+    // instead of scanning the whole domain with a matching rule.
+    // $visited protects against membership loops (A contains B, B contains A).
+    function get_nested_groups(
+      $group_dn,
+      &$visited = array()
+    ) {
+      $nested = array();
+
+      if (isset($visited[$group_dn])) {
+        return $nested; // already processed, avoid infinite loop
+      }
+      $visited[$group_dn] = true;
+
+      if (!$this->_bind) { return $nested; }
+
+      // Read only the "member" attribute of this group
+      $r = @ldap_read($this->_conn, $group_dn, "(objectclass=*)", array("member"));
+      if (FALSE === $r) {
+        return $nested;
+      }
+      $data = @ldap_get_entries($this->_conn, $r);
+
+      if (!isset($data[0]["member"])) {
+        return $nested; // no members at all
+      }
+
+      for ($i = 0; $i < $data[0]["member"]["count"]; $i++) {
+        $member_dn = $data[0]["member"][$i];
+
+        // Check if this member is itself a group (not a user/computer)
+        $r2 = @ldap_read($this->_conn, $member_dn, "(objectCategory=group)", array("cn"));
+        if (FALSE === $r2) {
+          continue;
+        }
+        $entry = @ldap_get_entries($this->_conn, $r2);
+        if ($entry["count"] > 0) {
+          $nested[] = array(
+            "dn"   => $member_dn,
+            "name" => isset($entry[0]["cn"][0]) ? $entry[0]["cn"][0] : null
+          );
+
+          // Recurse into this nested group's own members
+          $children = $this->get_nested_groups($member_dn, $visited);
+          $nested = array_merge($nested, $children);
+        }
+      }
+
+      return $nested;
+    }
+
+
+    // Added 2014-07-21 by SysCo/al, enhanced 2018-07-12, 2023-01-02, 2026-05-17, 2026-07-15
     function one_user_info(
       $first = FALSE,
       $username = NULL,
       $fields = NULL,
       $group_cn_cache_only = FALSE,
       $groups_filtering = '',
-      $in_groups_filtering = array()
+      $in_groups_filtering = array(),
+      $ldap_in_groups = '', // Added 2026-05-17 by SysCo/al
+      $recursive_prefix = '' // Added 2026-05-17 by SysCo/al
     ) {
       $this->_warning_message = '';
       $sr = FALSE;
@@ -1050,9 +1108,71 @@ class MultiotpAdLdap {
         if  ('' == $this->_users_dn) {
           $this->_users_dn = $this->_base_dn;
         }
-
+        
         if (1 == $this->_ldap_server_type) { // Active Directory
+        
+          if ((!empty($ldap_in_groups)) && (!empty($groups_filtering))) {
+            if (is_array($ldap_in_groups)) {
+              $groups_list = $ldap_in_groups;
+            } else {
+              $groups_list = explode(",", $ldap_in_groups);
+            }
+            $groups_list = array_map('trim', $groups_list);
+            $groups_list = array_filter($groups_list, function($g) { return $g !== ""; });
+
+            if (count($groups_list) > 0) {
+
+              $or_clauses = array();
+              $rid_seen = array();
+
+              foreach ($groups_list as $group_identifier) {
+                // Resolve the group's DN (needed for the memberOf matching-rule clause)
+                if (stripos($group_identifier, $this->_base_dn) !== false) {
+                  // Already looks like a DN
+                  $group_dn = $group_identifier;
+                } else {
+                  // It's a cn/samaccountname, resolve to DN
+                  $grp_info = $this->group_info($group_identifier, array("distinguishedname"));
+                  if (isset($grp_info[0]["distinguishedname"][0])) {
+                    $group_dn = $grp_info[0]["distinguishedname"][0];
+                  } else {
+                    // Group not found, skip it
+                    continue;
+                  }
+                }
+
+                // memberOf clause (covers direct + nested group membership)
+                $or_clauses[] = "(".$this->_group_attribute.":".$recursive_prefix.$group_dn.")"; // $this->ldap_dn_encode($group_dn)
+
+                // primaryGroupID clause (covers users whose PRIMARY group is this one)
+                $rid = $this->group_rid($group_identifier);
+                if ($rid !== false) {
+                  $or_clauses[] = "(primaryGroupID=".intval($rid).")";
+                  $rid_seen[$rid] = true;
+                }
+                
+                $nested_groups = $this->get_nested_groups($group_dn);
+
+                foreach ($nested_groups as $nested) {
+                  $nested_rid = $this->group_rid($nested["dn"]);
+                  if ($nested_rid !== false && !isset($rid_seen[$nested_rid])) {
+                    $or_clauses[] = "(primaryGroupID=".intval($nested_rid).")";
+                    $rid_seen[$nested_rid] = true;
+                  }
+                }                
+              }
+
+              if (count($or_clauses) > 0) {
+                // The new group_filtering contains the old one, just replace it !
+                $groups_filtering="(|".implode("", $or_clauses).")";
+              }
+            }          
+          }
+       
           $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$username.")".$groups_filtering.")";
+
+          // echo "DEBUG filter: $filter\n";
+
           if ($fields==NULL){ $fields=array($this->_cn_identifier,"mail",$this->_group_attribute,"department","description","displayname","telephonenumber","primarygroupid","distinguishedname"); }
         } elseif (3 == $this->_ldap_server_type) { // legacy Active Directory
           $filter = "(&(objectClass=user)(samaccounttype=". ADLDAP_NORMAL_ACCOUNT .")(objectCategory=person)(".$this->_cn_identifier."=".$username."))";
@@ -1605,6 +1725,91 @@ class MultiotpAdLdap {
             }
         }
         return ($r);
+    }
+    
+    
+    // Added by SysCo/al
+    // Returns the primaryGroupToken (RID) of a group, given its cn (or dn)
+    function group_rid($group_name, $cache_only = FALSE) {
+      $this->_warning_message = "";
+      if ($group_name == NULL) { return (false); }
+      $r = false;
+      $r_data = FALSE;
+
+      $cache_key = md5($group_name);
+
+      if ($this->_cache_support) {
+        if ("" != $this->get_cache_folder()) {
+          if (file_exists($this->get_cache_folder()."ldap_grid_".$cache_key.".cache")) {
+            if ((filemtime($this->get_cache_folder()."ldap_grid_".$cache_key.".cache") + $this->get_cache_timeout()) > time()) {
+              if ($cache_handle = fopen($this->get_cache_folder()."ldap_grid_".$cache_key.".cache", "rb")) {
+                $r = unserialize(fgets($cache_handle));
+                $r_data = TRUE;
+                fclose($cache_handle);
+                @touch($this->get_cache_folder()."ldap_grid_".$cache_key.".cache");
+              }
+            }
+          }
+        } elseif (isset($this->_cache_group_rid[$group_name])) {
+          $r = $this->_cache_group_rid[$group_name];
+          $r_data = TRUE;
+        }
+      }
+
+      if (!$r_data) {
+        if (!$cache_only) {
+          if (!$this->_bind) { return (false); }
+
+          // Resolve group DN if a bare cn/samaccountname was given
+          if (stripos($group_name, $this->_base_dn) === false) {
+            // Not a DN, treat as name and look up its DN
+            $grp_info = $this->group_info($group_name, array("distinguishedname"));
+            if (!isset($grp_info[0]["distinguishedname"][0])) {
+                return (false);
+            }
+            $group_dn = $grp_info[0]["distinguishedname"][0];
+          } else {
+            $group_dn = $group_name;
+          }
+
+          if ((2 == $this->_ldap_server_type) || (4 == $this->_ldap_server_type)) { // Generic LDAP or eDirectory
+            $r_ldap = @ldap_read($this->_conn, $group_dn, "(objectclass=*)", array("gidnumber"));
+            $data = @ldap_get_entries($this->_conn, $r_ldap);
+            if (isset($data[0]["gidnumber"][0])) {
+              $r = $data[0]["gidnumber"][0];
+            }
+          } else { // Active Directory or legacy Active Directory
+            $r_ldap = @ldap_read($this->_conn, $group_dn, "(objectclass=*)", array("primaryGroupToken"));
+            if (FALSE === $r_ldap) {
+              $this->_warning_message = "group_rid: ldap_read error ".ldap_errno($this->_conn).": ".ldap_error($this->_conn);
+              return (false);
+            }
+            $data = @ldap_get_entries($this->_conn, $r_ldap);
+            if (isset($data[0]["primarygrouptoken"][0])) {
+              $r = $data[0]["primarygrouptoken"][0];
+            }
+          }
+
+          if ($r !== false) {
+            if ($this->_cache_support) {
+              if ("" != $this->get_cache_folder()) {
+                if (file_exists($this->get_cache_folder())) {
+                  if ($cache_handle = fopen($this->get_cache_folder()."ldap_grid_".$cache_key.".cache", "wb")) {
+                    fwrite($cache_handle, serialize($r));
+                    fclose($cache_handle);
+                    @chmod($this->get_cache_folder()."ldap_grid_".$cache_key.".cache", octdec($this->_linux_file_mode));
+                  }
+                }
+              } else {
+                $this->_cache_group_rid[$group_name] = $r;
+              }
+            }
+          }
+        } else {
+          $this->_debug_message = "The requested group $group_name is not in cache.";
+        }
+      }
+      return ($r);
     }
 
     // Encode a password for transmission over LDAP
